@@ -10,7 +10,6 @@ import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categorie
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
 import { ThreadDisplay } from '@/components/mail/thread-display';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
@@ -24,6 +23,7 @@ import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
+import { useEffect, useRef, useState } from 'react';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
 import AIToggleButton from '../ai-toggle-button';
@@ -364,13 +364,13 @@ export function MailLayout() {
     };
   }, [threadId, enableScope, disableScope]);
 
-  const handleMailListMouseEnter = useCallback(() => {
-    enableScope('mail-list');
-  }, [enableScope]);
+  //   const handleMailListMouseEnter = useCallback(() => {
+  //     enableScope('mail-list');
+  //   }, [enableScope]);
 
-  const handleMailListMouseLeave = useCallback(() => {
-    disableScope('mail-list');
-  }, [disableScope]);
+  //   const handleMailListMouseLeave = useCallback(() => {
+  //     disableScope('mail-list');
+  //   }, [disableScope]);
 
   // Add mailto protocol handler registration
   useEffect(() => {
@@ -420,8 +420,8 @@ export function MailLayout() {
               `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
               isDesktop && threadId && 'hidden lg:block',
             )}
-            onMouseEnter={handleMailListMouseEnter}
-            onMouseLeave={handleMailListMouseLeave}
+            // onMouseEnter={handleMailListMouseEnter}
+            // onMouseLeave={handleMailListMouseLeave}
           >
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div

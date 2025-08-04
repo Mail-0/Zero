@@ -212,12 +212,12 @@ const Thread = memo(
         <div
           className={cn('select-none border-b md:my-1 md:border-none')}
           onClick={onClick ? onClick(latestMessage) : undefined}
-          onMouseEnter={() => {
-            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
-          }}
-          onMouseLeave={() => {
-            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
-          }}
+          //   onMouseEnter={() => {
+          //     window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
+          //   }}
+          //   onMouseLeave={() => {
+          //     window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
+          //   }}
         >
           <div
             data-thread-id={idToUse}
