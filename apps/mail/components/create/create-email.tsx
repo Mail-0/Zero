@@ -2,7 +2,7 @@ import { useUndoSend } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
-import { cleanEmailAddresses, isQueuedSendResult } from '@/lib/email-utils';
+import { cleanEmailAddresses } from '@/lib/email-utils';
 
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
@@ -60,7 +60,6 @@ export function CreateEmail({
   const [, setIsDraftFailed] = useState(false);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
-  const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const [, setThreadId] = useQueryState('threadId');
   const [, setActiveReplyId] = useQueryState('activeReplyId');

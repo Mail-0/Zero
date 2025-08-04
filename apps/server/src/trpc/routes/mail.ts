@@ -7,7 +7,7 @@ import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { getZeroAgent, getZeroClient, getZeroDB } from '../../lib/server-utils';
 import { processEmailHtml } from '../../lib/email-processor';
-import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
+import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { getContext } from 'hono/context-storage';

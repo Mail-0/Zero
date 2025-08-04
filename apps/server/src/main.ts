@@ -928,7 +928,6 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   }
 
   private async processExpiredSubscriptions() {
-    console.log('Checking for expired subscriptions...');
     console.log('[SCHEDULED] Checking for expired subscriptions...');
     const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
     const allAccounts = await db.query.connection.findMany({

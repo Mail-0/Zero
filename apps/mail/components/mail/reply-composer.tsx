@@ -1,6 +1,5 @@
 import { useUndoSend } from '@/hooks/use-undo-send';
 import { constructReplyBody, constructForwardBody } from '@/lib/utils';
-import { isQueuedSendResult } from '@/lib/email-utils';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
