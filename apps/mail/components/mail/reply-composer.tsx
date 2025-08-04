@@ -1,4 +1,6 @@
+import { useUndoSend } from '@/hooks/use-undo-send';
 import { constructReplyBody, constructForwardBody } from '@/lib/utils';
+import { isQueuedSendResult } from '@/lib/email-utils';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
@@ -21,18 +23,6 @@ interface ReplyComposeProps {
   messageId?: string;
 }
 
-interface QueuedSendEmailResult {
-  queued: true;
-  messageId: string;
-  sendAt?: number;
-}
-
-const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
-  if (!value || typeof value !== 'object') return false;
-  const obj = value as Record<string, unknown>;
-  return obj.queued === true && typeof obj.messageId === 'string';
-};
-
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
@@ -45,10 +35,10 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const { data: draft } = useDraft(draftId ?? null);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
-  const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const { data: session } = useSession();
+  const { handleUndoSend } = useUndoSend();
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -222,28 +212,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       setMode(null);
       await refetch();
       toast.success(m['pages.createEmail.emailSent']());
-
-      if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
-        const { messageId, sendAt } = result;
-        const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
-
-        if (timeRemaining > 5_000) {
-          toast.success('Email scheduled', {
-            action: {
-              label: 'Undo',
-              onClick: async () => {
-                try {
-                  await unsendEmail({ messageId });
-                  toast.info('Send cancelled');
-                } catch (error) {
-                  toast.error('Failed to cancel');
-                }
-              },
-            },
-            duration: 30_000,
-          });
-        }
-      }
+      handleUndoSend(result, settings);
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(m['pages.createEmail.failedToSendEmail']());

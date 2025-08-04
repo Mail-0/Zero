@@ -16,7 +16,7 @@ import {
   emailTemplate,
 } from './db/schema';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { EProviders, type ISubscribeBatch, type IThreadBatch, type IEmailSendBatch } from './types';
+import { EProviders, type IEmailSendBatch } from './types';
 import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';

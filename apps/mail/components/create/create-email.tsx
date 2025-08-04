@@ -1,7 +1,8 @@
+import { useUndoSend } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
-import { cleanEmailAddresses } from '@/lib/email-utils';
+import { cleanEmailAddresses, isQueuedSendResult } from '@/lib/email-utils';
 
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
@@ -29,20 +30,6 @@ type DraftType = {
   cc?: string[];
   bcc?: string[];
   attachments?: File[];
-};
-
-// The shape of the response when the email is queued (i.e. undo-send or scheduled).
-interface QueuedSendEmailResult {
-  queued: true;
-  messageId: string;
-  sendAt?: number;
-}
-
-// Type-guard to detect a queued send result at runtime.
-const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
-  if (!value || typeof value !== 'object') return false;
-  const obj = value as Record<string, unknown>;
-  return obj.queued === true && typeof obj.messageId === 'string';
 };
 
 export function CreateEmail({
@@ -79,6 +66,7 @@ export function CreateEmail({
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
+  const { handleUndoSend } = useUndoSend();
   // If there was an error loading the draft, set the failed state
   useEffect(() => {
     if (draftError) {
@@ -136,29 +124,7 @@ export function CreateEmail({
     }
 
     toast.success(m['pages.createEmail.emailSentSuccessfully']());
-
-    if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
-      const { messageId, sendAt } = result;
-
-      const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
-
-      if (timeRemaining > 5_000) {
-        toast.success('Email scheduled', {
-          action: {
-            label: 'Undo',
-            onClick: async () => {
-              try {
-                await unsendEmail({ messageId });
-                toast.info('Send cancelled');
-              } catch {
-                toast.error('Failed to cancel');
-              }
-            },
-          },
-          duration: 30_000,
-        });
-      }
-    }
+    handleUndoSend(result, settings);
   };
 
   useEffect(() => {

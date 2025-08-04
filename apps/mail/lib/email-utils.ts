@@ -220,3 +220,17 @@ export const cleanHtml = (html: string) => {
     return '<p><em>No email content available</em></p>';
   }
 };
+
+// The shape of the response when the email is queued (i.e. undo-send or scheduled).
+export interface QueuedSendEmailResult {
+  queued: true;
+  messageId: string;
+  sendAt?: number;
+}
+
+// Type-guard to detect a queued send result at runtime.
+export const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return obj.queued === true && typeof obj.messageId === 'string';
+};

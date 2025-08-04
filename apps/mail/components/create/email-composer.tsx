@@ -48,7 +48,6 @@ import { ImageCompressionSettings } from './image-compression-settings';
 import { compressImages } from '@/lib/image-compression';
 import type { ImageQuality } from '@/lib/image-compression';
 
-// Regex to replace GitHub-style emoji shortcodes with actual emoji characters
 const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
 import { TemplateButton } from './template-button';
 
