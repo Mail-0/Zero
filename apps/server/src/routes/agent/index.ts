@@ -1214,35 +1214,45 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
               }),
             ),
             Effect.catchAll((error) => {
-              console.error(`[syncThreads] Failed to list threads for folder ${folder}:`, error);
-              return Effect.fail(
-                new ThreadListError(`Failed to list threads for folder ${folder}`, error),
+              console.error(`[syncThreads] Failed to list threads for folder ${folder}, retrying in 1 minute:`, error);
+              return Effect.sleep('1 minute').pipe(
+                Effect.tap(() => Effect.sync(() => 
+                  console.log(`[syncThreads] Retrying page ${result.pagesProcessed} for folder ${folder}`)
+                )),
+                Effect.andThen(() => Effect.succeed({ threads: [], nextPageToken: pageToken }))
               );
             }),
           );
 
-          // Process threads with controlled concurrency to avoid rate limits
-          const threadIds = listResult.threads.map((thread) => thread.id);
-          const syncEffects = threadIds.map(syncSingleThread);
+          // Only process threads if we actually got some (not a retry with empty result)
+          if (listResult.threads.length > 0) {
+            // Process threads with controlled concurrency to avoid rate limits
+            const threadIds = listResult.threads.map((thread) => thread.id);
+            const syncEffects = threadIds.map(syncSingleThread);
 
-          yield* Effect.all(syncEffects, { concurrency: 1, discard: true }).pipe(
-            Effect.tap(() =>
-              Effect.sync(() =>
-                console.log(`[syncThreads] Completed page ${result.pagesProcessed}`),
+            yield* Effect.all(syncEffects, { concurrency: 1, discard: true }).pipe(
+              Effect.tap(() =>
+                Effect.sync(() =>
+                  console.log(`[syncThreads] Completed page ${result.pagesProcessed}`),
+                ),
               ),
-            ),
-            Effect.catchAll((error) => {
-              console.error(
-                `[syncThreads] Failed to process threads on page ${result.pagesProcessed}:`,
-                error,
-              );
-              return Effect.succeed(undefined);
-            }),
-          );
+              Effect.catchAll((error) => {
+                console.error(
+                  `[syncThreads] Failed to process threads on page ${result.pagesProcessed}:`,
+                  error,
+                );
+                return Effect.succeed(undefined);
+              }),
+            );
 
-          result.synced += listResult.threads.length;
-          pageToken = listResult.nextPageToken;
-          hasMore = pageToken !== null && shouldLoop;
+            result.synced += listResult.threads.length;
+            pageToken = listResult.nextPageToken;
+            hasMore = pageToken !== null && shouldLoop;
+          } else {
+            // This was a retry, don't update pageToken or hasMore - retry the same page
+            console.log(`[syncThreads] Retrying same page ${result.pagesProcessed} after error`);
+            result.pagesProcessed--; // Don't count failed pages
+          }
 
           // Send state update after first page is processed to give accurate feedback
           if (!firstPageProcessed) {
