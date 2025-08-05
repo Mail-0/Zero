@@ -9,6 +9,7 @@ import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/i
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
+import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
@@ -17,7 +18,6 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
-import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -677,6 +677,44 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
   const [isOpen, setIsOpen] = useState(false);
+
+  categorySettings.forEach((category, index) => {
+    if (index < 9) {
+      const keyNumber = (index + 1).toString();
+      useHotkeys(
+        keyNumber,
+        () => {
+          console.log('category', category);
+
+          const isCurrentlyActive = labels.includes(category.searchValue);
+
+          if (isCurrentlyActive) {
+            setLabels(labels.filter((label) => label !== category.searchValue));
+          } else {
+            setLabels([...labels, category.searchValue]);
+          }
+        },
+        {
+          scopes: ['mail-list'],
+          preventDefault: true,
+          enableOnFormTags: false,
+        },
+        [category.searchValue, labels, setLabels], // Dependencies
+      );
+    }
+  });
+
+  useHotkeys(
+    '0',
+    () => {
+      setLabels([]);
+    },
+    {
+      scopes: ['mail-list'],
+      preventDefault: true,
+      enableOnFormTags: false,
+    },
+  );
 
   if (folder !== 'inbox' || isMultiSelectMode) return null;
 
