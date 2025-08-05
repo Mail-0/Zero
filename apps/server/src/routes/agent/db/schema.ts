@@ -11,7 +11,6 @@ export const threads = sqliteTable(
     latestSender: text('latest_sender', { mode: 'json' }).$type<Sender>(),
     latestReceivedOn: text('latest_received_on'),
     latestSubject: text('latest_subject'),
-    latestLabelIds: text('latest_label_ids', { mode: 'json' }).$type<string[]>(),
   },
   (table) => [
     index('threads_thread_id_idx').on(table.threadId),

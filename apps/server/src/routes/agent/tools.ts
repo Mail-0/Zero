@@ -242,8 +242,14 @@ const modifyLabels = (connectionId: string) =>
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to modify'),
       options: z.object({
-        addLabels: z.array(z.string()).default([]).describe('The labels to add'),
-        removeLabels: z.array(z.string()).default([]).describe('The labels to remove'),
+        addLabels: z
+          .array(z.string())
+          .default([])
+          .describe('The labels to add, an array of label names'),
+        removeLabels: z
+          .array(z.string())
+          .default([])
+          .describe('The labels to remove, an array of label names'),
       }),
     }),
     execute: async ({ threadIds, options }) => {
@@ -482,6 +488,7 @@ export const tools = async (connectionId: string, ragEffect: boolean = false) =>
     [Tools.DeleteLabel]: deleteLabel(connectionId),
     [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
     [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.WebSearch]: webSearch(),
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

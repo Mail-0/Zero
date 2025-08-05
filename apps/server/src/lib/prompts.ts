@@ -394,7 +394,7 @@ export const AiChatPrompt = () =>
 
         <tool name="${Tools.ModifyLabels}">
           <purpose>Add/remove labels from threads</purpose>
-          <note>Get label IDs first with getUserLabels</note>
+          <note>Always use the label names, not the IDs</note>
           <example>modifyLabels({ threadIds: [...], options: { addLabels: [...], removeLabels: [...] } })</example>
         </tool>
 

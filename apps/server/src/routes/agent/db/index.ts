@@ -20,7 +20,6 @@ const threadSelect = {
   latestSender: threads.latestSender,
   latestReceivedOn: threads.latestReceivedOn,
   latestSubject: threads.latestSubject,
-  latestLabelIds: threads.latestLabelIds,
 } as const;
 
 async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {

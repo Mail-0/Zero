@@ -53,6 +53,7 @@ ${prompt}
 const appendContext = (prompt: string, context?: Record<string, string>) => {
   if (!context) return prompt;
   return dedent`
+  <note>use sequential thinking to solve the user's problem</note>
   <context>
           <note>when the user asks about "this" thread or "this" email, use the threadId to get the thread details</note>
           <note>when the user asks about "this" folder, use the currentFolder to get the folder details</note>

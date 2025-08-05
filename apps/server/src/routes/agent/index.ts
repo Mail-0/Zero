@@ -34,7 +34,7 @@ import {
   type ParsedMessage,
 } from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
-import { countThreads, countThreadsByLabel, create, get, modifyThreadLabels, type DB } from './db';
+import { countThreads, countThreadsByLabel, create, get, getThreadLabels, modifyThreadLabels, type DB } from './db';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
@@ -60,6 +60,7 @@ import { openai } from '@ai-sdk/openai';
 import * as schema from './db/schema';
 import { threads } from './db/schema';
 import { Effect, pipe } from 'effect';
+import { groq } from '@ai-sdk/groq';
 import { createDb } from '../../db';
 import type { Message } from 'ai';
 import { eq } from 'drizzle-orm';
@@ -952,17 +953,16 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         // Update database
         yield* Effect.tryPromise(() =>
           create(
-            this.db,
-            {
-              id: threadId,
-              threadId,
-              providerId: 'google',
-              latestSender: latest.sender,
-              latestReceivedOn: normalizedReceivedOn,
-              latestSubject: latest.subject,
-              latestLabelIds: latest.tags.map((tag) => tag.id),
-            },
-            latest.tags.map((tag) => tag.id),
+          this.db,
+          {
+          id: threadId,
+          threadId,
+          providerId: 'google',
+          latestSender: latest.sender,
+          latestReceivedOn: normalizedReceivedOn,
+          latestSubject: latest.subject,
+          },
+          latest.tags.map((tag) => tag.id),
           ),
         ).pipe(
           Effect.tap(() =>
@@ -1610,24 +1610,19 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   async modifyThreadLabelsInDB(threadId: string, addLabels: string[], removeLabels: string[]) {
     try {
       // Get current labels before modification
-      const currentThread = await get(this.db, { id: threadId });
+      let currentThread = await get(this.db, { id: threadId });
 
       if (!currentThread) {
-        throw new Error(`Thread ${threadId} not found in database`);
+        await this.syncThread({ threadId });
+        currentThread = await get(this.db, { id: threadId });
       }
 
-      let currentLabels: string[];
-      try {
-        const labelIds = currentThread.latestLabelIds;
-        if (Array.isArray(labelIds)) {
-          currentLabels = labelIds;
-        } else {
-          currentLabels = [];
-        }
-      } catch (error) {
-        console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
-        currentLabels = [];
+      if (!currentThread) {
+        throw new Error(`Thread ${threadId} not found in database and could not be synced`);
       }
+
+      const currentLabelsData = await getThreadLabels(this.db, threadId);
+      const currentLabels = currentLabelsData.map((l) => l.id);
 
       // Use the new database operations to modify labels
       const result = await modifyThreadLabels(this.db, threadId, addLabels, removeLabels);
@@ -1668,7 +1663,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
           labels: [],
         } satisfies IGetThreadResponse;
       }
-      const row = result;
       const storedThread = await this.env.THREADS_BUCKET.get(this.getThreadKey(id));
 
       let messages: ParsedMessage[] = storedThread
@@ -1681,14 +1675,21 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         messages = messages.filter((e) => e.isDraft !== true);
       }
 
-      const latestLabelIds = row.latestLabelIds;
+      const labelsList = await getThreadLabels(this.db, id);
+      const labelIds = labelsList.map((l) => l.id);
+
+      console.log(
+        '[getThreadFromDB] storedThread:',
+        labelIds,
+        messages.findLast((e) => e.isDraft !== true),
+      );
 
       return {
         messages,
         latest: messages.findLast((e) => e.isDraft !== true),
-        hasUnread: latestLabelIds?.includes('UNREAD') || false,
+        hasUnread: labelIds.includes('UNREAD'),
         totalReplies: messages.filter((e) => e.isDraft !== true).length,
-        labels: latestLabelIds?.map((id: string) => ({ id, name: id })) || [],
+        labels: labelsList,
         isLatestDraft,
       } satisfies IGetThreadResponse;
     } catch (error) {
@@ -1813,7 +1814,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
 
         const model =
           this.env.USE_OPENAI === 'true'
-            ? openai(this.env.OPENAI_MODEL || 'gpt-4o')
+            ? groq('openai/gpt-oss-120b')
             : anthropic(this.env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
 
         const result = streamText({
