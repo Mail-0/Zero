@@ -6,6 +6,13 @@
   "main": "src/main.ts",
   "env": {
     "local": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "ai": {
         "binding": "AI",
       },

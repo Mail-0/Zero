@@ -7,12 +7,12 @@ import { z } from 'zod';
 export const draftsRouter = router({
   create: activeDriverProcedure.input(createDraftData).mutation(async ({ input, ctx }) => {
     const { activeConnection } = ctx;
-    const agent = await getZeroAgent(activeConnection.id);
+    const { stub: agent } = await getZeroAgent(activeConnection.id);
     return agent.createDraft(input);
   }),
   get: activeDriverProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
     const { activeConnection } = ctx;
-    const agent = await getZeroAgent(activeConnection.id);
+    const { stub: agent } = await getZeroAgent(activeConnection.id);
     const { id } = input;
     return agent.getDraft(id) as ReturnType<MailManager['getDraft']>;
   }),
@@ -26,7 +26,7 @@ export const draftsRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
+      const { stub: agent } = await getZeroAgent(activeConnection.id);
       const { q, maxResults, pageToken } = input;
       return agent.listDrafts({ q, maxResults, pageToken }) as Awaited<
         ReturnType<MailManager['listDrafts']>

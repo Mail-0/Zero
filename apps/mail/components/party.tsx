@@ -63,8 +63,8 @@ export const NotificationProvider = () => {
             queryKey: trpc.labels.list.queryKey(),
           });
         } else if (type === IncomingMessageType.Do_State) {
-          const { isSyncing, syncingFolders, storageSize } = JSON.parse(message.data);
-          setDoState({ isSyncing, syncingFolders, storageSize });
+          const { isSyncing, syncingFolders, storageSize, counts } = JSON.parse(message.data);
+          setDoState({ isSyncing, syncingFolders, storageSize, counts });
         }
       } catch (error) {
         console.error('error parsing party message', error);
