@@ -1015,6 +1015,18 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
               return Effect.succeed(undefined);
             }),
           );
+          yield* Effect.tryPromise(() => this.sendDoState()).pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                result.broadcastSent = true;
+                console.log(`[syncThread] Broadcasted do state for ${threadId}`);
+              }),
+            ),
+            Effect.catchAll((error) => {
+              console.warn(`[syncThread] Failed to broadcast do state for ${threadId}:`, error);
+              return Effect.succeed(undefined);
+            }),
+          );
         } else {
           console.log(`[syncThread] No agent available for broadcasting ${threadId}`);
         }
