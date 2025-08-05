@@ -358,10 +358,11 @@ export const AiChatPrompt = () =>
 
       <tools>
         <tool name="${Tools.GetThreadSummary}">
-          <purpose>Get the summary of a specific email thread</purpose>
+          <purpose>Get thread details for a specific ID and respond back with summary, subject, sender and date</purpose>
           <returns>Summary of the thread</returns>
           <example>getThreadSummary({ id: "17c2318b9c1e44f6" })</example>
         </tool>
+
         <tool name="${Tools.InboxRag}">
           <purpose>Search inbox using natural language queries</purpose>
           <returns>Array of thread IDs only</returns>
@@ -369,7 +370,7 @@ export const AiChatPrompt = () =>
         </tool>
 
         <tool name="${Tools.GetThread}">
-          <purpose>Get thread details for a specific ID</purpose>
+          <purpose>Get thread details for a specific ID and show a threadPreview component for the user</purpose>
           <returns>Thread tag for client resolution</returns>
           <example>getThread({ id: "17c2318b9c1e44f6" })</example>
         </tool>
