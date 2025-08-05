@@ -72,7 +72,7 @@
           },
           {
             "queue": "send-email-queue",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -83,7 +83,7 @@
             "queue": "thread-queue",
           },
           {
-            "queue": "send-email-queue"
+            "queue": "send-email-queue",
           },
         ],
       },
@@ -177,15 +177,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
         },
         {
           "binding": "snoozed_emails",
@@ -194,6 +194,13 @@
       ],
     },
     "staging": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
         "crons": ["0 0 * * *", "0 * * * *"],
       },
@@ -259,7 +266,7 @@
           },
           {
             "queue": "send-email-queue-staging",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -270,7 +277,7 @@
             "queue": "thread-queue-staging",
           },
           {
-            "queue": "send-email-queue-staging"
+            "queue": "send-email-queue-staging",
           },
         ],
       },
@@ -356,15 +363,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
         },
         {
           "binding": "snoozed_emails",
@@ -373,6 +380,13 @@
       ],
     },
     "production": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
         "crons": ["0 0 * * *", "0 * * * *"],
       },
@@ -445,7 +459,7 @@
           },
           {
             "queue": "send-email-queue-prod",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -456,7 +470,7 @@
             "queue": "thread-queue-prod",
           },
           {
-            "queue": "send-email-queue-prod"
+            "queue": "send-email-queue-prod",
           },
         ],
       },
@@ -532,15 +546,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
         },
         {
           "binding": "snoozed_emails",

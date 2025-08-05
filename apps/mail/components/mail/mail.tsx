@@ -326,7 +326,6 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
-  const [{ isSyncing, syncingFolders, storageSize }] = useDoState();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -394,39 +393,8 @@ export function MailLayout() {
   const defaultCategoryId = useDefaultCategoryId();
   const [category] = useQueryState('category', { defaultValue: defaultCategoryId });
 
-    return (
+  return (
     <TooltipProvider delayDuration={0}>
-      <div className="fixed right-2 top-2 z-10 flex items-center gap-2">
-        <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-2 rounded-lg border px-3 py-1.5 shadow-sm">
-          <div className="flex items-center gap-1.5">
-            <div className={cn(
-              "h-2 w-2 rounded-full",
-              isSyncing || storageSize === 0 ? "bg-orange-500 animate-pulse" : "bg-green-500"
-            )} />
-            <span className="text-muted-foreground text-xs font-medium">
-              {isSyncing || storageSize === 0 ? 'Syncing emails...' : 'Synced'}
-            </span>
-          </div>
-          
-          {storageSize && (
-            <>
-              <div className="bg-border h-3 w-px" />
-              <span className="text-muted-foreground text-xs">
-                {storageSize}
-              </span>
-            </>
-          )}
-          
-          {syncingFolders.length > 0 && (
-            <>
-              <div className="bg-border h-3 w-px" />
-              <span className="text-muted-foreground text-xs">
-                {syncingFolders.join(', ')}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
       <PricingDialog />
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
