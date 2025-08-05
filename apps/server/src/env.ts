@@ -1,4 +1,4 @@
-import type { ThinkingMCP, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
+import type { ThinkingMCP, ThreadSyncWorker, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
 import type { ZeroAgent, ZeroDriver } from './routes/agent';
 import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
@@ -10,6 +10,7 @@ export type ZeroEnv = {
   ZERO_MCP: DurableObjectNamespace<ZeroMCP & QueryableHandler>;
   THINKING_MCP: DurableObjectNamespace<ThinkingMCP & QueryableHandler>;
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
+  THREAD_SYNC_WORKER: DurableObjectNamespace<ThreadSyncWorker>;
   HYPERDRIVE: { connectionString: string };
   pending_emails_status: KVNamespace;
   pending_emails_payload: KVNamespace;

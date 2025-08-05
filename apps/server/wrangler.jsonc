@@ -58,6 +58,10 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
       "queues": {
@@ -115,6 +119,10 @@
         {
           "tag": "v7",
           "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
         },
       ],
 
@@ -246,6 +254,10 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
       "r2_buckets": [
@@ -313,6 +325,10 @@
         {
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
         },
       ],
       "observability": {
@@ -445,6 +461,10 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
       "queues": {
@@ -506,6 +526,10 @@
         {
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
         },
       ],
       "vars": {

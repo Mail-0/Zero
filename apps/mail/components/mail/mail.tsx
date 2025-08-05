@@ -698,8 +698,6 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
     },
   );
 
-  if (folder !== 'inbox' || isMultiSelectMode) return null;
-
   const handleLabelChange = (searchValue: string) => {
     const trimmed = searchValue.trim();
     if (!trimmed) {
@@ -730,6 +728,8 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
       setLabels(Array.from(newLabelsSet));
     }
   };
+
+  if (folder !== 'inbox' || isMultiSelectMode) return null;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
