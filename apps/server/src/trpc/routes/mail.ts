@@ -463,6 +463,7 @@ export const mailRouter = router({
           ...mail,
           draftId,
           attachments,
+          connectionId: activeConnection.id,
         };
 
         try {
@@ -568,8 +569,12 @@ export const mailRouter = router({
       if (payloadData) {
         try {
           const payload = JSON.parse(payloadData);
+          if (payload.connectionId && payload.connectionId !== activeConnection.id) {
+            return { success: false, error: 'Unauthorized: Cannot cancel another user\'s queued email' } as const;
+          }
         } catch (error) {
           console.error('Failed to parse payload data:', error);
+          return { success: false, error: 'Invalid payload data' } as const;
         }
       }
 

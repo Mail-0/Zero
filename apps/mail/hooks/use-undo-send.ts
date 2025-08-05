@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { useTRPC } from '@/providers/query-provider';
-import { isQueuedSendResult, isSendResult } from '@/lib/email-utils';
+import { isSendResult } from '@/lib/email-utils';
 import type { UserSettings } from '@zero/server/schemas';
 
 export const useUndoSend = () => {
