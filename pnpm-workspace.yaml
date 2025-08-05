@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - scripts/*
+
 catalog:
   zod: ^3.25.42
   better-auth: ^1.2.9
@@ -15,14 +16,20 @@ catalog:
   drizzle-orm: ^0.43.1
   drizzle-kit: ^0.31.1
   '@types/node': ^22.15.21
-  'react': ^19.1.0
-  'react-dom': ^19.1.0
+  react: ^19.1.0
+  react-dom: ^19.1.0
+
 onlyBuiltDependencies:
+  - '@sentry/cli'
+  - '@tailwindcss/oxide'
+  - better-sqlite3
   - core-js
   - core-js-pure
   - esbuild
+  - msw
   - sharp
   - unrs-resolver
   - workerd
+
 patchedDependencies:
   novel: patches/novel.patch
