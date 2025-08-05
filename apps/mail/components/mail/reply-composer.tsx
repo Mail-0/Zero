@@ -210,10 +210,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // Reset states
       setMode(null);
       await refetch();
-      toast.success(m['pages.createEmail.emailSent']());
-      setTimeout(() => {
-        handleUndoSend(result, settings);
-      }, 500);
+      handleUndoSend(result, settings);
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(m['pages.createEmail.failedToSendEmail']());

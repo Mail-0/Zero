@@ -13,7 +13,7 @@ export const useUndoSend = () => {
     if (isSendResult(result) && settings?.settings?.undoSendEnabled) {
       const { messageId, sendAt } = result;
 
-      const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
+      const timeRemaining = sendAt ? sendAt - Date.now() : 15_000;
 
       if (timeRemaining > 5_000) {
         toast.success('Email scheduled', {
@@ -28,7 +28,7 @@ export const useUndoSend = () => {
               }
             },
           },
-          duration: timeRemaining,
+          duration: 15_000,
         });
       }
     }

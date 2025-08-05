@@ -14,7 +14,6 @@ import { useDraft } from '@/hooks/use-drafts';
 import { useEffect, useState } from 'react';
 
 import type { Attachment } from '@/types';
-import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
@@ -122,7 +121,6 @@ export function CreateEmail({
       posthog.capture('Create Email Sent');
     }
 
-    toast.success(m['pages.createEmail.emailSentSuccessfully']());
     handleUndoSend(result, settings);
   };
 
