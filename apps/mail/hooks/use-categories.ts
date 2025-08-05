@@ -1,10 +1,8 @@
 import { useSettings } from '@/hooks/use-settings';
-import { useTRPC } from '@/providers/query-provider';
-import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 export interface CategorySetting {
-  id: 'Important' | 'All Mail' | 'Personal' | 'Promotions' | 'Updates' | 'Unread';
+  id: string;
   name: string;
   searchValue: string;
   order: number;
@@ -15,29 +13,33 @@ export interface CategorySetting {
 export function useCategorySettings(): CategorySetting[] {
   const { data } = useSettings();
 
-  const trpc = useTRPC();
-  const { data: defaultCategories = [] } = useQuery(
-    trpc.categories.defaults.queryOptions(void 0, { staleTime: Infinity }),
-  );
-
-  if (!defaultCategories.length) return [];
-
   const merged = useMemo(() => {
     const overrides = (data?.settings.categories as CategorySetting[] | undefined) ?? [];
 
-    const overridden = defaultCategories.map((cat) => {
-      const custom = overrides.find((c) => c.id === cat.id);
-      return custom
-        ? {
-            ...cat,
-            ...custom,
-          }
-        : cat;
-    });
+    const sorted = overrides.sort((a, b) => a.order - b.order);
 
-    const sorted = overridden.sort((a, b) => a.order - b.order);
+    // If no categories are defined, provide default ones
+    if (sorted.length === 0) {
+      return [
+        {
+          id: 'All Mail',
+          name: 'All Mail',
+          searchValue: '',
+          order: 0,
+          isDefault: true,
+        },
+        {
+          id: 'Unread',
+          name: 'Unread',
+          searchValue: 'UNREAD',
+          order: 1,
+          isDefault: false,
+        },
+      ];
+    }
+
     return sorted;
-  }, [data?.settings.categories, defaultCategories]);
+  }, [data?.settings.categories]);
 
   return merged;
 }

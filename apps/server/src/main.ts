@@ -16,9 +16,10 @@ import {
   emailTemplate,
 } from './db/schema';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { EProviders, type IEmailSendBatch } from './types';
 import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
+import { EProviders, type IEmailSendBatch, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
+import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
@@ -1006,16 +1007,16 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
       }
     } while (cursor);
 
-    await Promise.all(
-      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
-        try {
-          const agent = await getZeroClient(connectionId, this.ctx);
-          await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
-        } catch (error) {
-          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
-        }
-      }),
-    );
+    // await Promise.all(
+    //   Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+    //     try {
+    //       const { stub: agent } = await getZeroAgent(connectionId, this.ctx);
+    //       await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
+    //     } catch (error) {
+    //       console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+    //     }
+    //   }),
+    // );
 
     await Promise.all(
       allAccounts.map(async ({ id, providerId }) => {

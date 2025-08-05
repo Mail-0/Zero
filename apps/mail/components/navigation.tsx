@@ -163,7 +163,7 @@ export function Navigation() {
                 </NavigationMenuItem>
                 <NavigationMenuItem className="bg-transparent text-white">
                   <a href="/privacy">
-                    <Button variant="ghost" className="h-9 bg-transparent ml-1">
+                    <Button variant="ghost" className="ml-1 h-9 bg-transparent">
                       Privacy
                     </Button>
                   </a>

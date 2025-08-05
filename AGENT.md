@@ -105,3 +105,10 @@ This is a pnpm workspace monorepo with the following structure:
 - Uses Cloudflare Workers for backend deployment
 - iOS app is part of the monorepo
 - CLI tool `nizzy` helps manage environment and sync operations
+
+## IMPORTANT RESTRICTIONS
+
+- **NEVER run project-wide lint/format commands** (`pnpm check`, `pnpm lint`, `pnpm format`, `pnpm check:format`)
+- These commands format/lint the entire codebase and cause unnecessary changes
+- Only use targeted linting/formatting on specific files when absolutely necessary
+- Focus on the specific task at hand without touching unrelated files

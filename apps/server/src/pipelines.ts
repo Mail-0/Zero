@@ -288,7 +288,10 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
       });
 
       const agent = yield* Effect.tryPromise({
-        try: async () => await getZeroAgent(foundConnection.id),
+        try: async () => {
+          const { stub: agent } = await getZeroAgent(foundConnection.id);
+          return agent;
+        },
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
       });
 
@@ -591,7 +594,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
         });
 
-        const agent = yield* Effect.tryPromise({
+        const { stub: agent } = yield* Effect.tryPromise({
           try: async () => await getZeroAgent(foundConnection.id),
           catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
         });
@@ -758,7 +761,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
 
         let agent;
         try {
-          agent = await getZeroAgent(foundConnection.id);
+          agent = (await getZeroAgent(foundConnection.id)).stub;
         } catch (error) {
           console.error('[THREAD_WORKFLOW] Failed to get agent:', error);
           throw { _tag: 'DatabaseError' as const, error };
@@ -1014,7 +1017,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
 
       let agent;
       try {
-        agent = await getZeroAgent(foundConnection.id);
+        agent = (await getZeroAgent(foundConnection.id)).stub;
       } catch (error) {
         console.error('[ZERO_WORKFLOW] Failed to get agent:', error);
         throw { _tag: 'DatabaseError' as const, error };
