@@ -15,8 +15,6 @@ export type InsertLabel = typeof labels.$inferInsert;
 // Reusable thread selection object to reduce duplication
 const threadSelect = {
   id: threads.id,
-  createdAt: threads.createdAt,
-  updatedAt: threads.updatedAt,
   threadId: threads.threadId,
   providerId: threads.providerId,
   latestSender: threads.latestSender,
@@ -359,9 +357,7 @@ function buildLabelConditions(db: DB, labelIds: string[], requireAllLabels: bool
       db
         .select({ count: count() })
         .from(threadLabels)
-        .where(
-          and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds)),
-        ),
+        .where(and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds))),
       labelIds.length,
     );
   } else {

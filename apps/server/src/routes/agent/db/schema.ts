@@ -1,17 +1,11 @@
 import { sqliteTable, text, integer, index, unique } from 'drizzle-orm/sqlite-core';
 import type { Sender } from '../../../types';
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 
 export const threads = sqliteTable(
   'threads',
   {
     id: text('id').notNull().primaryKey(),
-    createdAt: integer('created_at')
-      .notNull()
-      .default(sql`strftime('%s', 'now')`),
-    updatedAt: integer('updated_at')
-      .notNull()
-      .default(sql`strftime('%s', 'now')`),
     threadId: text('thread_id').notNull(),
     providerId: text('provider_id').notNull(),
     latestSender: text('latest_sender', { mode: 'json' }).$type<Sender>(),

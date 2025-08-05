@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ca23948e-0f30-48d5-be3a-8cb8168f0179",
+  "id": "d0cc0b99-8d5a-4611-98c6-aae528e105af",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "labels": {
@@ -141,22 +141,6 @@
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "strftime('%s', 'now')"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "strftime('%s', 'now')"
         },
         "thread_id": {
           "name": "thread_id",

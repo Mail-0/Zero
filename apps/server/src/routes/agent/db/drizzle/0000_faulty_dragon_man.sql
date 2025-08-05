@@ -19,8 +19,6 @@ CREATE INDEX `thread_labels_thread_label_idx` ON `thread_labels` (`thread_id`,`l
 CREATE UNIQUE INDEX `thread_labels_thread_id_label_id_unique` ON `thread_labels` (`thread_id`,`label_id`);--> statement-breakpoint
 CREATE TABLE `threads` (
 	`id` text PRIMARY KEY NOT NULL,
-	`created_at` integer DEFAULT strftime('%s', 'now') NOT NULL,
-	`updated_at` integer DEFAULT strftime('%s', 'now') NOT NULL,
 	`thread_id` text NOT NULL,
 	`provider_id` text NOT NULL,
 	`latest_sender` text,
