@@ -678,34 +678,18 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
   const folder = params?.folder ?? 'inbox';
   const [isOpen, setIsOpen] = useState(false);
 
-  categorySettings.forEach((category, index) => {
-    if (index < 9) {
-      const keyNumber = (index + 1).toString();
-      useHotkeys(
-        keyNumber,
-        () => {
-          const isCurrentlyActive = labels.includes(category.searchValue);
-
-          if (isCurrentlyActive) {
-            setLabels(labels.filter((label) => label !== category.searchValue));
-          } else {
-            setLabels([...labels, category.searchValue]);
-          }
-        },
-        {
-          scopes: ['mail-list'],
-          preventDefault: true,
-          enableOnFormTags: false,
-        },
-        [category.searchValue, labels, setLabels], // Dependencies
-      );
-    }
-  });
-
   useHotkeys(
-    '0',
-    () => {
-      setLabels([]);
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    (key) => {
+      const category = categorySettings[Number(key.key) - 1];
+      if (!category) return;
+      const isCurrentlyActive = labels.includes(category.searchValue);
+
+      if (isCurrentlyActive) {
+        setLabels(labels.filter((label) => label !== category.searchValue));
+      } else {
+        setLabels([...labels, category.searchValue]);
+      }
     },
     {
       scopes: ['mail-list'],
