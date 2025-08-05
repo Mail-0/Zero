@@ -448,6 +448,8 @@
         "noResultsFound": "Nebyly nalezeny žádné výsledky",
         "zeroSignature": "Zero podpis",
         "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům.",
+        "undoSendEnabled": "Odvolat odeslání",
+        "undoSendEnabledDescription": "Umožnit zrušení e-mailů do 30 sekund po odeslání.",
         "defaultEmailAlias": "Výchozí e-mailový alias",
         "selectDefaultEmail": "Vybrat výchozí e-mail",
         "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů",

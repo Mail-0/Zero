@@ -448,6 +448,8 @@
         "noResultsFound": "لم يتم العثور على نتائج",
         "zeroSignature": "توقيع Zero",
         "zeroSignatureDescription": "إضافة توقيع Zero إلى رسائل البريد الإلكتروني الخاصة بك.",
+        "undoSendEnabled": "التراجع عن الإرسال",
+        "undoSendEnabledDescription": "السماح بإلغاء رسائل البريد الإلكتروني خلال 30 ثانية من إرسالها.",
         "defaultEmailAlias": "الاسم المستعار الافتراضي للبريد الإلكتروني",
         "selectDefaultEmail": "اختر البريد الإلكتروني الافتراضي",
         "defaultEmailDescription": "سيتم استخدام هذا البريد الإلكتروني كعنوان \"من\" الافتراضي عند إنشاء رسائل إلكترونية جديدة",

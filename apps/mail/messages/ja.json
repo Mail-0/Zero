@@ -448,6 +448,8 @@
         "noResultsFound": "結果が見つかりませんでした",
         "zeroSignature": "Zero署名",
         "zeroSignatureDescription": "メールにZero署名を追加します。",
+        "undoSendEnabled": "送信取り消し",
+        "undoSendEnabledDescription": "メール送信後30秒以内の取り消しを許可します。",
         "defaultEmailAlias": "デフォルトのメールエイリアス",
         "selectDefaultEmail": "デフォルトのメールを選択",
         "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます",

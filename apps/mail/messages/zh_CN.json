@@ -448,6 +448,8 @@
         "noResultsFound": "未找到结果",
         "zeroSignature": "Zero 签名",
         "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
+        "undoSendEnabled": "撤销发送",
+        "undoSendEnabledDescription": "允许在发送邮件后的30秒内取消发送。",
         "defaultEmailAlias": "默认邮箱别名",
         "selectDefaultEmail": "选择默认邮箱",
         "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认\"发件人\"地址",

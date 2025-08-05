@@ -448,6 +448,8 @@
         "noResultsFound": "找不到結果",
         "zeroSignature": "Zero 簽名檔",
         "zeroSignatureDescription": "在您的電子郵件中新增 Zero 簽名檔。",
+        "undoSendEnabled": "取消傳送",
+        "undoSendEnabledDescription": "允許在傳送後 30 秒內取消電子郵件的傳送。",
         "defaultEmailAlias": "預設電子郵件別名",
         "selectDefaultEmail": "選擇預設電子郵件",
         "defaultEmailDescription": "此電子郵件將作為撰寫新郵件時的預設「寄件者」地址",

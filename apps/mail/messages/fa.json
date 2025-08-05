@@ -448,6 +448,8 @@
         "noResultsFound": "نتیجه‌ای یافت نشد",
         "zeroSignature": "امضای Zero",
         "zeroSignatureDescription": "افزودن امضای Zero به ایمیل‌های شما.",
+        "undoSendEnabled": "لغو ارسال",
+        "undoSendEnabledDescription": "امکان لغو ایمیل‌ها در مدت ۳۰ ثانیه پس از ارسال.",
         "defaultEmailAlias": "نام مستعار ایمیل پیش‌فرض",
         "selectDefaultEmail": "انتخاب ایمیل پیش‌فرض",
         "defaultEmailDescription": "این ایمیل به عنوان آدرس پیش‌فرض 'از طرف' هنگام نوشتن ایمیل‌های جدید استفاده خواهد شد",
