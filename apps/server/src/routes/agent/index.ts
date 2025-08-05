@@ -22,6 +22,15 @@ import {
   type StreamTextOnFinishCallback,
 } from 'ai';
 import {
+  countThreads,
+  countThreadsByLabel,
+  create,
+  get,
+  getThreadLabels,
+  modifyThreadLabels,
+  type DB,
+} from './db';
+import {
   IncomingMessageType,
   OutgoingMessageType,
   type IncomingMessage,
@@ -34,7 +43,6 @@ import {
   type ParsedMessage,
 } from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
-import { countThreads, countThreadsByLabel, create, get, getThreadLabels, modifyThreadLabels, type DB } from './db';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
@@ -603,10 +611,24 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return await this.driver.getMessageAttachments(messageId);
   }
 
+  private dropTables() {
+    this.sql.exec(`DROP TABLE IF EXISTS threads`);
+    this.sql.exec(`DROP TABLE IF EXISTS thread_labels`);
+    this.sql.exec(`DROP TABLE IF EXISTS labels`);
+  }
+
+  private createTables() {
+    const m = Object.values(migrations.migrations);
+    for (const migration of m) {
+      this.sql.exec(migration);
+    }
+  }
+
   async forceReSync() {
     this.foldersInSync.clear();
     this.syncThreadsInProgress.clear();
-    this.sql.exec(`DELETE FROM threads`);
+    this.dropTables();
+    this.createTables();
     await this.syncFolders();
   }
 
@@ -953,16 +975,16 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         // Update database
         yield* Effect.tryPromise(() =>
           create(
-          this.db,
-          {
-          id: threadId,
-          threadId,
-          providerId: 'google',
-          latestSender: latest.sender,
-          latestReceivedOn: normalizedReceivedOn,
-          latestSubject: latest.subject,
-          },
-          latest.tags.map((tag) => tag.id),
+            this.db,
+            {
+              id: threadId,
+              threadId,
+              providerId: 'google',
+              latestSender: latest.sender,
+              latestReceivedOn: normalizedReceivedOn,
+              latestSubject: latest.subject,
+            },
+            latest.tags.map((tag) => tag.id),
           ),
         ).pipe(
           Effect.tap(() =>
