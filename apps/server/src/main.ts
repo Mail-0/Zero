@@ -849,7 +849,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
                   })
                 );
                 
-                const orderedAttachments = new Array(attachments.length);
+                const orderedAttachments = Array.from({ length: attachments.length });
                 processedAttachments.forEach(({ attachment, index }) => {
                   orderedAttachments[index] = attachment;
                 });
