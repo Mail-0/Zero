@@ -15,11 +15,15 @@ import {
   writingStyleMatrix,
   emailTemplate,
 } from './db/schema';
+import {
+  toAttachmentFiles,
+  type SerializedAttachment,
+  type AttachmentFile,
+} from './lib/attachments';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
-import { EProviders, type IEmailSendBatch, type ISubscribeBatch, type IThreadBatch } from './types';
+import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
-import { getZeroDB, verifyToken } from './lib/server-utils';
+import { EProviders, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
@@ -42,7 +46,6 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
-import { toAttachmentFiles, type SerializedAttachment, type AttachmentFile } from './lib/attachments';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
 const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
@@ -787,7 +790,9 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     // }
     return app.fetch(request, this.env, this.ctx);
   }
-  async queue(batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> }) {
+  async queue(
+    batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
+  ) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
@@ -813,10 +818,8 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
           batch.messages.map(async (msg: any) => {
             const { messageId, connectionId, mail } = msg.body;
 
-            const {
-              pending_emails_status: statusKV,
-              pending_emails_payload: payloadKV,
-            } = this.env as any;
+            const { pending_emails_status: statusKV, pending_emails_payload: payloadKV } = this
+              .env as any;
 
             const status = await statusKV.get(messageId);
             if (status === 'cancelled') {
@@ -834,35 +837,37 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
               payload = JSON.parse(stored);
             }
 
-            const agent = await getZeroClient(connectionId, this.ctx);
+            const agent = await getZeroAgent(connectionId, this.ctx);
             try {
               if (Array.isArray((payload as any).attachments)) {
                 const attachments = (payload as any).attachments;
-                
+
                 const processedAttachments = await Promise.all(
-                  attachments.map(async (att: SerializedAttachment | AttachmentFile, index: number) => {
-                    if ('arrayBuffer' in att && typeof att.arrayBuffer === 'function') {
-                      return { attachment: att as AttachmentFile, index };
-                    } else {
-                      const processed = toAttachmentFiles([att as SerializedAttachment]);
-                      return { attachment: processed[0], index };
-                    }
-                  })
+                  attachments.map(
+                    async (att: SerializedAttachment | AttachmentFile, index: number) => {
+                      if ('arrayBuffer' in att && typeof att.arrayBuffer === 'function') {
+                        return { attachment: att as AttachmentFile, index };
+                      } else {
+                        const processed = toAttachmentFiles([att as SerializedAttachment]);
+                        return { attachment: processed[0], index };
+                      }
+                    },
+                  ),
                 );
-                
+
                 const orderedAttachments = Array.from({ length: attachments.length });
                 processedAttachments.forEach(({ attachment, index }) => {
                   orderedAttachments[index] = attachment;
                 });
-                
+
                 (payload as any).attachments = orderedAttachments;
               }
 
               if ('draftId' in (payload as any) && (payload as any).draftId) {
                 const { draftId, ...rest } = payload as any;
-                await agent.sendDraft(draftId, rest as any);
+                await agent.stub.sendDraft(draftId, rest as any);
               } else {
-                await agent.create(payload as any);
+                await agent.stub.create(payload as any);
               }
 
               await statusKV.delete(messageId);
@@ -903,51 +908,51 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   }
   async scheduled() {
     console.log('Running scheduled tasks...');
-    
+
     await this.processScheduledEmails();
-    
+
     await this.processExpiredSubscriptions();
   }
 
   private async processScheduledEmails() {
     console.log('Checking for scheduled emails ready to be queued...');
     const { scheduled_emails: scheduledKV, send_email_queue } = this.env as any;
-    
+
     try {
       const now = Date.now();
-      const twelveHoursFromNow = now + (12 * 60 * 60 * 1000);
-      
+      const twelveHoursFromNow = now + 12 * 60 * 60 * 1000;
+
       let cursor: string | undefined = undefined;
       const batchSize = 1000;
-      
+
       do {
         const listResp: {
           keys: { name: string }[];
           cursor?: string;
         } = await scheduledKV.list({ cursor, limit: batchSize });
         cursor = listResp.cursor;
-        
+
         for (const key of listResp.keys) {
           try {
             const scheduledData = await scheduledKV.get(key.name);
             if (!scheduledData) continue;
-            
+
             const { messageId, connectionId, sendAt } = JSON.parse(scheduledData);
-            
+
             if (sendAt <= twelveHoursFromNow) {
               const delaySeconds = Math.max(0, Math.floor((sendAt - now) / 1000));
-              
+
               console.log(`Queueing scheduled email ${messageId} with ${delaySeconds}s delay`);
-              
+
               const queueBody: IEmailSendBatch = {
                 messageId,
                 connectionId,
                 sendAt,
               };
-              
+
               await send_email_queue.send(queueBody, { delaySeconds });
               await scheduledKV.delete(key.name);
-              
+
               console.log(`Successfully queued scheduled email ${messageId}`);
             }
           } catch (error) {

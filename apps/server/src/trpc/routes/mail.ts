@@ -4,19 +4,18 @@ import {
   type IGetThreadsResponse,
 } from '../../lib/driver/types';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
+import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
-import { getZeroAgent, getZeroClient, getZeroDB } from '../../lib/server-utils';
+import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
+import { toAttachmentFiles } from '../../lib/attachments';
 import { serializedFileSchema } from '../../lib/schemas';
-import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { getContext } from 'hono/context-storage';
 import { type HonoContext } from '../../ctx';
-import { env } from '../../env';
 import { TRPCError } from '@trpc/server';
+import { env } from '../../env';
 import { z } from 'zod';
-import { toAttachmentFiles } from '../../lib/attachments';
-
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -417,10 +416,7 @@ export const mailRouter = router({
         to: z.array(senderSchema),
         subject: z.string(),
         message: z.string(),
-        attachments: z
-          .array(serializedFileSchema)
-          .optional()
-          .default([]),
+        attachments: z.array(serializedFileSchema).optional().default([]),
         headers: z.record(z.string()).optional().default({}),
         cc: z.array(senderSchema).optional(),
         bcc: z.array(senderSchema).optional(),
@@ -437,12 +433,9 @@ export const mailRouter = router({
       const executionCtx = getContext<HonoContext>().executionCtx;
       const agent = await getZeroAgent(activeConnection.id, executionCtx);
 
-      const {
-        draftId,
-        scheduleAt,
-        attachments,
-        ...mail
-      } = input as typeof input & { scheduleAt?: string };
+      const { draftId, scheduleAt, attachments, ...mail } = input as typeof input & {
+        scheduleAt?: string;
+      };
 
       const db = await getZeroDB(sessionUser.id);
       const userSettings = await db.findUserSettings();
@@ -461,7 +454,7 @@ export const mailRouter = router({
 
       if (shouldSchedule) {
         const messageId = crypto.randomUUID();
-        
+
         // Validate scheduleAt if provided
         let targetTime: number;
         if (scheduleAt) {
@@ -469,28 +462,28 @@ export const mailRouter = router({
           if (isNaN(parsedTime)) {
             return { success: false, error: 'Invalid schedule date format' } as const;
           }
-          
+
           const now = Date.now();
-          
+
           if (parsedTime <= now) {
             return { success: false, error: 'Schedule time must be in the future' } as const;
           }
-          
+
           targetTime = parsedTime;
         } else {
           targetTime = Date.now() + 30_000;
         }
-        
+
         const rawDelaySeconds = Math.floor((targetTime - Date.now()) / 1000);
         const maxQueueDelay = 43200; // 12 hours
         const isLongTerm = rawDelaySeconds > maxQueueDelay;
-        
+
         const {
           pending_emails_status: statusKV,
           pending_emails_payload: payloadKV,
           scheduled_emails: scheduledKV,
           send_email_queue,
-        } = env 
+        } = env;
 
         try {
           await statusKV.put(messageId, 'pending', {
@@ -509,11 +502,9 @@ export const mailRouter = router({
         };
 
         try {
-          await payloadKV.put(
-            messageId,
-            JSON.stringify(mailPayload),
-            { expirationTtl: 60 * 60 * 24 },
-          );
+          await payloadKV.put(messageId, JSON.stringify(mailPayload), {
+            expirationTtl: 60 * 60 * 24,
+          });
         } catch (error) {
           console.error(`Failed to write email payload to KV for message ${messageId}`, error);
           return { success: false, error: 'Failed to schedule email payload' } as const;
@@ -531,7 +522,10 @@ export const mailRouter = router({
               { expirationTtl: Math.min(Math.ceil(rawDelaySeconds + 3600), 31556952) },
             );
           } catch (error) {
-            console.error(`Failed to write long-term schedule to KV for message ${messageId}`, error);
+            console.error(
+              `Failed to write long-term schedule to KV for message ${messageId}`,
+              error,
+            );
             return { success: false, error: 'Failed to schedule email (long-term)' } as const;
           }
         } else {
@@ -566,9 +560,9 @@ export const mailRouter = router({
       } as typeof mail & { attachments: any[] };
 
       if (draftId) {
-        await agent.sendDraft(draftId, mailWithAttachments);
+        await agent.stub.sendDraft(draftId, mailWithAttachments);
       } else {
-        await agent.create(mailWithAttachments);
+        await agent.stub.create(mailWithAttachments);
       }
 
       ctx.c.executionCtx.waitUntil(afterTask());
@@ -583,8 +577,8 @@ export const mailRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { messageId } = input;
       const { activeConnection } = ctx;
-      const { 
-        pending_emails_status: statusKV, 
+      const {
+        pending_emails_status: statusKV,
         pending_emails_payload: payloadKV,
         scheduled_emails: scheduledKV,
       } = env;
@@ -594,7 +588,10 @@ export const mailRouter = router({
         try {
           const { connectionId } = JSON.parse(scheduledData);
           if (connectionId !== activeConnection.id) {
-            return { success: false, error: 'Unauthorized: Cannot cancel another user\'s scheduled email' } as const;
+            return {
+              success: false,
+              error: "Unauthorized: Cannot cancel another user's scheduled email",
+            } as const;
           }
         } catch (error) {
           console.error('Failed to parse scheduled data for ownership verification:', error);
@@ -607,7 +604,10 @@ export const mailRouter = router({
         try {
           const payload = JSON.parse(payloadData);
           if (payload.connectionId && payload.connectionId !== activeConnection.id) {
-            return { success: false, error: 'Unauthorized: Cannot cancel another user\'s queued email' } as const;
+            return {
+              success: false,
+              error: "Unauthorized: Cannot cancel another user's queued email",
+            } as const;
           }
         } catch (error) {
           console.error('Failed to parse payload data:', error);
