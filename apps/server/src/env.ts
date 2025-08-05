@@ -11,6 +11,10 @@ export type ZeroEnv = {
   THINKING_MCP: DurableObjectNamespace<ThinkingMCP & QueryableHandler>;
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
   HYPERDRIVE: { connectionString: string };
+  pending_emails_status: KVNamespace;
+  pending_emails_payload: KVNamespace;
+  scheduled_emails: KVNamespace;
+  send_email_queue: Queue;
   snoozed_emails: KVNamespace;
   gmail_sub_age: KVNamespace;
   subscribe_queue: Queue;

@@ -1,15 +1,14 @@
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useLocation, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
+import { useCallback, useMemo, useRef } from 'react';
 import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { cleanSearchValue } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
-import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 export function MailListHotkeys() {
@@ -18,7 +17,6 @@ export function MailListHotkeys() {
   const [, items] = useThreads();
   const hoveredEmailId = useRef<string | null>(null);
   const categories = Categories();
-  const [, setCategory] = useQueryState('category');
   const [searchValue, setSearchValue] = useSearchValue();
   const pathname = useLocation().pathname;
   const params = useParams<{ folder: string }>();
@@ -34,16 +32,16 @@ export function MailListHotkeys() {
     optimisticToggleStar,
   } = useOptimisticActions();
 
-  useEffect(() => {
-    const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
-      hoveredEmailId.current = event.detail.id;
-    };
+  //   useEffect(() => {
+  //     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
+  //       hoveredEmailId.current = event.detail.id;
+  //     };
 
-    window.addEventListener('emailHover', handleEmailHover as EventListener);
-    return () => {
-      window.removeEventListener('emailHover', handleEmailHover as EventListener);
-    };
-  }, []);
+  //     window.addEventListener('emailHover', handleEmailHover as EventListener);
+  //     return () => {
+  //       window.removeEventListener('emailHover', handleEmailHover as EventListener);
+  //     };
+  //   }, []);
 
   const selectAll = useCallback(() => {
     if (mail.bulkSelected.length > 0) {
@@ -179,7 +177,7 @@ export function MailListHotkeys() {
       if (pathname?.includes('/mail/inbox')) {
         const cat = categories.find((cat) => cat.id === category);
         if (!cat) {
-          setCategory(null);
+          // setCategory(null);
           setSearchValue({
             value: '',
             highlight: searchValue.highlight,
@@ -187,7 +185,7 @@ export function MailListHotkeys() {
           });
           return;
         }
-        setCategory(cat.id);
+        // setCategory(cat.id);
         setSearchValue({
           value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
           highlight: searchValue.highlight,
@@ -195,7 +193,7 @@ export function MailListHotkeys() {
         });
       }
     },
-    [categories, pathname, searchValue, setCategory, setSearchValue],
+    [categories, pathname, searchValue, setSearchValue],
   );
 
   const switchCategoryByIndex = useCallback(

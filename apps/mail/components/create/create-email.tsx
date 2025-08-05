@@ -1,3 +1,4 @@
+import { useUndoSend } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
@@ -64,6 +65,7 @@ export function CreateEmail({
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
+  const { handleUndoSend } = useUndoSend();
   // If there was an error loading the draft, set the failed state
   useEffect(() => {
     if (draftError) {
@@ -86,6 +88,7 @@ export function CreateEmail({
     message: string;
     attachments: File[];
     fromEmail?: string;
+    scheduleAt?: string;
   }) => {
     const fromEmail = data.fromEmail || aliases?.[0]?.email || userEmail;
 
@@ -93,15 +96,16 @@ export function CreateEmail({
       ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
       : '';
 
-    await sendEmail({
-      to: data.to.map((email) => ({ email, name: email?.split('@')[0] || email })),
-      cc: data.cc?.map((email) => ({ email, name: email?.split('@')[0] || email })),
-      bcc: data.bcc?.map((email) => ({ email, name: email?.split('@')[0] || email })),
+    const result = await sendEmail({
+      to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
+      cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
+      bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
       subject: data.subject,
       message: data.message + zeroSignature,
       attachments: await serializeFiles(data.attachments),
       fromEmail: userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail,
       draftId: draftId ?? undefined,
+      scheduleAt: data.scheduleAt,
     });
 
     // Clear draft ID from URL
@@ -119,6 +123,7 @@ export function CreateEmail({
     }
 
     toast.success(m['pages.createEmail.emailSentSuccessfully']());
+    handleUndoSend(result, settings);
   };
 
   useEffect(() => {

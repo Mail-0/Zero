@@ -115,7 +115,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       fromEmail: context.foundConnection.email,
     };
 
-    const agent = await getZeroAgent(context.connectionId);
+    const { stub: agent } = await getZeroAgent(context.connectionId);
     const createdDraft = await agent.createDraft(draftData);
     console.log('[WORKFLOW_FUNCTIONS] Created automatic draft:', {
       threadId: context.threadId,
@@ -383,7 +383,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   getUserLabels: async (context) => {
     try {
       console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
-      const agent = await getZeroAgent(context.connectionId);
+      const { stub: agent } = await getZeroAgent(context.connectionId);
       const userAccountLabels = await agent.getUserLabels();
       return { userAccountLabels };
     } catch (error) {
@@ -403,7 +403,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
     let userLabels: { name: string; usecase: string }[] = [];
     try {
-      const agent = await getZeroAgent(context.connectionId);
+      const { stub: agent } = await getZeroAgent(context.connectionId);
       const userTopics = await agent.getUserTopics();
       if (userTopics.length > 0) {
         userLabels = userTopics.map((topic: any) => ({
@@ -468,7 +468,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
 
-    const agent = await getZeroAgent(context.connectionId);
+    const { stub: agent } = await getZeroAgent(context.connectionId);
 
     const validLabelIds = generatedLabels
       .map((name: string) => {
