@@ -951,20 +951,18 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
         // Update database
         yield* Effect.tryPromise(() =>
-          Promise.resolve(
-            create(
-              this.db,
-              {
-                id: threadId,
-                threadId,
-                providerId: 'google',
-                latestSender: latest.sender,
-                latestReceivedOn: normalizedReceivedOn,
-                latestSubject: latest.subject,
-                latestLabelIds: latest.tags.map((tag) => tag.id),
-              },
-              latest.tags.map((tag) => tag.id),
-            ),
+          create(
+            this.db,
+            {
+              id: threadId,
+              threadId,
+              providerId: 'google',
+              latestSender: latest.sender,
+              latestReceivedOn: normalizedReceivedOn,
+              latestSubject: latest.subject,
+              latestLabelIds: latest.tags.map((tag) => tag.id),
+            },
+            latest.tags.map((tag) => tag.id),
           ),
         ).pipe(
           Effect.tap(() =>
@@ -1028,7 +1026,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   async getThreadCount() {
     const count = await countThreads(this.db);
-    return count[0].count || 0;
+    return count || 0;
   }
 
   async getFolderThreadCount(folder: string) {

@@ -102,9 +102,9 @@ export async function ensureLabelsExist(db: DB, labelIds: string[]): Promise<str
   return labelIds;
 }
 
-export async function del(db: DB, params: { id: string }): Promise<Thread> {
+export async function del(db: DB, params: { id: string }): Promise<Thread | null> {
   const [thread] = await db.delete(threads).where(eq(threads.id, params.id)).returning();
-  return thread;
+  return thread || null;
 }
 
 export async function get(db: DB, params: { id: string }): Promise<Thread | null> {
@@ -116,7 +116,10 @@ export async function list(db: DB): Promise<Thread[]> {
   return await db.select().from(threads).orderBy(desc(threads.latestReceivedOn));
 }
 
-export const countThreads = (db: DB) => db.select({ count: count() }).from(threads);
+export async function countThreads(db: DB): Promise<number> {
+  const [result] = await db.select({ count: count() }).from(threads);
+  return result.count;
+}
 
 export async function countThreadsByLabel(db: DB, labelId: string): Promise<number> {
   const [result] = await db
@@ -131,9 +134,9 @@ export async function countThreadsByLabel(db: DB, labelId: string): Promise<numb
 export async function createThreadLabel(
   db: DB,
   threadLabel: InsertThreadLabel,
-): Promise<ThreadLabel> {
+): Promise<ThreadLabel | null> {
   const [res] = await db.insert(threadLabels).values(threadLabel).onConflictDoNothing().returning();
-  return res;
+  return res || null;
 }
 
 export async function deleteThreadLabel(
@@ -192,11 +195,7 @@ export async function updateThreadLabels(
   });
 }
 
-export async function addThreadLabels(
-  db: DB,
-  threadId: string,
-  labelIds: string[],
-): Promise<void> {
+export async function addThreadLabels(db: DB, threadId: string, labelIds: string[]): Promise<void> {
   if (labelIds.length === 0) return;
 
   return await db.transaction(async (tx) => {
@@ -234,12 +233,7 @@ export async function removeThreadLabels(
 
   await db
     .delete(threadLabels)
-    .where(
-      and(
-        eq(threadLabels.threadId, threadId),
-        inArray(threadLabels.labelId, labelIds),
-      ),
-    );
+    .where(and(eq(threadLabels.threadId, threadId), inArray(threadLabels.labelId, labelIds)));
 }
 
 export async function modifyThreadLabels(
@@ -254,10 +248,7 @@ export async function modifyThreadLabels(
       await tx
         .delete(threadLabels)
         .where(
-          and(
-            eq(threadLabels.threadId, threadId),
-            inArray(threadLabels.labelId, removeLabelIds),
-          ),
+          and(eq(threadLabels.threadId, threadId), inArray(threadLabels.labelId, removeLabelIds)),
         );
     }
 
@@ -302,15 +293,15 @@ export async function findThreadsWithAllLabels(db: DB, labelIds: string[]): Prom
     .select(threadSelect)
     .from(threads)
     .where(
-      sql`(
-        SELECT COUNT(*) 
-        FROM ${threadLabels} 
-        WHERE ${threadLabels.threadId} = ${threads.id} 
-        AND ${threadLabels.labelId} IN (${sql.join(
-          labelIds.map((id) => sql`${id}`),
-          sql`, `,
-        )})
-      ) = ${labelIds.length}`,
+      eq(
+        db
+          .select({ count: count() })
+          .from(threadLabels)
+          .where(
+            and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds)),
+          ),
+        labelIds.length,
+      ),
     )
     .orderBy(desc(threads.latestReceivedOn));
 
@@ -359,6 +350,52 @@ export async function findThreadsWithTextSearch(db: DB, searchText: string): Pro
   return results;
 }
 
+// Helper function to build label filtering conditions
+function buildLabelConditions(db: DB, labelIds: string[], requireAllLabels: boolean) {
+  if (labelIds.length === 0) return null;
+
+  if (requireAllLabels) {
+    return eq(
+      db
+        .select({ count: count() })
+        .from(threadLabels)
+        .where(
+          and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds)),
+        ),
+      labelIds.length,
+    );
+  } else {
+    // Use EXISTS for better performance with any labels
+    return sql`EXISTS (
+      SELECT 1 FROM ${threadLabels} 
+      WHERE ${threadLabels.threadId} = ${threads.id} 
+      AND ${threadLabels.labelId} IN ${labelIds}
+    )`;
+  }
+}
+
+// Helper function to build text search conditions
+function buildTextSearchConditions(searchText: string) {
+  return or(
+    like(threads.latestSubject, `%${searchText}%`),
+    like(threads.latestSender, `%${searchText}%`),
+  );
+}
+
+// Helper function to build pagination conditions
+function buildPaginationConditions(pageToken: string) {
+  return lt(threads.latestReceivedOn, pageToken);
+}
+
+// Helper function to calculate pagination result
+function calculatePaginationResult(results: Thread[], maxResults: number) {
+  const hasNextPage = results.length > maxResults;
+  const threadResults = hasNextPage ? results.slice(0, maxResults) : results;
+  const nextPageToken = hasNextPage ? results[maxResults].latestReceivedOn : null;
+
+  return { threads: threadResults, nextPageToken };
+}
+
 export async function findThreadsWithPagination(
   db: DB,
   params: {
@@ -371,53 +408,24 @@ export async function findThreadsWithPagination(
 ): Promise<{ threads: Thread[]; nextPageToken: string | null }> {
   const { labelIds = [], searchText, pageToken, maxResults, requireAllLabels = false } = params;
 
-  // Build conditions array
   const conditions = [];
 
   // Apply label filtering
-  if (labelIds.length > 0) {
-    if (requireAllLabels) {
-      conditions.push(
-        sql`(
-          SELECT COUNT(*) 
-          FROM ${threadLabels} 
-          WHERE ${threadLabels.threadId} = ${threads.id} 
-          AND ${threadLabels.labelId} IN (${sql.join(
-            labelIds.map((id) => sql`${id}`),
-            sql`, `,
-          )})
-        ) = ${labelIds.length}`,
-      );
-    } else {
-      // For any labels, we need to use a different approach
-      const labelConditions = labelIds.map(
-        (labelId) =>
-          sql`EXISTS (
-            SELECT 1 FROM ${threadLabels} 
-            WHERE ${threadLabels.threadId} = ${threads.id} 
-            AND ${threadLabels.labelId} = ${labelId}
-          )`,
-      );
-      conditions.push(or(...labelConditions));
-    }
+  const labelCondition = buildLabelConditions(db, labelIds, requireAllLabels);
+  if (labelCondition) {
+    conditions.push(labelCondition);
   }
 
   // Apply text search
   if (searchText) {
-    conditions.push(
-      or(
-        like(threads.latestSubject, `%${searchText}%`),
-        like(threads.latestSender, `%${searchText}%`),
-      ),
-    );
+    conditions.push(buildTextSearchConditions(searchText));
   }
 
   // Apply pagination
   if (pageToken) {
-    conditions.push(lt(threads.latestReceivedOn, pageToken));
+    conditions.push(buildPaginationConditions(pageToken));
   }
 
-  // Build the final query
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const results = await db
@@ -427,11 +435,7 @@ export async function findThreadsWithPagination(
     .orderBy(desc(threads.latestReceivedOn))
     .limit(maxResults + 1);
 
-  const hasNextPage = results.length > maxResults;
-  const threadResults = hasNextPage ? results.slice(0, maxResults) : results;
-  const nextPageToken = hasNextPage ? results[maxResults - 1].latestReceivedOn : null;
-
-  return { threads: threadResults, nextPageToken };
+  return calculatePaginationResult(results, maxResults);
 }
 
 export async function findThreadsByFolder(db: DB, folderLabel: string): Promise<Thread[]> {

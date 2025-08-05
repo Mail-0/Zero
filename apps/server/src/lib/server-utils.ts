@@ -14,7 +14,13 @@ export const getZeroDB = async (userId: string) => {
 };
 
 class MockExecutionContext implements ExecutionContext {
-  waitUntil(_: Promise<any>): void {}
+  async waitUntil(promise: Promise<any>) {
+    try {
+      await promise;
+    } catch (error) {
+      console.error('MockExecutionContext: Error in waitUntil', error);
+    }
+  }
   passThroughOnException(): void {}
   props: any;
 }

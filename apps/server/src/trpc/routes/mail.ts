@@ -31,6 +31,12 @@ const senderSchema = z.object({
 // };
 
 export const mailRouter = router({
+  forceSync: activeDriverProcedure.mutation(async ({ ctx }) => {
+    const { activeConnection } = ctx;
+    const executionCtx = getContext<HonoContext>().executionCtx;
+    const { stub: agent } = await getZeroAgent(activeConnection.id, executionCtx);
+    return await agent.forceReSync();
+  }),
   get: activeDriverProcedure
     .input(
       z.object({
