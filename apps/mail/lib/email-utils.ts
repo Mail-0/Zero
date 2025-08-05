@@ -2,6 +2,7 @@ import * as emailAddresses from 'email-addresses';
 import type { Sender } from '@/types';
 import DOMPurify from 'dompurify';
 import Color from 'color';
+import { z } from 'zod';
 
 export const fixNonReadableColors = (
   rootElement: HTMLElement,
@@ -221,16 +222,29 @@ export const cleanHtml = (html: string) => {
   }
 };
 
-// The shape of the response when the email is queued (i.e. undo-send or scheduled).
-export interface QueuedSendEmailResult {
-  queued: true;
-  messageId: string;
-  sendAt?: number;
-}
+export const queuedSendEmailResultSchema = z.object({
+  queued: z.literal(true),
+  messageId: z.string(),
+  sendAt: z.number().optional(),
+});
 
-// Type-guard to detect a queued send result at runtime.
+export const scheduledSendEmailResultSchema = z.object({
+  scheduled: z.literal(true),
+  messageId: z.string(),
+  sendAt: z.number().optional(),
+});
+
+export type QueuedSendEmailResult = z.infer<typeof queuedSendEmailResultSchema>;
+export type ScheduledSendEmailResult = z.infer<typeof scheduledSendEmailResultSchema>;
+
 export const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
-  if (!value || typeof value !== 'object') return false;
-  const obj = value as Record<string, unknown>;
-  return obj.queued === true && typeof obj.messageId === 'string';
+  return queuedSendEmailResultSchema.safeParse(value).success;
+};
+
+export const isScheduledSendResult = (value: unknown): value is ScheduledSendEmailResult => {
+  return scheduledSendEmailResultSchema.safeParse(value).success;
+};
+
+export const isSendResult = (value: unknown): value is QueuedSendEmailResult | ScheduledSendEmailResult => {
+  return isQueuedSendResult(value) || isScheduledSendResult(value);
 };

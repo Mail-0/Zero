@@ -2,14 +2,15 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { useTRPC } from '@/providers/query-provider';
-import { isQueuedSendResult } from '@/lib/email-utils';
+import { isQueuedSendResult, isSendResult } from '@/lib/email-utils';
+import type { UserSettings } from '@zero/server/schemas';
 
 export const useUndoSend = () => {
   const trpc = useTRPC();
   const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
 
-  const handleUndoSend = (result: unknown, settings: any) => {
-    if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
+  const handleUndoSend = (result: unknown, settings: { settings: UserSettings } | undefined) => {
+    if (isSendResult(result) && settings?.settings?.undoSendEnabled) {
       const { messageId, sendAt } = result;
 
       const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
@@ -27,7 +28,7 @@ export const useUndoSend = () => {
               }
             },
           },
-          duration: 30_000,
+          duration: timeRemaining,
         });
       }
     }

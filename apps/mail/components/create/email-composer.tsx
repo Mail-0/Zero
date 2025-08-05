@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { ScheduleSendPicker } from './schedule-send-picker';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
@@ -704,6 +704,14 @@ export function EmailComposer({
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
 
+  const handleScheduleChange = useCallback((value?: string) => {
+    setScheduleAt(value);
+  }, []);
+
+  const handleScheduleValidityChange = useCallback((valid: boolean) => {
+    setIsScheduleValid(valid);
+  }, []);
+
   const replaceEmojiShortcodes = (text: string): string => {
     if (!text.trim().length || !text.includes(':')) return text;
     return text.replace(shortcodeRegex, (match, shortcode): string => {
@@ -1332,8 +1340,8 @@ export function EmailComposer({
             </Button>
             <ScheduleSendPicker
               value={scheduleAt}
-              onChange={(value) => setScheduleAt(value)}
-              onValidityChange={(valid) => setIsScheduleValid(valid)}
+              onChange={handleScheduleChange}
+              onValidityChange={handleScheduleValidityChange}
             />
             <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />

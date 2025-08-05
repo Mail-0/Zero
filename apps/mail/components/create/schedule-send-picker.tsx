@@ -1,7 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock } from 'lucide-react';
 import { format, isValid } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -33,6 +33,17 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
     }
     return '';
   });
+
+  useEffect(() => {
+    if (value) {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        setLocalValue(toLocalInputValue(d));
+      }
+    } else {
+      setLocalValue('');
+    }
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;

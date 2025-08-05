@@ -725,7 +725,6 @@ export class GoogleMailManager implements MailManager {
             if (typeof (attachment as any)?.base64 === 'string') {
               base64Data = (attachment as any).base64;
             } else if (typeof (attachment as any)?.arrayBuffer === 'function') {
-              // Convert the ArrayBuffer into a base64 string expected by Gmail
               const buffer = Buffer.from(await (attachment as any).arrayBuffer());
               base64Data = buffer.toString('base64');
             }

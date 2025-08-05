@@ -786,7 +786,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     // }
     return app.fetch(request, this.env, this.ctx);
   }
-  async queue(batch: any) {
+  async queue(batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> }) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
@@ -836,9 +836,30 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
             const agent = await getZeroClient(connectionId, this.ctx);
             try {
               if (Array.isArray((payload as any).attachments)) {
-                (payload as any).attachments = (payload as any).attachments.map((att: any) =>
-                  typeof att?.arrayBuffer === 'function' ? att : toAttachmentFiles([att])[0],
-                );
+                const attachments = (payload as any).attachments;
+                const needsProcessing = [];
+                const processedAttachments = [];
+                
+                for (let i = 0; i < attachments.length; i++) {
+                  const att = attachments[i];
+                  if (typeof att?.arrayBuffer === 'function') {
+                    processedAttachments[i] = att;
+                  } else {
+                    needsProcessing.push({ attachment: att, index: i });
+                  }
+                }
+                
+                if (needsProcessing.length > 0) {
+                  const attachmentsToProcess = needsProcessing.map(item => item.attachment);
+                  const processed = toAttachmentFiles(attachmentsToProcess);
+                  
+                  for (let i = 0; i < needsProcessing.length; i++) {
+                    const { index } = needsProcessing[i];
+                    processedAttachments[index] = processed[i];
+                  }
+                }
+                
+                (payload as any).attachments = processedAttachments;
               }
 
               if ('draftId' in (payload as any) && (payload as any).draftId) {
@@ -897,33 +918,47 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     const { scheduled_emails: scheduledKV, send_email_queue } = this.env as any;
     
     try {
-      const allScheduled = await scheduledKV.list();
       const now = Date.now();
       const twelveHoursFromNow = now + (12 * 60 * 60 * 1000);
       
-      for (const key of allScheduled.keys) {
-        const scheduledData = await scheduledKV.get(key.name);
-        if (!scheduledData) continue;
+      let cursor: string | undefined = undefined;
+      const batchSize = 1000;
+      
+      do {
+        const listResp: {
+          keys: { name: string }[];
+          cursor?: string;
+        } = await scheduledKV.list({ cursor, limit: batchSize });
+        cursor = listResp.cursor;
         
-        const { messageId, connectionId, sendAt } = JSON.parse(scheduledData);
-        
-        if (sendAt <= twelveHoursFromNow) {
-          const delaySeconds = Math.max(0, Math.floor((sendAt - now) / 1000));
-          
-          console.log(`Queueing scheduled email ${messageId} with ${delaySeconds}s delay`);
-          
-          const queueBody: IEmailSendBatch = {
-            messageId,
-            connectionId,
-            sendAt,
-          };
-          
-          await send_email_queue.send(queueBody, { delaySeconds });
-          await scheduledKV.delete(key.name);
-          
-          console.log(`Successfully queued scheduled email ${messageId}`);
+        for (const key of listResp.keys) {
+          try {
+            const scheduledData = await scheduledKV.get(key.name);
+            if (!scheduledData) continue;
+            
+            const { messageId, connectionId, sendAt } = JSON.parse(scheduledData);
+            
+            if (sendAt <= twelveHoursFromNow) {
+              const delaySeconds = Math.max(0, Math.floor((sendAt - now) / 1000));
+              
+              console.log(`Queueing scheduled email ${messageId} with ${delaySeconds}s delay`);
+              
+              const queueBody: IEmailSendBatch = {
+                messageId,
+                connectionId,
+                sendAt,
+              };
+              
+              await send_email_queue.send(queueBody, { delaySeconds });
+              await scheduledKV.delete(key.name);
+              
+              console.log(`Successfully queued scheduled email ${messageId}`);
+            }
+          } catch (error) {
+            console.error('Failed to process scheduled email key', key.name, error);
+          }
         }
-      }
+      } while (cursor);
     } catch (error) {
       console.error('Error processing scheduled emails:', error);
     }

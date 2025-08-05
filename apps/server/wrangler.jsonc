@@ -115,7 +115,7 @@
         "enabled": true,
       },
       "triggers": {
-        "crons": ["*/1 * * * *"],
+        "crons": ["*/1 * * * *", "0 0 * * *", "0 * * * *"],
       },
       "hyperdrive": [
         {
@@ -185,9 +185,6 @@
           "id": "f3a30ed7198542d890db172536bade33",
         },
       ],
-      "triggers": {
-        "crons": ["0 0 * * *", "0 * * * *"],
-      },
     },
     "staging": {
       "triggers": {

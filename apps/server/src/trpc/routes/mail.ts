@@ -419,7 +419,26 @@ export const mailRouter = router({
 
       if (shouldSchedule) {
         const messageId = crypto.randomUUID();
-        const targetTime = scheduleAt ? new Date(scheduleAt).getTime() : Date.now() + 30_000;
+        
+        // Validate scheduleAt if provided
+        let targetTime: number;
+        if (scheduleAt) {
+          const parsedTime = Date.parse(scheduleAt);
+          if (isNaN(parsedTime)) {
+            return { success: false, error: 'Invalid schedule date format' } as const;
+          }
+          
+          const now = Date.now();
+          
+          if (parsedTime <= now) {
+            return { success: false, error: 'Schedule time must be in the future' } as const;
+          }
+          
+          targetTime = parsedTime;
+        } else {
+          targetTime = Date.now() + 30_000;
+        }
+        
         const rawDelaySeconds = Math.floor((targetTime - Date.now()) / 1000);
         const maxQueueDelay = 43200; // 12 hours
         const isLongTerm = rawDelaySeconds > maxQueueDelay;
@@ -473,7 +492,12 @@ export const mailRouter = router({
             return { success: false, error: 'Failed to schedule email (long-term)' } as const;
           }
         } else {
-          const delaySeconds = Math.max(0, rawDelaySeconds);
+          if (rawDelaySeconds < 0) {
+            console.error(`Scheduled time is in the past for message ${messageId}: ${rawDelaySeconds}s delay`);
+            return { success: false, error: 'Scheduled time cannot be in the past' } as const;
+          }
+          
+          const delaySeconds = rawDelaySeconds;
           const queueBody: IEmailSendBatch = {
             messageId,
             connectionId: activeConnection.id,
@@ -489,7 +513,11 @@ export const mailRouter = router({
 
         ctx.c.executionCtx.waitUntil(afterTask());
 
-        return { success: true, queued: true, messageId, sendAt: targetTime };
+        if (isLongTerm) {
+          return { success: true, scheduled: true, messageId, sendAt: targetTime };
+        } else {
+          return { success: true, queued: true, messageId, sendAt: targetTime };
+        }
       }
 
       const mailWithAttachments = {
@@ -514,13 +542,36 @@ export const mailRouter = router({
         messageId: z.string(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { messageId } = input;
+      const { activeConnection } = ctx;
       const { 
         pending_emails_status: statusKV, 
         pending_emails_payload: payloadKV,
         scheduled_emails: scheduledKV,
       } = env;
+
+      const scheduledData = await scheduledKV.get(messageId);
+      if (scheduledData) {
+        try {
+          const { connectionId } = JSON.parse(scheduledData);
+          if (connectionId !== activeConnection.id) {
+            return { success: false, error: 'Unauthorized: Cannot cancel another user\'s scheduled email' } as const;
+          }
+        } catch (error) {
+          console.error('Failed to parse scheduled data for ownership verification:', error);
+          return { success: false, error: 'Invalid scheduled email data' } as const;
+        }
+      }
+
+      const payloadData = await payloadKV.get(messageId);
+      if (payloadData) {
+        try {
+          const payload = JSON.parse(payloadData);
+        } catch (error) {
+          console.error('Failed to parse payload data:', error);
+        }
+      }
 
       await statusKV.put(messageId, 'cancelled', {
         expirationTtl: 60 * 60,
