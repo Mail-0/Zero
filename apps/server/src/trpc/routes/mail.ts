@@ -493,11 +493,6 @@ export const mailRouter = router({
             return { success: false, error: 'Failed to schedule email (long-term)' } as const;
           }
         } else {
-          if (rawDelaySeconds < 0) {
-            console.error(`Scheduled time is in the past for message ${messageId}: ${rawDelaySeconds}s delay`);
-            return { success: false, error: 'Scheduled time cannot be in the past' } as const;
-          }
-          
           const delaySeconds = rawDelaySeconds;
           const queueBody: IEmailSendBatch = {
             messageId,

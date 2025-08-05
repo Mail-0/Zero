@@ -41,7 +41,7 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
-import { toAttachmentFiles } from './lib/attachments';
+import { toAttachmentFiles, type SerializedAttachment, type AttachmentFile } from './lib/attachments';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
 const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
@@ -837,29 +837,24 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
             try {
               if (Array.isArray((payload as any).attachments)) {
                 const attachments = (payload as any).attachments;
-                const needsProcessing = [];
-                const processedAttachments = [];
                 
-                for (let i = 0; i < attachments.length; i++) {
-                  const att = attachments[i];
-                  if (typeof att?.arrayBuffer === 'function') {
-                    processedAttachments[i] = att;
-                  } else {
-                    needsProcessing.push({ attachment: att, index: i });
-                  }
-                }
+                const processedAttachments = await Promise.all(
+                  attachments.map(async (att: SerializedAttachment | AttachmentFile, index: number) => {
+                    if ('arrayBuffer' in att && typeof att.arrayBuffer === 'function') {
+                      return { attachment: att as AttachmentFile, index };
+                    } else {
+                      const processed = toAttachmentFiles([att as SerializedAttachment]);
+                      return { attachment: processed[0], index };
+                    }
+                  })
+                );
                 
-                if (needsProcessing.length > 0) {
-                  const attachmentsToProcess = needsProcessing.map(item => item.attachment);
-                  const processed = toAttachmentFiles(attachmentsToProcess);
-                  
-                  for (let i = 0; i < needsProcessing.length; i++) {
-                    const { index } = needsProcessing[i];
-                    processedAttachments[index] = processed[i];
-                  }
-                }
+                const orderedAttachments = new Array(attachments.length);
+                processedAttachments.forEach(({ attachment, index }) => {
+                  orderedAttachments[index] = attachment;
+                });
                 
-                (payload as any).attachments = processedAttachments;
+                (payload as any).attachments = orderedAttachments;
               }
 
               if ('draftId' in (payload as any) && (payload as any).draftId) {
