@@ -177,15 +177,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9",
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
+          "id": "d5da698931524da9992fe398e095fc32",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
+          "id": "444cad0e54114635b5199ffae9542bd5",
         },
         {
           "binding": "snoozed_emails",
@@ -363,15 +363,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9",
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
+          "id": "d5da698931524da9992fe398e095fc32",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
+          "id": "444cad0e54114635b5199ffae9542bd5",
         },
         {
           "binding": "snoozed_emails",

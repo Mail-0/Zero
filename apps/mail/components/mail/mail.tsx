@@ -30,7 +30,6 @@ import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
-import { useDoState } from './use-do-state';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
