@@ -684,8 +684,6 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
       useHotkeys(
         keyNumber,
         () => {
-          console.log('category', category);
-
           const isCurrentlyActive = labels.includes(category.searchValue);
 
           if (isCurrentlyActive) {
