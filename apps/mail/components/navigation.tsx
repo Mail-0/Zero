@@ -263,7 +263,7 @@ export function Navigation() {
               <a
                 target="_blank"
                 rel="noreferrer"
-                href="https://cal.com/team/0"
+                href="https://cal.com/team/0/chat"
                 className="font-medium"
               >
                 Contact Us
