@@ -9,6 +9,10 @@ import { createDb } from '../db';
 export interface SyncThreadsParams {
   connectionId: string;
   folder: string;
+  pageNumber?: number;
+  pageToken?: string | null;
+  maxCount?: number;
+  singlePageMode?: boolean;
 }
 
 export interface SyncThreadsResult {
@@ -88,6 +92,91 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
     if (!driver) {
       console.warn(`[SyncThreadsWorkflow] No driver available for folder ${folder}`);
       result.message = 'No driver available';
+      return result;
+    }
+
+    if (event.payload.singlePageMode) {
+      const { pageNumber = 1, pageToken, maxCount: paramMaxCount } = event.payload;
+      const effectiveMaxCount = paramMaxCount || maxCount;
+
+      console.info(`[SyncThreadsWorkflow] Running in single-page mode for page ${pageNumber}`);
+
+      const pageResult = await step.do(
+        `process-single-page-${pageNumber}-${folder}-${connectionId}`,
+        async () => {
+          console.info(`[SyncThreadsWorkflow] Processing single page ${pageNumber} for folder ${folder}`);
+
+          const listResult = await driver.list({
+            folder,
+            maxResults: effectiveMaxCount,
+            pageToken: pageToken || undefined,
+          });
+
+          const pageProcessingResult: PageProcessingResult = {
+            threads: listResult.threads,
+            nextPageToken: listResult.nextPageToken,
+            processedCount: 0,
+            successCount: 0,
+            failureCount: 0,
+          };
+
+          const { stub: agent } = await getZeroAgent(connectionId);
+
+          const syncSingleThread = async (thread: { id: string; historyId: string | null }) => {
+            try {
+              const latest = await this.env.THREAD_SYNC_WORKER.get(
+                this.env.THREAD_SYNC_WORKER.newUniqueId(),
+              ).syncThread(foundConnection, thread.id);
+
+              if (latest) {
+                const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+
+                await agent.storeThreadInDB(
+                  {
+                    id: thread.id,
+                    threadId: thread.id,
+                    providerId: 'google',
+                    latestSender: latest.sender,
+                    latestReceivedOn: normalizedReceivedOn,
+                    latestSubject: latest.subject,
+                  },
+                  latest.tags.map((tag) => tag.id),
+                );
+
+                pageProcessingResult.processedCount++;
+                pageProcessingResult.successCount++;
+                console.log(`[SyncThreadsWorkflow] Successfully synced thread ${thread.id}`);
+              } else {
+                console.info(
+                  `[SyncThreadsWorkflow] Skipping thread ${thread.id} - no latest message`,
+                );
+                pageProcessingResult.failureCount++;
+              }
+            } catch (error) {
+              console.error(`[SyncThreadsWorkflow] Failed to sync thread ${thread.id}:`, error);
+              pageProcessingResult.failureCount++;
+            }
+          };
+
+          const syncEffects = listResult.threads.map(syncSingleThread);
+          await Promise.allSettled(syncEffects);
+
+          await agent.sendDoState();
+          await agent.reloadFolder(folder);
+
+          console.log(`[SyncThreadsWorkflow] Completed single page ${pageNumber}`);
+          return pageProcessingResult;
+        },
+      );
+
+      const typedPageResult = pageResult as PageProcessingResult;
+      result.pagesProcessed = 1;
+      result.totalThreads = typedPageResult.threads.length;
+      result.synced = typedPageResult.processedCount;
+      result.successfulSyncs = typedPageResult.successCount;
+      result.failedSyncs = typedPageResult.failureCount;
+
+      console.info(`[SyncThreadsWorkflow] Single-page workflow completed for ${connectionId}/${folder}:`, result);
       return result;
     }
 

@@ -70,6 +70,11 @@
           "class_name": "SyncThreadsWorkflow",
           "name": "sync-threads-workflow",
         },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow",
+        },
       ],
       "queues": {
         "producers": [
@@ -272,6 +277,11 @@
           "binding": "SYNC_THREADS_WORKFLOW",
           "class_name": "SyncThreadsWorkflow",
           "name": "sync-threads-workflow-staging",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-staging",
         },
       ],
       "r2_buckets": [
@@ -486,6 +496,11 @@
           "binding": "SYNC_THREADS_WORKFLOW",
           "class_name": "SyncThreadsWorkflow",
           "name": "sync-threads-workflow-prod",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-prod",
         },
       ],
       "queues": {

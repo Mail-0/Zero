@@ -328,6 +328,15 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   async isSyncing(): Promise<boolean> {
     try {
+      const coordinatorInstance = await this.env.SYNC_THREADS_COORDINATOR_WORKFLOW.get(`${this.name}-inbox-coordinator`);
+      const coordinatorStatus = (await coordinatorInstance.status()).status;
+      if (['running', 'queued', 'waiting'].includes(coordinatorStatus)) {
+        return true;
+      }
+    } catch {
+    }
+
+    try {
       const workflowInstance = await this.env.SYNC_THREADS_WORKFLOW.get(`${this.name}-inbox`);
       const status = (await workflowInstance.status()).status;
       return ['running', 'queued', 'waiting'].includes(status);
@@ -1505,10 +1514,10 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   private async triggerSyncWorkflow(folder: string): Promise<void> {
     try {
-      console.log(`[ZeroDriver] Triggering sync workflow for ${this.name}/${folder}`);
+      console.log(`[ZeroDriver] Triggering sync coordinator workflow for ${this.name}/${folder}`);
 
-      const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
-        id: `${this.name}-${folder}`,
+      const instance = await this.env.SYNC_THREADS_COORDINATOR_WORKFLOW.create({
+        id: `${this.name}-${folder}-coordinator`,
         params: {
           connectionId: this.name,
           folder: folder,
@@ -1516,14 +1525,25 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       });
 
       console.log(
-        `[ZeroDriver] Sync workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`,
+        `[ZeroDriver] Sync coordinator workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`,
       );
     } catch (error) {
       console.error(
-        `[ZeroDriver] Failed to trigger sync workflow for ${this.name}/${folder}:`,
+        `[ZeroDriver] Failed to trigger sync coordinator workflow for ${this.name}/${folder}:`,
         error,
       );
-      //   await this.syncThreads(folder);
+      try {
+        const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
+          id: `${this.name}-${folder}`,
+          params: {
+            connectionId: this.name,
+            folder: folder,
+          },
+        });
+        console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
+      } catch (fallbackError) {
+        console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
+      }
     }
   }
 }
