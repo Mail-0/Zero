@@ -48,7 +48,6 @@ import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompt
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
-import { withRetry } from '../../lib/gmail-rate-limit';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
@@ -829,12 +828,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return counts;
   }
 
-  private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
-    if (!this.driver) throw new Error('No driver available');
-
-    return Effect.runPromise(withRetry(Effect.tryPromise(() => this.driver!.list(params))));
-  }
-
   private getThreadKey(threadId: string) {
     return `${this.name}/${threadId}.json`;
   }
@@ -1387,7 +1380,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     try {
       const result = await get(this.db, { id });
       if (!result) {
-        // await this.queue('syncThread', { threadId: id });
+        await this.syncThread({ threadId: id });
         return {
           messages: [],
           latest: undefined,
