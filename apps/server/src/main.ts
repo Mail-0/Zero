@@ -15,9 +15,16 @@ import {
   writingStyleMatrix,
   emailTemplate,
 } from './db/schema';
+import {
+  toAttachmentFiles,
+  type SerializedAttachment,
+  type AttachmentFile,
+} from './lib/attachments';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
-import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
+import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
+import { ThreadSyncWorker } from './routes/agent/sync-worker';
+import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
+import { EProviders, type IEmailSendBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
@@ -785,12 +792,14 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     // }
     return app.fetch(request, this.env, this.ctx);
   }
-  async queue(batch: MessageBatch<any>) {
+  async queue(
+    batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
+  ) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         await Promise.all(
-          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+          batch.messages.map(async (msg: any) => {
             const connectionId = msg.body.connectionId;
             const providerId = msg.body.providerId;
             try {
@@ -806,9 +815,78 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         console.log('[SUBSCRIBE_QUEUE] batch done');
         return;
       }
+      case batch.queue.startsWith('send-email-queue'): {
+        await Promise.all(
+          batch.messages.map(async (msg: any) => {
+            const { messageId, connectionId, mail } = msg.body;
+
+            const { pending_emails_status: statusKV, pending_emails_payload: payloadKV } = this
+              .env as any;
+
+            const status = await statusKV.get(messageId);
+            if (status === 'cancelled') {
+              console.log(`Email ${messageId} cancelled – skipping send.`);
+              return;
+            }
+
+            let payload = mail;
+            if (!payload) {
+              const stored = await payloadKV.get(messageId);
+              if (!stored) {
+                console.error(`No payload found for scheduled email ${messageId}`);
+                return;
+              }
+              payload = JSON.parse(stored);
+            }
+
+            const agent = await getZeroAgent(connectionId, this.ctx);
+            try {
+              if (Array.isArray((payload as any).attachments)) {
+                const attachments = (payload as any).attachments;
+
+                const processedAttachments = await Promise.all(
+                  attachments.map(
+                    async (att: SerializedAttachment | AttachmentFile, index: number) => {
+                      if ('arrayBuffer' in att && typeof att.arrayBuffer === 'function') {
+                        return { attachment: att as AttachmentFile, index };
+                      } else {
+                        const processed = toAttachmentFiles([att as SerializedAttachment]);
+                        return { attachment: processed[0], index };
+                      }
+                    },
+                  ),
+                );
+
+                const orderedAttachments = Array.from({ length: attachments.length });
+                processedAttachments.forEach(({ attachment, index }) => {
+                  orderedAttachments[index] = attachment;
+                });
+
+                (payload as any).attachments = orderedAttachments;
+              }
+
+              if ('draftId' in (payload as any) && (payload as any).draftId) {
+                const { draftId, ...rest } = payload as any;
+                await agent.stub.sendDraft(draftId, rest as any);
+              } else {
+                await agent.stub.create(payload as any);
+              }
+
+              await statusKV.delete(messageId);
+              await payloadKV.delete(messageId);
+              console.log(`Email ${messageId} sent successfully`);
+            } catch (error) {
+              console.error(`Failed to send scheduled email ${messageId}:`, error);
+              await statusKV.delete(messageId);
+              await payloadKV.delete(messageId);
+            }
+          }),
+        );
+        return;
+      }
       case batch.queue.startsWith('thread-queue'): {
         await Promise.all(
-          batch.messages.map(async (msg: Message<IThreadBatch>) => {
+          batch.messages.map(async (msg: any) => {
             const providerId = msg.body.providerId;
             const historyId = msg.body.historyId;
             const subscriptionName = msg.body.subscriptionName;
@@ -831,6 +909,65 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     }
   }
   async scheduled() {
+    console.log('Running scheduled tasks...');
+
+    await this.processScheduledEmails();
+
+    await this.processExpiredSubscriptions();
+  }
+
+  private async processScheduledEmails() {
+    console.log('Checking for scheduled emails ready to be queued...');
+    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as any;
+
+    try {
+      const now = Date.now();
+      const twelveHoursFromNow = now + 12 * 60 * 60 * 1000;
+
+      let cursor: string | undefined = undefined;
+      const batchSize = 1000;
+
+      do {
+        const listResp: {
+          keys: { name: string }[];
+          cursor?: string;
+        } = await scheduledKV.list({ cursor, limit: batchSize });
+        cursor = listResp.cursor;
+
+        for (const key of listResp.keys) {
+          try {
+            const scheduledData = await scheduledKV.get(key.name);
+            if (!scheduledData) continue;
+
+            const { messageId, connectionId, sendAt } = JSON.parse(scheduledData);
+
+            if (sendAt <= twelveHoursFromNow) {
+              const delaySeconds = Math.max(0, Math.floor((sendAt - now) / 1000));
+
+              console.log(`Queueing scheduled email ${messageId} with ${delaySeconds}s delay`);
+
+              const queueBody: IEmailSendBatch = {
+                messageId,
+                connectionId,
+                sendAt,
+              };
+
+              await send_email_queue.send(queueBody, { delaySeconds });
+              await scheduledKV.delete(key.name);
+
+              console.log(`Successfully queued scheduled email ${messageId}`);
+            }
+          } catch (error) {
+            console.error('Failed to process scheduled email key', key.name, error);
+          }
+        }
+      } while (cursor);
+    } catch (error) {
+      console.error('Error processing scheduled emails:', error);
+    }
+  }
+
+  private async processExpiredSubscriptions() {
     console.log('[SCHEDULED] Checking for expired subscriptions...');
     const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
     const allAccounts = await db.query.connection.findMany({
@@ -877,16 +1014,16 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
       }
     } while (cursor);
 
-    await Promise.all(
-      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
-        try {
-          const agent = await getZeroClient(connectionId, this.ctx);
-          await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
-        } catch (error) {
-          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
-        }
-      }),
-    );
+    // await Promise.all(
+    //   Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+    //     try {
+    //       const { stub: agent } = await getZeroAgent(connectionId, this.ctx);
+    //       await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
+    //     } catch (error) {
+    //       console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+    //     }
+    //   }),
+    // );
 
     await Promise.all(
       allAccounts.map(async ({ id, providerId }) => {
@@ -922,4 +1059,4 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner, ThreadSyncWorker, SyncThreadsWorkflow };

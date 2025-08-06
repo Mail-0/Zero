@@ -6,6 +6,13 @@
   "main": "src/main.ts",
   "env": {
     "local": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "ai": {
         "binding": "AI",
       },
@@ -51,8 +58,19 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow",
+        },
+      ],
       "queues": {
         "producers": [
           {
@@ -63,6 +81,10 @@
             "queue": "subscribe-queue",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue",
+            "binding": "send_email_queue",
+          },
         ],
         "consumers": [
           {
@@ -70,6 +92,9 @@
           },
           {
             "queue": "thread-queue",
+          },
+          {
+            "queue": "send-email-queue",
           },
         ],
       },
@@ -102,13 +127,17 @@
           "tag": "v7",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
       ],
 
       "observability": {
         "enabled": true,
       },
       "triggers": {
-        "crons": ["*/1 * * * *"],
+        "crons": ["*/1 * * * *", "0 0 * * *", "0 * * * *"],
       },
       "hyperdrive": [
         {
@@ -162,14 +191,33 @@
           "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
         {
+          "binding": "pending_emails_status",
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "d5da698931524da9992fe398e095fc32",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "444cad0e54114635b5199ffae9542bd5",
+        },
+        {
           "binding": "snoozed_emails",
           "id": "f3a30ed7198542d890db172536bade33",
         },
       ],
     },
     "staging": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["0 0 * * *", "0 * * * *"],
       },
       "ai": {
         "binding": "AI",
@@ -213,8 +261,19 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-staging",
+        },
+      ],
       "r2_buckets": [
         {
           "binding": "THREADS_BUCKET",
@@ -231,6 +290,10 @@
             "queue": "subscribe-queue-staging",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue-staging",
+            "binding": "send_email_queue",
+          },
         ],
         "consumers": [
           {
@@ -238,6 +301,9 @@
           },
           {
             "queue": "thread-queue-staging",
+          },
+          {
+            "queue": "send-email-queue-staging",
           },
         ],
       },
@@ -273,6 +339,10 @@
         {
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
         },
       ],
       "observability": {
@@ -322,14 +392,33 @@
           "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
         {
+          "binding": "pending_emails_status",
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "d5da698931524da9992fe398e095fc32",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "444cad0e54114635b5199ffae9542bd5",
+        },
+        {
           "binding": "snoozed_emails",
           "id": "f3a30ed7198542d890db172536bade33",
         },
       ],
     },
     "production": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["0 0 * * *", "0 * * * *"],
       },
       "r2_buckets": [
         {
@@ -386,8 +475,19 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-prod",
+        },
+      ],
       "queues": {
         "producers": [
           {
@@ -398,6 +498,10 @@
             "queue": "subscribe-queue-prod",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue-prod",
+            "binding": "send_email_queue",
+          },
         ],
         "consumers": [
           {
@@ -405,6 +509,9 @@
           },
           {
             "queue": "thread-queue-prod",
+          },
+          {
+            "queue": "send-email-queue-prod",
           },
         ],
       },
@@ -440,6 +547,10 @@
         {
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
         },
       ],
       "vars": {
@@ -477,6 +588,18 @@
         {
           "binding": "gmail_sub_age",
           "id": "0591e91fffcc4675aaf00f909bee77d2",
+        },
+        {
+          "binding": "pending_emails_status",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
         },
         {
           "binding": "snoozed_emails",

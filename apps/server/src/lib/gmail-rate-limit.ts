@@ -33,7 +33,7 @@ export function isRateLimit(err: unknown): boolean {
  *  – stops immediately for any other error
  */
 export const rateLimitSchedule = Schedule.recurWhile(isRateLimit)
-  .pipe(Schedule.intersect(Schedule.recurs(3))) // max 3 attempts
+  .pipe(Schedule.intersect(Schedule.recurs(10))) // max 3 attempts
   .pipe(Schedule.addDelay(() => Duration.seconds(60))); // 60s delay between retries
 
 /**
