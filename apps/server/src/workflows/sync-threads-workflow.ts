@@ -24,6 +24,7 @@ export interface SyncThreadsResult {
   successfulSyncs: number;
   failedSyncs: number;
   broadcastSent: boolean;
+  nextPageToken: string | null;
 }
 
 interface PageProcessingResult {
@@ -54,6 +55,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       successfulSyncs: 0,
       failedSyncs: 0,
       broadcastSent: false,
+      nextPageToken: null,
     };
 
     const setupResult = await step.do(`setup-connection-${connectionId}-${folder}`, async () => {
@@ -175,6 +177,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       result.synced = typedPageResult.processedCount;
       result.successfulSyncs = typedPageResult.successCount;
       result.failedSyncs = typedPageResult.failureCount;
+      result.nextPageToken = typedPageResult.nextPageToken;
 
       console.info(`[SyncThreadsWorkflow] Single-page workflow completed for ${connectionId}/${folder}:`, result);
       return result;
@@ -288,6 +291,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       return true;
     });
 
+    result.nextPageToken = pageToken;
     console.info(`[SyncThreadsWorkflow] Workflow completed for ${connectionId}/${folder}:`, result);
     return result;
   }

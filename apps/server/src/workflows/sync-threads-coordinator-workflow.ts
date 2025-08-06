@@ -93,78 +93,97 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<
       return result;
     }
 
-    const pageTokens = await step.do(`discover-pages-${connectionId}-${folder}`, async () => {
-      const tokens: Array<{ pageNumber: number; pageToken: string | null }> = [];
-      let currentPageToken: string | null = null;
-      let pageNumber = 0;
+    // Process pages sequentially
+    let currentPageToken: string | null = null;
+    let pageNumber = 0;
 
-      do {
-        pageNumber++;
-        const listResult = await driver.list({
-          folder,
-          maxResults: maxCount,
-          pageToken: currentPageToken || undefined,
-        });
+    do {
+      pageNumber++;
 
-        tokens.push({
-          pageNumber,
-          pageToken: currentPageToken,
-        });
+      // Process this page
+      const pageResult = await step.do(
+        `process-page-${pageNumber}-${folder}-${connectionId}`,
+        async () => {
+          console.info(
+            `[SyncThreadsCoordinatorWorkflow] Processing page ${pageNumber} for ${folder}`,
+          );
 
-        currentPageToken = listResult.nextPageToken;
-      } while (currentPageToken && shouldLoop && pageNumber < 5);
+          // Create workflow for this page
+          const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
+            params: {
+              connectionId,
+              folder,
+              pageNumber,
+              pageToken: currentPageToken,
+              maxCount,
+              singlePageMode: true,
+            },
+          });
 
-      console.info(
-        `[SyncThreadsCoordinatorWorkflow] Discovered ${tokens.length} pages for ${folder}`,
-      );
-      return tokens;
-    });
+          console.info(
+            `[SyncThreadsCoordinatorWorkflow] Created workflow ${instance.id} for page ${pageNumber}`,
+          );
 
-    const pageWorkflows = await step.do(
-      `spawn-page-workflows-${connectionId}-${folder}`,
-      async () => {
-        const workflows: Array<{ pageNumber: number; workflowId: string; instance: any }> = [];
+          // Simple polling to wait for completion
+          let attempts = 0;
+          const maxAttempts = 60; // 5 minutes
 
-        for (const pageInfo of pageTokens) {
-          try {
-            const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
-              params: {
-                connectionId,
-                folder,
-                pageNumber: pageInfo.pageNumber,
-                pageToken: pageInfo.pageToken,
-                maxCount,
-                singlePageMode: true,
-              },
-            });
+          while (attempts < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, 5000));
 
-            workflows.push({
-              pageNumber: pageInfo.pageNumber,
-              workflowId: instance.id,
-              instance,
-            });
+            try {
+              const status = await instance.status();
+              if (status.status === 'complete') {
+                return { result: status.output, workflowId: instance.id };
+              } else if (status.status === 'errored') {
+                throw new Error(`Workflow ${instance.id} failed`);
+              }
+            } catch (error) {
+              if (attempts === maxAttempts - 1) {
+                throw error;
+              }
+            }
 
-            console.info(`[SyncThreadsCoordinatorWorkflow] Spawned workflow ${instance.id}`);
-          } catch (error) {
-            console.error(
-              `[SyncThreadsCoordinatorWorkflow] Failed to spawn workflow for page ${pageInfo.pageNumber}:`,
-              error,
-            );
-            result.pageWorkflowResults.push({
-              pageNumber: pageInfo.pageNumber,
-              workflowId: '',
-              status: 'failed',
-              synced: 0,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            });
+            attempts++;
           }
-        }
 
-        return workflows;
-      },
+          throw new Error(`Workflow ${instance.id} timed out`);
+        },
+      );
+
+      // Update result with this page's data
+      if (pageResult?.result) {
+        const workflowResult = pageResult.result as any;
+        result.pageWorkflowResults.push({
+          pageNumber,
+          workflowId: pageResult.workflowId,
+          status: 'completed',
+          synced: workflowResult.synced || 0,
+        });
+
+        result.totalSynced += workflowResult.synced || 0;
+        result.totalPagesProcessed += 1;
+        result.totalThreads += workflowResult.totalThreads || 0;
+        result.totalSuccessfulSyncs += workflowResult.successfulSyncs || 0;
+        result.totalFailedSyncs += workflowResult.failedSyncs || 0;
+
+        // Get next page token from workflow result if available
+        currentPageToken = workflowResult.nextPageToken || null;
+      } else {
+        // If no result, we can't continue
+        break;
+      }
+
+      // If no more pages, stop
+      if (!currentPageToken) {
+        console.info(`[SyncThreadsCoordinatorWorkflow] No more pages for ${folder}`);
+        break;
+      }
+    } while (currentPageToken && shouldLoop);
+
+    console.info(
+      `[SyncThreadsCoordinatorWorkflow] Completed ${folder}: ${result.totalSynced} synced across ${result.totalPagesProcessed} pages`,
     );
-
-    console.log(`[SyncThreadsCoordinatorWorkflow] Page workflows:`, pageWorkflows);
 
     return result;
   }
