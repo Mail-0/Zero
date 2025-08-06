@@ -66,7 +66,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       }
 
       const maxCount = parseInt(this.env.THREAD_SYNC_MAX_COUNT || '20');
-      const shouldLoop = true;
+      const shouldLoop = this.env.THREAD_SYNC_LOOP === 'true';
 
       return { maxCount, shouldLoop, foundConnection };
     });
@@ -119,7 +119,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
 
           const { stub: agent } = await getZeroAgent(connectionId);
 
-          for (const thread of listResult.threads) {
+          const syncSingleThread = async (thread: { id: string; historyId: string | null }) => {
             try {
               const latest = await this.env.THREAD_SYNC_WORKER.get(
                 this.env.THREAD_SYNC_WORKER.newUniqueId(),
@@ -142,6 +142,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
 
                 pageProcessingResult.processedCount++;
                 pageProcessingResult.successCount++;
+                console.log(`[SyncThreadsWorkflow] Successfully synced thread ${thread.id}`);
               } else {
                 console.info(
                   `[SyncThreadsWorkflow] Skipping thread ${thread.id} - no latest message`,
@@ -152,10 +153,16 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
               console.error(`[SyncThreadsWorkflow] Failed to sync thread ${thread.id}:`, error);
               pageProcessingResult.failureCount++;
             }
-          }
+          };
+
+          const syncEffects = listResult.threads.map(syncSingleThread);
+
+          await Promise.allSettled(syncEffects);
 
           await agent.sendDoState();
           await agent.reloadFolder(folder);
+
+          console.log(`[SyncThreadsWorkflow] Completed page ${pageNumber}`);
 
           return pageProcessingResult;
         },
