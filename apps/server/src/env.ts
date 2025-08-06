@@ -11,6 +11,7 @@ export type ZeroEnv = {
   THINKING_MCP: DurableObjectNamespace<ThinkingMCP & QueryableHandler>;
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
   THREAD_SYNC_WORKER: DurableObjectNamespace<ThreadSyncWorker>;
+  SYNC_THREADS_WORKFLOW: Workflow;
   HYPERDRIVE: { connectionString: string };
   pending_emails_status: KVNamespace;
   pending_emails_payload: KVNamespace;

@@ -24,7 +24,6 @@ import {
 import {
   countThreads,
   countThreadsByLabel,
-  create,
   get,
   getThreadLabels,
   modifyThreadLabels,
@@ -47,6 +46,7 @@ import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/in
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
+import { create } from './db';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
 import { DurableObject, env } from 'cloudflare:workers';
@@ -664,7 +664,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       console.log(
         `[syncFolders] Starting folder sync for ${this.name} (threadCount: ${threadCount})`,
       );
-      this.ctx.waitUntil(this.syncThreads());
+      this.ctx.waitUntil(this.triggerSyncWorkflow('inbox'));
     } else {
       console.log(
         `[syncFolders] Skipping sync for ${this.name} - threadCount (${threadCount}) >= maxCount (${maxCount})`,
@@ -1730,6 +1730,53 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   //     }
   //     return await this.getThreadFromDB(id, includeDrafts);
   //   }
+
+  public async storeThreadInDB(threadData: {
+    id: string;
+    threadId: string;
+    providerId: string;
+    latestSender: any;
+    latestReceivedOn: string;
+    latestSubject: string;
+  }, labelIds: string[]): Promise<void> {
+    try {
+      await create(
+        this.db,
+        {
+          id: threadData.id,
+          threadId: threadData.threadId,
+          providerId: threadData.providerId,
+          latestSender: threadData.latestSender,
+          latestReceivedOn: threadData.latestReceivedOn,
+          latestSubject: threadData.latestSubject,
+        },
+        labelIds,
+      );
+      console.log(`[ZeroDriver] Successfully stored thread ${threadData.id} in database`);
+    } catch (error) {
+      console.error(`[ZeroDriver] Failed to store thread ${threadData.id} in database:`, error);
+      throw error;
+    }
+  }
+
+  private async triggerSyncWorkflow(folder: string): Promise<void> {
+    try {
+      console.log(`[ZeroDriver] Triggering sync workflow for ${this.name}/${folder}`);
+      
+      const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
+        id: `${this.name}-${folder}-${Date.now()}`,
+        params: {
+          connectionId: this.name,
+          folder: folder,
+        },
+      });
+
+      console.log(`[ZeroDriver] Sync workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`);
+    } catch (error) {
+      console.error(`[ZeroDriver] Failed to trigger sync workflow for ${this.name}/${folder}:`, error);
+      await this.syncThreads(folder);
+    }
+  }
 }
 
 export class ZeroAgent extends AIChatAgent<ZeroEnv> {

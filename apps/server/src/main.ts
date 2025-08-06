@@ -23,6 +23,8 @@ import {
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { ThreadSyncWorker } from './routes/agent/sync-worker';
+import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
+import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { EProviders, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
@@ -1058,4 +1060,4 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner, ThreadSyncWorker };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner, ThreadSyncWorker, SyncThreadsWorkflow };
