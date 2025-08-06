@@ -271,7 +271,7 @@
         {
           "binding": "SYNC_THREADS_WORKFLOW",
           "class_name": "SyncThreadsWorkflow",
-          "name": "sync-threads-workflow",
+          "name": "sync-threads-workflow-staging",
         },
       ],
       "r2_buckets": [
@@ -485,7 +485,7 @@
         {
           "binding": "SYNC_THREADS_WORKFLOW",
           "class_name": "SyncThreadsWorkflow",
-          "name": "sync-threads-workflow",
+          "name": "sync-threads-workflow-prod",
         },
       ],
       "queues": {
