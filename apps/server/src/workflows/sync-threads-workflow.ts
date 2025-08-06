@@ -1,10 +1,10 @@
+import { getZeroAgent, connectionToDriver } from '../lib/server-utils';
 import { WorkflowEntrypoint, WorkflowStep } from 'cloudflare:workers';
 import type { WorkflowEvent } from 'cloudflare:workers';
-import type { ZeroEnv } from '../env';
-import { createDb } from '../db';
 import { connection } from '../db/schema';
+import type { ZeroEnv } from '../env';
 import { eq } from 'drizzle-orm';
-import { getZeroAgent, connectionToDriver } from '../lib/server-utils';
+import { createDb } from '../db';
 
 export interface SyncThreadsParams {
   connectionId: string;
@@ -31,10 +31,15 @@ interface PageProcessingResult {
 }
 
 export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreadsParams> {
-  async run(event: WorkflowEvent<SyncThreadsParams>, step: WorkflowStep): Promise<SyncThreadsResult> {
+  async run(
+    event: WorkflowEvent<SyncThreadsParams>,
+    step: WorkflowStep,
+  ): Promise<SyncThreadsResult> {
     const { connectionId, folder } = event.payload;
-    
-    console.log(`[SyncThreadsWorkflow] Starting sync for connection ${connectionId}, folder ${folder}`);
+
+    console.info(
+      `[SyncThreadsWorkflow] Starting sync for connection ${connectionId}, folder ${folder}`,
+    );
 
     const result: SyncThreadsResult = {
       synced: 0,
@@ -47,41 +52,41 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       broadcastSent: false,
     };
 
-    const setupResult = await step.do('setup-connection', async () => {
+    const setupResult = await step.do(`setup-connection-${connectionId}-${folder}`, async () => {
       const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
-      
+
       const foundConnection = await db.query.connection.findFirst({
         where: eq(connection.id, connectionId),
       });
-      
+
       await conn.end();
-      
+
       if (!foundConnection) {
         throw new Error(`Connection ${connectionId} not found`);
       }
 
-      const driver = connectionToDriver(foundConnection);
-      const maxCount = parseInt(this.env.THREAD_SYNC_MAX_COUNT || '5');
-      const shouldLoop = this.env.THREAD_SYNC_LOOP === 'true';
+      const maxCount = parseInt(this.env.THREAD_SYNC_MAX_COUNT || '20');
+      const shouldLoop = true;
 
-      return { driver, maxCount, shouldLoop, foundConnection };
+      return { maxCount, shouldLoop, foundConnection };
     });
 
-    const { driver, maxCount, shouldLoop, foundConnection } = setupResult as {
+    const { maxCount, shouldLoop, foundConnection } = setupResult as {
       driver: any;
       maxCount: number;
       shouldLoop: boolean;
       foundConnection: any;
     };
+    const driver = connectionToDriver(foundConnection);
 
     if (connectionId.includes('aggregate')) {
-      console.log(`[SyncThreadsWorkflow] Skipping sync for aggregate instance - folder ${folder}`);
+      console.info(`[SyncThreadsWorkflow] Skipping sync for aggregate instance - folder ${folder}`);
       result.message = 'Skipped aggregate instance';
       return result;
     }
 
     if (!driver) {
-      console.error(`[SyncThreadsWorkflow] No driver available for folder ${folder}`);
+      console.warn(`[SyncThreadsWorkflow] No driver available for folder ${folder}`);
       result.message = 'No driver available';
       return result;
     }
@@ -92,58 +97,69 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
 
     while (hasMore) {
       pageNumber++;
-      
-      const pageResult = await step.do(`process-page-${pageNumber}`, async () => {
-        console.log(`[SyncThreadsWorkflow] Processing page ${pageNumber} for folder ${folder}`);
-        
-        const listResult = await driver.list({
-          folder,
-          maxResults: maxCount,
-          pageToken: pageToken || undefined,
-        });
 
-        const pageProcessingResult: PageProcessingResult = {
-          threads: listResult.threads,
-          nextPageToken: listResult.nextPageToken,
-          processedCount: 0,
-          successCount: 0,
-          failureCount: 0,
-        };
+      const pageResult = await step.do(
+        `process-page-${pageNumber}-${folder}-${connectionId}`,
+        async () => {
+          console.info(`[SyncThreadsWorkflow] Processing page ${pageNumber} for folder ${folder}`);
 
-        const { stub: agent } = await getZeroAgent(connectionId);
+          const listResult = await driver.list({
+            folder,
+            maxResults: maxCount,
+            pageToken: pageToken || undefined,
+          });
 
-        for (const thread of listResult.threads) {
-          try {
-            const latest = await this.env.THREAD_SYNC_WORKER.get(
-              this.env.THREAD_SYNC_WORKER.newUniqueId()
-            ).syncThread(foundConnection, thread.id);
+          const pageProcessingResult: PageProcessingResult = {
+            threads: listResult.threads,
+            nextPageToken: listResult.nextPageToken,
+            processedCount: 0,
+            successCount: 0,
+            failureCount: 0,
+          };
 
-            if (latest) {
-              const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+          const { stub: agent } = await getZeroAgent(connectionId);
 
-              await agent.storeThreadInDB({
-                id: thread.id,
-                threadId: thread.id,
-                providerId: 'google',
-                latestSender: latest.sender,
-                latestReceivedOn: normalizedReceivedOn,
-                latestSubject: latest.subject,
-              }, latest.tags.map((tag) => tag.id));
+          for (const thread of listResult.threads) {
+            try {
+              const latest = await this.env.THREAD_SYNC_WORKER.get(
+                this.env.THREAD_SYNC_WORKER.newUniqueId(),
+              ).syncThread(foundConnection, thread.id);
 
-              pageProcessingResult.processedCount++;
-              pageProcessingResult.successCount++;
-            } else {
-              console.log(`[SyncThreadsWorkflow] Skipping thread ${thread.id} - no latest message`);
+              if (latest) {
+                const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+
+                await agent.storeThreadInDB(
+                  {
+                    id: thread.id,
+                    threadId: thread.id,
+                    providerId: 'google',
+                    latestSender: latest.sender,
+                    latestReceivedOn: normalizedReceivedOn,
+                    latestSubject: latest.subject,
+                  },
+                  latest.tags.map((tag) => tag.id),
+                );
+
+                pageProcessingResult.processedCount++;
+                pageProcessingResult.successCount++;
+              } else {
+                console.info(
+                  `[SyncThreadsWorkflow] Skipping thread ${thread.id} - no latest message`,
+                );
+                pageProcessingResult.failureCount++;
+              }
+            } catch (error) {
+              console.error(`[SyncThreadsWorkflow] Failed to sync thread ${thread.id}:`, error);
               pageProcessingResult.failureCount++;
             }
-          } catch (error) {
-            console.error(`[SyncThreadsWorkflow] Failed to sync thread ${thread.id}:`, error);
-            pageProcessingResult.failureCount++;
           }
-        }
 
-        return pageProcessingResult;
-      });
+          await agent.sendDoState();
+          await agent.reloadFolder(folder);
+
+          return pageProcessingResult;
+        },
+      );
 
       const typedPageResult = pageResult as PageProcessingResult;
 
@@ -156,15 +172,16 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       pageToken = typedPageResult.nextPageToken;
       hasMore = pageToken !== null && shouldLoop;
 
-      console.log(`[SyncThreadsWorkflow] Completed page ${pageNumber}, total synced: ${result.synced}`);
-
+      console.info(
+        `[SyncThreadsWorkflow] Completed page ${pageNumber}, total synced: ${result.synced}`,
+      );
       if (hasMore) {
-        await step.sleep(`page-delay-${pageNumber}`, 1000);
+        await step.sleep(`page-delay-${pageNumber}-${folder}-${connectionId}`, 1000);
       }
     }
 
-    await step.do('broadcast-completion', async () => {
-      console.log(`[SyncThreadsWorkflow] Completed sync for folder ${folder}`, {
+    await step.do(`broadcast-completion-${folder}-${connectionId}`, async () => {
+      console.info(`[SyncThreadsWorkflow] Completed sync for folder ${folder}`, {
         synced: result.synced,
         pagesProcessed: result.pagesProcessed,
         totalThreads: result.totalThreads,
@@ -175,7 +192,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
       return true;
     });
 
-    console.log(`[SyncThreadsWorkflow] Workflow completed for ${connectionId}/${folder}:`, result);
+    console.info(`[SyncThreadsWorkflow] Workflow completed for ${connectionId}/${folder}:`, result);
     return result;
   }
 }

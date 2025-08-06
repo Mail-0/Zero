@@ -46,7 +46,6 @@ import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/in
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
-import { create } from './db';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
 import { DurableObject, env } from 'cloudflare:workers';
@@ -72,6 +71,7 @@ import { groq } from '@ai-sdk/groq';
 import { createDb } from '../../db';
 import type { Message } from 'ai';
 import { eq } from 'drizzle-orm';
+import { create } from './db';
 
 const decoder = new TextDecoder();
 const maxCount = 20;
@@ -320,7 +320,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     this.name = name;
     await this.ctx.blockConcurrencyWhile(async () => {
       await this.setupAuth();
-      await this.syncFolders();
+      //   await this.syncFolders();
     });
   }
 
@@ -664,7 +664,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       console.log(
         `[syncFolders] Starting folder sync for ${this.name} (threadCount: ${threadCount})`,
       );
-      this.ctx.waitUntil(this.triggerSyncWorkflow('inbox'));
+      await this.triggerSyncWorkflow('inbox');
     } else {
       console.log(
         `[syncFolders] Skipping sync for ${this.name} - threadCount (${threadCount}) >= maxCount (${maxCount})`,
@@ -1731,14 +1731,17 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   //     return await this.getThreadFromDB(id, includeDrafts);
   //   }
 
-  public async storeThreadInDB(threadData: {
-    id: string;
-    threadId: string;
-    providerId: string;
-    latestSender: any;
-    latestReceivedOn: string;
-    latestSubject: string;
-  }, labelIds: string[]): Promise<void> {
+  public async storeThreadInDB(
+    threadData: {
+      id: string;
+      threadId: string;
+      providerId: string;
+      latestSender: any;
+      latestReceivedOn: string;
+      latestSubject: string;
+    },
+    labelIds: string[],
+  ): Promise<void> {
     try {
       await create(
         this.db,
@@ -1752,6 +1755,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         },
         labelIds,
       );
+      await this.sendDoState();
       console.log(`[ZeroDriver] Successfully stored thread ${threadData.id} in database`);
     } catch (error) {
       console.error(`[ZeroDriver] Failed to store thread ${threadData.id} in database:`, error);
@@ -1762,19 +1766,24 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   private async triggerSyncWorkflow(folder: string): Promise<void> {
     try {
       console.log(`[ZeroDriver] Triggering sync workflow for ${this.name}/${folder}`);
-      
+
       const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
-        id: `${this.name}-${folder}-${Date.now()}`,
+        // id: `${this.name}-${folder}-${Date.now()}`,
         params: {
           connectionId: this.name,
           folder: folder,
         },
       });
 
-      console.log(`[ZeroDriver] Sync workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`);
+      console.log(
+        `[ZeroDriver] Sync workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`,
+      );
     } catch (error) {
-      console.error(`[ZeroDriver] Failed to trigger sync workflow for ${this.name}/${folder}:`, error);
-      await this.syncThreads(folder);
+      console.error(
+        `[ZeroDriver] Failed to trigger sync workflow for ${this.name}/${folder}:`,
+        error,
+      );
+      //   await this.syncThreads(folder);
     }
   }
 }
