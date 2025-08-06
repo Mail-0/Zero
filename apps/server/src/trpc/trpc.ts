@@ -1,4 +1,4 @@
-import { getActiveConnection, getZeroDB } from '../lib/server-utils';
+import { getActiveConnection, getZeroDB, logTRPCCall, initializeLoggingSession } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
@@ -14,8 +14,59 @@ type TrpcContext = {
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 
+// Logging middleware
+const createLoggingMiddleware = () => {
+  return t.middleware(async ({ ctx, next, path, type, input }) => {
+    const startTime = Date.now();
+    const sessionId = ctx.sessionUser?.id || 'anonymous';
+
+    try {
+      // Initialize session if needed
+      await initializeLoggingSession(sessionId, sessionId);
+
+      const result = await next();
+      const duration = Date.now() - startTime;
+
+      // Log the call asynchronously (don't block the response)
+      logTRPCCall(sessionId, {
+        procedure: path,
+        input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
+        output: result.ok ? JSON.stringify(result.data).slice(0, 1000) : undefined, // Limit output size
+        error: !result.ok ? result.error?.message : undefined,
+        duration,
+        metadata: {
+          userAgent: ctx.c.req.header('user-agent'),
+          ip: getConnInfo(ctx.c).remote.address,
+          method: type,
+        },
+      }).catch(err => console.error('Failed to log TRPC call:', err));
+
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+
+      // Log the error asynchronously
+      logTRPCCall(sessionId, {
+        procedure: path,
+        input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration,
+        metadata: {
+          userAgent: ctx.c.req.header('user-agent'),
+          ip: getConnInfo(ctx.c).remote.address,
+          method: type,
+        },
+      }).catch(err => console.error('Failed to log TRPC call:', err));
+
+      throw error;
+    }
+  });
+};
+
+const loggingMiddleware = createLoggingMiddleware();
+
 export const router = t.router;
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(loggingMiddleware);
 
 export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.sessionUser) {
@@ -69,12 +120,12 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
         accessToken: null,
         refreshToken: null,
       });
-      if (activeConnection.accessToken) {
-        ctx.c.header(
-          'X-Zero-Redirect',
-          `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
-        );
-      }
+
+      ctx.c.header(
+        'X-Zero-Redirect',
+        `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
+      );
+
       throw new TRPCError({
         code: 'UNAUTHORIZED',
         message: 'Connection expired. Please reconnect.',

@@ -59,6 +59,10 @@
             "class_name": "WorkflowRunner",
           },
           {
+            "name": "LOGGING",
+            "class_name": "LoggingDurableObject",
+          },
+          {
             "name": "THREAD_SYNC_WORKER",
             "class_name": "ThreadSyncWorker",
           },
@@ -143,6 +147,7 @@
         {
           "tag": "v9",
           "new_sqlite_classes": ["ShardRegistry"],
+          "new_classes": ["LoggingDurableObject"],
         },
       ],
 

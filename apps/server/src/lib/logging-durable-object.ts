@@ -1,0 +1,141 @@
+import { DurableObject } from 'cloudflare:workers';
+import { Queryable } from 'dormroom';
+import type { ZeroEnv } from '../env';
+
+export interface TRPCCallLog {
+    id: string;
+    timestamp: number;
+    userId: string;
+    sessionId: string;
+    procedure: string;
+    input: any;
+    output?: any;
+    error?: string;
+    duration: number;
+    metadata: {
+        userAgent?: string;
+        ip?: string;
+        method: 'query' | 'mutation' | 'subscription';
+    };
+}
+
+export interface LoggingState {
+    sessionId: string;
+    userId: string;
+    calls: TRPCCallLog[];
+    startedAt: number;
+    lastActivity: number;
+    totalCalls: number;
+    totalErrors: number;
+    totalDuration: number;
+}
+
+@Queryable()
+export class LoggingDurableObject extends DurableObject<ZeroEnv> {
+    private state: DurableObjectState;
+    protected env: ZeroEnv;
+
+    constructor(state: DurableObjectState, env: ZeroEnv) {
+        super(state, env);
+        this.state = state;
+        this.env = env;
+    }
+
+    async logCall(callData: Omit<TRPCCallLog, 'id' | 'timestamp'>): Promise<void> {
+        const log: TRPCCallLog = {
+            ...callData,
+            id: crypto.randomUUID(),
+            timestamp: Date.now(),
+        };
+
+        // Get current state
+        const currentState = await this.getState();
+
+        // Add the new call
+        currentState.calls.push(log);
+        currentState.lastActivity = log.timestamp;
+        currentState.totalCalls++;
+        currentState.totalDuration += log.duration;
+
+        if (log.error) {
+            currentState.totalErrors++;
+        }
+
+        // Keep only last 1000 calls to prevent memory issues
+        if (currentState.calls.length > 1000) {
+            currentState.calls = currentState.calls.slice(-1000);
+        }
+
+        // Store updated state
+        await this.state.storage.put('state', currentState);
+    }
+
+    async getState(): Promise<LoggingState> {
+        const state = await this.state.storage.get<LoggingState>('state');
+        if (!state) {
+            // Initialize new state
+            const newState: LoggingState = {
+                sessionId: crypto.randomUUID(),
+                userId: '',
+                calls: [],
+                startedAt: Date.now(),
+                lastActivity: Date.now(),
+                totalCalls: 0,
+                totalErrors: 0,
+                totalDuration: 0,
+            };
+            await this.state.storage.put('state', newState);
+            return newState;
+        }
+        return state;
+    }
+
+    async initializeSession(userId: string): Promise<void> {
+        const state = await this.getState();
+        state.userId = userId;
+        state.sessionId = crypto.randomUUID();
+        state.startedAt = Date.now();
+        state.lastActivity = Date.now();
+        await this.state.storage.put('state', state);
+    }
+
+    async getCallHistory(limit: number = 100): Promise<TRPCCallLog[]> {
+        const state = await this.getState();
+        return state.calls.slice(-limit);
+    }
+
+    async getSessionStats(): Promise<{
+        totalCalls: number;
+        totalErrors: number;
+        totalDuration: number;
+        averageDuration: number;
+        errorRate: number;
+        sessionDuration: number;
+    }> {
+        const state = await this.getState();
+        const sessionDuration = Date.now() - state.startedAt;
+
+        return {
+            totalCalls: state.totalCalls,
+            totalErrors: state.totalErrors,
+            totalDuration: state.totalDuration,
+            averageDuration: state.totalCalls > 0 ? state.totalDuration / state.totalCalls : 0,
+            errorRate: state.totalCalls > 0 ? (state.totalErrors / state.totalCalls) * 100 : 0,
+            sessionDuration,
+        };
+    }
+
+    async clearSession(): Promise<void> {
+        const newState: LoggingState = {
+            sessionId: crypto.randomUUID(),
+            userId: '',
+            calls: [],
+            startedAt: Date.now(),
+            lastActivity: Date.now(),
+            totalCalls: 0,
+            totalErrors: 0,
+            totalDuration: 0,
+        };
+        await this.state.storage.put('state', newState);
+    }
+} 
