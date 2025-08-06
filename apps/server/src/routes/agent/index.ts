@@ -48,11 +48,11 @@ import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompt
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
-import { DurableObject, env } from 'cloudflare:workers';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
+import { DurableObject } from 'cloudflare:workers';
 import { ToolOrchestrator } from './orchestrator';
 import migrations from './db/drizzle/migrations';
 import { getPromptName } from '../../pipelines';
