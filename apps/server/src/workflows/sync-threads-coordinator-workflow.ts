@@ -1,5 +1,5 @@
-import { connectionToDriver } from '../lib/server-utils';
 import { WorkflowEntrypoint, WorkflowStep } from 'cloudflare:workers';
+import { connectionToDriver } from '../lib/server-utils';
 import type { WorkflowEvent } from 'cloudflare:workers';
 import { connection } from '../db/schema';
 import type { ZeroEnv } from '../env';
@@ -28,7 +28,10 @@ export interface SyncThreadsCoordinatorResult {
   }>;
 }
 
-export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreadsCoordinatorParams> {
+export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<
+  ZeroEnv,
+  SyncThreadsCoordinatorParams
+> {
   async run(
     event: WorkflowEvent<SyncThreadsCoordinatorParams>,
     step: WorkflowStep,
@@ -64,7 +67,7 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<ZeroEnv, 
       }
 
       const maxCount = parseInt(this.env.THREAD_SYNC_MAX_COUNT || '20');
-      const shouldLoop = this.env.THREAD_SYNC_LOOP === 'true';
+      const shouldLoop = true;
 
       return { maxCount, shouldLoop, foundConnection };
     });
@@ -77,7 +80,9 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<ZeroEnv, 
     const driver = connectionToDriver(foundConnection);
 
     if (connectionId.includes('aggregate')) {
-      console.info(`[SyncThreadsCoordinatorWorkflow] Skipping sync for aggregate instance - folder ${folder}`);
+      console.info(
+        `[SyncThreadsCoordinatorWorkflow] Skipping sync for aggregate instance - folder ${folder}`,
+      );
       result.message = 'Skipped aggregate instance';
       return result;
     }
@@ -107,99 +112,60 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<ZeroEnv, 
         });
 
         currentPageToken = listResult.nextPageToken;
-      } while (currentPageToken && shouldLoop && pageNumber < 50);
+      } while (currentPageToken && shouldLoop && pageNumber < 5);
 
-      console.info(`[SyncThreadsCoordinatorWorkflow] Discovered ${tokens.length} pages for ${folder}`);
+      console.info(
+        `[SyncThreadsCoordinatorWorkflow] Discovered ${tokens.length} pages for ${folder}`,
+      );
       return tokens;
     });
 
-    const pageWorkflows = await step.do(`spawn-page-workflows-${connectionId}-${folder}`, async () => {
-      const workflows: Array<{ pageNumber: number; workflowId: string; instance: any }> = [];
+    const pageWorkflows = await step.do(
+      `spawn-page-workflows-${connectionId}-${folder}`,
+      async () => {
+        const workflows: Array<{ pageNumber: number; workflowId: string; instance: any }> = [];
 
-      for (const pageInfo of pageTokens) {
-        const workflowId = `${connectionId}-${folder}-page-${pageInfo.pageNumber}`;
-        
-        try {
-          const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
-            id: workflowId,
-            params: {
-              connectionId,
-              folder,
+        for (const pageInfo of pageTokens) {
+          try {
+            const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
+              params: {
+                connectionId,
+                folder,
+                pageNumber: pageInfo.pageNumber,
+                pageToken: pageInfo.pageToken,
+                maxCount,
+                singlePageMode: true,
+              },
+            });
+
+            workflows.push({
               pageNumber: pageInfo.pageNumber,
-              pageToken: pageInfo.pageToken,
-              maxCount,
-              singlePageMode: true,
-            },
-          });
+              workflowId: instance.id,
+              instance,
+            });
 
-          workflows.push({
-            pageNumber: pageInfo.pageNumber,
-            workflowId,
-            instance,
-          });
-
-          console.info(`[SyncThreadsCoordinatorWorkflow] Spawned workflow ${workflowId}`);
-        } catch (error) {
-          console.error(`[SyncThreadsCoordinatorWorkflow] Failed to spawn workflow for page ${pageInfo.pageNumber}:`, error);
-          result.pageWorkflowResults.push({
-            pageNumber: pageInfo.pageNumber,
-            workflowId,
-            status: 'failed',
-            synced: 0,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
+            console.info(`[SyncThreadsCoordinatorWorkflow] Spawned workflow ${instance.id}`);
+          } catch (error) {
+            console.error(
+              `[SyncThreadsCoordinatorWorkflow] Failed to spawn workflow for page ${pageInfo.pageNumber}:`,
+              error,
+            );
+            result.pageWorkflowResults.push({
+              pageNumber: pageInfo.pageNumber,
+              workflowId: '',
+              status: 'failed',
+              synced: 0,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
         }
-      }
 
-      return workflows;
-    });
+        return workflows;
+      },
+    );
 
-    for (const workflow of pageWorkflows) {
-      await step.do(`wait-for-page-${workflow.pageNumber}-${connectionId}-${folder}`, async () => {
-        try {
-          const workflowResult = await workflow.instance.result();
-          
-          result.totalSynced += workflowResult.synced || 0;
-          result.totalPagesProcessed += 1;
-          result.totalThreads += workflowResult.totalThreads || 0;
-          result.totalSuccessfulSyncs += workflowResult.successfulSyncs || 0;
-          result.totalFailedSyncs += workflowResult.failedSyncs || 0;
+    console.log(`[SyncThreadsCoordinatorWorkflow] Page workflows:`, pageWorkflows);
 
-          result.pageWorkflowResults.push({
-            pageNumber: workflow.pageNumber,
-            workflowId: workflow.workflowId,
-            status: 'completed',
-            synced: workflowResult.synced || 0,
-          });
-
-          console.info(`[SyncThreadsCoordinatorWorkflow] Page ${workflow.pageNumber} completed: ${workflowResult.synced} synced`);
-          return workflowResult;
-        } catch (error) {
-          console.error(`[SyncThreadsCoordinatorWorkflow] Page ${workflow.pageNumber} failed:`, error);
-          result.pageWorkflowResults.push({
-            pageNumber: workflow.pageNumber,
-            workflowId: workflow.workflowId,
-            status: 'failed',
-            synced: 0,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-          return null;
-        }
-      });
-    }
-
-    await step.do(`broadcast-completion-${folder}-${connectionId}`, async () => {
-      console.info(`[SyncThreadsCoordinatorWorkflow] Completed coordination for folder ${folder}`, {
-        totalSynced: result.totalSynced,
-        totalPagesProcessed: result.totalPagesProcessed,
-        totalThreads: result.totalThreads,
-        totalSuccessfulSyncs: result.totalSuccessfulSyncs,
-        totalFailedSyncs: result.totalFailedSyncs,
-      });
-      return true;
-    });
-
-    console.info(`[SyncThreadsCoordinatorWorkflow] Coordination completed for ${connectionId}/${folder}:`, result);
     return result;
   }
 }
