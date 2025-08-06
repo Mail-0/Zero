@@ -1,4 +1,3 @@
-import type { TRPCError } from '@trpc/server';
 import type { TRPCCallLog } from './logging-durable-object';
 import { logTRPCCall, initializeLoggingSession } from './server-utils';
 import { getContext } from 'hono/context-storage';

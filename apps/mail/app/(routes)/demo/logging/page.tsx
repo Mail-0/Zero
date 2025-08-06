@@ -1,4 +1,3 @@
-import { api } from '@/lib/trpc';
 import { useEffect, useState } from 'react';
 
 export default function LoggingDemoPage() {
