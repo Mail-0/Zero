@@ -1039,11 +1039,11 @@ export class OutlookMailManager implements MailManager {
         },
       })) || [];
 
-    let references: string | undefined;
-    let inReplyTo: string | undefined;
-    let listUnsubscribe: string | undefined;
-    let listUnsubscribePost: string | undefined;
-    let replyTo: string | undefined;
+    const references: string | undefined = undefined;
+    const inReplyTo: string | undefined = undefined;
+    const listUnsubscribe: string | undefined = undefined;
+    const listUnsubscribePost: string | undefined = undefined;
+    const replyTo: string | undefined = undefined;
 
     // TODO: use headers if available
     // if (headers) {
