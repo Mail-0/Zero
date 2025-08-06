@@ -4,12 +4,14 @@ export type State = {
   isSyncing: boolean;
   syncingFolders: string[];
   storageSize: number;
+  counts: { label: string; count: number }[];
 };
 
 const stateAtom = atom<State>({
   isSyncing: false,
   syncingFolders: [],
   storageSize: 0,
+  counts: [],
 });
 
 function useDoState() {

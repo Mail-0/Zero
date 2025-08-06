@@ -448,6 +448,8 @@
         "noResultsFound": "Netika atrasts neviens rezultāts",
         "zeroSignature": "Zero paraksts",
         "zeroSignatureDescription": "Pievienot Zero parakstu saviem e-pastiem.",
+        "undoSendEnabled": "Atsaukt nosūtīšanu",
+        "undoSendEnabledDescription": "Ļaut atcelt e-pastus 30 sekunžu laikā pēc nosūtīšanas.",
         "defaultEmailAlias": "Noklusējuma e-pasta aizstājvārds",
         "selectDefaultEmail": "Izvēlieties noklusējuma e-pastu",
         "defaultEmailDescription": "Šis e-pasts tiks izmantots kā noklusējuma 'No' adrese, rakstot jaunus e-pastus",

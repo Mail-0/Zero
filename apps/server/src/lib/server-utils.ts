@@ -13,24 +13,31 @@ export const getZeroDB = async (userId: string) => {
   return rpcTarget;
 };
 
-export const getZeroClient = async (connectionId: string, executionCtx: ExecutionContext) => {
+class MockExecutionContext implements ExecutionContext {
+  async waitUntil(promise: Promise<any>) {
+    try {
+      await promise;
+    } catch (error) {
+      console.error('MockExecutionContext: Error in waitUntil', error);
+    }
+  }
+  passThroughOnException(): void {}
+  props: any;
+}
+
+export const getZeroAgent = async (connectionId: string, executionCtx?: ExecutionContext) => {
+  if (!executionCtx) {
+    executionCtx = new MockExecutionContext();
+  }
   const agent = createClient({
     doNamespace: env.ZERO_DRIVER,
     ctx: executionCtx,
     configs: [{ name: connectionId }],
-  }).stub;
+  });
 
-  await agent.setName(connectionId);
-  await agent.setupAuth();
+  await agent.stub.setName(connectionId);
 
   return agent;
-};
-
-export const getZeroAgent = async (connectionId: string) => {
-  const stub = env.ZERO_DRIVER.get(env.ZERO_DRIVER.idFromName(connectionId));
-  const rpcTarget = await stub.setMetaData(connectionId);
-  await rpcTarget.setupAuth();
-  return rpcTarget;
 };
 
 export const getZeroSocketAgent = async (connectionId: string) => {

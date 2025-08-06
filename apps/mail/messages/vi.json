@@ -448,6 +448,8 @@
         "noResultsFound": "Không tìm thấy kết quả nào",
         "zeroSignature": "Chữ ký Zero",
         "zeroSignatureDescription": "Thêm chữ ký Zero vào email của bạn.",
+        "undoSendEnabled": "Hoàn tác gửi",
+        "undoSendEnabledDescription": "Cho phép hủy email trong vòng 30 giây sau khi gửi.",
         "defaultEmailAlias": "Bí danh email mặc định",
         "selectDefaultEmail": "Chọn email mặc định",
         "defaultEmailDescription": "Email này sẽ được sử dụng làm địa chỉ 'Từ' mặc định khi soạn email mới",

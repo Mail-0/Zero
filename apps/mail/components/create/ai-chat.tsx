@@ -72,12 +72,12 @@ const ThreadPreview = ({ threadId }: { threadId: string }) => {
 
 const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => void }) => {
   const firstRowQueries = [
-    'Find invoice from Stripe',
-    'Show unpaid invoices',
-    'Show recent work feedback',
+    'Find all work meetings today',
+    'Label all emails from Github as OSS',
+    'Show recent Linear feedback',
   ];
 
-  const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
+  const secondRowQueries = ['Find receipt from OpenAI', 'What Asana projects do I have coming up'];
 
   return (
     <div className="relative mt-6 flex w-full max-w-xl flex-col items-center gap-2">

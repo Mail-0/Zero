@@ -448,6 +448,8 @@
         "noResultsFound": "No results found",
         "zeroSignature": "Zero Signature",
         "zeroSignatureDescription": "Add a Zero signature to your emails.",
+        "undoSendEnabled": "Undo Send",
+        "undoSendEnabledDescription": "Allow canceling emails within 30 seconds of sending.",
         "defaultEmailAlias": "Default Email Alias",
         "selectDefaultEmail": "Select default email",
         "defaultEmailDescription": "This email will be used as the default 'From' address when composing new emails",

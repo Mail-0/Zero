@@ -448,6 +448,8 @@
         "noResultsFound": "Результаты не найдены",
         "zeroSignature": "Подпись Zero",
         "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам.",
+        "undoSendEnabled": "Отменить отправку",
+        "undoSendEnabledDescription": "Позволяет отменить отправку писем в течение 30 секунд после отправки.",
         "defaultEmailAlias": "Адрес электронной почты по умолчанию",
         "selectDefaultEmail": "Выберите адрес электронной почты по умолчанию",
         "defaultEmailDescription": "Этот адрес будет использоваться в качестве адреса отправителя по умолчанию при создании новых писем",

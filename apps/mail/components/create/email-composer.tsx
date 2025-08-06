@@ -18,14 +18,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { Check, Command, Loader, Paperclip, Plus, Type, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
-import { ImageCompressionSettings } from './image-compression-settings';
+import { ScheduleSendPicker } from './schedule-send-picker';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
-import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
-import { compressImages } from '@/lib/image-compression';
 import { gitHubEmojis } from '@tiptap/extension-emoji';
 import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +44,10 @@ import { Toolbar } from './toolbar';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ImageCompressionSettings } from './image-compression-settings';
+import { compressImages } from '@/lib/image-compression';
+import type { ImageQuality } from '@/lib/image-compression';
+
 const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
 import { TemplateButton } from './template-button';
 
@@ -73,6 +75,7 @@ interface EmailComposerProps {
     message: string;
     attachments: File[];
     fromEmail?: string;
+    scheduleAt?: string;
   }) => Promise<void>;
   onClose?: () => void;
   className?: string;
@@ -145,6 +148,8 @@ export function EmailComposer({
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState<string>();
+  const [isScheduleValid, setIsScheduleValid] = useState<boolean>(true);
   const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
   const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
@@ -463,6 +468,11 @@ export function EmailComposer({
         return;
       }
 
+      if (!isScheduleValid) {
+        toast.error('Please choose a valid date & time for scheduling');
+        return;
+      }
+
       setIsLoading(true);
       setAiGeneratedMessage(null);
       // Save draft before sending, we want to send drafts instead of sending new emails
@@ -476,6 +486,7 @@ export function EmailComposer({
         message: editor.getHTML(),
         attachments: values.attachments || [],
         fromEmail: values.fromEmail,
+        scheduleAt,
       });
       setHasUnsavedChanges(false);
       editor.commands.clearContent(true);
@@ -692,6 +703,14 @@ export function EmailComposer({
     setImageQuality(newQuality);
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
+
+  const handleScheduleChange = useCallback((value?: string) => {
+    setScheduleAt(value);
+  }, []);
+
+  const handleScheduleValidityChange = useCallback((valid: boolean) => {
+    setIsScheduleValid(valid);
+  }, []);
 
   const replaceEmojiShortcodes = (text: string): string => {
     if (!text.trim().length || !text.includes(':')) return text;
@@ -1308,7 +1327,7 @@ export function EmailComposer({
         <div className="flex flex-col items-start justify-start gap-2">
           {toggleToolbar && <Toolbar editor={editor} />}
           <div className="flex items-center justify-start gap-2">
-            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
+            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading || !isScheduleValid}>
               <div className="flex items-center justify-center">
                 <div className="text-center text-sm leading-none text-white dark:text-black">
                   <span>Send </span>
@@ -1319,6 +1338,11 @@ export function EmailComposer({
                 <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
               </div>
             </Button>
+            <ScheduleSendPicker
+              value={scheduleAt}
+              onChange={handleScheduleChange}
+              onValidityChange={handleScheduleValidityChange}
+            />
             <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
@@ -1531,37 +1555,6 @@ export function EmailComposer({
               </div>
             </Button>
           </div>
-          {/* <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="hidden h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  <Smile className="h-3 w-3 fill-[#9A9A9A]" />
-                  <span className="px-0.5 text-sm">Casual</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  {messageLength < 50 && <ShortStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                  {messageLength >= 50 && messageLength < 200 && (
-                    <MediumStack className="h-3 w-3 fill-[#9A9A9A]" />
-                  )}
-                  {messageLength >= 200 && <LongStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip> */}
         </div>
       </div>
 

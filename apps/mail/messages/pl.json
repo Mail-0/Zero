@@ -448,6 +448,8 @@
         "noResultsFound": "Nie znaleziono wyników",
         "zeroSignature": "Podpis Zero",
         "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili.",
+        "undoSendEnabled": "Cofnij wysyłanie",
+        "undoSendEnabledDescription": "Pozwala anulować wysyłanie e-maili w ciągu 30 sekund od ich wysłania.",
         "defaultEmailAlias": "Domyślny alias e-mail",
         "selectDefaultEmail": "Wybierz domyślny e-mail",
         "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail",
