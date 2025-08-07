@@ -262,7 +262,7 @@ export function Navigation() {
               </div>
               <a
                 target="_blank"
-                rel="noreferrer"
+                rel="noreferrer noopener"
                 href="https://cal.com/team/0/chat"
                 className="font-medium"
               >
