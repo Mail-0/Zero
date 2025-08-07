@@ -210,7 +210,16 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // Reset states
       setMode(null);
       await refetch();
-      handleUndoSend(result, settings);
+      
+      handleUndoSend(result, settings, {
+        to: data.to,
+        cc: data.cc,
+        bcc: data.bcc,
+        subject: data.subject,
+        message: data.message,
+        attachments: data.attachments,
+        scheduleAt: data.scheduleAt,
+      });
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(m['pages.createEmail.failedToSendEmail']());
