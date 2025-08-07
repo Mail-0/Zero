@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useQueryState } from 'nuqs';
 
 import { useTRPC } from '@/providers/query-provider';
 import { isSendResult } from '@/lib/email-utils';
@@ -20,11 +19,6 @@ export type EmailData = {
 export const useUndoSend = () => {
   const trpc = useTRPC();
   const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
-  
-  const [, setIsComposeOpen] = useQueryState('isComposeOpen');
-  const [, setDraftId] = useQueryState('draftId');
-  const [, setActiveReplyId] = useQueryState('activeReplyId');
-  const [, setMode] = useQueryState('mode');
 
   const handleUndoSend = (
     result: unknown, 
@@ -48,10 +42,12 @@ export const useUndoSend = () => {
                   localStorage.setItem('undoEmailData', JSON.stringify(emailData));
                 }
                 
-                setActiveReplyId(null);
-                setMode(null);
-                setDraftId(null);
-                setIsComposeOpen('true');
+                const url = new URL(window.location.href);
+                url.searchParams.delete('activeReplyId');
+                url.searchParams.delete('mode');
+                url.searchParams.delete('draftId');
+                url.searchParams.set('isComposeOpen', 'true');
+                window.history.replaceState({}, '', url.toString());
                 
                 toast.info('Send cancelled');
               } catch {
