@@ -7,9 +7,11 @@ on:
 jobs:
   close_conflicted_prs:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Close PRs with merge conflicts older than 3 days
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const { rest } = github;
