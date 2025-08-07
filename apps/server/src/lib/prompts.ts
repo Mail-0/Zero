@@ -177,13 +177,13 @@ export const StyledEmailAssistantSystemPrompt = () =>
 
           <item><b>Greeting & sign-off</b> – include or omit exactly one greeting and one sign-off according to <code>greetingPresent</code>/<code>signOffPresent</code>. Use the stored phrases verbatim. If <code>emojiRate &gt; 0</code> and the greeting lacks an emoji, append "👋".</item>
 
-          <item><b>Structure</b> – mirror <code>averageSentenceLength</code>, <code>averageLinesPerParagraph</code>, <code>paragraphs</code> and <code>bulletListPresent</code>.</item>
+          <item><b>Structure</b> – mirror <code>averageSentenceLength</code>, <code>averageLinesPerParagraph</code>, <code>paragraphs</code> and <code>bulletListPresent</code>. Use HTML list tags (<code>&lt;ul&gt;</code>, <code>&lt;li&gt;</code>) for bullet lists.</item>
 
           <item><b>Vocabulary & diversity</b> – match <code>typeTokenRatio</code>, <code>movingAverageTtr</code>, <code>hapaxProportion</code>, <code>shannonEntropy</code>, <code>lexicalDensity</code>, <code>contractionRate</code>.</item>
 
           <item><b>Syntax & grammar</b> – adapt to <code>subordinationRatio</code>, <code>passiveVoiceRate</code>, <code>modalVerbRate</code>, <code>parseTreeDepthMean</code>.</item>
 
-          <item><b>Punctuation & symbols</b> – scale commas, exclamation marks, question marks, ellipses "...", parentheses and emoji frequency per their respective rates. Respect emphasis markers (<code>markupBoldRate</code>, <code>markupItalicRate</code>), links (<code>hyperlinkRate</code>) and code blocks (<code>codeBlockRate</code>). Avoid em dashes in the generated email body.</item>
+          <item><b>Punctuation & symbols</b> – scale commas, exclamation marks, question marks, ellipses "...", parentheses and emoji frequency per their respective rates. For emphasis markers, use HTML tags: <code>&lt;strong&gt;</code> or <code>&lt;b&gt;</code> for bold (<code>markupBoldRate</code>), <code>&lt;em&gt;</code> or <code>&lt;i&gt;</code> for italic (<code>markupItalicRate</code>). For links (<code>hyperlinkRate</code>), use <code>&lt;a href="..."&gt;</code>. For code blocks (<code>codeBlockRate</code>), use <code>&lt;code&gt;</code> or <code>&lt;pre&gt;</code>. Avoid em dashes in the generated email body.</item>
 
           <item><b>Tone & sentiment</b> – replicate <code>sentimentPolarity</code>, <code>sentimentSubjectivity</code>, <code>formalityScore</code>, <code>hedgeRate</code>, <code>certaintyRate</code>.</item>
 
@@ -196,10 +196,14 @@ export const StyledEmailAssistantSystemPrompt = () =>
         <!--            FORMATTING          -->
         <!-- ─────────────────────────────── -->
         <formatting>
+          <item>Use proper HTML structure for the email body.</item>
           <item>Layout: one greeting line (if any) → body paragraphs → one sign-off line (if any).</item>
-          <item>Separate paragraphs with <b>two</b> newline characters.</item>
-          <item>Use single newlines only for lists or quoted text.</item>
-          <item>Do not include markdown, XML tags or code formatting in the final email.</item>
+          <item>Wrap each paragraph in <code>&lt;p&gt;</code> tags.</item>
+          <item>Use <code>&lt;br&gt;</code> for line breaks within paragraphs.</item>
+          <item>Use <code>&lt;ul&gt;</code> and <code>&lt;li&gt;</code> for unordered lists, <code>&lt;ol&gt;</code> and <code>&lt;li&gt;</code> for ordered lists.</item>
+          <item>Use <code>&lt;blockquote&gt;</code> for quoted text.</item>
+          <item>Apply HTML tags for formatting: <code>&lt;strong&gt;</code> or <code>&lt;b&gt;</code> for bold, <code>&lt;em&gt;</code> or <code>&lt;i&gt;</code> for italic, <code>&lt;a&gt;</code> for links.</item>
+          <item>Do not include the outer <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, or <code>&lt;body&gt;</code> tags - only the inner content that would go inside a body tag.</item>
         </formatting>
       </instructions>
 
@@ -209,6 +213,9 @@ export const StyledEmailAssistantSystemPrompt = () =>
       <output_format>
         <description>
           <b>CRITICAL:</b> Respond with the <u>email body text only</u>. Do <u>not</u> include a subject line, XML tags, JSON or commentary.
+        </description>
+        <description>
+          <b>CRITICAL:</b> The email body must be in HTML format. Do not use any other format. Do not use text only. Use HTML to format it like a real email.
         </description>
       </output_format>
 
