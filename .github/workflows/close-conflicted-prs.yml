@@ -1,0 +1,42 @@
+name: Close Old Conflicted PRs
+
+on:
+  schedule:
+    - cron: "0 * * * *" 
+
+jobs:
+  close_conflicted_prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close PRs with merge conflicts older than 3 days
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { rest } = github;
+            const prs = await rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+
+            const now = new Date();
+            for (const pr of prs.data) {
+              const details = await rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              if (details.data.mergeable === false) {
+                const createdAt = new Date(pr.created_at);
+                const diffDays = (now - createdAt) / (1000 * 60 * 60 * 24);
+                if (diffDays > 3) {
+                  await rest.pulls.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number,
+                    state: 'closed'
+                  });
+                }
+              }
+            }

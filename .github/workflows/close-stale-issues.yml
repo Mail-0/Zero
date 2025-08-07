@@ -1,0 +1,17 @@
+name: Close Stale Issues
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 0
+          days-before-close: 0
+          stale-issue-message: "This issue is stale and will be closed now."
+          close-issue-message: "Closing this issue."
