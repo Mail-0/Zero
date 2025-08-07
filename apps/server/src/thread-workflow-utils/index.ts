@@ -125,7 +125,9 @@ const generateAutomaticDraft = async (
       connectionId,
     });
 
-    return draftContent;
+    const draftNewLines = draftContent.replace(/\n/g, '<br>');
+
+    return draftNewLines;
   } catch (error) {
     console.log('[THREAD_WORKFLOW] Failed to generate automatic draft:', {
       connectionId,
