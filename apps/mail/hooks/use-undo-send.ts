@@ -16,6 +16,46 @@ export type EmailData = {
   scheduleAt?: string;
 };
 
+export type SerializedFile = {
+  name: string;
+  size: number;
+  type: string;
+  lastModified: number;
+  data: string; 
+};
+
+type SerializableEmailData = Omit<EmailData, 'attachments'> & {
+  attachments: SerializedFile[];
+};
+
+const serializeFiles = async (files: File[]): Promise<SerializedFile[]> => {
+  return Promise.all(
+    files.map(async (file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      data: await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      }),
+    }))
+  );
+};
+
+export const deserializeFiles = (serializedFiles: SerializedFile[]): File[] => {
+  return serializedFiles.map(({ data, name, type, lastModified }) => {
+    const byteString = atob(data);
+    const byteArray = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      byteArray[i] = byteString.charCodeAt(i);
+    }
+    return new File([byteArray], name, { type, lastModified });
+  });
+};
+
 export const useUndoSend = () => {
   const trpc = useTRPC();
   const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
@@ -39,7 +79,12 @@ export const useUndoSend = () => {
                 await unsendEmail({ messageId });
                 
                 if (emailData) {
-                  localStorage.setItem('undoEmailData', JSON.stringify(emailData));
+                  const serializedAttachments = await serializeFiles(emailData.attachments);
+                  const serializableData: SerializableEmailData = {
+                    ...emailData,
+                    attachments: serializedAttachments,
+                  };
+                  localStorage.setItem('undoEmailData', JSON.stringify(serializableData));
                 }
                 
                 const url = new URL(window.location.href);

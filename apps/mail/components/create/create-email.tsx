@@ -1,4 +1,4 @@
-import { useUndoSend, type EmailData } from '@/hooks/use-undo-send';
+import { useUndoSend, type EmailData, deserializeFiles } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
@@ -108,6 +108,7 @@ export function CreateEmail({
     });
 
     setDraftId(null);
+    clearUndoData();
 
     // Track different email sending scenarios
     if (data.cc && data.cc.length > 0 && data.bcc && data.bcc.length > 0) {
@@ -145,19 +146,29 @@ export function CreateEmail({
     return cleanedAddresses || [];
   };
 
+  const clearUndoData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('undoEmailData');
+    }
+  };
+
   const undoEmailData = useMemo((): EmailData | null => {
     if (isComposeOpen !== 'true') return null;
+    if (typeof window === 'undefined') return null;
     
     const storedData = localStorage.getItem('undoEmailData');
     if (!storedData) return null;
     
     try {
       const parsedData = JSON.parse(storedData);
-      localStorage.removeItem('undoEmailData');
+      
+      if (parsedData.attachments && Array.isArray(parsedData.attachments)) {
+        parsedData.attachments = deserializeFiles(parsedData.attachments);
+      }
+      
       return parsedData;
     } catch (error) {
       console.error('Failed to parse undo email data:', error);
-      localStorage.removeItem('undoEmailData');
       return null;
     }
   }, [isComposeOpen]);
@@ -169,6 +180,7 @@ export function CreateEmail({
     setIsComposeOpen(open ? 'true' : null);
     if (!open) {
       setDraftId(null);
+      clearUndoData();
     }
   };
 
@@ -242,6 +254,7 @@ export function CreateEmail({
                 setActiveReplyId(null);
                 setIsComposeOpen(null);
                 setDraftId(null);
+                clearUndoData();
               }}
               initialAttachments={undoEmailData?.attachments || files}
               initialSubject={
