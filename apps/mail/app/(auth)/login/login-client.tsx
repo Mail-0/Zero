@@ -303,7 +303,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           )}
         </div>
       </div>
-      <a href={'/'} className='text-white'>Return home</a>
+      <a href={'/'} className='text-white hover:text-gray-200'>Return home</a>
 
       <footer className="w-full px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
