@@ -1,10 +1,11 @@
 import type { ThinkingMCP, ThreadSyncWorker, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
-import type { ZeroAgent, ZeroDriver } from './routes/agent';
+import type { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
 
 export type ZeroEnv = {
   ZERO_DRIVER: DurableObjectNamespace<ZeroDriver & QueryableHandler>;
+  SHARD_REGISTRY: DurableObjectNamespace<ShardRegistry & QueryableHandler>;
   ZERO_DB: DurableObjectNamespace<ZeroDB>;
   ZERO_AGENT: DurableObjectNamespace<ZeroAgent>;
   ZERO_MCP: DurableObjectNamespace<ZeroMCP & QueryableHandler>;
@@ -12,6 +13,7 @@ export type ZeroEnv = {
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
   THREAD_SYNC_WORKER: DurableObjectNamespace<ThreadSyncWorker>;
   SYNC_THREADS_WORKFLOW: Workflow;
+  SYNC_THREADS_COORDINATOR_WORKFLOW: Workflow;
   HYPERDRIVE: { connectionString: string };
   pending_emails_status: KVNamespace;
   pending_emails_payload: KVNamespace;

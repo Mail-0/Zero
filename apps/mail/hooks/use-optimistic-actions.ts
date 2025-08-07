@@ -59,10 +59,7 @@ export function useOptimisticActions() {
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
   const refreshData = useCallback(async () => {
-    return await Promise.all([
-      queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
-      queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
-    ]);
+    return await queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() });
   }, [queryClient]);
 
   function createPendingAction({

@@ -4,13 +4,13 @@ import {
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
+import { getZeroAgent, modifyThreadLabelsInDB } from '../lib/server-utils';
 import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
 import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
-import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
 import { env } from 'cloudflare:workers';
 import { Effect } from 'effect';
@@ -468,8 +468,6 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
 
-    const { stub: agent } = await getZeroAgent(context.connectionId);
-
     const validLabelIds = generatedLabels
       .map((name: string) => {
         const foundLabel = userAccountLabels.find(
@@ -504,7 +502,8 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
           add: labelsToAdd,
           remove: labelsToRemove,
         });
-        await agent.modifyThreadLabelsInDB(
+        await modifyThreadLabelsInDB(
+          context.connectionId,
           context.threadId.toString(),
           labelsToAdd,
           labelsToRemove,

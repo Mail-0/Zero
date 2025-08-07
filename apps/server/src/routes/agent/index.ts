@@ -15,20 +15,21 @@
  */
 
 import {
+  countThreads,
+  countThreadsByLabel,
+  deleteSpamThreads,
+  get,
+  getThreadLabels,
+  modifyThreadLabels,
+  type DB,
+} from './db';
+import {
   appendResponseMessages,
   createDataStreamResponse,
   generateText,
   streamText,
   type StreamTextOnFinishCallback,
 } from 'ai';
-import {
-  countThreads,
-  countThreadsByLabel,
-  get,
-  getThreadLabels,
-  modifyThreadLabels,
-  type DB,
-} from './db';
 import {
   IncomingMessageType,
   OutgoingMessageType,
@@ -295,6 +296,26 @@ const _migrations = Object.fromEntries(
 );
 
 @Migratable({
+  migrations: {
+    1: [
+      `CREATE TABLE IF NOT EXISTS shards (  
+      shard_id TEXT PRIMARY KEY,  
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+      last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP  
+    )`,
+    ],
+  },
+})
+@Queryable()
+export class ShardRegistry extends DurableObject<ZeroEnv> {
+  sql: SqlStorage;
+  constructor(ctx: DurableObjectState, env: ZeroEnv) {
+    super(ctx, env);
+    this.sql = ctx.storage.sql;
+  }
+}
+
+@Migratable({
   migrations: _migrations,
 })
 @Queryable()
@@ -327,13 +348,23 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   }
 
   async isSyncing(): Promise<boolean> {
-    try {
-      const workflowInstance = await this.env.SYNC_THREADS_WORKFLOW.get(`${this.name}-inbox`);
-      const status = (await workflowInstance.status()).status;
-      return ['running', 'queued', 'waiting'].includes(status);
-    } catch {
-      return false;
-    }
+    return false;
+    // try {
+    //   const coordinatorInstance = await this.env.SYNC_THREADS_COORDINATOR_WORKFLOW.get(`${this.name}-inbox-coordinator`);
+    //   const coordinatorStatus = (await coordinatorInstance.status()).status;
+    //   if (['running', 'queued', 'waiting'].includes(coordinatorStatus)) {
+    //     return true;
+    //   }
+    // } catch {
+    // }
+
+    // try {
+    //   const workflowInstance = await this.env.SYNC_THREADS_WORKFLOW.get(`${this.name}-inbox`);
+    //   const status = (await workflowInstance.status()).status;
+    //   return ['running', 'queued', 'waiting'].includes(status);
+    // } catch {
+    //   return false;
+    // }
   }
 
   async getAllSubjects() {
@@ -594,10 +625,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   }
 
   async deleteAllSpam() {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.driver.deleteAllSpam();
+    return await deleteSpamThreads(this.db);
   }
 
   async getEmailAliases() {
@@ -637,7 +665,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   public async setupAuth() {
     if (this.name === 'general') return;
-    await this.sendDoState();
     if (!this.driver) {
       const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
@@ -939,18 +966,18 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
               return Effect.succeed(undefined);
             }),
           );
-          yield* Effect.tryPromise(() => this.sendDoState()).pipe(
-            Effect.tap(() =>
-              Effect.sync(() => {
-                result.broadcastSent = true;
-                console.log(`[syncThread] Broadcasted do state for ${threadId}`);
-              }),
-            ),
-            Effect.catchAll((error) => {
-              console.warn(`[syncThread] Failed to broadcast do state for ${threadId}:`, error);
-              return Effect.succeed(undefined);
-            }),
-          );
+          //   yield* Effect.tryPromise(() => sendDoState(this.name)).pipe(
+          //     Effect.tap(() =>
+          //       Effect.sync(() => {
+          //         result.broadcastSent = true;
+          //         console.log(`[syncThread] Broadcasted do state for ${threadId}`);
+          //       }),
+          //     ),
+          //     Effect.catchAll((error) => {
+          //       console.warn(`[syncThread] Failed to broadcast do state for ${threadId}:`, error);
+          //       return Effect.succeed(undefined);
+          //     }),
+          //   );
         } else {
           console.log(`[syncThread] No agent available for broadcasting ${threadId}`);
         }
@@ -991,16 +1018,16 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return count || 0;
   }
 
-  async sendDoState() {
-    const isSyncing = await this.isSyncing();
-    return this.agent?.broadcastChatMessage({
-      type: OutgoingMessageType.Do_State,
-      isSyncing,
-      syncingFolders: isSyncing ? ['inbox'] : [],
-      storageSize: this.getDatabaseSize(),
-      counts: await this.count(),
-    });
-  }
+  //   async sendDoState() {
+  //     const isSyncing = await this.isSyncing();
+  //     return this.agent?.broadcastChatMessage({
+  //       type: OutgoingMessageType.Do_State,
+  //       isSyncing,
+  //       syncingFolders: isSyncing ? ['inbox'] : [],
+  //       storageSize: this.getDatabaseSize(),
+  //       counts: await this.count(),
+  //     });
+  //   }
 
   async inboxRag(query: string) {
     if (!this.env.AUTORAG_ID) {
@@ -1335,25 +1362,11 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   async modifyThreadLabelsInDB(threadId: string, addLabels: string[], removeLabels: string[]) {
     try {
-      // Get current labels before modification
-      let currentThread = await get(this.db, { id: threadId });
-
-      if (!currentThread) {
-        await this.syncThread({ threadId });
-        currentThread = await get(this.db, { id: threadId });
-      }
-
-      if (!currentThread) {
-        throw new Error(`Thread ${threadId} not found in database and could not be synced`);
-      }
-
       const currentLabelsData = await getThreadLabels(this.db, threadId);
       const currentLabels = currentLabelsData.map((l) => l.id);
 
-      // Use the new database operations to modify labels
       const result = await modifyThreadLabels(this.db, threadId, addLabels, removeLabels);
 
-      // Reload folders for all affected labels
       const allAffectedLabels = [...new Set([...addLabels, ...removeLabels])];
       await Promise.all(allAffectedLabels.map((label) => this.reloadFolder(label.toLowerCase())));
 
@@ -1361,7 +1374,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         type: OutgoingMessageType.Mail_Get,
         threadId,
       });
-      await this.sendDoState();
 
       return {
         success: true,
@@ -1495,7 +1507,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         },
         labelIds,
       );
-      await this.sendDoState();
+      //   await sendDoState(this.name);
       console.log(`[ZeroDriver] Successfully stored thread ${threadData.id} in database`);
     } catch (error) {
       console.error(`[ZeroDriver] Failed to store thread ${threadData.id} in database:`, error);
@@ -1505,10 +1517,9 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   private async triggerSyncWorkflow(folder: string): Promise<void> {
     try {
-      console.log(`[ZeroDriver] Triggering sync workflow for ${this.name}/${folder}`);
+      console.log(`[ZeroDriver] Triggering sync coordinator workflow for ${this.name}/${folder}`);
 
-      const instance = await this.env.SYNC_THREADS_WORKFLOW.create({
-        id: `${this.name}-${folder}`,
+      const instance = await this.env.SYNC_THREADS_COORDINATOR_WORKFLOW.create({
         params: {
           connectionId: this.name,
           folder: folder,
@@ -1516,14 +1527,25 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       });
 
       console.log(
-        `[ZeroDriver] Sync workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`,
+        `[ZeroDriver] Sync coordinator workflow triggered for ${this.name}/${folder}, instance: ${instance.id}`,
       );
     } catch (error) {
       console.error(
-        `[ZeroDriver] Failed to trigger sync workflow for ${this.name}/${folder}:`,
+        `[ZeroDriver] Failed to trigger sync coordinator workflow for ${this.name}/${folder}:`,
         error,
       );
-      //   await this.syncThreads(folder);
+      //   try {
+      //     const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
+      //       id: `${this.name}-${folder}`,
+      //       params: {
+      //         connectionId: this.name,
+      //         folder: folder,
+      //       },
+      //     });
+      //     console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
+      //   } catch (fallbackError) {
+      //     console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
+      //   }
     }
   }
 }
@@ -1555,8 +1577,17 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     });
   }
 
-  onStart(): void | Promise<void> {
+  onStart() {
     this.registerThinkingMCP();
+  }
+
+  async onConnect(connection: Connection): Promise<void> {
+    connection.send(
+      JSON.stringify({
+        type: OutgoingMessageType.Mail_List,
+        folder: 'inbox',
+      }),
+    );
   }
 
   private getDataStreamResponse(
