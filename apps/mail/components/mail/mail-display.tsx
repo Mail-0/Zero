@@ -1313,10 +1313,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               </>
             )}
           </div>
-          <div
-            className="flex cursor-pointer flex-col pb-2 transition-all duration-200"
-            onClick={toggleCollapse}
-          >
+          <div className="flex cursor-pointer flex-col pb-2 duration-200" onClick={toggleCollapse}>
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
                 <BimiAvatar
@@ -1635,16 +1632,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
 
-          <div
-            className={cn(
-              'h-0 overflow-hidden transition-all duration-200',
-              !isCollapsed && 'h-px',
-            )}
-          ></div>
+          <div className={cn('h-0 overflow-hidden duration-200', !isCollapsed && 'h-px')}></div>
 
           <div
             className={cn(
-              'grid overflow-hidden transition-all duration-200',
+              'grid overflow-hidden duration-200',
               isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
             )}
             onClick={(e) => e.stopPropagation()}

@@ -91,6 +91,8 @@ export type ZeroEnv = {
   VECTORIZE: VectorizeIndex;
   VECTORIZE_MESSAGE: VectorizeIndex;
   DEV_PROXY: string;
+  MEET_AUTH_HEADER: string;
+  MEET_API_URL: string;
 };
 
 const env = _env as ZeroEnv;

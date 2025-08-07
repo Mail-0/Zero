@@ -507,17 +507,19 @@ const getCounts = async (connectionId: string): Promise<CountResult[]> => {
  */
 export const sendDoState = async (connectionId: string) => {
   try {
-    const registry = await getRegistryClient(connectionId);
-    const agent = await getZeroSocketAgent(connectionId);
-    const size = await getDatabaseSize(connectionId);
-    const counts = await getCounts(connectionId);
+    const [registry, agent, size, counts] = await Promise.all([
+      getRegistryClient(connectionId),
+      getZeroSocketAgent(connectionId),
+      getDatabaseSize(connectionId),
+      getCounts(connectionId),
+    ]);
     const shards = await listShards(registry);
-    return await agent.broadcastChatMessage({
+    return agent.broadcastChatMessage({
       type: OutgoingMessageType.Do_State,
       isSyncing: false,
       syncingFolders: ['inbox'],
       storageSize: size,
-      counts: counts,
+      counts,
       shards: shards.length,
     });
   } catch (error) {

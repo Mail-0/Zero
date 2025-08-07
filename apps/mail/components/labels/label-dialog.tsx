@@ -131,7 +131,7 @@ export function LabelDialog({
                       <button
                         key={color.backgroundColor}
                         type="button"
-                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
+                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
                           formColor?.backgroundColor.toString() === color.backgroundColor &&
                           formColor.textColor.toString() === color.textColor
                             ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'

@@ -143,14 +143,19 @@ export async function countThreads(db: DB): Promise<number> {
   return result.count;
 }
 
-export async function countThreadsByLabel(db: DB, labelId: string): Promise<number> {
-  const [result] = await db
-    .select({ count: count() })
-    .from(threads)
-    .innerJoin(threadLabels, eq(threads.id, threadLabels.threadId))
-    .where(eq(threadLabels.labelId, labelId));
+export async function countThreadsByLabels(
+  db: DB,
+  labelIds: string[],
+): Promise<{ labelId: string; count: number }[]> {
+  if (labelIds.length === 0) return [];
 
-  return result.count;
+  const results = await db
+    .select({ labelId: threadLabels.labelId, count: count() })
+    .from(threadLabels)
+    .where(inArray(threadLabels.labelId, labelIds))
+    .groupBy(threadLabels.labelId);
+
+  return results;
 }
 
 export async function createThreadLabel(

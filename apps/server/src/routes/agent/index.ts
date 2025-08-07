@@ -16,7 +16,7 @@
 
 import {
   countThreads,
-  countThreadsByLabel,
+  countThreadsByLabels,
   deleteSpamThreads,
   get,
   getThreadLabels,
@@ -323,7 +323,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   transfer = new Transfer(this);
   sql: SqlStorage;
   private db: DB;
-  //   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
   private driver: MailManager | null = null;
   private agent: DurableObjectStub<ZeroAgent> | null = null;
@@ -339,7 +338,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     this.name = name;
     await this.ctx.blockConcurrencyWhile(async () => {
       await this.setupAuth();
-      //   await this.syncFolders();
     });
   }
 
@@ -349,22 +347,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   async isSyncing(): Promise<boolean> {
     return false;
-    // try {
-    //   const coordinatorInstance = await this.env.SYNC_THREADS_COORDINATOR_WORKFLOW.get(`${this.name}-inbox-coordinator`);
-    //   const coordinatorStatus = (await coordinatorInstance.status()).status;
-    //   if (['running', 'queued', 'waiting'].includes(coordinatorStatus)) {
-    //     return true;
-    //   }
-    // } catch {
-    // }
-
-    // try {
-    //   const workflowInstance = await this.env.SYNC_THREADS_WORKFLOW.get(`${this.name}-inbox`);
-    //   const status = (await workflowInstance.status()).status;
-    //   return ['running', 'queued', 'waiting'].includes(status);
-    // } catch {
-    //   return false;
-    // }
   }
 
   async getAllSubjects() {
@@ -846,13 +828,14 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   // Additional mail operations
   async count() {
     const folders = ['inbox', 'sent', 'spam', 'archive', 'trash'];
-    const counts = await Promise.all(
-      folders.map(async (folder) => {
-        const count = await this.getFolderThreadCount(folder.toUpperCase());
-        return { label: folder, count };
-      }),
+    const results = await countThreadsByLabels(
+      this.db,
+      folders.map((f) => f.toUpperCase()),
     );
-    return counts;
+    const resultMap = new Map(
+      results.map((r: { labelId: string; count: number }) => [r.labelId, r.count]),
+    );
+    return folders.map((f) => ({ label: f, count: resultMap.get(f.toUpperCase()) ?? 0 }));
   }
 
   private getThreadKey(threadId: string) {
@@ -1001,22 +984,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     const count = await countThreads(this.db);
     return count || 0;
   }
-
-  async getFolderThreadCount(folder: string) {
-    const count = await countThreadsByLabel(this.db, folder);
-    return count || 0;
-  }
-
-  //   async sendDoState() {
-  //     const isSyncing = await this.isSyncing();
-  //     return this.agent?.broadcastChatMessage({
-  //       type: OutgoingMessageType.Do_State,
-  //       isSyncing,
-  //       syncingFolders: isSyncing ? ['inbox'] : [],
-  //       storageSize: this.getDatabaseSize(),
-  //       counts: await this.count(),
-  //     });
-  //   }
 
   async inboxRag(query: string) {
     if (!this.env.AUTORAG_ID) {

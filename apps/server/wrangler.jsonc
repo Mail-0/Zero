@@ -172,11 +172,12 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "false",
+        "DISABLE_WORKFLOWS": "true",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
         "CLOUDFLARE_ACCOUNT_ID": "",
         "CLOUDFLARE_API_TOKEN": "",
+        "MEET_AUTH_HEADER": "",
       },
       "kv_namespaces": [
         {
