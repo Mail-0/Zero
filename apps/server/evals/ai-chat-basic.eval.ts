@@ -14,7 +14,6 @@ const baseModel = openai("gpt-4o-mini");
 // traced model for the actual task under test
 const model = traceAISDKModel(baseModel);
 
-// error handling incase llm fails 
 const safeStreamText = async (config: Parameters<typeof streamText>[0]) => {
   try {
     const res = await streamText(config);
@@ -39,31 +38,7 @@ const safeStreamText = async (config: Parameters<typeof streamText>[0]) => {
 
 // forever todo: make the expected output autistically specific 
 
-// Dynamically builds a list of natural-language queries and their minimal expected Gmail-syntax 
-const buildGmailSearchTestCases = async (): Promise<{ input: string; expected: string }[]> => {
-  const { object } = await generateObject({
-    model: baseModel,
-    system: `You are a JSON test-case generator for Gmail search query conversions.
-Return ONLY a JSON object with a single key "cases" mapping to an array. Each array element has exactly the keys {input, expected}.
-Guidelines:
-  • input – natural-language requests about searching/filtering email.
-  • expected – a short Gmail-syntax fragment (e.g., "is:unread", "has:attachment", "after:") that MUST appear in a correct answer.
-  • Cover diverse filters: sender, subject, attachments, labels, dates, read/unread.
-  • Array length: 8-12.
-  • No comments or additional keys.`,
-    prompt: "Generate Gmail search conversion test cases",
-    schema: z.object({
-      cases: z.array(
-        z.object({
-          input: z.string().min(5),
-          expected: z.string().min(3),
-        }),
-      ),
-    }),
-  });
-
-  return object.cases;
-};
+// REMOVED - replaced with makeGmailSearchTestCaseBuilder
 
 // generic dynamic testcase builder 
 
@@ -73,19 +48,49 @@ const makeAiChatTestCaseBuilder = (topic: string): (() => Promise<TestCase[]>) =
   return async () => {
     const { object } = await generateObject({
       model: baseModel,
-      system: `You are a JSON test-case generator for the topic: ${topic}.
-      Return ONLY a JSON object with key "cases" whose value is an array of objects {input, expected}.
+      system: `You are a test case generator for an AI email assistant that uses tools.
+      Generate realistic user requests for: ${topic}
+      
+      Return ONLY a JSON object with key "cases" containing objects {input, expected}.
       Guidelines:
-      • input – natural-language request related to ${topic}.
-      • expected – short keyword (≤3 words) expected in correct assistant reply.
-      • Array length: 6-10.
-      • No extra keys or comments.`,
-      prompt: `Generate ${topic} test cases`,
+      • input – natural user request (e.g., "Find my newsletters", "Archive old emails")
+      • expected – the primary tool name that should be called: inboxRag, getThread, getUserLabels, createLabel, modifyLabels, bulkArchive, bulkDelete, markThreadsRead, webSearch, composeEmail, sendEmail
+      • Make inputs realistic and varied
+      • Array length: 7-10
+      • No extra keys or comments`,
+      prompt: `Generate realistic ${topic} test cases`,
       schema: z.object({
         cases: z.array(
           z.object({
-            input: z.string().min(5),
-            expected: z.string().min(2),
+            input: z.string().min(8),
+            expected: z.string().min(3),
+          }),
+        ),
+      }),
+    });
+
+    return object.cases;
+  };
+};
+
+const makeGmailSearchTestCaseBuilder = (): (() => Promise<TestCase[]>) => {
+  return async () => {
+    const { object } = await generateObject({
+      model: baseModel,
+      system: `Generate test cases for Gmail search query conversion.
+      Return ONLY a JSON object with key "cases" containing objects {input, expected}.
+      Guidelines:
+      • input – natural language search request (e.g., "find emails from John", "show unread messages")
+      • expected – key Gmail operator that must appear in correct output (e.g., "from:", "is:unread", "has:attachment")
+      • Cover: senders, subjects, attachments, labels, dates, read status
+      • Array length: 8-12
+      • No extra keys or comments`,
+      prompt: "Generate Gmail search conversion test cases",
+      schema: z.object({
+        cases: z.array(
+          z.object({
+            input: z.string().min(8),
+            expected: z.string().min(3),
           }),
         ),
       }),
@@ -100,7 +105,7 @@ evalite("AI Chat – Basic Responses", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -108,7 +113,7 @@ evalite("AI Chat – Basic Responses", {
 });
 
 evalite("Gmail Search Query – Natural Language", {
-  data: buildGmailSearchTestCases, 
+  data: makeGmailSearchTestCaseBuilder(),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -124,7 +129,7 @@ evalite("AI Chat – Label Management", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -136,7 +141,7 @@ evalite("AI Chat – Email Organization", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -148,7 +153,7 @@ evalite("AI Chat – Email Composition", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -160,7 +165,7 @@ evalite("AI Chat – Smart Categorization", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -172,7 +177,7 @@ evalite("AI Chat – Information Queries", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -184,7 +189,7 @@ evalite("AI Chat – Complex Workflows", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -196,7 +201,7 @@ evalite("AI Chat – User Intent Recognition", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -208,7 +213,7 @@ evalite("AI Chat – Error Handling & Edge Cases", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id"),
+      system: AiChatPrompt(),
       prompt: input,
     });
   },
@@ -216,7 +221,7 @@ evalite("AI Chat – Error Handling & Edge Cases", {
 });
 
 evalite("Gmail Search Query Building", {
-  data: buildGmailSearchTestCases,
+  data: makeGmailSearchTestCaseBuilder(),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -227,8 +232,35 @@ evalite("Gmail Search Query Building", {
   scorers: [Factuality, Levenshtein],
 });
 
+const makeEmailCompositionTestCaseBuilder = (): (() => Promise<TestCase[]>) => {
+  return async () => {
+    const { object } = await generateObject({
+      model: baseModel,
+      system: `Generate test cases for styled email composition.
+      Return ONLY a JSON object with key "cases" containing objects {input, expected}.
+      Guidelines:
+      • input – email composition requests (e.g., "Write a thank you email", "Compose follow-up")
+      • expected – key phrase that should appear in composed email (e.g., "thank you", "following up", "appreciate")
+      • Focus on: thank you, follow-up, meeting, apology, introduction emails
+      • Array length: 6-8
+      • No extra keys or comments`,
+      prompt: "Generate email composition test cases",
+      schema: z.object({
+        cases: z.array(
+          z.object({
+            input: z.string().min(8),
+            expected: z.string().min(3),
+          }),
+        ),
+      }),
+    });
+
+    return object.cases;
+  };
+};
+
 evalite("Email Composition with Style Matching", {
-  data: makeAiChatTestCaseBuilder("styled email composition (follow-up, thank you, meeting, apology)"),
+  data: makeEmailCompositionTestCaseBuilder(),
   task: async (input) => {
     return safeStreamText({
       model: model,

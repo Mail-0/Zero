@@ -416,7 +416,7 @@
       "signatures": "Signatures",
       "shortcuts": "Raccourcis",
       "labels": "Étiquettes",
-      "categories": "Catégories",
+      "categories": "Vues",
       "dangerZone": "Zone dangereuse",
       "deleteAccount": "Supprimer le compte",
       "privacy": "Confidentialité"
@@ -448,6 +448,8 @@
         "noResultsFound": "Aucun résultat trouvé",
         "zeroSignature": "Signature Zero",
         "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels.",
+        "undoSendEnabled": "Annuler l'envoi",
+        "undoSendEnabledDescription": "Permettre d'annuler les emails dans les 30 secondes suivant l'envoi.",
         "defaultEmailAlias": "Alias e-mail par défaut",
         "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
         "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails",

@@ -4,13 +4,13 @@ import {
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
+import { getZeroAgent, modifyThreadLabelsInDB } from '../lib/server-utils';
 import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
 import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
-import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
 import { env } from 'cloudflare:workers';
 import { Effect } from 'effect';
@@ -115,7 +115,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       fromEmail: context.foundConnection.email,
     };
 
-    const agent = await getZeroAgent(context.connectionId);
+    const { stub: agent } = await getZeroAgent(context.connectionId);
     const createdDraft = await agent.createDraft(draftData);
     console.log('[WORKFLOW_FUNCTIONS] Created automatic draft:', {
       threadId: context.threadId,
@@ -383,7 +383,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   getUserLabels: async (context) => {
     try {
       console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
-      const agent = await getZeroAgent(context.connectionId);
+      const { stub: agent } = await getZeroAgent(context.connectionId);
       const userAccountLabels = await agent.getUserLabels();
       return { userAccountLabels };
     } catch (error) {
@@ -403,7 +403,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
     let userLabels: { name: string; usecase: string }[] = [];
     try {
-      const agent = await getZeroAgent(context.connectionId);
+      const { stub: agent } = await getZeroAgent(context.connectionId);
       const userTopics = await agent.getUserTopics();
       if (userTopics.length > 0) {
         userLabels = userTopics.map((topic: any) => ({
@@ -468,8 +468,6 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
 
-    const agent = await getZeroAgent(context.connectionId);
-
     const validLabelIds = generatedLabels
       .map((name: string) => {
         const foundLabel = userAccountLabels.find(
@@ -504,7 +502,8 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
           add: labelsToAdd,
           remove: labelsToRemove,
         });
-        await agent.modifyThreadLabelsInDB(
+        await modifyThreadLabelsInDB(
+          context.connectionId,
           context.threadId.toString(),
           labelsToAdd,
           labelsToRemove,

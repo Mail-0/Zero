@@ -1,17 +1,6 @@
-import { useTRPC } from '@/providers/query-provider';
-import { useQuery } from '@tanstack/react-query';
-import { useSession } from '@/lib/auth-client';
+import { useDoState } from '@/components/mail/use-do-state';
 
 export const useStats = () => {
-  const { data: session } = useSession();
-  const trpc = useTRPC();
-
-  const statsQuery = useQuery(
-    trpc.mail.count.queryOptions(void 0, {
-      enabled: !!session?.user.id,
-      staleTime: 1000 * 60 * 5, // 1 hour
-    }),
-  );
-
-  return statsQuery;
+  const [doState] = useDoState();
+  return { data: doState.counts };
 };

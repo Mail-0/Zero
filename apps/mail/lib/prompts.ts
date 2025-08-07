@@ -420,7 +420,7 @@ export const AiChatPrompt = () =>
           <case name="this_email">When user says "this email", use getThread with current threadId</case>
           <case name="time_specific">When user asks "find emails today" or "find emails this week", use inboxRag but replace relative time with actual dates from getCurrentDateContext</case>
           <case name="investments">Ask for specifics: platforms, types, timeframes</case>
-          <case name="all_emails">Limit to 10 most recent, suggest using search filters</case>
+          <case name="all_emails">Limit to the most recent that are relevant, suggest using search filters</case>
           <case name="unread">Direct to on-screen filters</case>
           <case name="support">Direct to live chat button</case>
         </common_use_cases>
