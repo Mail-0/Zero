@@ -106,7 +106,7 @@ export function NavUser() {
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [category] = useQueryState('category', { defaultValue: 'All Mail' });
   const { setLoading } = useLoading();
-  const [{ isSyncing, syncingFolders, storageSize }] = useDoState();
+  const [{ isSyncing, syncingFolders, storageSize, shards }] = useDoState();
 
   const getSettingsHref = useCallback(() => {
     const currentPath = category
@@ -135,12 +135,10 @@ export function NavUser() {
 
     try {
       setLoading(true, m['common.navUser.switchingAccounts']());
-
       setThreadId(null);
-
       await setDefaultConnection({ connectionId });
-
       queryClient.clear();
+      await queryClient.refetchQueries({ queryKey: trpc.mail.listThreads.infiniteQueryKey() });
     } catch (error) {
       console.error('Error switching accounts:', error);
       toast.error(m['common.navUser.failedToSwitchAccount']());
@@ -370,6 +368,11 @@ export function NavUser() {
                     storageSize={storageSize}
                     syncingFolders={syncingFolders}
                   />
+                  <DropdownMenuItem>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] opacity-60">Shards: {shards}</p>
+                    </div>
+                  </DropdownMenuItem>
                 </>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -617,6 +620,11 @@ export function NavUser() {
                     storageSize={storageSize}
                     syncingFolders={syncingFolders}
                   />
+                  <DropdownMenuItem>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] opacity-60">Shards: {shards}</p>
+                    </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

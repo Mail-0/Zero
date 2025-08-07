@@ -1,10 +1,11 @@
 import type { ThinkingMCP, ThreadSyncWorker, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
-import type { ZeroAgent, ZeroDriver } from './routes/agent';
+import type { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
 
 export type ZeroEnv = {
   ZERO_DRIVER: DurableObjectNamespace<ZeroDriver & QueryableHandler>;
+  SHARD_REGISTRY: DurableObjectNamespace<ShardRegistry & QueryableHandler>;
   ZERO_DB: DurableObjectNamespace<ZeroDB>;
   ZERO_AGENT: DurableObjectNamespace<ZeroAgent>;
   ZERO_MCP: DurableObjectNamespace<ZeroMCP & QueryableHandler>;

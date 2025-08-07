@@ -1,6 +1,7 @@
 import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
+import { getThread, getZeroAgent } from '../../lib/server-utils';
+import type { IGetThreadResponse } from '../../lib/driver/types';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import { getZeroAgent } from '../../lib/server-utils';
 import { perplexity } from '@ai-sdk/perplexity';
 import { colors } from '../../lib/prompts';
 import { openai } from '@ai-sdk/openai';
@@ -132,8 +133,14 @@ const getThreadSummary = (connectionId: string) =>
     }),
     execute: async ({ id }) => {
       const response = await env.VECTORIZE.getByIds([id]);
-      const { stub: agent } = await getZeroAgent(connectionId);
-      const thread = await agent.getThread(id);
+      let thread: IGetThreadResponse | null = null;
+      try {
+        const { result } = await getThread(connectionId, id);
+        thread = result;
+      } catch (error) {
+        console.error('Error getting thread', error);
+        return { error: 'Thread not found' };
+      }
       if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
         const result = response[0].metadata as { summary: string; connection: string };
         if (result.connection !== connectionId) {

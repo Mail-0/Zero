@@ -67,7 +67,7 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<
       }
 
       const maxCount = parseInt(this.env.THREAD_SYNC_MAX_COUNT || '20');
-      const shouldLoop = true;
+      const shouldLoop = this.env.THREAD_SYNC_LOOP === 'true';
 
       return { maxCount, shouldLoop, foundConnection };
     });

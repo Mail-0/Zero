@@ -62,6 +62,10 @@
             "name": "THREAD_SYNC_WORKER",
             "class_name": "ThreadSyncWorker",
           },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
       "workflows": [
@@ -136,6 +140,10 @@
           "tag": "v8",
           "new_sqlite_classes": ["ThreadSyncWorker"],
         },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
       ],
 
       "observability": {
@@ -163,7 +171,7 @@
         "GOOGLE_S_ACCOUNT": "{}",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
-        "THREAD_SYNC_LOOP": "true",
+        "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
@@ -270,6 +278,10 @@
             "name": "THREAD_SYNC_WORKER",
             "class_name": "ThreadSyncWorker",
           },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
       "workflows": [
@@ -353,6 +365,10 @@
         {
           "tag": "v9",
           "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v10",
+          "new_sqlite_classes": ["ShardRegistry"],
         },
       ],
       "observability": {
@@ -489,6 +505,10 @@
             "name": "THREAD_SYNC_WORKER",
             "class_name": "ThreadSyncWorker",
           },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
       "workflows": [
@@ -566,6 +586,10 @@
         {
           "tag": "v9",
           "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v10",
+          "new_sqlite_classes": ["ShardRegistry"],
         },
       ],
       "vars": {

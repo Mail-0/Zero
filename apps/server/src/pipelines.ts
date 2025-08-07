@@ -15,10 +15,10 @@ import {
   createDefaultWorkflows,
   type WorkflowContext,
 } from './thread-workflow-utils/workflow-engine';
+import { getThread, getZeroAgent, modifyThreadLabelsInDB } from './lib/server-utils';
 import { getServiceAccount } from './lib/factories/google-subscription.factory';
 import { DurableObject } from 'cloudflare:workers';
 import { bulkDeleteKeys } from './lib/bulk-delete';
-import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
 import { connection } from './db/schema';
@@ -594,15 +594,10 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
         });
 
-        const { stub: agent } = yield* Effect.tryPromise({
-          try: async () => await getZeroAgent(foundConnection.id),
-          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-        });
-
         const thread = yield* Effect.tryPromise({
           try: async () => {
             console.log('[THREAD_WORKFLOW] Getting thread:', threadId);
-            const thread = await agent.getThread(threadId.toString());
+            const { result: thread } = await getThread(foundConnection.id, threadId.toString());
             console.log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
             return thread;
           },
@@ -759,19 +754,12 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           }
         }
 
-        let agent;
-        try {
-          agent = (await getZeroAgent(foundConnection.id)).stub;
-        } catch (error) {
-          console.error('[THREAD_WORKFLOW] Failed to get agent:', error);
-          throw { _tag: 'DatabaseError' as const, error };
-        }
-
         let thread;
         try {
           console.log('[THREAD_WORKFLOW] Getting thread:', threadId);
-          thread = await agent.getThread(threadId.toString());
-          console.log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
+          const { result } = await getThread(connectionId.toString(), threadId.toString());
+          console.log('[THREAD_WORKFLOW] Found thread with messages:', result.messages.length);
+          thread = result;
         } catch (error) {
           console.error('[THREAD_WORKFLOW] Gmail API error:', error);
           throw { _tag: 'GmailApiError' as const, error };
@@ -1194,7 +1182,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
                 `[ZERO_WORKFLOW] Modifying labels for thread ${threadId}: +${addLabels.length} -${removeLabels.length}`,
               );
               try {
-                await agent.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
+                await modifyThreadLabelsInDB(foundConnection.id, threadId, addLabels, removeLabels);
               } catch {
                 console.log(`[ZERO_WORKFLOW] Failed to modify labels for thread ${threadId}`);
               }

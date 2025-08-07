@@ -104,6 +104,31 @@ export async function del(db: DB, params: { id: string }): Promise<Thread | null
   return thread || null;
 }
 
+export async function deleteSpamThreads(
+  db: DB,
+): Promise<{ deletedCount: number; deletedThreads: Thread[] }> {
+  return await db.transaction(async (tx) => {
+    const spamThreads = await tx
+      .select(threadSelect)
+      .from(threads)
+      .innerJoin(threadLabels, eq(threads.id, threadLabels.threadId))
+      .where(eq(threadLabels.labelId, 'SPAM'));
+
+    if (spamThreads.length === 0) {
+      return { deletedCount: 0, deletedThreads: [] };
+    }
+
+    const spamThreadIds = spamThreads.map((thread) => thread.id);
+
+    const deletedThreads = await tx
+      .delete(threads)
+      .where(inArray(threads.id, spamThreadIds))
+      .returning();
+
+    return { deletedCount: deletedThreads.length, deletedThreads };
+  });
+}
+
 export async function get(db: DB, params: { id: string }): Promise<Thread | null> {
   const [result] = await db.select().from(threads).where(eq(threads.id, params.id));
   return result || null;
