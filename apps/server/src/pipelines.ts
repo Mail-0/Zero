@@ -354,7 +354,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           // Extract thread IDs from messages
           historyItem.messagesAdded?.forEach((msg) => {
             if (msg.message?.labelIds?.includes('DRAFT')) return;
-            if (msg.message?.labelIds?.includes('SPAM')) return;
+            // if (msg.message?.labelIds?.includes('SPAM')) return;
             if (msg.message?.threadId) {
               threadsAdded.add(msg.message.threadId);
             }
@@ -465,6 +465,8 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
               );
             }
           }
+        } else {
+          yield* Console.log('[ZERO_WORKFLOW] No new threads to process');
         }
 
         // Process label changes for threads
@@ -1070,7 +1072,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
         history.forEach((historyItem) => {
           historyItem.messagesAdded?.forEach((msg) => {
             if (msg.message?.labelIds?.includes('DRAFT')) return;
-            if (msg.message?.labelIds?.includes('SPAM')) return;
+            // if (msg.message?.labelIds?.includes('SPAM')) return;
             if (msg.message?.threadId) {
               threadsAdded.add(msg.message.threadId);
             }

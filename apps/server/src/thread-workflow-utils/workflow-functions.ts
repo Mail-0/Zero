@@ -1,6 +1,5 @@
 import {
   SummarizeMessage,
-  ThreadLabels,
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
@@ -22,7 +21,18 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     if (!context.thread.messages || context.thread.messages.length === 0) {
       throw new Error('Cannot analyze email intent: No messages in thread');
     }
-    const latestMessage = context.thread.messages[context.thread.messages.length - 1];
+    const latestMessage = context.thread.latest!;
+
+    if (latestMessage.tags.some((tag) => tag.name.toLowerCase() === 'spam')) {
+      console.log('[WORKFLOW_FUNCTIONS] Skipping analysis for spam message');
+      return {
+        isQuestion: false,
+        isRequest: false,
+        isMeeting: false,
+        isUrgent: false,
+      };
+    }
+
     const emailIntent = analyzeEmailIntent(latestMessage);
 
     console.log('[WORKFLOW_FUNCTIONS] Analyzed email intent:', {
@@ -392,132 +402,212 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     }
   },
 
-  generateLabels: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
-    console.log(summaryResult, context.results);
-    if (!summaryResult?.summary) {
-      console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
-      return { labels: [] };
-    }
-
+  getUserTopics: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
-    let userLabels: { name: string; usecase: string }[] = [];
     try {
       const { stub: agent } = await getZeroAgent(context.connectionId);
       const userTopics = await agent.getUserTopics();
       if (userTopics.length > 0) {
-        userLabels = userTopics.map((topic: any) => ({
+        const formattedTopics = userTopics.map((topic: any) => ({
           name: topic.topic,
           usecase: topic.usecase,
         }));
-        console.log('[WORKFLOW_FUNCTIONS] Using user topics as labels:', userLabels);
+        console.log('[WORKFLOW_FUNCTIONS] Using user topics:', formattedTopics);
+        return { userTopics: formattedTopics };
       } else {
         console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
-        userLabels = defaultLabels;
+        return { userTopics: defaultLabels };
       }
     } catch (error) {
       console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
-      userLabels = defaultLabels;
-    }
-
-    console.log('[WORKFLOW_FUNCTIONS] Generating labels for thread:', {
-      userLabels,
-      threadId: context.threadId,
-      threadLabels: context.thread.labels,
-    });
-
-    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-      messages: [
-        { role: 'system', content: ThreadLabels(userLabels, context.thread.labels) },
-        { role: 'user', content: summaryResult.summary },
-      ],
-    });
-
-    if (labelsResponse?.response?.replaceAll('!', '').trim()?.length) {
-      console.log('[WORKFLOW_FUNCTIONS] Labels generated:', labelsResponse.response);
-      const labels: string[] = labelsResponse?.response
-        ?.split(',')
-        .map((e: string) => e.trim())
-        .filter((e: string) => e.length > 0)
-        .filter((e: string) =>
-          userLabels.find((label) => label.name.toLowerCase() === e.toLowerCase()),
-        );
-      return { labels, userLabelsUsed: userLabels };
-    } else {
-      console.log('[WORKFLOW_FUNCTIONS] No labels generated');
-      return { labels: [], userLabelsUsed: userLabels };
+      return { userTopics: defaultLabels };
     }
   },
 
-  applyLabels: async (context) => {
-    const labelsResult = context.results?.get('generate-labels');
+  generateLabelSuggestions: async (context) => {
+    const summaryResult = context.results?.get('generate-thread-summary');
+    const userLabelsResult = context.results?.get('get-user-labels');
+    const userTopicsResult = context.results?.get('get-user-topics');
+
+    if (!summaryResult?.summary) {
+      console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
+      return { suggestions: [], accountLabelsMap: {} };
+    }
+
+    const accountLabels = userLabelsResult?.userAccountLabels || [];
+    const userTopics = userTopicsResult?.userTopics || defaultLabels;
+    const currentThreadLabels = context.thread.labels?.map((l: { name: string }) => l.name) || [];
+
+    // Create normalized map for quick lookups
+    const accountLabelsMap: Record<string, any> = {};
+    accountLabels.forEach((label: any) => {
+      const key = label.name.toLowerCase().trim();
+      accountLabelsMap[key] = label;
+    });
+
+    console.log('[WORKFLOW_FUNCTIONS] Generating label suggestions for thread:', {
+      threadId: context.threadId,
+      accountLabelsCount: accountLabels.length,
+      userTopicsCount: userTopics.length,
+      currentLabelsCount: currentThreadLabels.length,
+    });
+
+    // Create a comprehensive prompt with all available options
+    const accountCandidates = accountLabels.map((l: { name: string; description?: string }) => ({
+      name: l.name,
+      usecase: l.description || 'General purpose label',
+    }));
+
+    const promptContent = `
+EXISTING ACCOUNT LABELS:
+${accountCandidates.map((l: { name: string; usecase: string }) => `- ${l.name}: ${l.usecase}`).join('\n')}
+
+USER TOPICS (potential new labels):
+${userTopics.map((t: { name: string; usecase: string }) => `- ${t.name}: ${t.usecase}`).join('\n')}
+
+CURRENT THREAD LABELS: ${currentThreadLabels.join(', ') || 'None'}
+
+Instructions:
+1. Return 1 label that best match this thread summary
+2. PREFER existing account labels if they fit the usecase
+3. If no existing labels fit, choose from user topics
+4. Only suggest NEW labels if neither existing nor topics match
+5. Return as JSON array: [{"name": "label name", "source": "existing|topic|new"}]
+
+Thread Summary: ${summaryResult.summary}`;
+
+    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are an AI that helps organize emails by suggesting appropriate labels. Always respond with valid JSON.',
+        },
+        { role: 'user', content: promptContent },
+      ],
+    });
+
+    const suggestions: { name: string; source: string }[] = labelsResponse.response;
+
+    console.log('[WORKFLOW_FUNCTIONS] Generated label suggestions:', suggestions);
+    return { suggestions, accountLabelsMap };
+  },
+
+  syncLabels: async (context) => {
+    const suggestionsResult: {
+      suggestions: { name: string; source: string }[];
+      accountLabelsMap: Record<string, any>;
+    } = context.results?.get('generate-label-suggestions') || { suggestions: [] };
     const userLabelsResult = context.results?.get('get-user-labels');
 
-    if (!labelsResult?.labels || labelsResult.labels.length === 0) {
-      console.log('[WORKFLOW_FUNCTIONS] No labels to apply');
+    if (!suggestionsResult?.suggestions || suggestionsResult.suggestions.length === 0) {
+      console.log('[WORKFLOW_FUNCTIONS] No label suggestions to sync');
       return { applied: false };
     }
 
-    if (!userLabelsResult?.userAccountLabels) {
-      console.log('[WORKFLOW_FUNCTIONS] No user account labels available');
-      return { applied: false };
-    }
+    const { suggestions, accountLabelsMap } = suggestionsResult;
+    const userAccountLabels = userLabelsResult?.userAccountLabels || [];
 
-    const userAccountLabels = userLabelsResult.userAccountLabels;
-    const generatedLabels = labelsResult.labels;
+    console.log('[WORKFLOW_FUNCTIONS] Syncing thread labels:', {
+      threadId: context.threadId,
+      suggestions: suggestions.map((s: any) => `${s.name} (${s.source})`),
+    });
 
-    console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
+    const { stub: agent } = await getZeroAgent(context.connectionId);
+    const finalLabelIds: string[] = [];
+    const createdLabels: any[] = [];
 
-    const validLabelIds = generatedLabels
-      .map((name: string) => {
-        const foundLabel = userAccountLabels.find(
-          (label: { name: string; id: string }) => label.name.toLowerCase() === name.toLowerCase(),
-        );
-        return foundLabel?.id;
-      })
-      .filter((id: string | undefined): id is string => id !== undefined && id !== '');
+    // Process each suggestion: create if needed, collect IDs
+    for (const suggestion of suggestions) {
+      const normalizedName = suggestion.name.toLowerCase().trim();
 
-    if (validLabelIds.length > 0) {
-      const currentLabelIds = context.thread.labels?.map((l: { id: string }) => l.id) || [];
-      const labelsToAdd = validLabelIds.filter((id: string) => !currentLabelIds.includes(id));
-
-      const aiManagedLabelNames = new Set(
-        (labelsResult.userLabelsUsed || []).map((topic: { name: string }) =>
-          topic.name.toLowerCase(),
-        ),
-      );
-
-      const aiManagedLabelIds = new Set(
-        userAccountLabels
-          .filter((label: { name: string }) => aiManagedLabelNames.has(label.name.toLowerCase()))
-          .map((label: { id: string }) => label.id),
-      );
-
-      const labelsToRemove = currentLabelIds.filter(
-        (id: string) => aiManagedLabelIds.has(id) && !validLabelIds.includes(id),
-      );
-
-      if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
-        console.log('[WORKFLOW_FUNCTIONS] Applying label changes:', {
-          add: labelsToAdd,
-          remove: labelsToRemove,
-        });
-        await modifyThreadLabelsInDB(
-          context.connectionId,
-          context.threadId.toString(),
-          labelsToAdd,
-          labelsToRemove,
-        );
-        console.log('[WORKFLOW_FUNCTIONS] Successfully modified thread labels');
-        return { applied: true, added: labelsToAdd.length, removed: labelsToRemove.length };
+      if (accountLabelsMap[normalizedName]) {
+        // Label already exists
+        finalLabelIds.push(accountLabelsMap[normalizedName].id);
+        console.log('[WORKFLOW_FUNCTIONS] Using existing label:', suggestion.name);
       } else {
-        console.log('[WORKFLOW_FUNCTIONS] No label changes needed - labels already match');
-        return { applied: false };
+        // Need to create label
+        try {
+          console.log('[WORKFLOW_FUNCTIONS] Creating new label:', suggestion.name);
+          const created = (await agent.createLabel({
+            name: suggestion.name,
+          })) as any; // Type assertion since agent interface may return void but implementation returns Label
+
+          if (created?.id) {
+            finalLabelIds.push(created.id);
+            createdLabels.push(created);
+            // Update accountLabelsMap for subsequent lookups
+            accountLabelsMap[normalizedName] = created;
+            console.log('[WORKFLOW_FUNCTIONS] Successfully created label:', created);
+          } else {
+            console.log(
+              '[WORKFLOW_FUNCTIONS] Failed to create label - no ID returned for:',
+              suggestion.name,
+            );
+          }
+        } catch (error) {
+          console.error('[WORKFLOW_FUNCTIONS] Error creating label:', {
+            name: suggestion.name,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
     }
 
-    console.log('[WORKFLOW_FUNCTIONS] No valid labels found in user account');
-    return { applied: false };
+    if (finalLabelIds.length === 0) {
+      console.log('[WORKFLOW_FUNCTIONS] No valid label IDs to apply');
+      return { applied: false, created: createdLabels.length };
+    }
+
+    // Calculate which labels to add/remove
+    const currentLabelIds = context.thread.labels?.map((l: { id: string }) => l.id) || [];
+    const labelsToAdd = finalLabelIds.filter((id: string) => !currentLabelIds.includes(id));
+
+    // Determine AI-managed labels for removal logic
+    const userTopicsResult = context.results?.get('get-user-topics');
+    const userTopics = userTopicsResult?.userTopics || [];
+
+    const aiManagedLabelNames = new Set([
+      ...userTopics.map((topic: { name: string; usecase: string }) => topic.name.toLowerCase()),
+      ...defaultLabels.map((label: { name: string; usecase: string }) => label.name.toLowerCase()),
+    ]);
+
+    const aiManagedLabelIds = new Set(
+      userAccountLabels
+        .filter((label: { name: string }) => aiManagedLabelNames.has(label.name.toLowerCase()))
+        .map((label: { id: string }) => label.id),
+    );
+
+    const labelsToRemove = currentLabelIds.filter(
+      (id: string) => aiManagedLabelIds.has(id) && !finalLabelIds.includes(id),
+    );
+
+    // Apply changes if needed
+    if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
+      console.log('[WORKFLOW_FUNCTIONS] Applying label changes:', {
+        add: labelsToAdd,
+        remove: labelsToRemove,
+        created: createdLabels.length,
+      });
+
+      await modifyThreadLabelsInDB(
+        context.connectionId,
+        context.threadId.toString(),
+        labelsToAdd,
+        labelsToRemove,
+      );
+
+      console.log('[WORKFLOW_FUNCTIONS] Successfully synced thread labels');
+      return {
+        applied: true,
+        added: labelsToAdd.length,
+        removed: labelsToRemove.length,
+        created: createdLabels.length,
+      };
+    } else {
+      console.log('[WORKFLOW_FUNCTIONS] No label changes needed - labels already match');
+      return { applied: false, created: createdLabels.length };
+    }
   },
 };
 

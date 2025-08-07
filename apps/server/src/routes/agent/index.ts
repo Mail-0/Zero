@@ -941,6 +941,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
           Effect.tap(() =>
             Effect.sync(() => console.log(`[syncThread] Updated database for ${threadId}`)),
           ),
+          Effect.tap(() => Effect.sync(() => this.reloadFolder('inbox'))),
           Effect.catchAll((error) => {
             console.error(`[syncThread] Failed to update database for ${threadId}:`, error);
             return Effect.succeed(undefined);
@@ -966,18 +967,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
               return Effect.succeed(undefined);
             }),
           );
-          //   yield* Effect.tryPromise(() => sendDoState(this.name)).pipe(
-          //     Effect.tap(() =>
-          //       Effect.sync(() => {
-          //         result.broadcastSent = true;
-          //         console.log(`[syncThread] Broadcasted do state for ${threadId}`);
-          //       }),
-          //     ),
-          //     Effect.catchAll((error) => {
-          //       console.warn(`[syncThread] Failed to broadcast do state for ${threadId}:`, error);
-          //       return Effect.succeed(undefined);
-          //     }),
-          //   );
         } else {
           console.log(`[syncThread] No agent available for broadcasting ${threadId}`);
         }

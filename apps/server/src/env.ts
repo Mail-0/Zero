@@ -90,6 +90,7 @@ export type ZeroEnv = {
   thread_queue: Queue;
   VECTORIZE: VectorizeIndex;
   VECTORIZE_MESSAGE: VectorizeIndex;
+  DEV_PROXY: string;
 };
 
 const env = _env as ZeroEnv;

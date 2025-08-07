@@ -23,7 +23,9 @@ export const c = {
 } as unknown as AppContext;
 
 export const getNotificationsUrl = (provider: EProviders) => {
-  return env.VITE_PUBLIC_BACKEND_URL + '/a8n/notify/' + provider;
+  return env.DEV_PROXY
+    ? `${env.DEV_PROXY}/a8n/notify/${provider}`
+    : env.VITE_PUBLIC_BACKEND_URL + '/a8n/notify/' + provider;
 };
 
 export async function setSubscribedState(
