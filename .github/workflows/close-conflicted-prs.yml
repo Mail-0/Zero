@@ -28,8 +28,11 @@ jobs:
                 pull_number: pr.number
               });
 
+              if (details.data.mergeable === null) {
+                continue;
+              }
+              
               if (details.data.mergeable === false) {
-                // Get the timeline of events to find when conflicts started
                 const timeline = await github.rest.issues.listEventsForTimeline({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -47,7 +50,7 @@ jobs:
 
                 const conflictAgeDays = (now - conflictStartTime) / (1000 * 60 * 60 * 24);
                 
-                if (conflictAgeDays > 3) {
+                if (conflictAgeDays >= 3) {
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
