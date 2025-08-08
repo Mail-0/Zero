@@ -2,11 +2,11 @@ name: Close Old Conflicted PRs
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: '0 0 * * *'
 
 jobs:
   close_conflicted_prs:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
     permissions:
       pull-requests: write
     steps:

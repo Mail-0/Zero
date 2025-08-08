@@ -22,7 +22,7 @@ concurrency:
 jobs:
   main:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
