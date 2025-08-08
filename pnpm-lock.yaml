@@ -19,8 +19,8 @@ catalogs:
       specifier: ^0.0.48
       version: 0.0.48
     better-auth:
-      specifier: ^1.2.9
-      version: 1.2.10
+      specifier: ^1.3.4
+      version: 1.3.4
     drizzle-kit:
       specifier: ^0.31.1
       version: 0.31.4
@@ -232,7 +232,7 @@ importers:
         version: 19.1.0-rc.2
       better-auth:
         specifier: 'catalog:'
-        version: 1.2.10
+        version: 1.3.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       canvas-confetti:
         specifier: 1.9.3
         version: 1.9.3
@@ -575,7 +575,7 @@ importers:
         version: 1.5.1
       better-auth:
         specifier: 'catalog:'
-        version: 1.2.10
+        version: 1.3.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       cheerio:
         specifier: 1.1.0
         version: 1.1.0
@@ -5139,11 +5139,19 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-auth@1.2.10:
-    resolution: {integrity: sha512-nEj1RG4DdLUuJiV5CR93ORyPCptGRBwksaPPCkUtGo9ka+UIlTpaiKoTaTqVLLYlqwX4bOj9tJ32oBNdf2G3Kg==}
+  better-auth@1.3.4:
+    resolution: {integrity: sha512-JbZYam6Cs3Eu5CSoMK120zSshfaKvrCftSo/+v7524H1RvhryQ7UtMbzagBcXj0Digjj8hZtVkkR4tTZD/wK2g==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
-  better-call@1.0.9:
-    resolution: {integrity: sha512-Qfm0gjk0XQz0oI7qvTK1hbqTsBY4xV2hsHAxF8LZfUYl3RaECCIifXuVqtPpZJWvlCCMlQSvkvhhyuApGUba6g==}
+  better-call@1.0.13:
+    resolution: {integrity: sha512-auqdP9lnNOli9tKpZIiv0nEIwmmyaD/RotM3Mucql+Ef88etoZi/t7Ph5LjlmZt/hiSahhNTt6YVnx6++rziXA==}
 
   better-sqlite3@11.10.0:
     resolution: {integrity: sha512-EwhOpyXiOEL/lKzHz9AW1msWFNzGc/z+LzeB3/jnFJpxu+th2yqvzsSWas1v9jgs9+xiXJcD5A8CJxAG2TaghQ==}
@@ -9912,6 +9920,9 @@ packages:
   zod@3.25.67:
     resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
 
+  zod@4.0.15:
+    resolution: {integrity: sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ==}
+
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -14451,7 +14462,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-auth@1.2.10:
+  better-auth@1.3.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@better-auth/utils': 0.2.5
       '@better-fetch/fetch': 1.1.18
@@ -14459,14 +14470,17 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@simplewebauthn/browser': 13.1.0
       '@simplewebauthn/server': 13.1.1
-      better-call: 1.0.9
+      better-call: 1.0.13
       defu: 6.1.4
       jose: 5.10.0
       kysely: 0.28.2
       nanostores: 0.11.4
-      zod: 3.25.67
+      zod: 4.0.15
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
-  better-call@1.0.9:
+  better-call@1.0.13:
     dependencies:
       '@better-fetch/fetch': 1.1.18
       rou3: 0.5.1
@@ -19949,6 +19963,8 @@ snapshots:
   zod@3.25.42: {}
 
   zod@3.25.67: {}
+
+  zod@4.0.15: {}
 
   zustand@4.5.7(@types/react@19.0.10)(react@19.1.0):
     dependencies:

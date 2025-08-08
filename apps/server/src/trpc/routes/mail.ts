@@ -151,6 +151,31 @@ export const mailRouter = router({
         threadsResponse.threads = filtered;
         console.debug('[listThreads] Snoozed threads after filtering:', filtered);
       }
+
+      if (threadsResponse.threads.length === 0 && folder === FOLDERS.INBOX && !q) {
+        const now = Date.now();
+        const cooldownKey = `resync_cooldown_${activeConnection.id}`;
+        const lastResyncStr = await env.gmail_processing_threads.get(cooldownKey);
+        const lastResync = lastResyncStr ? parseInt(lastResyncStr, 10) : 0;
+        const RESYNC_COOLDOWN_MS = 30000;
+
+        if (now - lastResync > RESYNC_COOLDOWN_MS) {
+          await env.gmail_processing_threads.put(cooldownKey, now.toString(), {
+            expirationTtl: 60,
+          });
+
+          getZeroAgent(activeConnection.id, executionCtx)
+            .then((_agent) => {
+              _agent.stub.forceReSync().catch((error) => {
+                console.error('[listThreads] Async resync failed:', error);
+              });
+            })
+            .catch((error) => {
+              console.error('[listThreads] Failed to get agent for async resync:', error);
+            });
+        }
+      }
+
       console.debug('[listThreads] Returning threadsResponse:', threadsResponse);
       return threadsResponse;
     }),

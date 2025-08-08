@@ -360,10 +360,10 @@ export const forceReSync = async (connectionId: string) => {
   const registry = await getRegistryClient(connectionId);
   const allShards = await listShards(registry);
 
-  await Promise.all(
+  await Promise.allSettled(
     allShards.map(async ({ shard_id: id }) => {
       const shard = await getShardClient(connectionId, id);
-      await Promise.all([
+      await Promise.allSettled([
         shard.exec(`DROP TABLE IF EXISTS threads`),
         shard.exec(`DROP TABLE IF EXISTS thread_labels`),
         shard.exec(`DROP TABLE IF EXISTS labels`),
@@ -374,22 +374,16 @@ export const forceReSync = async (connectionId: string) => {
   await deleteAllShards(registry);
 
   const agent = await getZeroAgent(connectionId);
-  await agent.stub.forceReSync();
+  return agent.stub.forceReSync();
 };
 
 export const reSyncThread = async (connectionId: string, threadId: string) => {
   try {
-    const { result: thread, shardId } = await getThread(connectionId, threadId);
+    const { shardId } = await getThread(connectionId, threadId);
     const agent = await getZeroAgentFromShard(connectionId, shardId);
     await agent.stub.syncThread({ threadId });
   } catch (error) {
-    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`);
-  }
-  if (thread) {
-    const agent = await getZeroAgentFromShard(connectionId, shardId);
-    await agent.stub.syncThread({ threadId });
-  } else {
-    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`);
+    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`, error);
   }
 };
 
@@ -527,11 +521,10 @@ export const getZeroSocketAgent = async (connectionId: string) => {
 
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
-  const { sessionUser } = c.var;
+  const { sessionUser, auth } = c.var;
   if (!sessionUser) throw new Error('Session Not Found');
 
   const db = await getZeroDB(sessionUser.id);
-
   const userData = await db.findUser();
 
   if (userData?.defaultConnectionId) {
@@ -541,6 +534,14 @@ export const getActiveConnection = async () => {
 
   const firstConnection = await db.findFirstConnection();
   if (!firstConnection) {
+    try {
+      if (auth) {
+        await auth.api.revokeSession({ headers: c.req.raw.headers });
+        await auth.api.signOut({ headers: c.req.raw.headers });
+      }
+    } catch (err) {
+      console.warn(`[getActiveConnection] Session cleanup failed for user ${sessionUser.id}:`, err);
+    }
     console.error(`No connections found for user ${sessionUser.id}`);
     throw new Error('No connections found for user');
   }
