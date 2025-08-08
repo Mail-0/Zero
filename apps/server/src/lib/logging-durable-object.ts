@@ -60,7 +60,7 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         if (timeSinceLastActivity > this.SESSION_TIMEOUT && currentState.calls.length > 0) {
             // Export expired session to Datadog
             await this.exportSessionToDatadog(currentState);
-            
+
             // Start new session
             await this.clearSession();
             const newState = await this.getState();
@@ -158,7 +158,7 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
 
     async exportSessionToDatadog(state: LoggingState): Promise<void> {
         if (state.calls.length === 0) return;
-        
+
         try {
             await this.datadogService.exportSessionLogs(
                 state.sessionId,
