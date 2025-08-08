@@ -448,6 +448,8 @@
         "noResultsFound": "Nenhum resultado encontrado",
         "zeroSignature": "Assinatura Zero",
         "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails.",
+        "undoSendEnabled": "Desfazer envio",
+        "undoSendEnabledDescription": "Permitir cancelar emails dentro de 30 segundos após o envio.",
         "defaultEmailAlias": "Alias de Email Padrão",
         "selectDefaultEmail": "Selecionar email padrão",
         "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails",

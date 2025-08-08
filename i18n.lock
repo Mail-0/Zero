@@ -888,6 +888,8 @@ checksums:
     pages/settings/general/noResultsFound: 5518f2865757dc73900aa03ef8be6934
     pages/settings/general/zeroSignature: 0e94e29f00f4b39838ebed8a774148c3
     pages/settings/general/zeroSignatureDescription: 296c4c81828361128b071969cde8ad76
+    pages/settings/general/undoSendEnabled: 20c02fde2ab10932a598b89ba1267079
+    pages/settings/general/undoSendEnabledDescription: b76f6f7945381839e5ffd3eb261ae5b8
     pages/settings/general/defaultEmailAlias: dc269bad429dd22b27d82118441ea9b2
     pages/settings/general/selectDefaultEmail: c2abb2947589920179e4757876ea905c
     pages/settings/general/defaultEmailDescription: 0ebf26fceccb4cad99f4b2a20cbcfab0

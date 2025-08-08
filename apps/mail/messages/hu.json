@@ -448,6 +448,8 @@
         "noResultsFound": "Nincs találat",
         "zeroSignature": "Zero aláírás",
         "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez.",
+        "undoSendEnabled": "Küldés visszavonása",
+        "undoSendEnabledDescription": "Lehetővé teszi az e-mailek visszavonását a küldéstől számított 30 másodpercen belül.",
         "defaultEmailAlias": "Alapértelmezett e-mail álnév",
         "selectDefaultEmail": "Alapértelmezett e-mail kiválasztása",
         "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor",

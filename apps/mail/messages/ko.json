@@ -448,6 +448,8 @@
         "noResultsFound": "검색 결과 없음",
         "zeroSignature": "Zero 서명",
         "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다.",
+        "undoSendEnabled": "전송 취소",
+        "undoSendEnabledDescription": "이메일 전송 후 30초 이내에 취소할 수 있습니다.",
         "defaultEmailAlias": "기본 이메일 별칭",
         "selectDefaultEmail": "기본 이메일 선택",
         "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다",

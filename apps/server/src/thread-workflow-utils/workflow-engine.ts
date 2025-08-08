@@ -1,3 +1,19 @@
+/*
+ * Licensed to Zero Email Inc. under one or more contributor license agreements.
+ * You may not use this file except in compliance with the Apache License, Version 2.0 (the "License").
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Reuse or distribution of this file requires a license from Zero Email Inc.
+ */
+
 import type { IGetThreadResponse } from '../lib/driver/types';
 import { workflowFunctions } from './workflow-functions';
 import { shouldGenerateDraft } from './index';
@@ -280,24 +296,31 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
       {
         id: 'get-user-labels',
         name: 'Get User Labels',
-        description: 'Retrieves user-defined labels',
+        description: 'Retrieves existing labels from user account',
         enabled: true,
         action: workflowFunctions.getUserLabels,
       },
       {
-        id: 'generate-labels',
-        name: 'Generate Labels',
-        description: 'Generates appropriate labels for the thread',
+        id: 'get-user-topics',
+        name: 'Get User Topics',
+        description: 'Retrieves user-defined topics for potential new labels',
         enabled: true,
-        action: workflowFunctions.generateLabels,
+        action: workflowFunctions.getUserTopics,
+      },
+      {
+        id: 'generate-label-suggestions',
+        name: 'Generate Label Suggestions',
+        description: 'Generates appropriate label suggestions for the thread',
+        enabled: true,
+        action: workflowFunctions.generateLabelSuggestions,
         errorHandling: 'continue',
       },
       {
-        id: 'apply-labels',
-        name: 'Apply Labels',
-        description: 'Applies generated labels to the thread',
+        id: 'sync-labels',
+        name: 'Sync Labels',
+        description: 'Creates missing labels and applies them to the thread',
         enabled: true,
-        action: workflowFunctions.applyLabels,
+        action: workflowFunctions.syncLabels,
         errorHandling: 'continue',
       },
       {

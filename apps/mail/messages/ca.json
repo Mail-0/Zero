@@ -448,6 +448,8 @@
         "noResultsFound": "No s'han trobat resultats",
         "zeroSignature": "Signatura Zero",
         "zeroSignatureDescription": "Afegeix una signatura Zero als teus correus.",
+        "undoSendEnabled": "Desfer enviament",
+        "undoSendEnabledDescription": "Permet cancel·lar correus electrònics dins dels 30 segons després d'enviar-los.",
         "defaultEmailAlias": "Àlies de correu predeterminat",
         "selectDefaultEmail": "Selecciona el correu predeterminat",
         "defaultEmailDescription": "Aquest correu s'utilitzarà com a adreça predeterminada 'De' quan es redactin nous correus",

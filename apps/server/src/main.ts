@@ -20,13 +20,16 @@ import {
   type SerializedAttachment,
   type AttachmentFile,
 } from './lib/attachments';
+import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordinator-workflow';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
+import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
+import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
+import { ThreadSyncWorker } from './routes/agent/sync-worker';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { EProviders, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
-import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
@@ -42,7 +45,6 @@ import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
 import { aiRouter } from './routes/ai';
-import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
@@ -584,13 +586,9 @@ const api = new Hono<HonoContext>()
       }
     }
 
-    const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
-    c.set('autumn', autumn);
-
     await next();
 
     c.set('sessionUser', undefined);
-    c.set('autumn', undefined as any);
     c.set('auth', undefined as any);
   })
   .route('/ai', aiRouter)
@@ -1057,4 +1055,15 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner };
+export {
+  ZeroAgent,
+  ZeroMCP,
+  ZeroDB,
+  ZeroDriver,
+  ThinkingMCP,
+  WorkflowRunner,
+  ThreadSyncWorker,
+  SyncThreadsWorkflow,
+  SyncThreadsCoordinatorWorkflow,
+  ShardRegistry,
+};

@@ -1,0 +1,21 @@
+name: Close Stale Issues
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  stale:
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-issue-stale: 3
+          days-before-issue-close: 0
+          days-before-pr-stale: -1
+          stale-issue-label: 'stale'
+          stale-issue-message: 'This issue is stale (3+ days) and will be closed.'
+          close-issue-message: 'Closing stale issue.'

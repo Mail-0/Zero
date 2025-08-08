@@ -1,4 +1,4 @@
-import { useUndoSend } from '@/hooks/use-undo-send';
+import { useUndoSend, type EmailData, deserializeFiles } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
@@ -11,10 +11,9 @@ import { EmailComposer } from './email-composer';
 import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Attachment } from '@/types';
-import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
@@ -108,8 +107,8 @@ export function CreateEmail({
       scheduleAt: data.scheduleAt,
     });
 
-    // Clear draft ID from URL
     setDraftId(null);
+    clearUndoData();
 
     // Track different email sending scenarios
     if (data.cc && data.cc.length > 0 && data.bcc && data.bcc.length > 0) {
@@ -122,8 +121,16 @@ export function CreateEmail({
       posthog.capture('Create Email Sent');
     }
 
-    toast.success(m['pages.createEmail.emailSentSuccessfully']());
-    handleUndoSend(result, settings);
+    handleUndoSend(result, settings, {
+      to: data.to,
+      cc: data.cc,
+      bcc: data.bcc,
+      subject: data.subject,
+      message: data.message,
+      attachments: data.attachments,
+      fromEmail: data.fromEmail,
+      scheduleAt: data.scheduleAt,
+    });
   };
 
   useEffect(() => {
@@ -139,6 +146,33 @@ export function CreateEmail({
     return cleanedAddresses || [];
   };
 
+  const clearUndoData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('undoEmailData');
+    }
+  };
+
+  const undoEmailData = useMemo((): EmailData | null => {
+    if (isComposeOpen !== 'true') return null;
+    if (typeof window === 'undefined') return null;
+    
+    const storedData = localStorage.getItem('undoEmailData');
+    if (!storedData) return null;
+    
+    try {
+      const parsedData = JSON.parse(storedData);
+      
+      if (parsedData.attachments && Array.isArray(parsedData.attachments)) {
+        parsedData.attachments = deserializeFiles(parsedData.attachments);
+      }
+      
+      return parsedData;
+    } catch (error) {
+      console.error('Failed to parse undo email data:', error);
+      return null;
+    }
+  }, [isComposeOpen]);
+
   // Cast draft to our extended type that includes CC and BCC
   const typedDraft = draft as unknown as DraftType;
 
@@ -146,6 +180,7 @@ export function CreateEmail({
     setIsComposeOpen(open ? 'true' : null);
     if (!open) {
       setDraftId(null);
+      clearUndoData();
     }
   };
 
@@ -191,19 +226,26 @@ export function CreateEmail({
             </div>
           ) : (
             <EmailComposer
-              key={typedDraft?.id || 'composer'}
+              key={typedDraft?.id || undoEmailData?.to?.join(',') || 'composer'}
               className="mb-12 rounded-2xl border"
               onSendEmail={handleSendEmail}
-              initialMessage={typedDraft?.content || initialBody}
+              initialMessage={
+                undoEmailData?.message || 
+                typedDraft?.content || 
+                initialBody
+              }
               initialTo={
+                undoEmailData?.to ||
                 typedDraft?.to?.map((e: string) => e.replace(/[<>]/g, '')) ||
                 processInitialEmails(initialTo)
               }
               initialCc={
+                undoEmailData?.cc ||
                 typedDraft?.cc?.map((e: string) => e.replace(/[<>]/g, '')) ||
                 processInitialEmails(initialCc)
               }
               initialBcc={
+                undoEmailData?.bcc ||
                 typedDraft?.bcc?.map((e: string) => e.replace(/[<>]/g, '')) ||
                 processInitialEmails(initialBcc)
               }
@@ -212,9 +254,14 @@ export function CreateEmail({
                 setActiveReplyId(null);
                 setIsComposeOpen(null);
                 setDraftId(null);
+                clearUndoData();
               }}
-              initialAttachments={files}
-              initialSubject={typedDraft?.subject || initialSubject}
+              initialAttachments={undoEmailData?.attachments || files}
+              initialSubject={
+                undoEmailData?.subject || 
+                typedDraft?.subject || 
+                initialSubject
+              }
               autofocus={false}
               settingsLoading={settingsLoading}
             />

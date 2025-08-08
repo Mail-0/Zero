@@ -448,6 +448,8 @@
         "noResultsFound": "Geen resultaten gevonden",
         "zeroSignature": "Zero-handtekening",
         "zeroSignatureDescription": "Voeg een Zero-handtekening toe aan je e-mails.",
+        "undoSendEnabled": "Verzenden ongedaan maken",
+        "undoSendEnabledDescription": "Sta toe om e-mails binnen 30 seconden na verzending te annuleren.",
         "defaultEmailAlias": "Standaard e-mailalias",
         "selectDefaultEmail": "Selecteer standaard e-mail",
         "defaultEmailDescription": "Dit e-mailadres wordt gebruikt als standaard 'Van'-adres bij het opstellen van nieuwe e-mails",

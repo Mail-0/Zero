@@ -58,8 +58,28 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow",
+        },
+      ],
       "queues": {
         "producers": [
           {
@@ -72,7 +92,7 @@
           },
           {
             "queue": "send-email-queue",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -83,7 +103,7 @@
             "queue": "thread-queue",
           },
           {
-            "queue": "send-email-queue"
+            "queue": "send-email-queue",
           },
         ],
       },
@@ -116,6 +136,14 @@
           "tag": "v7",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
       ],
 
       "observability": {
@@ -142,13 +170,14 @@
         "VOICE_SECRET": "1234567890",
         "GOOGLE_S_ACCOUNT": "{}",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "5",
+        "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
         "CLOUDFLARE_ACCOUNT_ID": "",
         "CLOUDFLARE_API_TOKEN": "",
+        "MEET_AUTH_HEADER": "",
       },
       "kv_namespaces": [
         {
@@ -177,15 +206,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "d5da698931524da9992fe398e095fc32",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "444cad0e54114635b5199ffae9542bd5",
         },
         {
           "binding": "snoozed_emails",
@@ -194,6 +223,13 @@
       ],
     },
     "staging": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
         "crons": ["0 0 * * *", "0 * * * *"],
       },
@@ -239,8 +275,28 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-staging",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-staging",
+        },
+      ],
       "r2_buckets": [
         {
           "binding": "THREADS_BUCKET",
@@ -259,7 +315,7 @@
           },
           {
             "queue": "send-email-queue-staging",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -270,7 +326,7 @@
             "queue": "thread-queue-staging",
           },
           {
-            "queue": "send-email-queue-staging"
+            "queue": "send-email-queue-staging",
           },
         ],
       },
@@ -307,6 +363,14 @@
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v10",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
       ],
       "observability": {
         "enabled": true,
@@ -325,9 +389,9 @@
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "20",
+        "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
       },
       "kv_namespaces": [
         {
@@ -356,15 +420,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "7f277903ebab4b4d89f5d59b1f531073",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "d5da698931524da9992fe398e095fc32",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "444cad0e54114635b5199ffae9542bd5",
         },
         {
           "binding": "snoozed_emails",
@@ -373,6 +437,13 @@
       ],
     },
     "production": {
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
       "triggers": {
         "crons": ["0 0 * * *", "0 * * * *"],
       },
@@ -431,8 +502,28 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
         ],
       },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-prod",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-prod",
+        },
+      ],
       "queues": {
         "producers": [
           {
@@ -445,7 +536,7 @@
           },
           {
             "queue": "send-email-queue-prod",
-            "binding": "send_email_queue"
+            "binding": "send_email_queue",
           },
         ],
         "consumers": [
@@ -456,7 +547,7 @@
             "queue": "thread-queue-prod",
           },
           {
-            "queue": "send-email-queue-prod"
+            "queue": "send-email-queue-prod",
           },
         ],
       },
@@ -493,6 +584,14 @@
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v10",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -501,7 +600,7 @@
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "10",
+        "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },
@@ -532,15 +631,15 @@
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
         },
         {
           "binding": "snoozed_emails",

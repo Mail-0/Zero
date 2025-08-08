@@ -448,6 +448,8 @@
         "noResultsFound": "Keine Ergebnisse gefunden",
         "zeroSignature": "Zero-Signatur",
         "zeroSignatureDescription": "Füge deinen E-Mails eine Zero-Signatur hinzu.",
+        "undoSendEnabled": "Senden rückgängig machen",
+        "undoSendEnabledDescription": "Ermöglicht das Abbrechen von E-Mails innerhalb von 30 Sekunden nach dem Senden.",
         "defaultEmailAlias": "Standard-E-Mail-Alias",
         "selectDefaultEmail": "Standard-E-Mail auswählen",
         "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet",

@@ -186,7 +186,7 @@ export function Navigation() {
                 <span className="ml-1 hidden lg:inline">GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <Star className="relative top-px size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <Star className="relative top-px size-4 fill-gray-400 duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
                 <AnimatedNumber value={stars} className="font-medium text-white" />
               </div>
             </a>
@@ -262,8 +262,8 @@ export function Navigation() {
               </div>
               <a
                 target="_blank"
-                rel="noreferrer"
-                href="https://cal.com/team/0"
+                rel="noreferrer noopener"
+                href="https://cal.com/team/0/chat"
                 className="font-medium"
               >
                 Contact Us

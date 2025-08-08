@@ -448,6 +448,8 @@
         "noResultsFound": "No se han encontrado resultados",
         "zeroSignature": "Firma Zero",
         "zeroSignatureDescription": "Añade una firma Zero a tus correos.",
+        "undoSendEnabled": "Deshacer envío",
+        "undoSendEnabledDescription": "Permitir cancelar correos electrónicos dentro de los 30 segundos posteriores al envío.",
         "defaultEmailAlias": "Alias de correo electrónico predeterminado",
         "selectDefaultEmail": "Seleccionar correo predeterminado",
         "defaultEmailDescription": "Este correo electrónico se utilizará como dirección predeterminada 'De' al redactar nuevos correos",

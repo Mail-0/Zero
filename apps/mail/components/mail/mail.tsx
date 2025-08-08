@@ -9,6 +9,7 @@ import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/i
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
+import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
@@ -17,7 +18,6 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
-import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -30,7 +30,6 @@ import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
-import { useDoState } from './use-do-state';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
@@ -326,7 +325,6 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
-  const [{ isSyncing, syncingFolders, storageSize }] = useDoState();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -394,39 +392,8 @@ export function MailLayout() {
   const defaultCategoryId = useDefaultCategoryId();
   const [category] = useQueryState('category', { defaultValue: defaultCategoryId });
 
-    return (
+  return (
     <TooltipProvider delayDuration={0}>
-      <div className="fixed right-2 top-2 z-10 flex items-center gap-2">
-        <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-2 rounded-lg border px-3 py-1.5 shadow-sm">
-          <div className="flex items-center gap-1.5">
-            <div className={cn(
-              "h-2 w-2 rounded-full",
-              isSyncing || storageSize === 0 ? "bg-orange-500 animate-pulse" : "bg-green-500"
-            )} />
-            <span className="text-muted-foreground text-xs font-medium">
-              {isSyncing || storageSize === 0 ? 'Syncing emails...' : 'Synced'}
-            </span>
-          </div>
-          
-          {storageSize && (
-            <>
-              <div className="bg-border h-3 w-px" />
-              <span className="text-muted-foreground text-xs">
-                {storageSize}
-              </span>
-            </>
-          )}
-          
-          {syncingFolders.length > 0 && (
-            <>
-              <div className="bg-border h-3 w-px" />
-              <span className="text-muted-foreground text-xs">
-                {syncingFolders.join(', ')}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
       <PricingDialog />
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
@@ -711,7 +678,25 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
   const folder = params?.folder ?? 'inbox';
   const [isOpen, setIsOpen] = useState(false);
 
-  if (folder !== 'inbox' || isMultiSelectMode) return null;
+  useHotkeys(
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    (key) => {
+      const category = categorySettings[Number(key.key) - 1];
+      if (!category) return;
+      const isCurrentlyActive = labels.includes(category.searchValue);
+
+      if (isCurrentlyActive) {
+        setLabels(labels.filter((label) => label !== category.searchValue));
+      } else {
+        setLabels([...labels, category.searchValue]);
+      }
+    },
+    {
+      scopes: ['mail-list'],
+      preventDefault: true,
+      enableOnFormTags: false,
+    },
+  );
 
   const handleLabelChange = (searchValue: string) => {
     const trimmed = searchValue.trim();
@@ -743,6 +728,8 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
       setLabels(Array.from(newLabelsSet));
     }
   };
+
+  if (folder !== 'inbox' || isMultiSelectMode) return null;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

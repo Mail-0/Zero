@@ -448,6 +448,8 @@
         "noResultsFound": "कोई परिणाम नहीं मिला",
         "zeroSignature": "ज़ीरो सिग्नेचर",
         "zeroSignatureDescription": "अपने ईमेल में ज़ीरो सिग्नेचर जोड़ें।",
+        "undoSendEnabled": "भेजना रद्द करें",
+        "undoSendEnabledDescription": "भेजने के 30 सेकंड के भीतर ईमेल रद्द करने की अनुमति दें।",
         "defaultEmailAlias": "डिफ़ॉल्ट ईमेल उपनाम",
         "selectDefaultEmail": "डिफ़ॉल्ट ईमेल चुनें",
         "defaultEmailDescription": "नए ईमेल लिखते समय यह ईमेल डिफ़ॉल्ट 'प्रेषक' पते के रूप में उपयोग किया जाएगा",

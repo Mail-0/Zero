@@ -15,14 +15,11 @@ export type InsertLabel = typeof labels.$inferInsert;
 // Reusable thread selection object to reduce duplication
 const threadSelect = {
   id: threads.id,
-  createdAt: threads.createdAt,
-  updatedAt: threads.updatedAt,
   threadId: threads.threadId,
   providerId: threads.providerId,
   latestSender: threads.latestSender,
   latestReceivedOn: threads.latestReceivedOn,
   latestSubject: threads.latestSubject,
-  latestLabelIds: threads.latestLabelIds,
 } as const;
 
 async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {
@@ -107,6 +104,31 @@ export async function del(db: DB, params: { id: string }): Promise<Thread | null
   return thread || null;
 }
 
+export async function deleteSpamThreads(
+  db: DB,
+): Promise<{ deletedCount: number; deletedThreads: Thread[] }> {
+  return await db.transaction(async (tx) => {
+    const spamThreads = await tx
+      .select(threadSelect)
+      .from(threads)
+      .innerJoin(threadLabels, eq(threads.id, threadLabels.threadId))
+      .where(eq(threadLabels.labelId, 'SPAM'));
+
+    if (spamThreads.length === 0) {
+      return { deletedCount: 0, deletedThreads: [] };
+    }
+
+    const spamThreadIds = spamThreads.map((thread) => thread.id);
+
+    const deletedThreads = await tx
+      .delete(threads)
+      .where(inArray(threads.id, spamThreadIds))
+      .returning();
+
+    return { deletedCount: deletedThreads.length, deletedThreads };
+  });
+}
+
 export async function get(db: DB, params: { id: string }): Promise<Thread | null> {
   const [result] = await db.select().from(threads).where(eq(threads.id, params.id));
   return result || null;
@@ -121,14 +143,19 @@ export async function countThreads(db: DB): Promise<number> {
   return result.count;
 }
 
-export async function countThreadsByLabel(db: DB, labelId: string): Promise<number> {
-  const [result] = await db
-    .select({ count: count() })
-    .from(threads)
-    .innerJoin(threadLabels, eq(threads.id, threadLabels.threadId))
-    .where(eq(threadLabels.labelId, labelId));
+export async function countThreadsByLabels(
+  db: DB,
+  labelIds: string[],
+): Promise<{ labelId: string; count: number }[]> {
+  if (labelIds.length === 0) return [];
 
-  return result.count;
+  const results = await db
+    .select({ labelId: threadLabels.labelId, count: count() })
+    .from(threadLabels)
+    .where(inArray(threadLabels.labelId, labelIds))
+    .groupBy(threadLabels.labelId);
+
+  return results;
 }
 
 export async function createThreadLabel(
@@ -359,9 +386,7 @@ function buildLabelConditions(db: DB, labelIds: string[], requireAllLabels: bool
       db
         .select({ count: count() })
         .from(threadLabels)
-        .where(
-          and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds)),
-        ),
+        .where(and(eq(threadLabels.threadId, threads.id), inArray(threadLabels.labelId, labelIds))),
       labelIds.length,
     );
   } else {

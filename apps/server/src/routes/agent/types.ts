@@ -80,6 +80,7 @@ export type OutgoingMessage =
       syncingFolders: string[];
       storageSize: number;
       counts: { label: string; count: number }[];
+      shards: number;
     };
 
 export type QueueFunc = (name: string, payload: unknown) => Promise<unknown>;

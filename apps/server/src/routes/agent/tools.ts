@@ -1,6 +1,7 @@
 import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
+import { getThread, getZeroAgent } from '../../lib/server-utils';
+import type { IGetThreadResponse } from '../../lib/driver/types';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import { getZeroAgent } from '../../lib/server-utils';
 import { perplexity } from '@ai-sdk/perplexity';
 import { colors } from '../../lib/prompts';
 import { openai } from '@ai-sdk/openai';
@@ -132,8 +133,14 @@ const getThreadSummary = (connectionId: string) =>
     }),
     execute: async ({ id }) => {
       const response = await env.VECTORIZE.getByIds([id]);
-      const { stub: agent } = await getZeroAgent(connectionId);
-      const thread = await agent.getThread(id);
+      let thread: IGetThreadResponse | null = null;
+      try {
+        const { result } = await getThread(connectionId, id);
+        thread = result;
+      } catch (error) {
+        console.error('Error getting thread', error);
+        return { error: 'Thread not found' };
+      }
       if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
         const result = response[0].metadata as { summary: string; connection: string };
         if (result.connection !== connectionId) {
@@ -242,8 +249,14 @@ const modifyLabels = (connectionId: string) =>
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to modify'),
       options: z.object({
-        addLabels: z.array(z.string()).default([]).describe('The labels to add'),
-        removeLabels: z.array(z.string()).default([]).describe('The labels to remove'),
+        addLabels: z
+          .array(z.string())
+          .default([])
+          .describe('The labels to add, an array of label names'),
+        removeLabels: z
+          .array(z.string())
+          .default([])
+          .describe('The labels to remove, an array of label names'),
       }),
     }),
     execute: async ({ threadIds, options }) => {
@@ -482,6 +495,7 @@ export const tools = async (connectionId: string, ragEffect: boolean = false) =>
     [Tools.DeleteLabel]: deleteLabel(connectionId),
     [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
     [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.WebSearch]: webSearch(),
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

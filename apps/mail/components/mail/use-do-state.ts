@@ -5,6 +5,7 @@ export type State = {
   syncingFolders: string[];
   storageSize: number;
   counts: { label: string; count: number }[];
+  shards: number;
 };
 
 const stateAtom = atom<State>({
@@ -12,6 +13,7 @@ const stateAtom = atom<State>({
   syncingFolders: [],
   storageSize: 0,
   counts: [],
+  shards: 0,
 });
 
 function useDoState() {

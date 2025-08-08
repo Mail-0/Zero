@@ -1,11 +1,11 @@
 import { sendEmailsCommand } from './send-emails/index';
-import { seedStyleCommand } from './seed-style/seeder';
+// import { seedStyleCommand } from './seed-style/seeder';
 import { subcommands, run } from 'cmd-ts';
 
 const app = subcommands({
   name: 'scripts',
   cmds: {
-    'seed-style': seedStyleCommand,
+    // 'seed-style': seedStyleCommand,
     'send-emails': sendEmailsCommand,
   },
 });

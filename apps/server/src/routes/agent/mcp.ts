@@ -15,9 +15,9 @@
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { getThread, getZeroAgent } from '../../lib/server-utils';
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import { getCurrentDateContext } from '../../lib/prompts';
-import { getZeroAgent } from '../../lib/server-utils';
 import { connection } from '../../db/schema';
 import { FOLDERS } from '../../lib/utils';
 import { env } from 'cloudflare:workers';
@@ -85,8 +85,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
           };
         }
         const response = await env.VECTORIZE.getByIds([s.id]);
-        const { stub: agent } = await getZeroAgent(this.activeConnectionId);
-        const thread = await agent.getThread(s.id);
+        const { result: thread } = await getThread(this.activeConnectionId, s.id);
         if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
           const result = response[0].metadata as { summary: string; connection: string };
           if (result.connection !== this.activeConnectionId) {
@@ -328,7 +327,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
         });
         const content = await Promise.all(
           result.threads.map(async (thread) => {
-            const loadedThread = await agent.getThread(thread.id);
+            const { result: loadedThread } = await getThread(this.activeConnectionId!, thread.id);
             return [
               {
                 type: 'text' as const,
@@ -363,7 +362,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
         },
       },
       async (s) => {
-        const thread = await agent.getThread(s.threadId);
+        const { result: thread } = await getThread(this.activeConnectionId!, s.threadId);
         const initialResponse = [
           {
             type: 'text' as const,
