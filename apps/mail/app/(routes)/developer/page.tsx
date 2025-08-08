@@ -94,7 +94,7 @@ export default function DeveloperPage() {
 
           <div className="grid grid-cols-1 gap-4 pb-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {developerResources.map((resource) => (
-              <Card key={resource.title} className="transition-all hover:shadow-md">
+              <Card key={resource.title} className="hover:shadow-md">
                 <CardHeader className="sm:p-6">
                   <div className="flex items-start gap-4 sm:items-center">
                     <div className={`shrink-0 rounded-lg ${resource.bgColor} p-2.5`}>

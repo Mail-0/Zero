@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy-to-production:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
     name: Merge Staging to Production
     if: github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'production-deploy') && startsWith(github.event.comment.body, '/deploy') && github.event.comment.author_association == 'MEMBER'
     steps:

@@ -77,7 +77,7 @@ export class ToolOrchestrator {
           maxResults: z.number().describe('The maximum number of results to return').default(10),
         }),
         execute: async ({ query, folder, maxResults }) => {
-          const agent = await getZeroAgent(this.connectionId);
+          const { stub: agent } = await getZeroAgent(this.connectionId);
           const res = await agent.searchThreads({ query, maxResults, folder });
           return res.threadIds;
         },

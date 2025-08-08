@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "eval": "evalite",
-    "eval:dev": "evalite watch"
+    "eval:dev": "evalite watch",
+    "test:cron": "curl 'http://localhost:8787/cdn-cgi/handler/scheduled'"
   },
   "exports": {
     "./trpc": "./src/trpc/index.ts",

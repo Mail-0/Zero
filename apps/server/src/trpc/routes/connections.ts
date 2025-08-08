@@ -1,7 +1,6 @@
 import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router } from '../trpc';
 import { getActiveConnection, getZeroDB } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
-
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 

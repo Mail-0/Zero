@@ -1,15 +1,17 @@
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
-import { useSearchValue } from '@/hooks/use-search-value';
-import { useLocation, useParams } from 'react-router';
+// import { useSearchValue } from '@/hooks/use-search-value';
+import {
+  // useLocation,
+  useParams,
+} from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
-import { Categories } from '@/components/mail/mail';
+import { useCallback, useMemo, useRef } from 'react';
+// import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
-import { cleanSearchValue } from '@/lib/utils';
+// import { cleanSearchValue } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
-import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 export function MailListHotkeys() {
@@ -17,10 +19,9 @@ export function MailListHotkeys() {
   const [mail, setMail] = useMail();
   const [, items] = useThreads();
   const hoveredEmailId = useRef<string | null>(null);
-  const categories = Categories();
-  const [, setCategory] = useQueryState('category');
-  const [searchValue, setSearchValue] = useSearchValue();
-  const pathname = useLocation().pathname;
+  // const categories = Categories();
+  // const [searchValue, setSearchValue] = useSearchValue();
+  // const pathname = useLocation().pathname;
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
   const shouldUseHover = mail.bulkSelected.length === 0;
@@ -34,16 +35,16 @@ export function MailListHotkeys() {
     optimisticToggleStar,
   } = useOptimisticActions();
 
-  useEffect(() => {
-    const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
-      hoveredEmailId.current = event.detail.id;
-    };
+  //   useEffect(() => {
+  //     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
+  //       hoveredEmailId.current = event.detail.id;
+  //     };
 
-    window.addEventListener('emailHover', handleEmailHover as EventListener);
-    return () => {
-      window.removeEventListener('emailHover', handleEmailHover as EventListener);
-    };
-  }, []);
+  //     window.addEventListener('emailHover', handleEmailHover as EventListener);
+  //     return () => {
+  //       window.removeEventListener('emailHover', handleEmailHover as EventListener);
+  //     };
+  //   }, []);
 
   const selectAll = useCallback(() => {
     if (mail.bulkSelected.length > 0) {
@@ -174,38 +175,38 @@ export function MailListHotkeys() {
     }));
   }, [shouldUseHover]);
 
-  const switchMailListCategory = useCallback(
-    (category: string | null) => {
-      if (pathname?.includes('/mail/inbox')) {
-        const cat = categories.find((cat) => cat.id === category);
-        if (!cat) {
-          setCategory(null);
-          setSearchValue({
-            value: '',
-            highlight: searchValue.highlight,
-            folder: '',
-          });
-          return;
-        }
-        setCategory(cat.id);
-        setSearchValue({
-          value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
-          highlight: searchValue.highlight,
-          folder: '',
-        });
-      }
-    },
-    [categories, pathname, searchValue, setCategory, setSearchValue],
-  );
+  // const switchMailListCategory = useCallback(
+  //   (category: string | null) => {
+  //     if (pathname?.includes('/mail/inbox')) {
+  //       const cat = categories.find((cat) => cat.id === category);
+  //       if (!cat) {
+  //         // setCategory(null);
+  //         setSearchValue({
+  //           value: '',
+  //           highlight: searchValue.highlight,
+  //           folder: '',
+  //         });
+  //         return;
+  //       }
+  //       // setCategory(cat.id);
+  //       setSearchValue({
+  //         value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+  //         highlight: searchValue.highlight,
+  //         folder: '',
+  //       });
+  //     }
+  //   },
+  //   [categories, pathname, searchValue, setSearchValue],
+  // );
 
-  const switchCategoryByIndex = useCallback(
-    (idx: number) => {
-      const cat = categories[idx];
-      if (!cat) return;
-      switchMailListCategory(cat.id);
-    },
-    [categories, switchMailListCategory],
-  );
+  // const switchCategoryByIndex = useCallback(
+  //   (idx: number) => {
+  //     const cat = categories[idx];
+  //     if (!cat) return;
+  //     switchMailListCategory(cat.id);
+  //   },
+  //   [categories, switchMailListCategory],
+  // );
 
   const handlers = useMemo(
     () => ({
@@ -218,15 +219,15 @@ export function MailListHotkeys() {
       bulkDelete,
       bulkStar,
       exitSelectionMode,
-      showImportant: () => switchCategoryByIndex(0),
-      showAllMail: () => switchCategoryByIndex(1),
-      showPersonal: () => switchCategoryByIndex(2),
-      showUpdates: () => switchCategoryByIndex(3),
-      showPromotions: () => switchCategoryByIndex(4),
-      showUnread: () => switchCategoryByIndex(5),
+      // showImportant: () => switchCategoryByIndex(0),
+      // showAllMail: () => switchCategoryByIndex(1),
+      // showPersonal: () => switchCategoryByIndex(2),
+      // showUpdates: () => switchCategoryByIndex(3),
+      // showPromotions: () => switchCategoryByIndex(4),
+      // showUnread: () => switchCategoryByIndex(5),
     }),
     [
-      switchCategoryByIndex,
+      // switchCategoryByIndex,
       markAsRead,
       markAsUnread,
       markAsImportant,
