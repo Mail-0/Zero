@@ -364,11 +364,7 @@ export const forceReSync = async (connectionId: string) => {
   await agent.stub.forceReSync();
 };
 
-type GetThreadsAccumulator = {
-  threads: any[];
-  nextPageToken: string | null;
-  maxResults: number;
-};
+
 
 export const getThreadsFromDB = async (
   connectionId: string,
@@ -380,80 +376,40 @@ export const getThreadsFromDB = async (
     pageToken?: string;
   },
 ): Promise<IGetThreadsResponse> => {
-  console.log(`[getThreadsFromDB] Called with connectionId: ${connectionId}, params:`, params);
-  await sendDoState(connectionId);
+  // Fire and forget - don't block the thread query on state updates
+  void sendDoState(connectionId);
 
   const maxResults = params.maxResults ?? 20;
 
   return Effect.runPromise(
-    aggregateShardDataSequentialEffect<IGetThreadsResponse, GetThreadsAccumulator>(
+    aggregateShardDataEffect<IGetThreadsResponse>(
       connectionId,
-      (shard, shardId, accumulator) =>
-        Effect.gen(function* () {
-          if (accumulator.threads.length >= accumulator.maxResults) {
-            console.log(
-              `[getThreadsFromDB] Reached maxResults (${accumulator.maxResults}), breaking loop`,
-            );
-            return { shouldContinue: false, accumulator };
-          }
+      (shard) =>
+        Effect.promise(() =>
+          shard.stub.getThreadsFromDB({
+            ...params,
+            maxResults: maxResults * 2, // Request more from each shard to ensure we have enough
+          }),
+        ),
+      (shardResults) => {
+        // Combine all threads from all shards
+        const allThreads = shardResults.flatMap((result) => result.threads);
+        
+        // Sort by some criteria if needed (assuming threads have a sortable field)
+        // allThreads.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        
+        // Take only the requested amount
+        const threads = allThreads.slice(0, maxResults);
+        
+        // Determine if there's a next page token (simplified logic)
+        const hasMoreResults = allThreads.length > maxResults;
+        const nextPageToken = hasMoreResults 
+          ? shardResults.find(r => r.nextPageToken)?.nextPageToken || null
+          : null;
 
-          const remainingResults = accumulator.maxResults - accumulator.threads.length;
-          console.log(
-            `[getThreadsFromDB] Querying shard ${shardId} for up to ${remainingResults} threads`,
-          );
-
-          const shardResult = (yield* Effect.promise(() =>
-            shard.stub.getThreadsFromDB({
-              ...params,
-              maxResults: remainingResults,
-            }),
-          )) as IGetThreadsResponse;
-
-          console.log(
-            `[getThreadsFromDB] Shard ${shardId} returned ${shardResult.threads.length} threads, nextPageToken: ${shardResult.nextPageToken}`,
-          );
-
-          const newThreads = [...accumulator.threads, ...shardResult.threads];
-          let newNextPageToken = accumulator.nextPageToken;
-
-          if (shardResult.nextPageToken) {
-            newNextPageToken = shardResult.nextPageToken;
-            console.log(
-              `[getThreadsFromDB] Setting nextPageToken from shard ${shardId}: ${newNextPageToken}`,
-            );
-          }
-
-          const shouldContinue =
-            newThreads.length < accumulator.maxResults &&
-            shardResult.threads.length >= remainingResults;
-
-          if (!shouldContinue) {
-            console.log(
-              `[getThreadsFromDB] Stopping after shard ${shardId} (threads.length: ${newThreads.length}, shardResult.threads.length: ${shardResult.threads.length}, remainingResults: ${remainingResults})`,
-            );
-          }
-
-          return {
-            shouldContinue,
-            accumulator: {
-              threads: newThreads,
-              nextPageToken: newNextPageToken,
-              maxResults: accumulator.maxResults,
-            },
-          };
-        }),
-      { threads: [], nextPageToken: null, maxResults },
-      (accumulator) => {
-        const slicedThreads = accumulator.threads.slice(
-          0,
-          maxResults === Infinity ? accumulator.threads.length : maxResults,
-        );
-        console.log(
-          `[getThreadsFromDB] Returning ${slicedThreads.length} threads, nextPageToken: ${accumulator.nextPageToken}`,
-        );
         return {
-          threads: slicedThreads,
-          nextPageToken: accumulator.nextPageToken,
+          threads,
+          nextPageToken,
         };
       },
     ),

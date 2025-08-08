@@ -20,8 +20,8 @@ import { useSession } from '@/lib/auth-client';
 import { useAIFullScreen } from './ai-sidebar';
 import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
+import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
-import { FOLDERS } from '@/lib/utils';
 import { Video } from 'lucide-react';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
@@ -39,11 +39,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return true;
   });
   const [, setPricingDialog] = useQueryState('pricingDialog');
-
   const { isFullScreen } = useAIFullScreen();
-
   const { data: stats } = useStats();
-
   const location = useLocation();
   const { data: session } = useSession();
   const { currentSection, navItems } = useMemo(() => {
@@ -107,15 +104,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             {showComposeButton && (
               <div className="flex gap-1">
-                <div className="w-[80%]">
+                <div className={cn(isPro ? 'w-[80%]' : 'w-full')}>
                   <ComposeButton />
                 </div>
-                <button
-                  onClick={handleCreateMeet}
-                  className="hover:bg-muted-foreground/10 inline-flex h-8 w-[20%] items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
-                >
-                  <Video className="text-muted-foreground h-4 w-4" />
-                </button>
+                {isPro ? (
+                  <button
+                    onClick={handleCreateMeet}
+                    className="hover:bg-muted-foreground/10 inline-flex h-8 w-[20%] items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  >
+                    <Video className="text-muted-foreground h-4 w-4" />
+                  </button>
+                ) : null}
               </div>
             )}
           </SidebarHeader>

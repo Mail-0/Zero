@@ -13,18 +13,17 @@ import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
-import { getContext } from 'hono/context-storage';
 import { dubAnalytics } from '@dub/better-auth';
 import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
 import { type EProviders } from '../types';
-import type { HonoContext } from '../ctx';
-import { env } from '../env';
 import { createDriver } from './driver';
+import { Autumn } from 'autumn-js';
 import { createDb } from '../db';
 import { Effect } from 'effect';
+import { env } from '../env';
 import { Dub } from 'dub';
 
 const scheduleCampaign = (userInfo: { address: string; name: string }) =>
@@ -191,9 +190,9 @@ export const createAuth = () => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = await getZeroDB(user.id);
           const connections = await db.findManyConnections();
-          const context = getContext<HonoContext>();
+          const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
           try {
-            await context.var.autumn.customers.delete(user.id);
+            await autumn.customers.delete(user.id);
           } catch (error) {
             console.error('Failed to delete Autumn customer:', error);
             // Continue with deletion process despite Autumn failure
