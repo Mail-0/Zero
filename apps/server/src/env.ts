@@ -99,6 +99,9 @@ export type ZeroEnv = {
   OTEL_EXPORTER_OTLP_ENDPOINT?: string;
   OTEL_EXPORTER_OTLP_HEADERS?: string;
   OTEL_SERVICE_NAME?: string;
+  DD_API_KEY: string;
+  DD_APP_KEY: string;
+  DD_SITE: string;
 };
 
 const env = _env as ZeroEnv;

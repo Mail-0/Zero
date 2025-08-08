@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { Queryable } from 'dormroom';
 import type { ZeroEnv } from '../env';
+import { DatadogService } from './datadog-service';
 
 export interface TRPCCallLog {
     id: string;
@@ -34,11 +35,14 @@ export interface LoggingState {
 export class LoggingDurableObject extends DurableObject<ZeroEnv> {
     private state: DurableObjectState;
     protected env: ZeroEnv;
+    private datadogService: DatadogService;
+    private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
     constructor(state: DurableObjectState, env: ZeroEnv) {
         super(state, env);
         this.state = state;
         this.env = env;
+        this.datadogService = new DatadogService(env);
     }
 
     async logCall(callData: Omit<TRPCCallLog, 'id' | 'timestamp'>): Promise<void> {
@@ -50,6 +54,19 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
 
         // Get current state
         const currentState = await this.getState();
+
+        // Check if session has expired
+        const timeSinceLastActivity = Date.now() - currentState.lastActivity;
+        if (timeSinceLastActivity > this.SESSION_TIMEOUT && currentState.calls.length > 0) {
+            // Export expired session to Datadog
+            await this.exportSessionToDatadog(currentState);
+            
+            // Start new session
+            await this.clearSession();
+            const newState = await this.getState();
+            newState.userId = currentState.userId; // Preserve user ID
+            await this.state.storage.put('state', newState);
+        }
 
         // Add the new call
         currentState.calls.push(log);
@@ -137,5 +154,32 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             totalDuration: 0,
         };
         await this.state.storage.put('state', newState);
+    }
+
+    async exportSessionToDatadog(state: LoggingState): Promise<void> {
+        if (state.calls.length === 0) return;
+        
+        try {
+            await this.datadogService.exportSessionLogs(
+                state.sessionId,
+                state.userId,
+                state.calls
+            );
+        } catch (error) {
+            console.error('Failed to export session to Datadog:', error);
+        }
+    }
+
+    async exportCurrentSessionToDatadog(): Promise<void> {
+        const state = await this.getState();
+        await this.exportSessionToDatadog(state);
+    }
+
+    async endSession(): Promise<void> {
+        const state = await this.getState();
+        if (state.calls.length > 0) {
+            await this.exportSessionToDatadog(state);
+        }
+        await this.clearSession();
     }
 } 

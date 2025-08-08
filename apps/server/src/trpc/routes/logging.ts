@@ -36,4 +36,20 @@ export const loggingRouter = router({
             const loggingDO = await getLoggingDO(sessionId);
             return await loggingDO.getState();
         }),
+
+    exportToDatadog: privateProcedure
+        .mutation(async ({ ctx }) => {
+            const sessionId = ctx.sessionUser?.id || 'anonymous';
+            const loggingDO = await getLoggingDO(sessionId);
+            await loggingDO.exportCurrentSessionToDatadog();
+            return { success: true };
+        }),
+
+    endSession: privateProcedure
+        .mutation(async ({ ctx }) => {
+            const sessionId = ctx.sessionUser?.id || 'anonymous';
+            const loggingDO = await getLoggingDO(sessionId);
+            await loggingDO.endSession();
+            return { success: true };
+        }),
 }); 
