@@ -20,9 +20,7 @@
     "tr",
     "hu",
     "fa",
-    "vi",
-    "zh-CN",
-    "zh-TW"
+    "vi"
   ],
   "modules": [
     "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",
