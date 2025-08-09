@@ -852,7 +852,7 @@ const handler = {
   }
 };
 
-const config: ResolveConfigFn = (env: ZeroEnv, _trigger: any) => {
+const config: ResolveConfigFn = (env: ZeroEnv, _trigger: unknown) => {
   return {
     exporter: {
       url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.signoz.cloud:443/v1/traces',
@@ -877,10 +877,10 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     if (instrumentedHandler && instrumentedHandler.fetch) {
       return instrumentedHandler.fetch(request as any, this.env, this.ctx);
     }
-    return handler.fetch(request as any, this.env, this.ctx);
+    return handler.fetch(request, this.env, this.ctx);
   }
   async queue(
-    batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
+    batch: MessageBatch<unknown> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
   ) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
@@ -888,7 +888,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         await Promise.all(
           batch.messages.map(async (msg: any) => {
             const connectionId = msg.body.connectionId;
-            const providerId = msg.body.providerId;
+            const providerId = msg.body.providerId as EProviders;
             try {
               await enableBrainFunction({ id: connectionId, providerId });
             } catch (error) {
@@ -908,7 +908,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
             const { messageId, connectionId, mail } = msg.body;
 
             const { pending_emails_status: statusKV, pending_emails_payload: payloadKV } = this
-              .env as any;
+              .env as { pending_emails_status: KVNamespace; pending_emails_payload: KVNamespace };
 
             const status = await statusKV.get(messageId);
             if (status === 'cancelled') {
@@ -1024,7 +1024,10 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
   private async processScheduledEmails() {
     console.log('Checking for scheduled emails ready to be queued...');
-    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as any;
+    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as { 
+      scheduled_emails: KVNamespace; 
+      send_email_queue: Queue<IEmailSendBatch>; 
+    };
 
     try {
       const now = Date.now();
@@ -1101,7 +1104,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
       for (const key of listResp.keys) {
         try {
-          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          const wakeAtIso = key.metadata?.wakeAt as string | undefined;
           if (!wakeAtIso) continue;
           const wakeAt = new Date(wakeAtIso).getTime();
           if (wakeAt > nowTs) continue;
