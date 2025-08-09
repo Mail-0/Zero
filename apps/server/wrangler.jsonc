@@ -149,9 +149,6 @@
       "observability": {
         "enabled": true,
       },
-      "triggers": {
-        "crons": ["*/1 * * * *", "0 0 * * *", "0 * * * *"],
-      },
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",

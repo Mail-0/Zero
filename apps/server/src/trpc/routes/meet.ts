@@ -29,6 +29,8 @@ export const meetRouter = router({
       }),
     )
     .mutation(async ({ ctx }) => {
+      const enableMeet = env.ENABLE_MEET === 'true';
+      if (!enableMeet) return new Response('Not implemented', { status: 501 });
       const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
       const customer = await autumn.customers.get(ctx.sessionUser?.id);
       if (!customer.data) {

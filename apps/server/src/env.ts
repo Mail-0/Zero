@@ -93,6 +93,7 @@ export type ZeroEnv = {
   DEV_PROXY: string;
   MEET_AUTH_HEADER: string;
   MEET_API_URL: string;
+  ENABLE_MEET: 'true' | 'false';
 };
 
 const env = _env as ZeroEnv;

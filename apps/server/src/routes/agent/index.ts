@@ -42,11 +42,11 @@ import {
   type ISnoozeBatch,
   type ParsedMessage,
 } from '../../types';
+import { connectionToDriver, getZeroSocketAgent, reSyncThread } from '../../lib/server-utils';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
-import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
@@ -1544,6 +1544,10 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
         folder: 'inbox',
       }),
     );
+  }
+
+  async _reSyncThread({ threadId }: { threadId: string }) {
+    await reSyncThread(this.name, threadId);
   }
 
   private getDataStreamResponse(

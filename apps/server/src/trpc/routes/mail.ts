@@ -6,6 +6,7 @@ import {
   getThread,
   modifyThreadLabelsInDB,
   deleteAllSpam,
+  reSyncThread,
 } from '../../lib/server-utils';
 import {
   IGetThreadResponseSchema,
@@ -569,6 +570,10 @@ export const mailRouter = router({
         await agent.stub.create(mailWithAttachments);
       }
 
+      console.log('[send] input.threadId:', input);
+
+      if (input.threadId)
+        ctx.c.executionCtx.waitUntil(reSyncThread(activeConnection.id, input.threadId));
       ctx.c.executionCtx.waitUntil(afterTask());
       return { success: true };
     }),

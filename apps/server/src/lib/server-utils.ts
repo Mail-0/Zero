@@ -2,6 +2,7 @@ import type { IGetThreadResponse, IGetThreadsResponse } from './driver/types';
 import { OutgoingMessageType } from '../routes/agent/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
+import { defaultPageSize } from './utils';
 import type { HonoContext } from '../ctx';
 import { createClient } from 'dormroom';
 import { createDriver } from './driver';
@@ -350,21 +351,41 @@ export const getZeroAgent = async (connectionId: string, executionCtx?: Executio
   return agent;
 };
 
+export const getZeroAgentFromShard = async (connectionId: string, shardId: string) => {
+  const agent = await getShardClient(connectionId, shardId);
+  return agent;
+};
+
 export const forceReSync = async (connectionId: string) => {
   const registry = await getRegistryClient(connectionId);
   const allShards = await listShards(registry);
-  for (const { shard_id: id } of allShards) {
-    const shard = await getShardClient(connectionId, id);
-    await shard.exec(`DROP TABLE IF EXISTS threads`);
-    await shard.exec(`DROP TABLE IF EXISTS thread_labels`);
-    await shard.exec(`DROP TABLE IF EXISTS labels`);
-  }
+
+  await Promise.all(
+    allShards.map(async ({ shard_id: id }) => {
+      const shard = await getShardClient(connectionId, id);
+      await Promise.all([
+        shard.exec(`DROP TABLE IF EXISTS threads`),
+        shard.exec(`DROP TABLE IF EXISTS thread_labels`),
+        shard.exec(`DROP TABLE IF EXISTS labels`),
+      ]);
+    }),
+  );
+
   await deleteAllShards(registry);
+
   const agent = await getZeroAgent(connectionId);
   await agent.stub.forceReSync();
 };
 
-
+export const reSyncThread = async (connectionId: string, threadId: string) => {
+  const { result: thread, shardId } = await getThread(connectionId, threadId);
+  if (thread) {
+    const agent = await getZeroAgentFromShard(connectionId, shardId);
+    await agent.stub.syncThread({ threadId });
+  } else {
+    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`);
+  }
+};
 
 export const getThreadsFromDB = async (
   connectionId: string,
@@ -379,7 +400,17 @@ export const getThreadsFromDB = async (
   // Fire and forget - don't block the thread query on state updates
   void sendDoState(connectionId);
 
-  const maxResults = params.maxResults ?? 20;
+  const maxResults = params.maxResults ?? defaultPageSize;
+
+  if (maxResults === defaultPageSize && !params.pageToken && !params.q) {
+    return Effect.promise(async () => {
+      const agent = await getZeroAgent(connectionId);
+      return await agent.stub.getThreadsFromDB({
+        ...params,
+        maxResults: maxResults,
+      });
+    }).pipe(Effect.runPromise);
+  }
 
   return Effect.runPromise(
     aggregateShardDataEffect<IGetThreadsResponse>(
@@ -388,23 +419,23 @@ export const getThreadsFromDB = async (
         Effect.promise(() =>
           shard.stub.getThreadsFromDB({
             ...params,
-            maxResults: maxResults * 2, // Request more from each shard to ensure we have enough
+            maxResults: maxResults,
           }),
         ),
       (shardResults) => {
         // Combine all threads from all shards
         const allThreads = shardResults.flatMap((result) => result.threads);
-        
+
         // Sort by some criteria if needed (assuming threads have a sortable field)
         // allThreads.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-        
+
         // Take only the requested amount
         const threads = allThreads.slice(0, maxResults);
-        
+
         // Determine if there's a next page token (simplified logic)
         const hasMoreResults = allThreads.length > maxResults;
-        const nextPageToken = hasMoreResults 
-          ? shardResults.find(r => r.nextPageToken)?.nextPageToken || null
+        const nextPageToken = hasMoreResults
+          ? shardResults.find((r) => r.nextPageToken)?.nextPageToken || null
           : null;
 
         return {
