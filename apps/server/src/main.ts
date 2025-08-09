@@ -820,35 +820,7 @@ const app = new Hono<HonoContext>()
   });
 const handler = {
   async fetch(request: Request, env: ZeroEnv, ctx: ExecutionContext): Promise<Response> {
-    const tracer = initTracing();
-    const span = tracer.startSpan('http_request', {
-      attributes: {
-        'http.method': request.method,
-        'http.url': request.url,
-        'http.user_agent': request.headers.get('user-agent') || 'unknown'
-      }
-    });
-
-    try {
-      // const url = new URL(request.url);
-      // if (url.pathname === '/__studio') {
-      //   return await studio(request, env.ZERO_DRIVER, {
-      //     basicAuth: { username: 'admin', password: 'password' },
-      //   });
-      // }
-      const response = await app.fetch(request, env, ctx);
-      span.setAttributes({ 
-        'http.status_code': response.status,
-        'http.response.size': response.headers.get('content-length') || 'unknown'
-      });
-      return response;
-    } catch (error) {
-      span.recordException(error as Error);
-      span.setStatus({ code: 2, message: (error as Error).message });
-      throw error;
-    } finally {
-      span.end();
-    }
+    return app.fetch(request, env, ctx);
   }
 };
 
