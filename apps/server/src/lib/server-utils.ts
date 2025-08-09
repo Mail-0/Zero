@@ -304,6 +304,10 @@ export const modifyThreadLabelsInDB = async (
   const threadResult = await getThread(connectionId, threadId);
   const shard = await getShardClient(connectionId, threadResult.shardId);
   await shard.stub.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
+  
+  const agent = await getZeroSocketAgent(connectionId);
+  await agent.invalidateDoStateCache();
+  
   await sendDoState(connectionId);
 };
 
@@ -377,6 +381,8 @@ export const getThreadsFromDB = async (
   },
 ): Promise<IGetThreadsResponse> => {
   // Fire and forget - don't block the thread query on state updates
+  const agent = await getZeroSocketAgent(connectionId);
+  await agent.invalidateDoStateCache();
   void sendDoState(connectionId);
 
   const maxResults = params.maxResults ?? 20;
@@ -463,13 +469,31 @@ const getCounts = async (connectionId: string): Promise<CountResult[]> => {
  */
 export const sendDoState = async (connectionId: string) => {
   try {
-    const [registry, agent, size, counts] = await Promise.all([
+    const agent = await getZeroSocketAgent(connectionId);
+    
+    const cached = await agent.getCachedDoState();
+    if (cached) {
+      console.log(`[sendDoState] Using cached data for connection ${connectionId}`);
+      return agent.broadcastChatMessage({
+        type: OutgoingMessageType.Do_State,
+        isSyncing: false,
+        syncingFolders: ['inbox'],
+        storageSize: cached.storageSize,
+        counts: cached.counts,
+        shards: cached.shards,
+      });
+    }
+
+    console.log(`[sendDoState] Cache miss, collecting fresh data for connection ${connectionId}`);
+    const [registry, size, counts] = await Promise.all([
       getRegistryClient(connectionId),
-      getZeroSocketAgent(connectionId),
       getDatabaseSize(connectionId),
       getCounts(connectionId),
     ]);
     const shards = await listShards(registry);
+    
+    await agent.setCachedDoState(size, counts, shards.length);
+    
     return agent.broadcastChatMessage({
       type: OutgoingMessageType.Do_State,
       isSyncing: false,

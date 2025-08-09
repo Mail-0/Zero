@@ -179,6 +179,7 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
         const syncEffects = listResult.threads.map(syncSingleThread);
         await Promise.allSettled(syncEffects);
 
+        await agent.invalidateDoStateCache();
         await sendDoState(connectionId);
         await agent.reloadFolder(folder);
 

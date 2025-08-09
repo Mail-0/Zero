@@ -1795,6 +1795,54 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     this.chatMessageAbortControllers.clear();
   }
 
+  async getCachedDoState(): Promise<{
+    storageSize: number;
+    counts: { label: string; count: number }[];
+    shards: number;
+    timestamp: number;
+  } | null> {
+    try {
+      const cached = await this.ctx.storage.get('do_state_cache');
+      if (!cached) return null;
+      
+      const data = cached as any;
+      const now = Date.now();
+      const CACHE_TTL = 5 * 60 * 1000;
+      
+      if (now - data.timestamp > CACHE_TTL) {
+        await this.ctx.storage.delete('do_state_cache');
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('[ZeroAgent] Failed to get cached DO state:', error);
+      return null;
+    }
+  }
+
+  async setCachedDoState(storageSize: number, counts: { label: string; count: number }[], shards: number): Promise<void> {
+    try {
+      const data = {
+        storageSize,
+        counts,
+        shards,
+        timestamp: Date.now()
+      };
+      await this.ctx.storage.put('do_state_cache', data);
+    } catch (error) {
+      console.error('[ZeroAgent] Failed to cache DO state:', error);
+    }
+  }
+
+  async invalidateDoStateCache(): Promise<void> {
+    try {
+      await this.ctx.storage.delete('do_state_cache');
+    } catch (error) {
+      console.error('[ZeroAgent] Failed to invalidate DO state cache:', error);
+    }
+  }
+
   async onChatMessageWithContext(
     onFinish: StreamTextOnFinishCallback<{}>,
     currentThreadId: string,
