@@ -175,6 +175,10 @@
         "CLOUDFLARE_ACCOUNT_ID": "",
         "CLOUDFLARE_API_TOKEN": "",
         "MEET_AUTH_HEADER": "",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://ingest.signoz.cloud:443",
+        "OTEL_EXPORTER_OTLP_HEADERS": "signoz-access-token=<YOUR_SIGNOZ_TOKEN>",
+        "OTEL_SERVICE_NAME": "zero-email-server",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.name=zero-email-server,service.version=1.0.0"
       },
       "kv_namespaces": [
         {
@@ -389,6 +393,10 @@
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "false",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://ingest.signoz.cloud:443",
+        "OTEL_EXPORTER_OTLP_HEADERS": "signoz-access-token=<YOUR_SIGNOZ_TOKEN>",
+        "OTEL_SERVICE_NAME": "zero-email-server",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.name=zero-email-server,service.version=1.0.0"
       },
       "kv_namespaces": [
         {
@@ -600,6 +608,10 @@
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://ingest.signoz.cloud:443",
+        "OTEL_EXPORTER_OTLP_HEADERS": "signoz-access-token=<YOUR_SIGNOZ_TOKEN>",
+        "OTEL_SERVICE_NAME": "zero-email-server",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.name=zero-email-server,service.version=1.0.0"
       },
       "kv_namespaces": [
         {

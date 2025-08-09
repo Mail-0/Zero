@@ -94,6 +94,10 @@ export type ZeroEnv = {
   MEET_AUTH_HEADER: string;
   MEET_API_URL: string;
   ENABLE_MEET: 'true' | 'false';
+  OTEL_EXPORTER_OTLP_ENDPOINT?: string;
+  OTEL_EXPORTER_OTLP_HEADERS?: string;
+  OTEL_SERVICE_NAME?: string;
+  OTEL_RESOURCE_ATTRIBUTES?: string;
 };
 
 const env = _env as ZeroEnv;

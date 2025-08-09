@@ -24,6 +24,7 @@ import { Effect, Console, Logger } from 'effect';
 import { connection } from './db/schema';
 import { EProviders } from './types';
 import type { ZeroEnv } from './env';
+import { initTracing } from './lib/tracing';
 import { EPrompts } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
@@ -140,6 +141,15 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
    * @returns
    */
   public runMainWorkflow(params: MainWorkflowParams) {
+    const tracer = initTracing(this.env);
+    const span = tracer.startSpan('workflow_main', {
+      attributes: {
+        'provider.id': params.providerId,
+        'history.id': params.historyId,
+        'subscription.name': params.subscriptionName
+      }
+    });
+
     return Effect.gen(this, function* () {
       yield* Console.log('[MAIN_WORKFLOW] Starting workflow with payload:', params);
 
@@ -148,9 +158,11 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
       const serviceAccount = getServiceAccount();
 
       const connectionId = yield* validateArguments(params, serviceAccount);
+      span.setAttributes({ 'connection.id': connectionId });
 
       if (!isValidUUID(connectionId)) {
         yield* Console.log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
+        span.setAttributes({ 'error.type': 'invalid_connection_id' });
         return yield* Effect.fail({
           _tag: 'InvalidConnectionId' as const,
           connectionId,
@@ -164,6 +176,8 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           error: 'Failed to get history ID',
         }),
       }).pipe(Effect.orElse(() => Effect.succeed(null)));
+
+      span.setAttributes({ 'history.previous_id': previousHistoryId || 'none' });
 
       if (providerId === EProviders.google) {
         yield* Console.log('[MAIN_WORKFLOW] Processing Google provider workflow');
@@ -181,8 +195,10 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
         });
 
         yield* Console.log('[MAIN_WORKFLOW] Zero workflow result:', result);
+        span.setAttributes({ 'workflow.result': typeof result === 'string' ? result : JSON.stringify(result) });
       } else {
         yield* Console.log('[MAIN_WORKFLOW] Unsupported provider:', providerId);
+        span.setAttributes({ 'error.type': 'unsupported_provider' });
         return yield* Effect.fail({
           _tag: 'UnsupportedProvider' as const,
           providerId,
@@ -190,8 +206,15 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
       }
 
       yield* Console.log('[MAIN_WORKFLOW] Workflow completed successfully');
+      span.setAttributes({ 'workflow.success': true });
       return 'Workflow completed successfully';
     }).pipe(
+      Effect.tap(() => Effect.sync(() => span.end())),
+      Effect.tapError((error) => Effect.sync(() => {
+        span.recordException(error as unknown as Error);
+        span.setStatus({ code: 2, message: String(error) });
+        span.end();
+      })),
       Effect.tapError((error) => Console.log('[MAIN_WORKFLOW] Error in workflow:', error)),
       Effect.provide(loggerLayer),
       Effect.runPromise,
@@ -601,6 +624,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           thread,
           foundConnection,
           results: new Map<string, any>(),
+          env: this.env,
         };
 
         // Execute configured workflows using the workflow engine
@@ -759,6 +783,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           thread,
           foundConnection,
           results: new Map<string, any>(),
+          env: this.env,
         };
 
         let workflowResults;

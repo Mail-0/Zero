@@ -4,6 +4,8 @@ import {
   type EmailMatrix,
   type WritingStyleMatrix,
 } from './services/writing-style-service';
+import { initTracing } from './lib/tracing';
+import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import {
   account,
   connection,
@@ -747,46 +749,135 @@ const app = new Hono<HonoContext>()
     }
   })
   .post('/a8n/notify/:providerId', async (c) => {
-    if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-    if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
-    const providerId = c.req.param('providerId');
-    if (providerId === EProviders.google) {
-      const body = await c.req.json<{ historyId: string }>();
-      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-      if (!subHeader) {
-        console.log('[GOOGLE] no subscription header', body);
-        return c.json({}, { status: 200 });
+    const tracer = initTracing(c.env);
+    const span = tracer.startSpan('a8n_notify', {
+      attributes: {
+        'provider.id': c.req.param('providerId'),
+        'notification.type': 'email_notification',
+        'http.method': c.req.method,
+        'http.url': c.req.url
       }
-      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-      if (!isValid) {
-        console.log('[GOOGLE] invalid request', body);
-        return c.json({}, { status: 200 });
+    });
+
+    try {
+      if (!c.req.header('Authorization')) {
+        span.setAttributes({ 'auth.status': 'missing' });
+        return c.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      try {
-        await env.thread_queue.send({
-          providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
+      if (env.DISABLE_WORKFLOWS === 'true') {
+        span.setAttributes({ 'workflows.disabled': true });
+        return c.json({ message: 'OK' }, { status: 200 });
+      }
+      const providerId = c.req.param('providerId');
+      if (providerId === EProviders.google) {
+        const body = await c.req.json<{ historyId: string }>();
+        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+        
+        span.setAttributes({
+          'history.id': body.historyId,
+          'subscription.name': subHeader || 'missing'
         });
-      } catch (error) {
-        console.error('Error sending to thread queue', error, {
-          providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
-        });
+
+        if (!subHeader) {
+          console.log('[GOOGLE] no subscription header', body);
+          span.setAttributes({ 'error.type': 'missing_subscription_header' });
+          return c.json({}, { status: 200 });
+        }
+        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+        if (!isValid) {
+          console.log('[GOOGLE] invalid request', body);
+          span.setAttributes({ 'auth.status': 'invalid' });
+          return c.json({}, { status: 200 });
+        }
+        
+        span.setAttributes({ 'auth.status': 'valid' });
+        
+        try {
+          await env.thread_queue.send({
+            providerId,
+            historyId: body.historyId,
+            subscriptionName: subHeader,
+          });
+          span.setAttributes({ 'queue.message_sent': true });
+        } catch (error) {
+          console.error('Error sending to thread queue', error, {
+            providerId,
+            historyId: body.historyId,
+            subscriptionName: subHeader,
+          });
+          span.recordException(error as Error);
+          span.setStatus({ code: 2, message: (error as Error).message });
+        }
+        return c.json({ message: 'OK' }, { status: 200 });
       }
-      return c.json({ message: 'OK' }, { status: 200 });
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: 2, message: (error as Error).message });
+      throw error;
+    } finally {
+      span.end();
     }
   });
+const handler = {
+  async fetch(request: Request, env: ZeroEnv, ctx: ExecutionContext): Promise<Response> {
+    const tracer = initTracing(env);
+    const span = tracer.startSpan('http_request', {
+      attributes: {
+        'http.method': request.method,
+        'http.url': request.url,
+        'http.user_agent': request.headers.get('user-agent') || 'unknown'
+      }
+    });
+
+    try {
+      // const url = new URL(request.url);
+      // if (url.pathname === '/__studio') {
+      //   return await studio(request, env.ZERO_DRIVER, {
+      //     basicAuth: { username: 'admin', password: 'password' },
+      //   });
+      // }
+      const response = await app.fetch(request, env, ctx);
+      span.setAttributes({ 
+        'http.status_code': response.status,
+        'http.response.size': response.headers.get('content-length') || 'unknown'
+      });
+      return response;
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: 2, message: (error as Error).message });
+      throw error;
+    } finally {
+      span.end();
+    }
+  }
+};
+
+const config: ResolveConfigFn = (env: ZeroEnv, _trigger: any) => {
+  return {
+    exporter: {
+      url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.signoz.cloud:443/v1/traces',
+      headers: env.OTEL_EXPORTER_OTLP_HEADERS ? 
+        Object.fromEntries(
+          env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
+            const [key, value] = header.split('=');
+            return [key.trim(), value.trim()];
+          })
+        ) : {},
+    },
+    service: { 
+      name: env.OTEL_SERVICE_NAME || 'zero-email-server',
+      version: '1.0.0',
+    },
+  };
+};
+
 export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   async fetch(request: Request): Promise<Response> {
-    // const url = new URL(request.url);
-    // if (url.pathname === '/__studio') {
-    //   return await studio(request, env.ZERO_DRIVER, {
-    //     basicAuth: { username: 'admin', password: 'password' },
-    //   });
-    // }
-    return app.fetch(request, this.env, this.ctx);
+    const instrumentedHandler = instrument(handler, config);
+    if (instrumentedHandler && instrumentedHandler.fetch) {
+      return instrumentedHandler.fetch(request as any, this.env, this.ctx);
+    }
+    return handler.fetch(request as any, this.env, this.ctx);
   }
   async queue(
     batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
@@ -881,13 +972,24 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
+        const tracer = initTracing(this.env);
+        
         await Promise.all(
           batch.messages.map(async (msg: any) => {
-            const providerId = msg.body.providerId;
-            const historyId = msg.body.historyId;
-            const subscriptionName = msg.body.subscriptionName;
+            const span = tracer.startSpan('thread_queue_processing', {
+              attributes: {
+                'provider.id': msg.body.providerId,
+                'history.id': msg.body.historyId,
+                'subscription.name': msg.body.subscriptionName,
+                'queue.name': batch.queue
+              }
+            });
 
             try {
+              const providerId = msg.body.providerId;
+              const historyId = msg.body.historyId;
+              const subscriptionName = msg.body.subscriptionName;
+
               const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
               const result = await workflowRunner.runMainWorkflow({
                 providerId,
@@ -895,8 +997,16 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
                 subscriptionName,
               });
               console.log('[THREAD_QUEUE] result', result);
+              span.setAttributes({ 
+                'workflow.result': typeof result === 'string' ? result : JSON.stringify(result),
+                'workflow.success': true
+              });
             } catch (error) {
               console.error('Error running workflow', error);
+              span.recordException(error as Error);
+              span.setStatus({ code: 2, message: (error as Error).message });
+            } finally {
+              span.end();
             }
           }),
         );
