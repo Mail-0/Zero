@@ -1,6 +1,6 @@
 import { trace, type Tracer, type Attributes } from '@opentelemetry/api';
 
-export const initTracing = (_env: unknown): Tracer => {
+export const initTracing = (): Tracer => {
   return trace.getTracer('zero-email-server', '1.0.0');
 };
 

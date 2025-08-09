@@ -749,7 +749,7 @@ const app = new Hono<HonoContext>()
     }
   })
   .post('/a8n/notify/:providerId', async (c) => {
-    const tracer = initTracing(c.env);
+    const tracer = initTracing();
     const span = tracer.startSpan('a8n_notify', {
       attributes: {
         'provider.id': c.req.param('providerId'),
@@ -820,7 +820,7 @@ const app = new Hono<HonoContext>()
   });
 const handler = {
   async fetch(request: Request, env: ZeroEnv, ctx: ExecutionContext): Promise<Response> {
-    const tracer = initTracing(env);
+    const tracer = initTracing();
     const span = tracer.startSpan('http_request', {
       attributes: {
         'http.method': request.method,
@@ -852,7 +852,7 @@ const handler = {
   }
 };
 
-const config: ResolveConfigFn = (env: ZeroEnv, _trigger: unknown) => {
+const config: ResolveConfigFn = (env: ZeroEnv) => {
   return {
     exporter: {
       url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.signoz.cloud:443/v1/traces',
@@ -888,7 +888,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         await Promise.all(
           batch.messages.map(async (msg: any) => {
             const connectionId = msg.body.connectionId;
-            const providerId = msg.body.providerId as EProviders;
+            const providerId = msg.body.providerId;
             try {
               await enableBrainFunction({ id: connectionId, providerId });
             } catch (error) {
@@ -972,7 +972,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
-        const tracer = initTracing(this.env);
+        const tracer = initTracing();
         
         await Promise.all(
           batch.messages.map(async (msg: any) => {

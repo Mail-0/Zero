@@ -67,7 +67,7 @@ export class WorkflowEngine {
       throw new Error(`Workflow "${workflowName}" not found`);
     }
 
-    const tracer = initTracing(context.env);
+    const tracer = initTracing();
     const workflowSpan = tracer.startSpan('workflow_execution', {
       attributes: {
         'workflow.name': workflowName,

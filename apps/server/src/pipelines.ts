@@ -141,7 +141,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
    * @returns
    */
   public runMainWorkflow(params: MainWorkflowParams) {
-    const tracer = initTracing(this.env);
+    const tracer = initTracing();
     const span = tracer.startSpan('workflow_main', {
       attributes: {
         'provider.id': params.providerId,
@@ -623,7 +623,7 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           threadId: threadId.toString(),
           thread,
           foundConnection,
-          results: new Map<string, any>(),
+          results: new Map<string, unknown>(),
           env: this.env,
         };
 
@@ -782,13 +782,13 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
           threadId: threadId.toString(),
           thread,
           foundConnection,
-          results: new Map<string, any>(),
+          results: new Map<string, unknown>(),
           env: this.env,
         };
 
         let workflowResults;
         try {
-          const allResults = new Map<string, any>();
+          const allResults = new Map<string, unknown>();
           const allErrors = new Map<string, Error>();
 
           const workflowNames = workflowEngine.getWorkflowNames();
