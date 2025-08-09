@@ -378,7 +378,13 @@ export const forceReSync = async (connectionId: string) => {
 };
 
 export const reSyncThread = async (connectionId: string, threadId: string) => {
-  const { result: thread, shardId } = await getThread(connectionId, threadId);
+  try {
+    const { result: thread, shardId } = await getThread(connectionId, threadId);
+    const agent = await getZeroAgentFromShard(connectionId, shardId);
+    await agent.stub.syncThread({ threadId });
+  } catch (error) {
+    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`);
+  }
   if (thread) {
     const agent = await getZeroAgentFromShard(connectionId, shardId);
     await agent.stub.syncThread({ threadId });
