@@ -4,8 +4,6 @@ import {
   type EmailMatrix,
   type WritingStyleMatrix,
 } from './services/writing-style-service';
-import { initTracing } from './lib/tracing';
-import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import {
   account,
   connection,
@@ -24,6 +22,7 @@ import {
 } from './lib/attachments';
 import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordinator-workflow';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
+import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
@@ -42,6 +41,7 @@ import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
 import { WorkflowRunner } from './pipelines';
 import { autumnApi } from './routes/autumn';
+import { initTracing } from './lib/tracing';
 import { env, type ZeroEnv } from './env';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
@@ -755,8 +755,8 @@ const app = new Hono<HonoContext>()
         'provider.id': c.req.param('providerId'),
         'notification.type': 'email_notification',
         'http.method': c.req.method,
-        'http.url': c.req.url
-      }
+        'http.url': c.req.url,
+      },
     });
 
     try {
@@ -772,10 +772,10 @@ const app = new Hono<HonoContext>()
       if (providerId === EProviders.google) {
         const body = await c.req.json<{ historyId: string }>();
         const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-        
+
         span.setAttributes({
           'history.id': body.historyId,
-          'subscription.name': subHeader || 'missing'
+          'subscription.name': subHeader || 'missing',
         });
 
         if (!subHeader) {
@@ -789,9 +789,9 @@ const app = new Hono<HonoContext>()
           span.setAttributes({ 'auth.status': 'invalid' });
           return c.json({}, { status: 200 });
         }
-        
+
         span.setAttributes({ 'auth.status': 'valid' });
-        
+
         try {
           await env.thread_queue.send({
             providerId,
@@ -821,22 +821,23 @@ const app = new Hono<HonoContext>()
 const handler = {
   async fetch(request: Request, env: ZeroEnv, ctx: ExecutionContext): Promise<Response> {
     return app.fetch(request, env, ctx);
-  }
+  },
 };
 
 const config: ResolveConfigFn = (env: ZeroEnv) => {
   return {
     exporter: {
-      url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.signoz.cloud:443/v1/traces',
-      headers: env.OTEL_EXPORTER_OTLP_HEADERS ? 
-        Object.fromEntries(
-          env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
-            const [key, value] = header.split('=');
-            return [key.trim(), value.trim()];
-          })
-        ) : {},
+      url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://api.axiom.co/v1/traces',
+      headers: env.OTEL_EXPORTER_OTLP_HEADERS
+        ? Object.fromEntries(
+            env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
+              const [key, value] = header.split('=');
+              return [key.trim(), value.trim()];
+            }),
+          )
+        : {},
     },
-    service: { 
+    service: {
       name: env.OTEL_SERVICE_NAME || 'zero-email-server',
       version: '1.0.0',
     },
@@ -945,7 +946,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
       }
       case batch.queue.startsWith('thread-queue'): {
         const tracer = initTracing();
-        
+
         await Promise.all(
           batch.messages.map(async (msg: any) => {
             const span = tracer.startSpan('thread_queue_processing', {
@@ -953,8 +954,8 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
                 'provider.id': msg.body.providerId,
                 'history.id': msg.body.historyId,
                 'subscription.name': msg.body.subscriptionName,
-                'queue.name': batch.queue
-              }
+                'queue.name': batch.queue,
+              },
             });
 
             try {
@@ -969,9 +970,9 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
                 subscriptionName,
               });
               console.log('[THREAD_QUEUE] result', result);
-              span.setAttributes({ 
+              span.setAttributes({
                 'workflow.result': typeof result === 'string' ? result : JSON.stringify(result),
-                'workflow.success': true
+                'workflow.success': true,
               });
             } catch (error) {
               console.error('Error running workflow', error);
@@ -996,9 +997,9 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
   private async processScheduledEmails() {
     console.log('Checking for scheduled emails ready to be queued...');
-    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as { 
-      scheduled_emails: KVNamespace; 
-      send_email_queue: Queue<IEmailSendBatch>; 
+    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as {
+      scheduled_emails: KVNamespace;
+      send_email_queue: Queue<IEmailSendBatch>;
     };
 
     try {
