@@ -154,12 +154,10 @@ export function Navigation() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white cursor-pointer">
-                  <a href="/pricing">
-                    <Button variant="ghost" className="h-9 bg-transparent">
-                      Pricing
-                    </Button>
-                  </a>
+                <NavigationMenuItem className="bg-transparent text-white">
+                  <Button asChild variant="ghost" className="h-9 bg-transparent cursor-pointer">
+                    <a href="/pricing">Pricing</a>
+                  </Button>
                 </NavigationMenuItem>
                 <NavigationMenuItem className="bg-transparent text-white cursor-pointer">
                   <a href="/privacy">
