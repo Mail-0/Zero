@@ -11,7 +11,7 @@ catalog:
   '@trpc/server': ^11.1.4
   '@trpc/client': ^11.1.4
   '@trpc/tanstack-react-query': ^11.1.4
-  wrangler: ^4.18.0
+  wrangler: ^4.28.1
   typescript: ^5.8.3
   drizzle-orm: ^0.43.1
   drizzle-kit: ^0.31.1
