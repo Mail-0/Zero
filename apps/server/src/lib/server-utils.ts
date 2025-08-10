@@ -305,10 +305,10 @@ export const modifyThreadLabelsInDB = async (
   const threadResult = await getThread(connectionId, threadId);
   const shard = await getShardClient(connectionId, threadResult.shardId);
   await shard.stub.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
-  
+
   const agent = await getZeroSocketAgent(connectionId);
   await agent.invalidateDoStateCache();
-  
+
   await sendDoState(connectionId);
 };
 
@@ -402,8 +402,8 @@ export const getThreadsFromDB = async (
   },
 ): Promise<IGetThreadsResponse> => {
   // Fire and forget - don't block the thread query on state updates
-  const agent = await getZeroSocketAgent(connectionId);
-  await agent.invalidateDoStateCache();
+  //   const agent = await getZeroSocketAgent(connectionId);
+  //   await agent.invalidateDoStateCache();
   void sendDoState(connectionId);
 
   const maxResults = params.maxResults ?? defaultPageSize;

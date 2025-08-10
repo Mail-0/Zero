@@ -13,7 +13,7 @@
  *
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
-import { getZeroAgent, connectionToDriver, sendDoState } from '../lib/server-utils';
+import { getZeroAgent, connectionToDriver } from '../lib/server-utils';
 import { WorkflowEntrypoint, WorkflowStep } from 'cloudflare:workers';
 import type { WorkflowEvent } from 'cloudflare:workers';
 import { connection } from '../db/schema';
@@ -179,8 +179,8 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
         const syncEffects = listResult.threads.map(syncSingleThread);
         await Promise.allSettled(syncEffects);
 
-        await agent.invalidateDoStateCache();
-        await sendDoState(connectionId);
+        // await agent.invalidateDoStateCache();
+        // await sendDoState(connectionId);
         await agent.reloadFolder(folder);
 
         console.log(`[SyncThreadsWorkflow] Completed single page ${pageNumber}`);

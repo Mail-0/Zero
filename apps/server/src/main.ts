@@ -22,7 +22,7 @@ import {
 } from './lib/attachments';
 import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordinator-workflow';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
+// import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
@@ -824,32 +824,28 @@ const handler = {
   },
 };
 
-const config: ResolveConfigFn = (env: ZeroEnv) => {
-  return {
-    exporter: {
-      url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://api.axiom.co/v1/traces',
-      headers: env.OTEL_EXPORTER_OTLP_HEADERS
-        ? Object.fromEntries(
-            env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
-              const [key, value] = header.split('=');
-              return [key.trim(), value.trim()];
-            }),
-          )
-        : {},
-    },
-    service: {
-      name: env.OTEL_SERVICE_NAME || 'zero-email-server',
-      version: '1.0.0',
-    },
-  };
-};
+// const config: ResolveConfigFn = (env: ZeroEnv) => {
+//   return {
+//     exporter: {
+//       url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://api.axiom.co/v1/traces',
+//       headers: env.OTEL_EXPORTER_OTLP_HEADERS
+//         ? Object.fromEntries(
+//             env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
+//               const [key, value] = header.split('=');
+//               return [key.trim(), value.trim()];
+//             }),
+//           )
+//         : {},
+//     },
+//     service: {
+//       name: env.OTEL_SERVICE_NAME || 'zero-email-server',
+//       version: '1.0.0',
+//     },
+//   };
+// };
 
 export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   async fetch(request: Request): Promise<Response> {
-    const instrumentedHandler = instrument(handler, config);
-    if (instrumentedHandler && instrumentedHandler.fetch) {
-      return instrumentedHandler.fetch(request as any, this.env, this.ctx);
-    }
     return handler.fetch(request, this.env, this.ctx);
   }
   async queue(
