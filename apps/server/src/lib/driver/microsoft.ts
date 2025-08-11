@@ -563,6 +563,15 @@ export class OutlookMailManager implements MailManager {
       { draftId },
     );
   }
+  public deleteDraft(draftId: string) {
+    return this.withErrorHandler(
+      'deleteDraft',
+      async () => {
+        await this.graphClient.api(`/me/messages/${draftId}`).delete();
+      },
+      { draftId },
+    );
+  }
   public listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
     const { q, maxResults = 20, pageToken } = params;
     return this.withErrorHandler(

@@ -32,4 +32,16 @@ export const draftsRouter = router({
         ReturnType<MailManager['listDrafts']>
       >;
     }),
+  delete: activeDriverProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { activeConnection } = ctx;
+      const { stub: agent } = await getZeroAgent(activeConnection.id);
+      await agent.deleteDraft(input.id);
+      return true;
+    }),
 });

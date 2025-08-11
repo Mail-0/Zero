@@ -6,7 +6,15 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import { memo, useCallback, useEffect, useMemo, useRef, type ComponentProps, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ComponentProps,
+  useState,
+} from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -555,16 +563,31 @@ const Thread = memo(
   },
 );
 
-const Draft = memo(({ message }: { message: { id: string } }) => {
+const Draft = memo(({ message, index }: { message: { id: string }; index: number }) => {
   const draftQuery = useDraft(message.id) as UseQueryResult<ParsedDraft>;
   const draft = draftQuery.data;
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
+  const { optimisticDeleteDraft } = useOptimisticActions();
+  const optimisticState = useOptimisticThreadState(message.id);
+
   const handleMailClick = useCallback(() => {
     setComposeOpen('true');
     setDraftId(message.id);
     return;
   }, [message.id]);
+
+  const handleDeleteDraft = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      optimisticDeleteDraft(message.id);
+    },
+    [message.id, optimisticDeleteDraft],
+  );
+
+  if (optimisticState.shouldHide) {
+    return null;
+  }
 
   if (!draft) {
     return (
@@ -607,6 +630,31 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
           'hover:bg-offsetLight dark:hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-clip rounded-[10px] border-transparent py-3 text-left text-sm hover:opacity-100',
         )}
       >
+        <div
+          className={cn(
+            'dark:bg-panelDark z-25 absolute right-2 flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm group-hover:opacity-100',
+            index === 0 ? 'top-4' : 'top-[-1]',
+          )}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
+                onClick={handleDeleteDraft}
+              >
+                <Trash className="fill-[#F43F5E]" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side={index === 0 ? 'bottom' : 'top'}
+              className="dark:bg-panelDark mb-1 bg-white"
+            >
+              {m['common.actions.Bin']()}
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <div
           className={cn(
             'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
@@ -654,6 +702,8 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
     </div>
   );
 });
+
+Draft.displayName = 'Draft';
 
 export const MailList = memo(
   function MailList() {
@@ -785,7 +835,7 @@ export const MailList = memo(
               const end = Math.max(anchorIndex, clickedIndex);
               const rangeIds = itemsRef.current.slice(start, end + 1).map((item) => item.id);
               const newSelected = [...new Set([...mail.bulkSelected, ...rangeIds])];
-              
+
               return { ...mail, bulkSelected: newSelected };
             }
             default: {

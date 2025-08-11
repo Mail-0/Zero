@@ -42,8 +42,8 @@ import {
   type ISnoozeBatch,
   type ParsedMessage,
 } from '../../types';
-import { connectionToDriver, getZeroSocketAgent, reSyncThread } from '../../lib/server-utils';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
+import { connectionToDriver, getZeroSocketAgent, reSyncThread } from '../../lib/server-utils';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
@@ -54,6 +54,7 @@ import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { DurableObject } from 'cloudflare:workers';
 import { ToolOrchestrator } from './orchestrator';
+import { eq, desc, isNotNull } from 'drizzle-orm';
 import migrations from './db/drizzle/migrations';
 import { getPromptName } from '../../pipelines';
 import { anthropic } from '@ai-sdk/anthropic';
@@ -70,7 +71,6 @@ import { Effect, pipe } from 'effect';
 import { groq } from '@ai-sdk/groq';
 import { createDb } from '../../db';
 import type { Message } from 'ai';
-import { eq, desc, isNotNull } from 'drizzle-orm';
 import { create } from './db';
 
 const decoder = new TextDecoder();
@@ -298,10 +298,10 @@ const _migrations = Object.fromEntries(
 @Migratable({
   migrations: {
     1: [
-      `CREATE TABLE IF NOT EXISTS shards (  
-      shard_id TEXT PRIMARY KEY,  
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
-      last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP  
+      `CREATE TABLE IF NOT EXISTS shards (
+      shard_id TEXT PRIMARY KEY,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
     ],
   },
@@ -328,7 +328,10 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   private name: string = 'general';
   private connection: typeof connection.$inferSelect | null = null;
-  private recipientCache: { contacts: Array<{ email: string; name?: string | null; freq: number; last: number }>; hash: string } | null = null;
+  private recipientCache: {
+    contacts: Array<{ email: string; name?: string | null; freq: number; last: number }>;
+    hash: string;
+  } | null = null;
 
   private invalidateRecipientCache() {
     this.recipientCache = null;
@@ -336,7 +339,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   private parseMalformedSender(rawData: string): { email: string; name?: string } | null {
     const emailRegex = /([^\s@]+@[^\s@]+\.[^\s@]+)/;
-    
+
     if (emailRegex.test(rawData.trim())) {
       const email = rawData.trim();
       console.warn('[SuggestRecipients] Used fallback parsing for plain email:', email);
@@ -345,7 +348,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
     const emailMatch = rawData.match(emailRegex);
     if (!emailMatch) return null;
-    
+
     const email = emailMatch[1];
     let name: string | undefined = undefined;
 
@@ -876,6 +879,13 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return await this.driver.listDrafts(params);
   }
 
+  async deleteDraft(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteDraft(id);
+  }
+
   // Additional mail operations
   async count() {
     const folders = ['inbox', 'sent', 'spam', 'archive', 'trash'];
@@ -893,7 +903,6 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return `${this.name}/${threadId}.json`;
   }
 
- 
   async deleteThread(id: string) {
     await this.db.delete(threads).where(eq(threads.threadId, id));
     this.invalidateRecipientCache();
@@ -1505,24 +1514,37 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
   async suggestRecipients(query: string = '', limit: number = 10) {
     const lower = query.toLowerCase();
-    
-    const hashRows = await this.db.select({ id: threads.id }).from(threads).where(isNotNull(threads.latestSender)).orderBy(desc(threads.latestReceivedOn)).limit(100);
-    
-    const currentHash = hashRows.map(r => r.id).join(',');
-    
-    if (!this.recipientCache || this.recipientCache.hash !== currentHash) {
-      const rows = await this.db.select({ 
-        latest_sender: threads.latestSender, 
-        latest_received_on: threads.latestReceivedOn 
-      }).from(threads).where(isNotNull(threads.latestSender)).orderBy(desc(threads.latestReceivedOn)).limit(100);
 
-      const map = new Map<string, { email: string; name?: string | null; freq: number; last: number }>();
+    const hashRows = await this.db
+      .select({ id: threads.id })
+      .from(threads)
+      .where(isNotNull(threads.latestSender))
+      .orderBy(desc(threads.latestReceivedOn))
+      .limit(100);
+
+    const currentHash = hashRows.map((r) => r.id).join(',');
+
+    if (!this.recipientCache || this.recipientCache.hash !== currentHash) {
+      const rows = await this.db
+        .select({
+          latest_sender: threads.latestSender,
+          latest_received_on: threads.latestReceivedOn,
+        })
+        .from(threads)
+        .where(isNotNull(threads.latestSender))
+        .orderBy(desc(threads.latestReceivedOn))
+        .limit(100);
+
+      const map = new Map<
+        string,
+        { email: string; name?: string | null; freq: number; last: number }
+      >();
 
       for (const row of rows) {
         if (!row?.latest_sender) continue;
-        
+
         let sender: { email?: string; name?: string } | null = null;
-        
+
         try {
           const senderData = row.latest_sender;
           if (typeof senderData === 'string') {
@@ -1532,23 +1554,33 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
           } else {
             sender = this.parseMalformedSender(String(senderData));
           }
-          
+
           if (!sender) {
-            console.error('[SuggestRecipients] Failed to parse latest_sender, no fallback possible. Raw data:', row.latest_sender);
+            console.error(
+              '[SuggestRecipients] Failed to parse latest_sender, no fallback possible. Raw data:',
+              row.latest_sender,
+            );
             continue;
           }
         } catch (error) {
           sender = this.parseMalformedSender(String(row.latest_sender));
           if (!sender) {
-            console.error('[SuggestRecipients] Failed to parse latest_sender, no fallback possible:', error, 'Raw data:', row.latest_sender);
+            console.error(
+              '[SuggestRecipients] Failed to parse latest_sender, no fallback possible:',
+              error,
+              'Raw data:',
+              row.latest_sender,
+            );
             continue;
           }
         }
-        
+
         if (!sender?.email) continue;
 
         const key = sender.email.toLowerCase();
-        const lastTs = row.latest_received_on ? new Date(String(row.latest_received_on)).getTime() : 0;
+        const lastTs = row.latest_received_on
+          ? new Date(String(row.latest_received_on)).getTime()
+          : 0;
 
         if (!map.has(key)) {
           map.set(key, {
@@ -1575,8 +1607,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     if (lower) {
       contacts = contacts.filter(
         (c) =>
-          c.email.toLowerCase().includes(lower) ||
-          (c.name && c.name.toLowerCase().includes(lower)),
+          c.email.toLowerCase().includes(lower) || (c.name && c.name.toLowerCase().includes(lower)),
       );
     }
 
@@ -1965,16 +1996,16 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     try {
       const cached = await this.ctx.storage.get('do_state_cache');
       if (!cached) return null;
-      
+
       const data = cached as any;
       const now = Date.now();
       const CACHE_TTL = 5 * 60 * 1000;
-      
+
       if (now - data.timestamp > CACHE_TTL) {
         await this.ctx.storage.delete('do_state_cache');
         return null;
       }
-      
+
       return data;
     } catch (error) {
       console.error('[ZeroAgent] Failed to get cached DO state:', error);
@@ -1982,13 +2013,17 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     }
   }
 
-  async setCachedDoState(storageSize: number, counts: { label: string; count: number }[], shards: number): Promise<void> {
+  async setCachedDoState(
+    storageSize: number,
+    counts: { label: string; count: number }[],
+    shards: number,
+  ): Promise<void> {
     try {
       const data = {
         storageSize,
         counts,
         shards,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       await this.ctx.storage.put('do_state_cache', data);
     } catch (error) {
