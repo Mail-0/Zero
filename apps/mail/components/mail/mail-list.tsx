@@ -627,7 +627,7 @@ const Draft = memo(({ message, index }: { message: { id: string }; index: number
       <div
         key={message.id}
         className={cn(
-          'hover:bg-offsetLight dark:hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-clip rounded-[10px] border-transparent py-3 text-left text-sm hover:opacity-100',
+          'hover:bg-offsetLight dark:hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-visible rounded-[10px] border-transparent py-3 text-left text-sm hover:opacity-100',
         )}
       >
         <div
@@ -658,11 +658,6 @@ const Draft = memo(({ message, index }: { message: { id: string }; index: number
             </TooltipContent>
           </Tooltip>
         </div>
-        <div
-          className={cn(
-            'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
-          )}
-        />
         <div className="flex w-full items-center justify-between gap-4 px-4">
           <div className="flex w-full justify-between">
             <div className="w-full">
