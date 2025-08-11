@@ -1,7 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
@@ -31,7 +31,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   const selectedDate = value ? new Date(value) : undefined;
   const time = value ? getLocalTimeFromDate(new Date(value)) : getNowTime();
 
-  const emitChange = (datePart: Date | undefined, timePart: string, validate: boolean = false) => {
+  const emitChange = useCallback((datePart: Date | undefined, timePart: string, validate: boolean = false) => {
     if (!datePart) {
       onChange(undefined);
       if (validate) {
@@ -64,39 +64,39 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
       onValidityChange?.(true);
     }
     onChange(combinedDate.toISOString());
-  };
+  }, [onChange, onValidityChange]);
 
-  const handleDateSelect = (d?: Date) => {
+  const handleDateSelect = useCallback((d?: Date) => {
     emitChange(d, time, false);
-  };
+  }, [emitChange, time]);
 
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     emitChange(selectedDate, val, false);
-  };
+  }, [selectedDate, emitChange]);
 
-  const handleDatePickerClose = (open: boolean) => {
+  const handleDatePickerClose = useCallback((open: boolean) => {
     setDatePickerOpen(open);
     if (!open && selectedDate) {
       emitChange(selectedDate, time, true);
     }
-  };
+  }, [selectedDate, time, emitChange]);
 
-  const handleTimePickerClose = (open: boolean) => {
+  const handleTimePickerClose = useCallback((open: boolean) => {
     setTimePickerOpen(open);
     if (!open && selectedDate) {
       emitChange(selectedDate, time, true);
     }
-  };
+  }, [selectedDate, time, emitChange]);
 
-  const handleToggleScheduling = () => {
+  const handleToggleScheduling = useCallback(() => {
     if (isScheduling) {
       onChange(undefined);
     } else {
       const now = new Date();
       emitChange(now, getNowTime());
     }
-  };
+  }, [isScheduling, onChange, emitChange]);
 
   const formatTime12Hour = (timeStr: string) => {
     try {
