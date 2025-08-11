@@ -80,6 +80,14 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
     );
   }, [deferredSearch, templates]);
 
+  const templatesById = useMemo(() => {
+    const map = new Map<string, EmailTemplate>();
+    for (const template of templates) {
+      map.set(template.id, template);
+    }
+    return map;
+  }, [templates]);
+
   const { mutateAsync: createTemplate } = useMutation(trpc.templates.create.mutationOptions());
   const { mutateAsync: deleteTemplateMutation } = useMutation(
     trpc.templates.delete.mutationOptions(),
@@ -152,6 +160,41 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
     [deleteTemplateMutation, queryClient, trpc.templates.list],
   );
 
+  const handleTemplateItemClick = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      const templateId = (e.currentTarget as HTMLElement).dataset.templateId;
+      if (!templateId) return;
+      const template = templatesById.get(templateId);
+      if (!template) return;
+      handleApplyTemplate(template);
+      setMenuOpen(false);
+    },
+    [handleApplyTemplate, templatesById],
+  );
+
+  const handleDeleteButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      setMenuOpen(false);
+      const templateId = (e.currentTarget as HTMLButtonElement).dataset.templateId;
+      if (!templateId) return;
+      const template = templatesById.get(templateId);
+      const templateName = template?.name ?? 'this template';
+      toast(`Delete template "${templateName}"?`, {
+        duration: 10000,
+        action: {
+          label: 'Delete',
+          onClick: () => handleDeleteTemplate(templateId),
+        },
+        className: 'pointer-events-auto',
+        style: {
+          pointerEvents: 'auto',
+        },
+      });
+    },
+    [templatesById, handleDeleteTemplate],
+  );
+
   return (
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -189,30 +232,15 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
                   {filteredTemplates.map((t: EmailTemplate) => (
                     <DropdownMenuItem
                       key={t.id}
+                      data-template-id={t.id}
                       className="flex items-center justify-between gap-2"
-                      onClick={() => {
-                        handleApplyTemplate(t);
-                        setMenuOpen(false);
-                      }}
+                      onClick={handleTemplateItemClick}
                     >
                       <span className="flex-1 truncate text-left">{t.name}</span>
                       <button
                         className="p-0.5 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpen(false); 
-                          toast(`Delete template "${t.name}"?`, {
-                            duration: 10000,
-                            action: {
-                              label: 'Delete',
-                              onClick: () => handleDeleteTemplate(t.id),
-                            },
-                            className: 'pointer-events-auto',
-                            style: {
-                              pointerEvents: 'auto',
-                            },
-                          });
-                        }}
+                        data-template-id={t.id}
+                        onClick={handleDeleteButtonClick}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
