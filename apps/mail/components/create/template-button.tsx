@@ -63,7 +63,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
   const queryClient = useQueryClient();
   const { data } = useTemplates();
   
-  const templates: EmailTemplate[] = data?.templates ?? [];
+  const templates = (data?.templates ?? []) as EmailTemplate[];
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -75,17 +75,13 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
 
   const filteredTemplates = useMemo(() => {
     if (!deferredSearch.trim()) return templates;
-    return templates.filter((t: EmailTemplate) =>
+    return templates.filter((t) =>
       t.name.toLowerCase().includes(deferredSearch.toLowerCase()),
     );
   }, [deferredSearch, templates]);
 
   const templatesById = useMemo(() => {
-    const map = new Map<string, EmailTemplate>();
-    for (const template of templates) {
-      map.set(template.id, template);
-    }
-    return map;
+    return new Map(templates.map((t) => [t.id, t] as const));
   }, [templates]);
 
   const { mutateAsync: createTemplate } = useMutation(trpc.templates.create.mutationOptions());
@@ -102,13 +98,14 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
 
     setIsSaving(true);
     try {
+      const normalizedSubject = subject.trim() ? subject : null;
       await createTemplate({
         name: templateName.trim(),
-        subject: subject || '',
         body: editor.getHTML(),
         to: to.length ? to : undefined,
         cc: cc.length ? cc : undefined,
         bcc: bcc.length ? bcc : undefined,
+        ...(normalizedSubject !== null ? { subject: normalizedSubject } : {}),
       });
       await queryClient.invalidateQueries({
         queryKey: trpc.templates.list.queryKey(),
@@ -213,7 +210,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
           >
             <Save className="mr-2 h-3.5 w-3.5" /> Save current as template
           </DropdownMenuItem>
-          {templates.length > 0 ? (
+           {templates.length > 0 ? (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <FileText className="mr-2 h-3.5 w-3.5" /> Use template
@@ -229,7 +226,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
                   />
                 </div>
                 <div className="max-h-30 overflow-y-auto">
-                  {filteredTemplates.map((t: EmailTemplate) => (
+                  {filteredTemplates.map((t) => (
                     <DropdownMenuItem
                       key={t.id}
                       data-template-id={t.id}
