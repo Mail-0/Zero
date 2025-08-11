@@ -20,35 +20,16 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   className,
   onValidityChange,
 }) => {
-  const [isScheduling, setIsScheduling] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
-
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() =>
-    value ? new Date(value) : undefined,
-  );
 
   const pad2 = (n: number) => n.toString().padStart(2, '0');
   const getLocalTimeFromDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   const getNowTime = () => getLocalTimeFromDate(new Date());
 
-  const [time, setTime] = useState<string>(() => 
-    value ? getLocalTimeFromDate(new Date(value)) : getNowTime()
-  );
-
-  const currentValue = value ? new Date(value) : undefined;
-  const currentTime = value ? getLocalTimeFromDate(new Date(value)) : getNowTime();
-  const currentScheduling = !!value;
-
-  if (currentValue?.getTime() !== selectedDate?.getTime()) {
-    setSelectedDate(currentValue);
-  }
-  if (currentTime !== time) {
-    setTime(currentTime);
-  }
-  if (currentScheduling !== isScheduling) {
-    setIsScheduling(currentScheduling);
-  }
+  const isScheduling = !!value;
+  const selectedDate = value ? new Date(value) : undefined;
+  const time = value ? getLocalTimeFromDate(new Date(value)) : getNowTime();
 
   const emitChange = (datePart: Date | undefined, timePart: string, validate: boolean = false) => {
     if (!datePart) {
@@ -86,13 +67,11 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   };
 
   const handleDateSelect = (d?: Date) => {
-    setSelectedDate(d);
     emitChange(d, time, false);
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setTime(val);
     emitChange(selectedDate, val, false);
   };
 
@@ -112,13 +91,9 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
 
   const handleToggleScheduling = () => {
     if (isScheduling) {
-      setIsScheduling(false);
       onChange(undefined);
     } else {
-      setIsScheduling(true);
       const now = new Date();
-      setSelectedDate(now);
-      setTime(getNowTime());
       emitChange(now, getNowTime());
     }
   };
