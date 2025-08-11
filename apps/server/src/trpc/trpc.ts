@@ -38,6 +38,17 @@ const createLoggingMiddleware = () => {
           userAgent: ctx.c.req.header('user-agent'),
           ip: getConnInfo(ctx.c).remote.address,
           method: type,
+          // Additional metadata
+          referer: ctx.c.req.header('referer'),
+          origin: ctx.c.req.header('origin'),
+          acceptLanguage: ctx.c.req.header('accept-language'),
+          acceptEncoding: ctx.c.req.header('accept-encoding'),
+          // Request context
+          requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          // Performance context
+          startTime,
+          endTime: Date.now(),
         },
       }).catch(err => console.error('Failed to log TRPC call:', err));
 
@@ -55,6 +66,17 @@ const createLoggingMiddleware = () => {
           userAgent: ctx.c.req.header('user-agent'),
           ip: getConnInfo(ctx.c).remote.address,
           method: type,
+          // Additional metadata
+          referer: ctx.c.req.header('referer'),
+          origin: ctx.c.req.header('origin'),
+          acceptLanguage: ctx.c.req.header('accept-language'),
+          acceptEncoding: ctx.c.req.header('accept-encoding'),
+          // Request context
+          requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          // Performance context
+          startTime,
+          endTime: Date.now(),
         },
       }).catch(err => console.error('Failed to log TRPC call:', err));
 

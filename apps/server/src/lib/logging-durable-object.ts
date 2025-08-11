@@ -17,6 +17,15 @@ export interface TRPCCallLog {
         userAgent?: string;
         ip?: string;
         method: 'query' | 'mutation' | 'subscription';
+        // Additional metadata
+        referer?: string;
+        origin?: string;
+        acceptLanguage?: string;
+        acceptEncoding?: string;
+        requestId?: string;
+        timestamp?: string;
+        startTime?: number;
+        endTime?: number;
     };
 }
 
