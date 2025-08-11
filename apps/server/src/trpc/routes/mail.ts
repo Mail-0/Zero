@@ -515,7 +515,7 @@ export const mailRouter = router({
 
           targetTime = parsedTime;
         } else {
-          targetTime = Date.now() + 30_000;
+          targetTime = Date.now() + 15_000;
         }
 
         const rawDelaySeconds = Math.floor((targetTime - Date.now()) / 1000);
