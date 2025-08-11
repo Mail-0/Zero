@@ -242,7 +242,7 @@ const Thread = memo(
             <div
               className={cn(
                 'dark:bg-panelDark z-25 absolute right-2 flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm group-hover:opacity-100',
-                index === 0 ? 'top-4' : 'top-[-1]',
+                index === 0 ? 'top-4' : 'top-[-1px]',
               )}
             >
               <Tooltip>
