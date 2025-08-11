@@ -43,90 +43,169 @@ export class DatadogService {
         return positiveHash.padEnd(32, '0').slice(0, 32).toLowerCase();
     }
 
+    // Check if a procedure is logging-related to avoid recursive logging
+    private isLoggingProcedure(procedure: string): boolean {
+        const loggingProcedures = [
+            'logging.getSessionStats',
+            'logging.getCallHistory',
+            'logging.clearSession',
+            'logging.getSessionState',
+            'logging.exportToDatadog',
+            'logging.endSession'
+        ];
+        return loggingProcedures.includes(procedure);
+    }
+
     async exportSessionLogs(sessionId: string, userId: string, logs: TRPCCallLog[]): Promise<void> {
         if (logs.length === 0) return;
 
-        try {
-            const logEntries = logs.map((log, index) => {
-                // Generate consistent trace and span IDs for distributed tracing
-                // Use session-based trace ID for correlation across all calls in a session
-                // Must be 32-character lowercase hexadecimal strings for trace_id
-                // Must be 16-character lowercase hexadecimal strings for span_id
+        // Filter out logging-related procedures to avoid recursive logging
+        const filteredLogs = logs.filter(log => !this.isLoggingProcedure(log.procedure));
 
-                // Create a consistent trace ID based on session and user
-                // Using a simple hash function that doesn't require async operations
-                // According to Datadog docs: https://docs.datadoghq.com/tracing/connect_logs_and_traces
+        if (filteredLogs.length === 0) return;
+
+        try {
+            const logEntries = filteredLogs.map((log, index) => {
+                // Generate consistent trace and span IDs for distributed tracing
                 const sessionString = `${sessionId}-${userId}`;
                 const traceId = this.simpleHash(sessionString).slice(0, 32);
-
-                // Create a span ID based on the specific call
                 const callString = `${log.id}-${log.procedure}-${index}`;
                 const spanId = this.simpleHash(callString).slice(0, 16);
 
-                // Include ALL possible information in the logs for maximum visibility
+                // Calculate performance category once
+                const performanceCategory = log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow';
+                const hasError = !!log.error;
+
+                // Determine log level based on error status and performance
+                const logLevel = hasError ? 'ERROR' : performanceCategory === 'slow' ? 'WARNING' : 'INFO';
+
+                // Parse user agent for device/browser info
+                const parseUserAgent = (userAgent?: string) => {
+                    if (!userAgent) return {};
+
+                    const browsers = {
+                        chrome: /Chrome\/([0-9.]+)/i,
+                        firefox: /Firefox\/([0-9.]+)/i,
+                        safari: /Safari\/([0-9.]+)/i,
+                        edge: /Edg\/([0-9.]+)/i,
+                    };
+
+                    const os = {
+                        windows: /Windows NT ([0-9.]+)/i,
+                        macos: /Mac OS X ([0-9_.]+)/i,
+                        linux: /Linux/i,
+                        android: /Android ([0-9.]+)/i,
+                        ios: /OS ([0-9_]+)/i,
+                    };
+
+                    const devices = {
+                        mobile: /Mobile|Android|iPhone/i,
+                        tablet: /iPad|Tablet/i,
+                        desktop: /Windows|Mac|Linux/i,
+                    };
+
+                    let browser = 'unknown', browserVersion = '', operatingSystem = 'unknown', osVersion = '', deviceType = 'unknown';
+
+                    // Detect browser
+                    for (const [name, regex] of Object.entries(browsers)) {
+                        const match = userAgent.match(regex);
+                        if (match) {
+                            browser = name;
+                            browserVersion = match[1];
+                            break;
+                        }
+                    }
+
+                    // Detect OS
+                    for (const [name, regex] of Object.entries(os)) {
+                        const match = userAgent.match(regex);
+                        if (match) {
+                            operatingSystem = name;
+                            osVersion = match[1]?.replace(/_/g, '.') || '';
+                            break;
+                        }
+                    }
+
+                    // Detect device type
+                    for (const [type, regex] of Object.entries(devices)) {
+                        if (regex.test(userAgent)) {
+                            deviceType = type;
+                            break;
+                        }
+                    }
+
+                    return {
+                        browser,
+                        browser_version: browserVersion,
+                        operating_system: operatingSystem,
+                        os_version: osVersion,
+                        device_type: deviceType,
+                        user_agent: userAgent,
+                    };
+                };
+
+                const deviceInfo = parseUserAgent(log.metadata?.userAgent);
+
                 return {
-                    message: `TRPC call: ${log.procedure} (${log.duration}ms)`,
+                    message: `${logLevel}: TRPC call: [${log.procedure}] (${log.duration}ms)`,
                     service: 'zero-mail-app',
                     ddsource: 'trpc-logging',
-                    ddtags: `session:${sessionId},user:${userId},procedure:${log.procedure},duration:${log.duration}ms,has_error:${!!log.error}`,
+                    ddtags: `session:${sessionId},user:${userId},procedure:${log.procedure},duration:${log.duration}ms,has_error:${hasError},performance:${performanceCategory},browser:${deviceInfo.browser},device:${deviceInfo.device_type}`,
                     hostname: 'cloudflare-worker',
-                    timestamp: log.timestamp,
-                    // Trace correlation fields - must be nested in 'dd' object                    // According to Datadog docs: https://docs.datadoghq.com/tracing/connect_logs_and_traces
+                    // Trace correlation fields
                     dd: {
                         trace_id: traceId,
                         span_id: spanId,
                     },
-                    // Environment and version for better correlation
-                    env: 'development',
-                    version: '1.0.0',
-                    // Rich context at root level for better searchability and correlation
-                    // Include ALL possible information for maximum visibility
-                    procedure: log.procedure,
-                    duration: log.duration,
-                    session_id: sessionId,
-                    user_id: userId,
-                    call_id: log.id,
-                    performance_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
-                    has_error: !!log.error,
-                    error_message: log.error || null,
-                    error_type: log.error ? 'trpc_error' : null,
-                    // Additional context for better debugging
-                    call_sequence: index + 1,
-                    total_calls_in_session: logs.length,
-                    session_start_time: logs[0]?.timestamp || log.timestamp,
-                    session_duration: logs.length > 1 ? (logs[logs.length - 1]?.timestamp || log.timestamp) - (logs[0]?.timestamp || log.timestamp) : 0,
-                    // HTTP context
-                    http_method: 'POST',
-                    http_url: `/api/trpc/${log.procedure}`,
-                    // Request context (if available)
-                    request_id: log.id,
-                    request_timestamp: log.timestamp,
-                    // Performance metrics
-                    response_time_ms: log.duration,
-                    response_time_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
-                    // Error details
-                    error_details: log.error ? {
-                        message: log.error,
-                        type: 'trpc_error',
-                        procedure: log.procedure,
-                        timestamp: log.timestamp
-                    } : null,
-                    // Input/Output data (truncated for safety)
-                    input_data: log.input ? (typeof log.input === 'string' ? log.input.slice(0, 1000) : JSON.stringify(log.input).slice(0, 1000)) : null,
-                    output_data: log.output ? (typeof log.output === 'string' ? log.output.slice(0, 1000) : JSON.stringify(log.output).slice(0, 1000)) : null,
-                    // Metadata
-                    metadata: {
-                        session_id: sessionId,
-                        user_id: userId,
+
+                    additionalProperties: {
+                        // Core call data
                         call_id: log.id,
                         procedure: log.procedure,
                         duration: log.duration,
-                        timestamp: log.timestamp,
-                        has_error: !!log.error,
-                        error_message: log.error || null,
+                        performance_category: performanceCategory,
+                        trpc_method: log.metadata?.method || 'unknown',
+
+                        // Session context
+                        session_id: sessionId,
+                        user_id: userId,
                         call_sequence: index + 1,
-                        total_calls_in_session: logs.length,
-                        performance_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
+                        total_calls_in_session: filteredLogs.length,
+
+                        // HTTP context
+                        http_method: 'POST',
+                        http_url: `/api/trpc/${log.procedure}`,
+                        client_ip: log.metadata?.ip,
+                        referer: log.metadata?.referer,
+                        origin: log.metadata?.origin,
+                        accept_language: log.metadata?.acceptLanguage,
+                        accept_encoding: log.metadata?.acceptEncoding,
+                        request_id: log.metadata?.requestId,
+
+                        // Device and browser information
+                        ...deviceInfo,
+
+                        // Error handling
+                        has_error: hasError,
+                        log_level: logLevel,
+                        ...(log.error && {
+                            error_message: log.error,
+                            error_type: 'trpc_error',
+                        }),
+
+                        // Full request/response data
+                        request_payload: log.input,
+                        ...(log.output && {
+                            response_payload: log.output,
+                        }),
+
+                        // Performance metrics
+                        timing: {
+                            start_time: log.metadata?.startTime || log.timestamp,
+                            end_time: log.metadata?.endTime || (log.timestamp + log.duration),
+                            duration_ms: log.duration,
+                            performance_category: performanceCategory,
+                        },
                     }
                 };
             });
@@ -134,134 +213,20 @@ export class DatadogService {
             console.log('📊 Sending to Datadog:', {
                 sessionId,
                 userId,
-                logCount: logs.length,
-                sampleLogEntry: logEntries[0], // Show the first log entry structure
+                totalLogs: logs.length,
+                filteredLogs: filteredLogs.length,
+                excludedLoggingCalls: logs.length - filteredLogs.length,
             });
 
-            // Send logs
-            const logParams = {
-                body: logEntries,
-            };
-            await this.apiInstance.submitLog(logParams);
+            await this.apiInstance.submitLog({ body: logEntries });
 
             console.log('✅ Successfully exported to Datadog:', {
                 sessionId,
                 userId,
-                logCount: logs.length,
+                exportedLogs: filteredLogs.length,
             });
         } catch (error) {
             console.error('❌ Failed to export session logs to Datadog:', error);
-        }
-    }
-
-    async exportBatchLogs(logs: Array<{ sessionId: string; userId: string; logs: TRPCCallLog[] }>): Promise<void> {
-        if (logs.length === 0) return;
-
-        try {
-            const allLogEntries: any[] = [];
-
-            for (const { sessionId, userId, logs: sessionLogs } of logs) {
-                const logEntries = sessionLogs.map((log, index) => {
-                    // Generate consistent trace and span IDs for distributed tracing
-                    // Use session-based trace ID for correlation across all calls in a session
-                    // Must be 32-character lowercase hexadecimal strings for trace_id
-                    // Must be 16-character lowercase hexadecimal strings for span_id
-
-                    // Create a consistent trace ID based on session and user
-                    const sessionString = `${sessionId}-${userId}`;
-                    const traceId = this.simpleHash(sessionString).slice(0, 32);
-
-                    // Create a span ID based on the specific call
-                    const callString = `${log.id}-${log.procedure}-${index}`;
-                    const spanId = this.simpleHash(callString).slice(0, 16);
-
-                    // Include ALL possible information in the logs for maximum visibility
-                    return {
-                        message: `TRPC call: ${log.procedure} (${log.duration}ms)`,
-                        service: 'zero-mail-app',
-                        ddsource: 'trpc-logging',
-                        ddtags: `session:${sessionId},user:${userId},procedure:${log.procedure},duration:${log.duration}ms,has_error:${!!log.error}`,
-                        hostname: 'cloudflare-worker',
-                        timestamp: log.timestamp,
-                        // Trace correlation fields - must be nested in 'dd' object
-                        // According to Datadog docs: https://docs.datadoghq.com/tracing/connect_logs_and_traces
-                        dd: {
-                            trace_id: traceId,
-                            span_id: spanId,
-                        },
-                        // Environment and version for better correlation
-                        env: 'development',
-                        version: '1.0.0',
-                        // Rich context at root level for better searchability and correlation
-                        // Include ALL possible information for maximum visibility
-                        procedure: log.procedure,
-                        duration: log.duration,
-                        session_id: sessionId,
-                        user_id: userId,
-                        call_id: log.id,
-                        performance_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
-                        has_error: !!log.error,
-                        error_message: log.error || null,
-                        error_type: log.error ? 'trpc_error' : null,
-                        // Additional context for better debugging
-                        call_sequence: index + 1,
-                        total_calls_in_session: sessionLogs.length,
-                        session_start_time: sessionLogs[0]?.timestamp || log.timestamp,
-                        session_duration: sessionLogs.length > 1 ? (sessionLogs[sessionLogs.length - 1]?.timestamp || log.timestamp) - (sessionLogs[0]?.timestamp || log.timestamp) : 0,
-                        // HTTP context
-                        http_method: 'POST',
-                        http_url: `/api/trpc/${log.procedure}`,
-                        // Request context (if available)
-                        request_id: log.id,
-                        request_timestamp: log.timestamp,
-                        // Performance metrics
-                        response_time_ms: log.duration,
-                        response_time_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
-                        // Error details
-                        error_details: log.error ? {
-                            message: log.error,
-                            type: 'trpc_error',
-                            procedure: log.procedure,
-                            timestamp: log.timestamp
-                        } : null,
-                        // Input/Output data (truncated for safety)
-                        input_data: log.input ? (typeof log.input === 'string' ? log.input.slice(0, 1000) : JSON.stringify(log.input).slice(0, 1000)) : null,
-                        output_data: log.output ? (typeof log.output === 'string' ? log.output.slice(0, 1000) : JSON.stringify(log.output).slice(0, 1000)) : null,
-                        // Metadata
-                        metadata: {
-                            session_id: sessionId,
-                            user_id: userId,
-                            call_id: log.id,
-                            procedure: log.procedure,
-                            duration: log.duration,
-                            timestamp: log.timestamp,
-                            has_error: !!log.error,
-                            error_message: log.error || null,
-                            call_sequence: index + 1,
-                            total_calls_in_session: sessionLogs.length,
-                            performance_category: log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow',
-                        }
-                    };
-                });
-
-                allLogEntries.push(...logEntries);
-            }
-
-            console.log('📊 Sending batch to Datadog:', {
-                sessionCount: logs.length,
-                totalLogCount: allLogEntries.length,
-                sessions: logs.map(l => ({ sessionId: l.sessionId, userId: l.userId, logCount: l.logs.length }))
-            });
-
-            if (allLogEntries.length > 0) {
-                const logParams: v2.LogsApiSubmitLogRequest = {
-                    body: allLogEntries,
-                };
-
-                await this.apiInstance.submitLog(logParams);
-            }
-        } catch (error) {
-            console.error('Failed to export batch logs to Datadog:', error);
         }
     }
 } 
