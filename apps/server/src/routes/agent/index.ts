@@ -883,7 +883,10 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return await this.driver.deleteDraft(id);
+    await this.driver.deleteDraft(id);
+    // Broadcast drafts folder refresh
+    await this.reloadFolder('drafts');
+    return { success: true };
   }
 
   // Additional mail operations

@@ -632,9 +632,10 @@ const Draft = memo(({ message, index }: { message: { id: string }; index: number
       >
         <div
           className={cn(
-            'dark:bg-panelDark z-25 absolute right-2 flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm group-hover:opacity-100',
-            index === 0 ? 'top-4' : 'top-[-1]',
+            'dark:bg-panelDark shadow-xs absolute right-2 z-20 flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 group-hover:opacity-100',
+            index === 0 ? 'top-4' : 'top-[-1px]',
           )}
+          aria-busy={optimisticState.isRemoving}
         >
           <Tooltip>
             <TooltipTrigger asChild>
@@ -642,6 +643,8 @@ const Draft = memo(({ message, index }: { message: { id: string }; index: number
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
+                aria-label="Delete draft"
+                disabled={optimisticState.isRemoving}
                 onClick={handleDeleteDraft}
               >
                 <Trash className="fill-[#F43F5E]" />

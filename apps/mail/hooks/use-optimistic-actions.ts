@@ -33,7 +33,7 @@ interface ActionParams {
   labelId?: string;
   add?: boolean;
   currentFolder?: string;
-  destination?: string;
+  destination?: ThreadDestination;
   wakeAt?: string;
 }
 
@@ -514,6 +514,7 @@ export function useOptimisticActions() {
       optimisticId,
       execute: async () => {
         await deleteDraft({ id: draftId });
+        await queryClient.invalidateQueries({ queryKey: trpc.drafts.list.queryKey() });
       },
       undo: () => {
         removeOptimisticAction(optimisticId);

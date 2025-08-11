@@ -597,6 +597,7 @@ export class GoogleMailManager implements MailManager {
         await this.gmail.users.drafts.delete({
           userId: 'me',
           id: draftId,
+          quotaUser: this.getQuotaUser(),
         });
       },
       { draftId },

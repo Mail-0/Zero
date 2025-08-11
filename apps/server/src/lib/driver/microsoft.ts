@@ -535,7 +535,7 @@ export class OutlookMailManager implements MailManager {
     return this.withErrorHandler(
       'sendDraft',
       async () => {
-        await this.graphClient.api(`/me/drafts/${draftId}/send`).post({});
+        await this.graphClient.api(`/me/messages/${draftId}/send`).post({});
       },
       { draftId, data },
     );

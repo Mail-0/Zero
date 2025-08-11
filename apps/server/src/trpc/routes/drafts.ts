@@ -35,7 +35,7 @@ export const draftsRouter = router({
   delete: activeDriverProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.string().min(1, 'id is required'),
       }),
     )
     .mutation(async ({ input, ctx }) => {
