@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import * as React from 'react';
+import { useCallback, useMemo } from 'react';
 import { addMonths, subMonths, getYear, getMonth, setYear, setMonth, format } from 'date-fns';
 
 import { buttonVariants } from '@/components/ui/button';
@@ -13,9 +14,9 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
 function Calendar({ className, classNames, showOutsideDays = true, captionLayout, yearRange = 10, ...props }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   
-  const years = Array.from({ length: yearRange }, (_, i) => new Date().getFullYear() + i);
+  const years = useMemo(() => Array.from({ length: yearRange }, (_, i) => new Date().getFullYear() + i), [yearRange]);
   
-  const handleMonthChange = (monthIndex: string) => {
+  const handleMonthChange = useCallback((monthIndex: string) => {
     const parsedMonth = parseInt(monthIndex, 10);
     
     
@@ -26,9 +27,9 @@ function Calendar({ className, classNames, showOutsideDays = true, captionLayout
     
     const newDate = setMonth(currentMonth, parsedMonth);
     setCurrentMonth(newDate);
-  };
+  }, [currentMonth]);
   
-  const handleYearChange = (year: string) => {
+  const handleYearChange = useCallback((year: string) => {
     const parsedYear = parseInt(year, 10);
     if (!Number.isFinite(parsedYear) || parsedYear < 1900 || parsedYear > 2100) {
       console.warn(`Invalid year value: ${year}. Expected 1900-2100, got ${parsedYear}`);
@@ -37,7 +38,15 @@ function Calendar({ className, classNames, showOutsideDays = true, captionLayout
     
     const newDate = setYear(currentMonth, parsedYear);
     setCurrentMonth(newDate);
-  };
+  }, [currentMonth]);
+
+  const handlePreviousMonth = useCallback((displayMonth: Date) => {
+    setCurrentMonth(subMonths(displayMonth, 1));
+  }, []);
+
+  const handleNextMonth = useCallback((displayMonth: Date) => {
+    setCurrentMonth(addMonths(displayMonth, 1));
+  }, []);
 
   return (
     <DayPicker
@@ -88,7 +97,7 @@ function Calendar({ className, classNames, showOutsideDays = true, captionLayout
         Caption: ({ displayMonth }) => (
           <div className="flex items-center justify-between w-full px-1">
             <button
-              onClick={() => setCurrentMonth(subMonths(displayMonth, 1))}
+              onClick={() => handlePreviousMonth(displayMonth)}
               className={cn(
                 buttonVariants({ variant: 'outline' }),
                 'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100'
@@ -127,7 +136,7 @@ function Calendar({ className, classNames, showOutsideDays = true, captionLayout
             </div>
             
             <button
-              onClick={() => setCurrentMonth(addMonths(displayMonth, 1))}
+              onClick={() => handleNextMonth(displayMonth)}
               className={cn(
                 buttonVariants({ variant: 'outline' }),
                 'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100'
