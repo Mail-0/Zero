@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 
+const pad2 = (n: number) => n.toString().padStart(2, '0');
+const getLocalTimeFromDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const getNowTime = () => getLocalTimeFromDate(new Date());
+
 interface ScheduleSendPickerProps {
   value?: string | undefined;
   onChange: (value?: string) => void;
@@ -22,10 +26,6 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
 }) => {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
-
-  const pad2 = (n: number) => n.toString().padStart(2, '0');
-  const getLocalTimeFromDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  const getNowTime = () => getLocalTimeFromDate(new Date());
 
   const isScheduling = !!value;
   const selectedDate = value ? new Date(value) : undefined;
@@ -98,13 +98,23 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
     }
   };
 
+  const formatTime12Hour = (timeStr: string) => {
+    try {
+      const [hhStr, mmStr = '00'] = timeStr.split(':');
+      const preview = new Date();
+      preview.setHours(Number(hhStr), Number(mmStr), 0, 0);
+      return format(preview, 'hh:mm aaa');
+    } catch {
+      return timeStr;
+    }
+  };
+
   const triggerLabel = (() => {
     if (!selectedDate) return 'Send later';
     try {
-      const [hhStr, mmStr = '00'] = time.split(':');
-      const preview = new Date(selectedDate);
-      preview.setHours(Number(hhStr), Number(mmStr), 0, 0);
-      return format(preview, 'dd MMM yyyy hh:mm aaa');
+      const formattedTime = formatTime12Hour(time);
+      const formattedDate = format(selectedDate, 'dd MMM yyyy');
+      return `${formattedDate} ${formattedTime}`;
     } catch {
       return 'Send later';
     }
@@ -152,7 +162,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
               )}
             >
               <Clock className="h-4 w-4" />
-              <span>{time}</span>
+              <span>{formatTime12Hour(time)}</span>
             </button>
           </PopoverTrigger>
           <PopoverContent className="z-[100] w-auto p-4" align="start" side="top" sideOffset={8}>

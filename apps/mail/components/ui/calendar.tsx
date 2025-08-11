@@ -16,12 +16,26 @@ function Calendar({ className, classNames, showOutsideDays = true, captionLayout
   const years = Array.from({ length: yearRange }, (_, i) => new Date().getFullYear() + i);
   
   const handleMonthChange = (monthIndex: string) => {
-    const newDate = setMonth(currentMonth, parseInt(monthIndex));
+    const parsedMonth = parseInt(monthIndex, 10);
+    
+    
+    if (!Number.isFinite(parsedMonth) || parsedMonth < 0 || parsedMonth > 11) {
+      console.warn(`Invalid month value: ${monthIndex}. Expected 0-11, got ${parsedMonth}`);
+      return;
+    }
+    
+    const newDate = setMonth(currentMonth, parsedMonth);
     setCurrentMonth(newDate);
   };
   
   const handleYearChange = (year: string) => {
-    const newDate = setYear(currentMonth, parseInt(year));
+    const parsedYear = parseInt(year, 10);
+    if (!Number.isFinite(parsedYear) || parsedYear < 1900 || parsedYear > 2100) {
+      console.warn(`Invalid year value: ${year}. Expected 1900-2100, got ${parsedYear}`);
+      return; 
+    }
+    
+    const newDate = setYear(currentMonth, parsedYear);
     setCurrentMonth(newDate);
   };
 
