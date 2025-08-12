@@ -303,19 +303,19 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           )}
         </div>
       </div>
-      <a href={'/'}>Return home</a>
+      <a href={'/'} className='text-white hover:text-gray-200'>Return home</a>
 
       <footer className="w-full px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
           <a
             href="/terms"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Terms of Service
           </a>
           <a
             href="/privacy"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Privacy Policy
           </a>

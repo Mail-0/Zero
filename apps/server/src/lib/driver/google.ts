@@ -590,6 +590,19 @@ export class GoogleMailManager implements MailManager {
       { draftId, data },
     );
   }
+  public deleteDraft(draftId: string) {
+    return this.withErrorHandler(
+      'deleteDraft',
+      async () => {
+        await this.gmail.users.drafts.delete({
+          userId: 'me',
+          id: draftId,
+          quotaUser: this.getQuotaUser(),
+        });
+      },
+      { draftId },
+    );
+  }
   public getDraft(draftId: string) {
     return this.withErrorHandler(
       'getDraft',

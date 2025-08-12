@@ -535,7 +535,7 @@ export class OutlookMailManager implements MailManager {
     return this.withErrorHandler(
       'sendDraft',
       async () => {
-        await this.graphClient.api(`/me/drafts/${draftId}/send`).post({});
+        await this.graphClient.api(`/me/messages/${draftId}/send`).post({});
       },
       { draftId, data },
     );
@@ -559,6 +559,15 @@ export class OutlookMailManager implements MailManager {
         }
 
         return parsedDraft;
+      },
+      { draftId },
+    );
+  }
+  public deleteDraft(draftId: string) {
+    return this.withErrorHandler(
+      'deleteDraft',
+      async () => {
+        await this.graphClient.api(`/me/messages/${draftId}`).delete();
       },
       { draftId },
     );

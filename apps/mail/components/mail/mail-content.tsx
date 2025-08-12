@@ -200,7 +200,7 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
           </button>
         </div>
       )}
-      <div ref={hostRef} className={cn('mail-content w-full flex-1 overflow-scroll no-scrollbar px-4')} />
+      <div ref={hostRef} className={cn('mail-content w-full flex-1 overflow-scroll no-scrollbar px-4 text-black dark:text-white')} />
     </>
   );
 }

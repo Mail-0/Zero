@@ -6,6 +6,7 @@ import {
   getThread,
   modifyThreadLabelsInDB,
   deleteAllSpam,
+  reSyncThread,
 } from '../../lib/server-utils';
 import {
   IGetThreadResponseSchema,
@@ -40,6 +41,20 @@ const senderSchema = z.object({
 // };
 
 export const mailRouter = router({
+  suggestRecipients: activeDriverProcedure
+    .input(
+      z.object({
+        query: z.string().optional().default(''),
+        limit: z.number().optional().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { activeConnection } = ctx;
+      const executionCtx = getContext<HonoContext>().executionCtx;
+      const { stub: agent } = await getZeroAgent(activeConnection.id, executionCtx);
+
+      return await agent.suggestRecipients(input.query, input.limit);
+    }),
   forceSync: activeDriverProcedure.mutation(async ({ ctx }) => {
     const { activeConnection } = ctx;
     return await forceReSync(activeConnection.id);
@@ -150,6 +165,31 @@ export const mailRouter = router({
         threadsResponse.threads = filtered;
         console.debug('[listThreads] Snoozed threads after filtering:', filtered);
       }
+
+      if (threadsResponse.threads.length === 0 && folder === FOLDERS.INBOX && !q) {
+        const now = Date.now();
+        const cooldownKey = `resync_cooldown_${activeConnection.id}`;
+        const lastResyncStr = await env.gmail_processing_threads.get(cooldownKey);
+        const lastResync = lastResyncStr ? parseInt(lastResyncStr, 10) : 0;
+        const RESYNC_COOLDOWN_MS = 30000;
+
+        if (now - lastResync > RESYNC_COOLDOWN_MS) {
+          await env.gmail_processing_threads.put(cooldownKey, now.toString(), {
+            expirationTtl: 60,
+          });
+
+          getZeroAgent(activeConnection.id, executionCtx)
+            .then((_agent) => {
+              _agent.stub.forceReSync().catch((error) => {
+                console.error('[listThreads] Async resync failed:', error);
+              });
+            })
+            .catch((error) => {
+              console.error('[listThreads] Failed to get agent for async resync:', error);
+            });
+        }
+      }
+
       console.debug('[listThreads] Returning threadsResponse:', threadsResponse);
       return threadsResponse;
     }),
@@ -475,7 +515,7 @@ export const mailRouter = router({
 
           targetTime = parsedTime;
         } else {
-          targetTime = Date.now() + 30_000;
+          targetTime = Date.now() + 15_000;
         }
 
         const rawDelaySeconds = Math.floor((targetTime - Date.now()) / 1000);
@@ -569,6 +609,10 @@ export const mailRouter = router({
         await agent.stub.create(mailWithAttachments);
       }
 
+      console.log('[send] input.threadId:', input);
+
+      if (input.threadId)
+        ctx.c.executionCtx.waitUntil(reSyncThread(activeConnection.id, input.threadId));
       ctx.c.executionCtx.waitUntil(afterTask());
       return { success: true };
     }),

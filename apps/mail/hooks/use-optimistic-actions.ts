@@ -22,9 +22,22 @@ enum ActionType {
   IMPORTANT = 'IMPORTANT',
   SNOOZE = 'SNOOZE',
   UNSNOOZE = 'UNSNOOZE',
+  DELETE_DRAFT = 'DELETE_DRAFT',
 }
 
-const actionEventNames: Record<ActionType, (params: any) => string> = {
+// Update the params interface
+interface ActionParams {
+  starred?: boolean;
+  read?: boolean;
+  important?: boolean;
+  labelId?: string;
+  add?: boolean;
+  currentFolder?: string;
+  destination?: ThreadDestination;
+  wakeAt?: string;
+}
+
+const actionEventNames: Record<ActionType, (params: ActionParams) => string> = {
   [ActionType.MOVE]: () => 'email_moved',
   [ActionType.STAR]: (params) => (params.starred ? 'email_starred' : 'email_unstarred'),
   [ActionType.READ]: (params) => (params.read ? 'email_marked_read' : 'email_marked_unread'),
@@ -33,6 +46,7 @@ const actionEventNames: Record<ActionType, (params: any) => string> = {
   [ActionType.LABEL]: (params) => (params.add ? 'email_label_added' : 'email_label_removed'),
   [ActionType.SNOOZE]: () => 'email_snoozed',
   [ActionType.UNSNOOZE]: () => 'email_unsnoozed',
+  [ActionType.DELETE_DRAFT]: () => 'draft_deleted',
 };
 
 export function useOptimisticActions() {
@@ -54,6 +68,8 @@ export function useOptimisticActions() {
   const { mutateAsync: snoozeThreads } = useMutation(trpc.mail.snoozeThreads.mutationOptions());
   const { mutateAsync: unsnoozeThreads } = useMutation(trpc.mail.unsnoozeThreads.mutationOptions());
   const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
+
+  const { mutateAsync: deleteDraft } = useMutation(trpc.drafts.delete.mutationOptions());
 
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -442,7 +458,7 @@ export function useOptimisticActions() {
     createPendingAction({
       type: 'SNOOZE',
       threadIds,
-      params: { currentFolder, wakeAt: wakeAt.toISOString() } as any,
+      params: { currentFolder, wakeAt: wakeAt.toISOString() },
       optimisticId,
       execute: async () => {
         await snoozeThreads({ ids: threadIds, wakeAt: wakeAt.toISOString() });
@@ -483,6 +499,30 @@ export function useOptimisticActions() {
     });
   }
 
+  function optimisticDeleteDraft(draftId: string) {
+    if (!draftId) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'DELETE_DRAFT',
+      threadIds: [draftId],
+    });
+
+    createPendingAction({
+      type: 'DELETE_DRAFT',
+      threadIds: [draftId],
+      params: {} as any,
+      optimisticId,
+      execute: async () => {
+        await deleteDraft({ id: draftId });
+        await queryClient.invalidateQueries({ queryKey: trpc.drafts.list.queryKey() });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: 'Draft deleted',
+    });
+  }
+
   function undoLastAction() {
     if (!optimisticActionsManager.lastActionId) return;
 
@@ -515,6 +555,7 @@ export function useOptimisticActions() {
     optimisticToggleLabel,
     optimisticSnooze,
     optimisticUnsnooze,
+    optimisticDeleteDraft,
     undoLastAction,
   };
 }

@@ -165,8 +165,13 @@
       "attachments": "پیوست‌ها",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پیوست",
             "countPlural=one": "پیوست",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "فایل",
             "countPlural=one": "فایل",
@@ -249,8 +259,13 @@
       "search": "جستجوی یادداشت‌ها...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "افزودن یادداشت‌ها",
             "countPlural=one": "# یادداشت",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پاسخ‌ها",
             "countPlural=one": "# پاسخ",

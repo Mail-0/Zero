@@ -165,8 +165,13 @@
       "attachments": "Załączniki",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "załączników",
             "countPlural=one": "załącznik",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "plików",
             "countPlural=one": "plik",
@@ -249,8 +259,13 @@
       "search": "Szukaj notatek...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Dodaj notatki",
             "countPlural=one": "# notatka",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "odpowiedzi",
             "countPlural=one": "# odpowiedź",

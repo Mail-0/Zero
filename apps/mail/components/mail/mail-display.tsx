@@ -242,7 +242,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
 // Helper function to clean email display
 const cleanEmailDisplay = (email?: string) => {
   if (!email) return '';
-  const match = email.match(/^[^a-zA-Z]*(.*?)[^a-zA-Z]*$/);
+  const match = email.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
   return match ? match[1] : email;
 };
 

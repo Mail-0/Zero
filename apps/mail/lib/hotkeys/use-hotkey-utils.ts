@@ -4,6 +4,7 @@ import { keyboardLayoutMapper, type KeyboardLayout } from '@/utils/keyboard-layo
 import { getKeyCodeFromKey } from '@/utils/keyboard-utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
+import { isMac } from '@/lib/platform';
 
 export const useShortcutCache = () => {
   // const { data: shortcuts, mutate } = useSWR<Shortcut[]>(
@@ -48,11 +49,6 @@ export const useShortcutCache = () => {
     // updateShortcut,
   };
 };
-
-export const isMac =
-  typeof window !== 'undefined' &&
-  (/macintosh|mac os x/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
 const dvorakToQwerty: Record<string, string> = {
   a: 'a',

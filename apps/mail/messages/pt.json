@@ -165,8 +165,13 @@
       "attachments": "Anexos",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "anexos",
             "countPlural=one": "anexo",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
             "countPlural=one": "arquivo",
@@ -249,8 +259,13 @@
       "search": "Pesquisar notas...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Adicione notas",
             "countPlural=one": "# nota",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
             "countPlural=one": "# resposta",

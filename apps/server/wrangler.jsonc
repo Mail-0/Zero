@@ -149,9 +149,6 @@
       "observability": {
         "enabled": true,
       },
-      "triggers": {
-        "crons": ["*/1 * * * *", "0 0 * * *", "0 * * * *"],
-      },
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
@@ -178,6 +175,8 @@
         "CLOUDFLARE_ACCOUNT_ID": "",
         "CLOUDFLARE_API_TOKEN": "",
         "MEET_AUTH_HEADER": "",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-local",
       },
       "kv_namespaces": [
         {
@@ -392,6 +391,8 @@
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "false",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-staging",
       },
       "kv_namespaces": [
         {
@@ -603,6 +604,8 @@
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-production",
       },
       "kv_namespaces": [
         {

@@ -122,7 +122,7 @@ export function Navigation() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white">
+                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -136,7 +136,7 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white">
+                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
                     Resources
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -155,13 +155,11 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem className="bg-transparent text-white">
-                  <a href="/pricing">
-                    <Button variant="ghost" className="h-9 bg-transparent">
-                      Pricing
-                    </Button>
-                  </a>
+                  <Button asChild variant="ghost" className="h-9 bg-transparent cursor-pointer">
+                    <a href="/pricing">Pricing</a>
+                  </Button>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white">
+                <NavigationMenuItem className="bg-transparent text-white cursor-pointer">
                   <a href="/privacy">
                     <Button variant="ghost" className="ml-1 h-9 bg-transparent">
                       Privacy
@@ -191,7 +189,7 @@ export function Navigation() {
               </div>
             </a>
             <Button
-              className="h-8 bg-white text-black hover:bg-white hover:text-black"
+              className="h-8 bg-white text-black hover:bg-white hover:text-black cursor-pointer"
               onClick={() => {
                 if (session) {
                   navigate('/mail/inbox');

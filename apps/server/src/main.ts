@@ -22,6 +22,7 @@ import {
 } from './lib/attachments';
 import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordinator-workflow';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
+// import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
@@ -40,6 +41,7 @@ import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
 import { WorkflowRunner } from './pipelines';
 import { autumnApi } from './routes/autumn';
+import { initTracing } from './lib/tracing';
 import { env, type ZeroEnv } from './env';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
@@ -747,49 +749,107 @@ const app = new Hono<HonoContext>()
     }
   })
   .post('/a8n/notify/:providerId', async (c) => {
-    if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-    if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
-    const providerId = c.req.param('providerId');
-    if (providerId === EProviders.google) {
-      const body = await c.req.json<{ historyId: string }>();
-      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-      if (!subHeader) {
-        console.log('[GOOGLE] no subscription header', body);
-        return c.json({}, { status: 200 });
+    const tracer = initTracing();
+    const span = tracer.startSpan('a8n_notify', {
+      attributes: {
+        'provider.id': c.req.param('providerId'),
+        'notification.type': 'email_notification',
+        'http.method': c.req.method,
+        'http.url': c.req.url,
+      },
+    });
+
+    try {
+      if (!c.req.header('Authorization')) {
+        span.setAttributes({ 'auth.status': 'missing' });
+        return c.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-      if (!isValid) {
-        console.log('[GOOGLE] invalid request', body);
-        return c.json({}, { status: 200 });
+      if (env.DISABLE_WORKFLOWS === 'true') {
+        span.setAttributes({ 'workflows.disabled': true });
+        return c.json({ message: 'OK' }, { status: 200 });
       }
-      try {
-        await env.thread_queue.send({
-          providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
+      const providerId = c.req.param('providerId');
+      if (providerId === EProviders.google) {
+        const body = await c.req.json<{ historyId: string }>();
+        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+
+        span.setAttributes({
+          'history.id': body.historyId,
+          'subscription.name': subHeader || 'missing',
         });
-      } catch (error) {
-        console.error('Error sending to thread queue', error, {
-          providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
-        });
+
+        if (!subHeader) {
+          console.log('[GOOGLE] no subscription header', body);
+          span.setAttributes({ 'error.type': 'missing_subscription_header' });
+          return c.json({}, { status: 200 });
+        }
+        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+        if (!isValid) {
+          console.log('[GOOGLE] invalid request', body);
+          span.setAttributes({ 'auth.status': 'invalid' });
+          return c.json({}, { status: 200 });
+        }
+
+        span.setAttributes({ 'auth.status': 'valid' });
+
+        try {
+          await env.thread_queue.send({
+            providerId,
+            historyId: body.historyId,
+            subscriptionName: subHeader,
+          });
+          span.setAttributes({ 'queue.message_sent': true });
+        } catch (error) {
+          console.error('Error sending to thread queue', error, {
+            providerId,
+            historyId: body.historyId,
+            subscriptionName: subHeader,
+          });
+          span.recordException(error as Error);
+          span.setStatus({ code: 2, message: (error as Error).message });
+        }
+        return c.json({ message: 'OK' }, { status: 200 });
       }
-      return c.json({ message: 'OK' }, { status: 200 });
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: 2, message: (error as Error).message });
+      throw error;
+    } finally {
+      span.end();
     }
   });
+const handler = {
+  async fetch(request: Request, env: ZeroEnv, ctx: ExecutionContext): Promise<Response> {
+    return app.fetch(request, env, ctx);
+  },
+};
+
+// const config: ResolveConfigFn = (env: ZeroEnv) => {
+//   return {
+//     exporter: {
+//       url: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://api.axiom.co/v1/traces',
+//       headers: env.OTEL_EXPORTER_OTLP_HEADERS
+//         ? Object.fromEntries(
+//             env.OTEL_EXPORTER_OTLP_HEADERS.split(',').map((header: string) => {
+//               const [key, value] = header.split('=');
+//               return [key.trim(), value.trim()];
+//             }),
+//           )
+//         : {},
+//     },
+//     service: {
+//       name: env.OTEL_SERVICE_NAME || 'zero-email-server',
+//       version: '1.0.0',
+//     },
+//   };
+// };
+
 export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   async fetch(request: Request): Promise<Response> {
-    // const url = new URL(request.url);
-    // if (url.pathname === '/__studio') {
-    //   return await studio(request, env.ZERO_DRIVER, {
-    //     basicAuth: { username: 'admin', password: 'password' },
-    //   });
-    // }
-    return app.fetch(request, this.env, this.ctx);
+    return handler.fetch(request, this.env, this.ctx);
   }
   async queue(
-    batch: MessageBatch<any> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
+    batch: MessageBatch<unknown> | { queue: string; messages: Array<{ body: IEmailSendBatch }> },
   ) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
@@ -817,7 +877,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
             const { messageId, connectionId, mail } = msg.body;
 
             const { pending_emails_status: statusKV, pending_emails_payload: payloadKV } = this
-              .env as any;
+              .env as { pending_emails_status: KVNamespace; pending_emails_payload: KVNamespace };
 
             const status = await statusKV.get(messageId);
             if (status === 'cancelled') {
@@ -881,13 +941,24 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
+        const tracer = initTracing();
+
         await Promise.all(
           batch.messages.map(async (msg: any) => {
-            const providerId = msg.body.providerId;
-            const historyId = msg.body.historyId;
-            const subscriptionName = msg.body.subscriptionName;
+            const span = tracer.startSpan('thread_queue_processing', {
+              attributes: {
+                'provider.id': msg.body.providerId,
+                'history.id': msg.body.historyId,
+                'subscription.name': msg.body.subscriptionName,
+                'queue.name': batch.queue,
+              },
+            });
 
             try {
+              const providerId = msg.body.providerId;
+              const historyId = msg.body.historyId;
+              const subscriptionName = msg.body.subscriptionName;
+
               const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
               const result = await workflowRunner.runMainWorkflow({
                 providerId,
@@ -895,8 +966,16 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
                 subscriptionName,
               });
               console.log('[THREAD_QUEUE] result', result);
+              span.setAttributes({
+                'workflow.result': typeof result === 'string' ? result : JSON.stringify(result),
+                'workflow.success': true,
+              });
             } catch (error) {
               console.error('Error running workflow', error);
+              span.recordException(error as Error);
+              span.setStatus({ code: 2, message: (error as Error).message });
+            } finally {
+              span.end();
             }
           }),
         );
@@ -914,7 +993,10 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
   private async processScheduledEmails() {
     console.log('Checking for scheduled emails ready to be queued...');
-    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as any;
+    const { scheduled_emails: scheduledKV, send_email_queue } = this.env as {
+      scheduled_emails: KVNamespace;
+      send_email_queue: Queue<IEmailSendBatch>;
+    };
 
     try {
       const now = Date.now();
@@ -991,7 +1073,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
       for (const key of listResp.keys) {
         try {
-          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          const wakeAtIso = key.metadata?.wakeAt as string | undefined;
           if (!wakeAtIso) continue;
           const wakeAt = new Date(wakeAtIso).getTime();
           if (wakeAt > nowTs) continue;

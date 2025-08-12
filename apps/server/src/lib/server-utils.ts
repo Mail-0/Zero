@@ -2,6 +2,7 @@ import type { IGetThreadResponse, IGetThreadsResponse } from './driver/types';
 import { OutgoingMessageType } from '../routes/agent/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
+import { defaultPageSize } from './utils';
 import type { HonoContext } from '../ctx';
 import { createClient } from 'dormroom';
 import { createDriver } from './driver';
@@ -304,6 +305,10 @@ export const modifyThreadLabelsInDB = async (
   const threadResult = await getThread(connectionId, threadId);
   const shard = await getShardClient(connectionId, threadResult.shardId);
   await shard.stub.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
+
+  const agent = await getZeroSocketAgent(connectionId);
+  await agent.invalidateDoStateCache();
+
   await sendDoState(connectionId);
 };
 
@@ -350,21 +355,41 @@ export const getZeroAgent = async (connectionId: string, executionCtx?: Executio
   return agent;
 };
 
+export const getZeroAgentFromShard = async (connectionId: string, shardId: string) => {
+  const agent = await getShardClient(connectionId, shardId);
+  return agent;
+};
+
 export const forceReSync = async (connectionId: string) => {
   const registry = await getRegistryClient(connectionId);
   const allShards = await listShards(registry);
-  for (const { shard_id: id } of allShards) {
-    const shard = await getShardClient(connectionId, id);
-    await shard.exec(`DROP TABLE IF EXISTS threads`);
-    await shard.exec(`DROP TABLE IF EXISTS thread_labels`);
-    await shard.exec(`DROP TABLE IF EXISTS labels`);
-  }
+
+  await Promise.allSettled(
+    allShards.map(async ({ shard_id: id }) => {
+      const shard = await getShardClient(connectionId, id);
+      await Promise.allSettled([
+        shard.exec(`DROP TABLE IF EXISTS threads`),
+        shard.exec(`DROP TABLE IF EXISTS thread_labels`),
+        shard.exec(`DROP TABLE IF EXISTS labels`),
+      ]);
+    }),
+  );
+
   await deleteAllShards(registry);
+
   const agent = await getZeroAgent(connectionId);
-  await agent.stub.forceReSync();
+  return agent.stub.forceReSync();
 };
 
-
+export const reSyncThread = async (connectionId: string, threadId: string) => {
+  try {
+    const { shardId } = await getThread(connectionId, threadId);
+    const agent = await getZeroAgentFromShard(connectionId, shardId);
+    await agent.stub.syncThread({ threadId });
+  } catch (error) {
+    console.error(`[ZeroAgent] Thread not found for threadId: ${threadId}`, error);
+  }
+};
 
 export const getThreadsFromDB = async (
   connectionId: string,
@@ -377,9 +402,21 @@ export const getThreadsFromDB = async (
   },
 ): Promise<IGetThreadsResponse> => {
   // Fire and forget - don't block the thread query on state updates
+  //   const agent = await getZeroSocketAgent(connectionId);
+  //   await agent.invalidateDoStateCache();
   void sendDoState(connectionId);
 
-  const maxResults = params.maxResults ?? 20;
+  const maxResults = params.maxResults ?? defaultPageSize;
+
+  if (maxResults === defaultPageSize && !params.pageToken && !params.q) {
+    return Effect.promise(async () => {
+      const agent = await getZeroAgent(connectionId);
+      return await agent.stub.getThreadsFromDB({
+        ...params,
+        maxResults: maxResults,
+      });
+    }).pipe(Effect.runPromise);
+  }
 
   return Effect.runPromise(
     aggregateShardDataEffect<IGetThreadsResponse>(
@@ -388,23 +425,23 @@ export const getThreadsFromDB = async (
         Effect.promise(() =>
           shard.stub.getThreadsFromDB({
             ...params,
-            maxResults: maxResults * 2, // Request more from each shard to ensure we have enough
+            maxResults: maxResults,
           }),
         ),
       (shardResults) => {
         // Combine all threads from all shards
         const allThreads = shardResults.flatMap((result) => result.threads);
-        
+
         // Sort by some criteria if needed (assuming threads have a sortable field)
         // allThreads.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-        
+
         // Take only the requested amount
         const threads = allThreads.slice(0, maxResults);
-        
+
         // Determine if there's a next page token (simplified logic)
         const hasMoreResults = allThreads.length > maxResults;
-        const nextPageToken = hasMoreResults 
-          ? shardResults.find(r => r.nextPageToken)?.nextPageToken || null
+        const nextPageToken = hasMoreResults
+          ? shardResults.find((r) => r.nextPageToken)?.nextPageToken || null
           : null;
 
         return {
@@ -463,13 +500,31 @@ const getCounts = async (connectionId: string): Promise<CountResult[]> => {
  */
 export const sendDoState = async (connectionId: string) => {
   try {
-    const [registry, agent, size, counts] = await Promise.all([
+    const agent = await getZeroSocketAgent(connectionId);
+    
+    const cached = await agent.getCachedDoState();
+    if (cached) {
+      console.log(`[sendDoState] Using cached data for connection ${connectionId}`);
+      return agent.broadcastChatMessage({
+        type: OutgoingMessageType.Do_State,
+        isSyncing: false,
+        syncingFolders: ['inbox'],
+        storageSize: cached.storageSize,
+        counts: cached.counts,
+        shards: cached.shards,
+      });
+    }
+
+    console.log(`[sendDoState] Cache miss, collecting fresh data for connection ${connectionId}`);
+    const [registry, size, counts] = await Promise.all([
       getRegistryClient(connectionId),
-      getZeroSocketAgent(connectionId),
       getDatabaseSize(connectionId),
       getCounts(connectionId),
     ]);
     const shards = await listShards(registry);
+    
+    await agent.setCachedDoState(size, counts, shards.length);
+    
     return agent.broadcastChatMessage({
       type: OutgoingMessageType.Do_State,
       isSyncing: false,
@@ -490,11 +545,10 @@ export const getZeroSocketAgent = async (connectionId: string) => {
 
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
-  const { sessionUser } = c.var;
+  const { sessionUser, auth } = c.var;
   if (!sessionUser) throw new Error('Session Not Found');
 
   const db = await getZeroDB(sessionUser.id);
-
   const userData = await db.findUser();
 
   if (userData?.defaultConnectionId) {
@@ -504,6 +558,14 @@ export const getActiveConnection = async () => {
 
   const firstConnection = await db.findFirstConnection();
   if (!firstConnection) {
+    try {
+      if (auth) {
+        await auth.api.revokeSession({ headers: c.req.raw.headers });
+        await auth.api.signOut({ headers: c.req.raw.headers });
+      }
+    } catch (err) {
+      console.warn(`[getActiveConnection] Session cleanup failed for user ${sessionUser.id}:`, err);
+    }
     console.error(`No connections found for user ${sessionUser.id}`);
     throw new Error('No connections found for user');
   }

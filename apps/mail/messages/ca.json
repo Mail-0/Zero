@@ -165,8 +165,13 @@
       "attachments": "Adjunts",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "adjunts",
             "countPlural=one": "adjunt",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "fitxers",
             "countPlural=one": "fitxer",
@@ -249,8 +259,13 @@
       "search": "Cerca notes...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Afegeix notes",
             "countPlural=one": "# nota",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "respostes",
             "countPlural=one": "# resposta",

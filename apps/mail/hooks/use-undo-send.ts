@@ -68,13 +68,31 @@ export const useUndoSend = () => {
     if (isSendResult(result) && settings?.settings?.undoSendEnabled) {
       const { messageId, sendAt } = result;
 
-      const timeRemaining = sendAt ? sendAt - Date.now() : 15_000;
+      const timeRemaining = sendAt ? Math.max(0, sendAt - Date.now()) : 15_000;
+      const wasUserScheduled = Boolean(emailData?.scheduleAt);
 
       if (timeRemaining > 5_000) {
-        toast.success('Email scheduled', {
-          action: {
-            label: 'Undo',
-            onClick: async () => {
+        if (wasUserScheduled) {
+          toast.success('Email scheduled', {
+            action: {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await unsendEmail({ messageId });
+                  toast.info('Schedule cancelled');
+                } catch {
+                  toast.error('Failed to cancel');
+                }
+              },
+            },
+            duration: 15_000,
+            closeButton: true,
+          });
+        } else {
+          toast.success('Email sent', {
+            action: {
+              label: 'Undo',
+              onClick: async () => {
               try {
                 await unsendEmail({ messageId });
                 
@@ -98,10 +116,12 @@ export const useUndoSend = () => {
               } catch {
                 toast.error('Failed to cancel');
               }
+              },
             },
-          },
-          duration: 15_000,
-        });
+            duration: 15_000,
+            closeButton: true,
+          });
+        }
       }
     }
   };

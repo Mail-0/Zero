@@ -8,7 +8,8 @@ export type OptimisticAction =
   | { type: 'LABEL'; threadIds: string[]; labelIds: string[]; add: boolean }
   | { type: 'IMPORTANT'; threadIds: string[]; important: boolean }
   | { type: 'SNOOZE'; threadIds: string[]; wakeAt: string }
-  | { type: 'UNSNOOZE'; threadIds: string[] };
+  | { type: 'UNSNOOZE'; threadIds: string[] }
+  | { type: 'DELETE_DRAFT'; threadIds: string[] };
 
 export const optimisticActionsAtom = atom<Record<string, OptimisticAction>>({});
 

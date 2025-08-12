@@ -7,10 +7,10 @@ import {
 } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
-import { useTRPC } from '@/providers/query-provider';
+// import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
-import { useMutation } from '@tanstack/react-query';
+// import { useMutation } from '@tanstack/react-query';
 import { PencilCompose, X } from '../icons/icons';
 import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -22,16 +22,16 @@ import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
 import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
-import { Video } from 'lucide-react';
+// import { Video } from 'lucide-react';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isPro, isLoading } = useBilling();
-  const trpc = useTRPC();
-  const { mutateAsync: createMeet } = useMutation(trpc.meet.create.mutationOptions());
+  //   const trpc = useTRPC();
+  //   const { mutateAsync: createMeet } = useMutation(trpc.meet.create.mutationOptions());
   const [showUpgrade, setShowUpgrade] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('hideUpgradeCard') !== 'true';
@@ -76,18 +76,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const showComposeButton = currentSection === 'mail';
   const { state } = useSidebar();
 
-  const handleCreateMeet = async () => {
-    try {
-      const {
-        data: { id },
-      } = await createMeet();
-      navigator.clipboard.writeText(`https://meet.0.email/${id}`);
-      toast.success('Meeting linked copied to clipboard');
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to create meeting');
-    }
-  };
+  //   const handleCreateMeet = async () => {
+  //     try {
+  //       const {
+  //         data: { id },
+  //       } = await createMeet();
+  //       navigator.clipboard.writeText(`https://meet.0.email/${id}`);
+  //       toast.success('Meeting linked copied to clipboard');
+  //     } catch (error) {
+  //       console.error(error);
+  //       toast.error('Failed to create meeting');
+  //     }
+  //   };
 
   return (
     <div>
@@ -104,17 +104,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             {showComposeButton && (
               <div className="flex gap-1">
-                <div className={cn(isPro ? 'w-[80%]' : 'w-full')}>
+                <div className={cn('w-full')}>
                   <ComposeButton />
                 </div>
-                {isPro ? (
+                {/* {isPro ? (
                   <button
                     onClick={handleCreateMeet}
                     className="hover:bg-muted-foreground/10 inline-flex h-8 w-[20%] items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                   >
                     <Video className="text-muted-foreground h-4 w-4" />
                   </button>
-                ) : null}
+                ) : null} */}
               </div>
             )}
           </SidebarHeader>
