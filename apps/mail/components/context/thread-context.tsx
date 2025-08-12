@@ -93,15 +93,11 @@ const LabelsList = ({ threadId, bulkSelected, onCreateLabel }: { threadId: strin
     optimisticToggleLabel(targetThreadIds, labelId, !hasLabel);
   };
 
-  const handleCreateLabel = () => {
-    onCreateLabel();
-  };
-
   // If no labels exist, show create label button
   if (!labels || labels.length === 0) {
     return (
       <ContextMenuItem 
-        onClick={handleCreateLabel}
+        onClick={onCreateLabel}
         className="font-normal"
       >
         <Plus className="mr-2 h-4 w-4 opacity-60" />
@@ -510,9 +506,10 @@ export function ThreadContextMenu({
       });
       
       await promise;
-      setCreateLabelOpen(false);
     } catch (error) {
       console.error('Failed to create label:', error);
+    } finally {
+      setCreateLabelOpen(false);
     }
   };
 
