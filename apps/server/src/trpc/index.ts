@@ -17,8 +17,6 @@ import { bimiRouter } from './routes/bimi';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
-import { categoriesRouter } from './routes/categories';
-import { templatesRouter } from './routes/templates';
 import { loggingRouter } from './routes/logging';
 
 export const appRouter = router({
