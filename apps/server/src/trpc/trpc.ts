@@ -1,8 +1,9 @@
-import { getActiveConnection, getZeroDB, logTRPCCall, initializeLoggingSession } from '../lib/server-utils';
+import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
+import { createLoggingMiddleware } from '../lib/trpc-logging';
 
 import { redis } from '../lib/services';
 import type { Context } from 'hono';
@@ -15,75 +16,75 @@ type TrpcContext = {
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 
 // Logging middleware
-const createLoggingMiddleware = () => {
-  return t.middleware(async ({ ctx, next, path, type, input }) => {
-    const startTime = Date.now();
-    const sessionId = ctx.sessionUser?.id || 'anonymous';
+// const createLoggingMiddleware = () => {
+//   return t.middleware(async ({ ctx, next, path, type, input }) => {
+//     const startTime = Date.now();
+//     const sessionId = ctx.sessionUser?.id || 'anonymous';
 
-    try {
-      // Initialize session if needed
-      await initializeLoggingSession(sessionId, sessionId);
+//     try {
+//       // Initialize session if needed
+//       await initializeLoggingSession(sessionId, sessionId);
 
-      const result = await next();
-      const duration = Date.now() - startTime;
+//       const result = await next();
+//       const duration = Date.now() - startTime;
 
-      // Log the call asynchronously (don't block the response)
-      logTRPCCall(sessionId, {
-        procedure: path,
-        input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
-        output: result.ok ? JSON.stringify(result.data).slice(0, 1000) : undefined, // Limit output size
-        error: !result.ok ? result.error?.message : undefined,
-        duration,
-        metadata: {
-          userAgent: ctx.c.req.header('user-agent'),
-          ip: getConnInfo(ctx.c).remote.address,
-          method: type,
-          // Additional metadata
-          referer: ctx.c.req.header('referer'),
-          origin: ctx.c.req.header('origin'),
-          acceptLanguage: ctx.c.req.header('accept-language'),
-          acceptEncoding: ctx.c.req.header('accept-encoding'),
-          // Request context
-          requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          // Performance context
-          startTime,
-          endTime: Date.now(),
-        },
-      }).catch(err => console.error('Failed to log TRPC call:', err));
+//       // Log the call asynchronously (don't block the response)
+//       logTRPCCall(sessionId, {
+//         procedure: path,
+//         input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
+//         output: result.ok ? JSON.stringify(result.data).slice(0, 1000) : undefined, // Limit output size
+//         error: !result.ok ? result.error?.message : undefined,
+//         duration,
+//         metadata: {
+//           userAgent: ctx.c.req.header('user-agent'),
+//           ip: getConnInfo(ctx.c).remote.address,
+//           method: type,
+//           // Additional metadata
+//           referer: ctx.c.req.header('referer'),
+//           origin: ctx.c.req.header('origin'),
+//           acceptLanguage: ctx.c.req.header('accept-language'),
+//           acceptEncoding: ctx.c.req.header('accept-encoding'),
+//           // Request context
+//           requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
+//           timestamp: new Date().toISOString(),
+//           // Performance context
+//           startTime,
+//           endTime: Date.now(),
+//         },
+//       }).catch(err => console.error('Failed to log TRPC call:', err));
 
-      return result;
-    } catch (error) {
-      const duration = Date.now() - startTime;
+//       return result;
+//     } catch (error) {
+//       const duration = Date.now() - startTime;
 
-      // Log the error asynchronously
-      logTRPCCall(sessionId, {
-        procedure: path,
-        input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
-        error: error instanceof Error ? error.message : 'Unknown error',
-        duration,
-        metadata: {
-          userAgent: ctx.c.req.header('user-agent'),
-          ip: getConnInfo(ctx.c).remote.address,
-          method: type,
-          // Additional metadata
-          referer: ctx.c.req.header('referer'),
-          origin: ctx.c.req.header('origin'),
-          acceptLanguage: ctx.c.req.header('accept-language'),
-          acceptEncoding: ctx.c.req.header('accept-encoding'),
-          // Request context
-          requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          // Performance context
-          startTime,
-          endTime: Date.now(),
-        },
-      }).catch(err => console.error('Failed to log TRPC call:', err));
+//       // Log the error asynchronously
+//       logTRPCCall(sessionId, {
+//         procedure: path,
+//         input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//         duration,
+//         metadata: {
+//           userAgent: ctx.c.req.header('user-agent'),
+//           ip: getConnInfo(ctx.c).remote.address,
+//           method: type,
+//           // Additional metadata
+//           referer: ctx.c.req.header('referer'),
+//           origin: ctx.c.req.header('origin'),
+//           acceptLanguage: ctx.c.req.header('accept-language'),
+//           acceptEncoding: ctx.c.req.header('accept-encoding'),
+//           // Request context
+//           requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
+//           timestamp: new Date().toISOString(),
+//           // Performance context
+//           startTime,
+//           endTime: Date.now(),
+//         },
+//       }).catch(err => console.error('Failed to log TRPC call:', err));
 
-      throw error;
-    }
-  });
-};
+//       throw error;
+//     }
+//   });
+// };
 
 const loggingMiddleware = createLoggingMiddleware();
 
@@ -91,9 +92,34 @@ export const router = t.router;
 export const publicProcedure = t.procedure.use(loggingMiddleware);
 
 export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
+
+  // Start auth validation span
+  const authSpan = addRequestSpan(ctx.c, 'trpc_auth_validation', {
+    hasSessionUser: !!ctx.sessionUser,
+    procedure: 'private',
+  }, {
+    'trpc.auth_required': 'true'
+  });
+
   if (!ctx.sessionUser) {
+    if (authSpan) {
+      completeRequestSpan(ctx.c, authSpan.id, {
+        success: false,
+        reason: 'no_session_user',
+      }, 'UNAUTHORIZED: No session user found');
+    }
+
     throw new TRPCError({
       code: 'UNAUTHORIZED',
+    });
+  }
+
+  if (authSpan) {
+    completeRequestSpan(ctx.c, authSpan.id, {
+      success: true,
+      userId: ctx.sessionUser.id,
+      userEmail: ctx.sessionUser.email,
     });
   }
 
@@ -101,10 +127,36 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
 });
 
 export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next }) => {
+  const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
+
+  // Start connection validation span
+  const connectionSpan = addRequestSpan(ctx.c, 'trpc_connection_validation', {
+    userId: ctx.sessionUser.id,
+  }, {
+    'trpc.connection_required': 'true'
+  });
+
   try {
     const activeConnection = await getActiveConnection();
+
+    if (connectionSpan) {
+      completeRequestSpan(ctx.c, connectionSpan.id, {
+        success: true,
+        connectionId: activeConnection.id,
+        connectionType: activeConnection.providerId,
+        connectionEmail: activeConnection.email,
+      });
+    }
+
     return next({ ctx: { ...ctx, activeConnection } });
   } catch (err) {
+    if (connectionSpan) {
+      completeRequestSpan(ctx.c, connectionSpan.id, {
+        success: false,
+        reason: 'connection_not_found',
+      }, err instanceof Error ? err.message : 'Failed to get active connection');
+    }
+
     await ctx.c.var.auth.api.signOut({ headers: ctx.c.req.raw.headers });
     throw new TRPCError({
       code: 'BAD_REQUEST',

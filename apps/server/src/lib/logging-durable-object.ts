@@ -3,6 +3,18 @@ import { Queryable } from 'dormroom';
 import type { ZeroEnv } from '../env';
 import { DatadogService } from './datadog-service';
 
+export interface TraceSpan {
+    id: string;
+    name: string;
+    startTime: number;
+    endTime?: number;
+    duration?: number;
+    status: 'started' | 'completed' | 'error';
+    metadata?: Record<string, any>;
+    error?: string;
+    tags?: Record<string, string>;
+}
+
 export interface TRPCCallLog {
     id: string;
     timestamp: number;
@@ -26,13 +38,26 @@ export interface TRPCCallLog {
         timestamp?: string;
         startTime?: number;
         endTime?: number;
+        // Trace information
+        traceId?: string;
+        requestDuration?: number;
+    };
+    // Complete trace spans for this request
+    trace?: {
+        traceId: string;
+        requestStartTime: number;
+        requestEndTime?: number;
+        requestDuration?: number;
+        spans: TraceSpan[];
+        totalSpans: number;
+        completedSpans: number;
+        errorSpans: number;
     };
 }
 
 export interface LoggingState {
     sessionId: string;
     userId: string;
-    calls: TRPCCallLog[];
     startedAt: number;
     lastActivity: number;
     totalCalls: number;
@@ -61,24 +86,19 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             timestamp: Date.now(),
         };
 
-        // Get current state
-        const currentState = await this.getState();
-
-        // Check if session has expired
-        const timeSinceLastActivity = Date.now() - currentState.lastActivity;
-        if (timeSinceLastActivity > this.SESSION_TIMEOUT && currentState.calls.length > 0) {
-            // Export expired session to Datadog
-            await this.exportSessionToDatadog(currentState);
-
-            // Start new session
-            await this.clearSession();
-            const newState = await this.getState();
-            newState.userId = currentState.userId; // Preserve user ID
-            await this.state.storage.put('state', newState);
+        // Immediately export to Datadog (no session storage)
+        try {
+            await this.datadogService.logSingleCall(
+                callData.sessionId,
+                callData.userId,
+                log
+            );
+        } catch (error) {
+            console.error('❌ Failed to log TRPC call to Datadog:', error);
         }
 
-        // Add the new call
-        currentState.calls.push(log);
+        // Optional: Keep minimal stats for dashboard (no call storage)
+        const currentState = await this.getState();
         currentState.lastActivity = log.timestamp;
         currentState.totalCalls++;
         currentState.totalDuration += log.duration;
@@ -87,12 +107,7 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             currentState.totalErrors++;
         }
 
-        // Keep only last 1000 calls to prevent memory issues
-        if (currentState.calls.length > 1000) {
-            currentState.calls = currentState.calls.slice(-1000);
-        }
-
-        // Store updated state
+        // Save updated stats only (no call arrays)
         await this.state.storage.put('state', currentState);
     }
 
@@ -103,7 +118,6 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             const newState: LoggingState = {
                 sessionId: crypto.randomUUID(),
                 userId: '',
-                calls: [],
                 startedAt: Date.now(),
                 lastActivity: Date.now(),
                 totalCalls: 0,
@@ -125,9 +139,9 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         await this.state.storage.put('state', state);
     }
 
-    async getCallHistory(limit: number = 100): Promise<TRPCCallLog[]> {
-        const state = await this.getState();
-        return state.calls.slice(-limit);
+    async getCallHistory(_limit: number = 100): Promise<TRPCCallLog[]> {
+        // No longer storing call history - all logs go directly to Datadog
+        return [];
     }
 
     async getSessionStats(): Promise<{
@@ -155,7 +169,6 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         const newState: LoggingState = {
             sessionId: crypto.randomUUID(),
             userId: '',
-            calls: [],
             startedAt: Date.now(),
             lastActivity: Date.now(),
             totalCalls: 0,
@@ -165,30 +178,13 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         await this.state.storage.put('state', newState);
     }
 
-    async exportSessionToDatadog(state: LoggingState): Promise<void> {
-        if (state.calls.length === 0) return;
-
-        try {
-            await this.datadogService.exportSessionLogs(
-                state.sessionId,
-                state.userId,
-                state.calls
-            );
-        } catch (error) {
-            console.error('Failed to export session to Datadog:', error);
-        }
-    }
-
     async exportCurrentSessionToDatadog(): Promise<void> {
-        const state = await this.getState();
-        await this.exportSessionToDatadog(state);
+        // No longer needed - all logs go directly to Datadog in real-time
+        console.log('✅ All logs are already in Datadog (real-time logging)');
     }
 
     async endSession(): Promise<void> {
-        const state = await this.getState();
-        if (state.calls.length > 0) {
-            await this.exportSessionToDatadog(state);
-        }
+        // Just clear stats - no export needed since logs go directly to Datadog
         await this.clearSession();
     }
 } 
