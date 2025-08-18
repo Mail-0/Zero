@@ -80,6 +80,7 @@ export const createLoggingMiddleware = () => {
                         sanitized[key] = sanitizeOutput(value);
                     } catch (err) {
                         // If it can't be serialized, replace with a description
+                        console.log('🔍 [TRACE DEBUG ERROR] Non-serializable value:', err);
                         sanitized[key] = `[Non-serializable: ${value?.constructor?.name || typeof value}]`;
                     }
                 }
