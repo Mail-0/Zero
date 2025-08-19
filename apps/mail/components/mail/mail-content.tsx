@@ -173,6 +173,21 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
     };
   }, [handleImageError, processedData]);
 
+    useEffect(() => {
+    if (!shadowRootRef.current) return;
+
+    // keep text visible in light mode --- (the change added here)
+    if (resolvedTheme === 'light') {
+      const nodeList = shadowRootRef.current.querySelectorAll('*');
+      nodeList.forEach((el) => {
+        const style = getComputedStyle(el);
+        if (style.color === 'rgb(255, 255, 255)') {
+          (el as HTMLElement).style.color = '#000';
+        }
+      });
+    }
+  }, [processedData, resolvedTheme]);
+
   return (
     <>
       {cspViolation && !isTrustedSender && !data?.settings?.externalImages && (
