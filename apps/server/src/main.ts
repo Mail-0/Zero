@@ -24,7 +24,6 @@ import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordin
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 // import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
-import { Autumn } from 'autumn-js';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { ThreadSyncWorker } from './routes/agent/sync-worker';
@@ -565,6 +564,26 @@ class ZeroDB extends DurableObject<ZeroEnv> {
   }
 }
 
+// Utility function to hash IP addresses for PII protection
+function hashIpAddress(ip: string | undefined): string | undefined {
+  if (!ip) return undefined;
+
+  // Simple but effective hash for IP addresses
+  // This preserves uniqueness while protecting PII
+  const salt = 'zero-mail-ip-salt-2024'; // Consider using env variable for production
+  let hash = 0;
+  const str = ip + salt;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  // Return a prefixed hex representation
+  return `ip_${Math.abs(hash).toString(16).padStart(8, '0')}`;
+}
+
 const api = new Hono<HonoContext>()
   .use(contextStorage())
   .use('*', async (c, next) => {
@@ -583,9 +602,10 @@ const api = new Hono<HonoContext>()
     const { TraceContext } = await import('./lib/trace-context');
 
     // Create trace for this request
+    const rawIp = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For');
     const trace = TraceContext.createTrace(traceId, {
       requestId,
-      ip: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For'),
+      ip: hashIpAddress(rawIp), // Hash IP address to protect PII
       userAgent: c.req.header('User-Agent'),
     });
 
@@ -660,9 +680,6 @@ const api = new Hono<HonoContext>()
     // Update trace metadata with user info
     trace.metadata.userId = c.var.sessionUser?.id;
     trace.metadata.sessionId = c.var.sessionUser?.id || 'anonymous';
-
-    const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
-    c.set('autumn', autumn);
 
     // Start request processing span
     const requestSpan = TraceContext.startSpan(traceId, 'request_processing', {

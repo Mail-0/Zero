@@ -3,6 +3,26 @@ import { logTRPCCall, initializeLoggingSession } from './server-utils';
 import { getContext } from 'hono/context-storage';
 import type { HonoContext } from '../ctx';
 
+// Utility function to hash IP addresses for PII protection
+function hashIpAddress(ip: string | undefined): string | undefined {
+    if (!ip) return undefined;
+
+    // Simple but effective hash for IP addresses
+    // This preserves uniqueness while protecting PII
+    const salt = 'zero-mail-ip-salt-2024'; // Consider using env variable for production
+    let hash = 0;
+    const str = ip + salt;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+
+    // Return a prefixed hex representation
+    return `ip_${Math.abs(hash).toString(16).padStart(8, '0')}`;
+}
+
 export interface LoggingContext {
     sessionId: string;
     userId?: string;
@@ -98,7 +118,7 @@ export const createLoggingMiddleware = () => {
                 metadata: {
                     method: opts.type,
                     userAgent: c.req.header('User-Agent'),
-                    ip: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For'),
+                    ip: hashIpAddress(c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')),
                     referer: c.req.header('Referer'),
                     origin: c.req.header('Origin'),
                     acceptLanguage: c.req.header('Accept-Language'),
@@ -169,7 +189,7 @@ export const createLoggingMiddleware = () => {
                 metadata: {
                     method: opts.type,
                     userAgent: c.req.header('User-Agent'),
-                    ip: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For'),
+                    ip: hashIpAddress(c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')),
                     referer: c.req.header('Referer'),
                     origin: c.req.header('Origin'),
                     acceptLanguage: c.req.header('Accept-Language'),

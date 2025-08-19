@@ -67,15 +67,13 @@ export interface LoggingState {
 
 @Queryable()
 export class LoggingDurableObject extends DurableObject<ZeroEnv> {
-    private state: DurableObjectState;
-    protected env: ZeroEnv;
     private datadogService: DatadogService;
+    private storage: DurableObjectStorage;
 
-    constructor(state: DurableObjectState, env: ZeroEnv) {
-        super(state, env);
-        this.state = state;
-        this.env = env;
-        this.datadogService = new DatadogService(env);
+    constructor(ctx: DurableObjectState, env: ZeroEnv) {
+        super(ctx, env);
+        this.storage = ctx.storage;
+        this.datadogService = new DatadogService(this.env);
     }
 
     async logCall(callData: Omit<TRPCCallLog, 'id' | 'timestamp'>): Promise<void> {
@@ -107,11 +105,11 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         }
 
         // Save updated stats only (no call arrays)
-        await this.state.storage.put('state', currentState);
+        await this.storage.put('state', currentState);
     }
 
     async getState(): Promise<LoggingState> {
-        const state = await this.state.storage.get<LoggingState>('state');
+        const state = await this.storage.get<LoggingState>('state');
         if (!state) {
             // Initialize new state
             const newState: LoggingState = {
@@ -123,7 +121,7 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
                 totalErrors: 0,
                 totalDuration: 0,
             };
-            await this.state.storage.put('state', newState);
+            await this.storage.put('state', newState);
             return newState;
         }
         return state;
@@ -135,7 +133,7 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         state.sessionId = crypto.randomUUID();
         state.startedAt = Date.now();
         state.lastActivity = Date.now();
-        await this.state.storage.put('state', state);
+        await this.storage.put('state', state);
     }
 
     async getSessionStats(): Promise<{
@@ -169,6 +167,6 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             totalErrors: 0,
             totalDuration: 0,
         };
-        await this.state.storage.put('state', newState);
+        await this.storage.put('state', newState);
     }
 } 

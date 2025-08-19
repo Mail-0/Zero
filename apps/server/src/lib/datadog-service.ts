@@ -9,22 +9,30 @@ export class DatadogService {
     private site: string;
 
     constructor(env?: ZeroEnv) {
+        // Runtime validation for required Datadog credentials
+        if (!env?.DD_API_KEY || env.DD_API_KEY.trim() === '') {
+            throw new Error('DD_API_KEY environment variable is required and cannot be empty for Datadog service');
+        }
+
+        if (!env?.DD_APP_KEY || env.DD_APP_KEY.trim() === '') {
+            throw new Error('DD_APP_KEY environment variable is required and cannot be empty for Datadog service');
+        }
+
         const configuration = client.createConfiguration({
             authMethods: {
-                apiKeyAuth: env?.DD_API_KEY || '',
-                appKeyAuth: env?.DD_APP_KEY || '',
+                apiKeyAuth: env.DD_API_KEY,
+                appKeyAuth: env.DD_APP_KEY,
             },
         });
 
-        // Set the site for the configuration
-        if (env?.DD_SITE) {
-            configuration.setServerVariables({ site: env.DD_SITE });
-        }
+        // Set the site for the configuration (defaults to datadoghq.com if not provided)
+        const ddSite = env?.DD_SITE || 'datadoghq.com';
+        configuration.setServerVariables({ site: ddSite });
 
         this.apiInstance = new v2.LogsApi(configuration);
-        this.apiKey = env?.DD_API_KEY || '';
-        this.appKey = env?.DD_APP_KEY || '';
-        this.site = env?.DD_SITE || 'datadoghq.com';
+        this.apiKey = env.DD_API_KEY;
+        this.appKey = env.DD_APP_KEY;
+        this.site = ddSite;
     }
 
     private generateId(): string {
@@ -54,7 +62,7 @@ export class DatadogService {
 
             const performanceCategory = log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow';
             const hasError = !!log.error;
-            const logLevel = hasError ? 'ERROR' : performanceCategory === 'slow' ? 'WARNING' : 'INFO';
+            const logLevel = hasError ? 'error' : performanceCategory === 'slow' ? 'warn' : 'info';
 
             // Parse user agent for device/browser info
             const parseUserAgent = (userAgent?: string) => {
@@ -124,7 +132,8 @@ export class DatadogService {
             const deviceInfo = parseUserAgent(log.metadata?.userAgent);
 
             const logEntry = {
-                message: `${logLevel}: TRPC call: [${log.procedure}] (${log.duration}ms)`,
+                message: `${logLevel.toUpperCase()}: TRPC call: [${log.procedure}] (${log.duration}ms)`,
+                status: logLevel,
                 service: 'zero-mail-app',
                 ddsource: 'trpc-logging',
                 ddtags: `session:${sessionId},user:${userId},procedure:${log.procedure},duration:${log.duration}ms,has_error:${hasError},performance:${performanceCategory},browser:${deviceInfo.browser},device:${deviceInfo.device_type}`,
@@ -164,7 +173,6 @@ export class DatadogService {
 
                     // Error handling
                     has_error: hasError,
-                    log_level: logLevel,
                     ...(log.error && {
                         error_message: log.error,
                         error_type: 'trpc_error',
