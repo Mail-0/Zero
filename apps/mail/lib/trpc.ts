@@ -2,7 +2,7 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import type { AppRouter } from '@zero/server/trpc';
 import superjson from 'superjson';
 
-const getUrl = () => 'http://localhost:8787/api/trpc';
+const getUrl = () => import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/trpc';
 
 export const api = createTRPCClient<AppRouter>({
     links: [

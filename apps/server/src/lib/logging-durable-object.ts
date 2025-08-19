@@ -70,7 +70,6 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
     private state: DurableObjectState;
     protected env: ZeroEnv;
     private datadogService: DatadogService;
-    private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
     constructor(state: DurableObjectState, env: ZeroEnv) {
         super(state, env);
@@ -139,11 +138,6 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
         await this.state.storage.put('state', state);
     }
 
-    async getCallHistory(_limit: number = 100): Promise<TRPCCallLog[]> {
-        // No longer storing call history - all logs go directly to Datadog
-        return [];
-    }
-
     async getSessionStats(): Promise<{
         totalCalls: number;
         totalErrors: number;
@@ -176,15 +170,5 @@ export class LoggingDurableObject extends DurableObject<ZeroEnv> {
             totalDuration: 0,
         };
         await this.state.storage.put('state', newState);
-    }
-
-    async exportCurrentSessionToDatadog(): Promise<void> {
-        // No longer needed - all logs go directly to Datadog in real-time
-        console.log('✅ All logs are already in Datadog (real-time logging)');
-    }
-
-    async endSession(): Promise<void> {
-        // Just clear stats - no export needed since logs go directly to Datadog
-        await this.clearSession();
     }
 } 

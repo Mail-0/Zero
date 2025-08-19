@@ -27,31 +27,17 @@ export class DatadogService {
         this.site = env?.DD_SITE || 'datadoghq.com';
     }
 
-    // Simple hash function for generating consistent trace and span IDs
-    // According to Datadog docs: https://docs.datadoghq.com/tracing/connect_logs_and_traces
-    // Trace IDs must be 32-character lowercase hexadecimal strings
-    // Span IDs must be 16-character lowercase hexadecimal strings
-    private simpleHash(str: string): string {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32-bit integer
-        }
-        // Convert to positive hex string and pad to 32 characters
-        const positiveHash = Math.abs(hash).toString(16);
-        return positiveHash.padEnd(32, '0').slice(0, 32).toLowerCase();
+    private generateId(): string {
+        return crypto.randomUUID().replace(/-/g, '');
     }
 
     // Check if a procedure is logging-related to avoid recursive logging
     private isLoggingProcedure(procedure: string): boolean {
         const loggingProcedures = [
             'logging.getSessionStats',
-            'logging.getCallHistory',
             'logging.clearSession',
             'logging.getSessionState',
             'logging.exportToDatadog',
-            'logging.endSession'
         ];
         return loggingProcedures.includes(procedure);
     }
@@ -63,8 +49,8 @@ export class DatadogService {
         }
 
         try {
-            const traceId = this.simpleHash(`${sessionId}-${userId}`).slice(0, 32);
-            const spanId = this.simpleHash(`${log.id}-${log.procedure}-${log.timestamp}`).slice(0, 16);
+            const traceId = this.generateId();
+            const spanId = this.generateId();
 
             const performanceCategory = log.duration < 100 ? 'fast' : log.duration < 500 ? 'normal' : 'slow';
             const hasError = !!log.error;

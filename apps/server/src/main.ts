@@ -629,7 +629,6 @@ const api = new Hono<HonoContext>()
             TraceContext.completeSpan(traceId, tokenSpan.id, {
               success: true,
               userId,
-              userEmail: user?.email,
             });
           } else {
             TraceContext.completeSpan(traceId, tokenSpan.id, {
@@ -655,7 +654,6 @@ const api = new Hono<HonoContext>()
     TraceContext.completeSpan(traceId, authSpan.id, {
       authenticated: !!c.var.sessionUser,
       userId: c.var.sessionUser?.id,
-      userEmail: c.var.sessionUser?.email,
       authMethod: session?.user ? 'session' : (c.req.header('Authorization') ? 'token' : 'none'),
     });
 

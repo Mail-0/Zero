@@ -70,17 +70,15 @@ export const createLoggingMiddleware = () => {
                 for (const [key, value] of Object.entries(obj)) {
                     // Skip known non-serializable fields
                     if (key === 'ctx' && value && typeof value === 'object') {
-                        // Skip the ctx field entirely as it contains Fetcher/Context objects
                         continue;
                     }
 
                     try {
-                        // Test if the value can be serialized
                         structuredClone(value);
                         sanitized[key] = sanitizeOutput(value);
                     } catch (err) {
                         // If it can't be serialized, replace with a description
-                        console.log('🔍 [TRACE DEBUG ERROR] Non-serializable value:', err);
+                        console.log('[TRACE DEBUG] Non-serializable value:', err);
                         sanitized[key] = `[Non-serializable: ${value?.constructor?.name || typeof value}]`;
                     }
                 }

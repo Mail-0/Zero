@@ -15,77 +15,6 @@ type TrpcContext = {
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 
-// Logging middleware
-// const createLoggingMiddleware = () => {
-//   return t.middleware(async ({ ctx, next, path, type, input }) => {
-//     const startTime = Date.now();
-//     const sessionId = ctx.sessionUser?.id || 'anonymous';
-
-//     try {
-//       // Initialize session if needed
-//       await initializeLoggingSession(sessionId, sessionId);
-
-//       const result = await next();
-//       const duration = Date.now() - startTime;
-
-//       // Log the call asynchronously (don't block the response)
-//       logTRPCCall(sessionId, {
-//         procedure: path,
-//         input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
-//         output: result.ok ? JSON.stringify(result.data).slice(0, 1000) : undefined, // Limit output size
-//         error: !result.ok ? result.error?.message : undefined,
-//         duration,
-//         metadata: {
-//           userAgent: ctx.c.req.header('user-agent'),
-//           ip: getConnInfo(ctx.c).remote.address,
-//           method: type,
-//           // Additional metadata
-//           referer: ctx.c.req.header('referer'),
-//           origin: ctx.c.req.header('origin'),
-//           acceptLanguage: ctx.c.req.header('accept-language'),
-//           acceptEncoding: ctx.c.req.header('accept-encoding'),
-//           // Request context
-//           requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
-//           timestamp: new Date().toISOString(),
-//           // Performance context
-//           startTime,
-//           endTime: Date.now(),
-//         },
-//       }).catch(err => console.error('Failed to log TRPC call:', err));
-
-//       return result;
-//     } catch (error) {
-//       const duration = Date.now() - startTime;
-
-//       // Log the error asynchronously
-//       logTRPCCall(sessionId, {
-//         procedure: path,
-//         input: input ? JSON.stringify(input).slice(0, 1000) : undefined, // Limit input size
-//         error: error instanceof Error ? error.message : 'Unknown error',
-//         duration,
-//         metadata: {
-//           userAgent: ctx.c.req.header('user-agent'),
-//           ip: getConnInfo(ctx.c).remote.address,
-//           method: type,
-//           // Additional metadata
-//           referer: ctx.c.req.header('referer'),
-//           origin: ctx.c.req.header('origin'),
-//           acceptLanguage: ctx.c.req.header('accept-language'),
-//           acceptEncoding: ctx.c.req.header('accept-encoding'),
-//           // Request context
-//           requestId: ctx.c.req.header('x-request-id') || crypto.randomUUID(),
-//           timestamp: new Date().toISOString(),
-//           // Performance context
-//           startTime,
-//           endTime: Date.now(),
-//         },
-//       }).catch(err => console.error('Failed to log TRPC call:', err));
-
-//       throw error;
-//     }
-//   });
-// };
-
 const loggingMiddleware = createLoggingMiddleware();
 
 export const router = t.router;
@@ -119,7 +48,6 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
     completeRequestSpan(ctx.c, authSpan.id, {
       success: true,
       userId: ctx.sessionUser.id,
-      userEmail: ctx.sessionUser.email,
     });
   }
 
@@ -144,7 +72,6 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
         success: true,
         connectionId: activeConnection.id,
         connectionType: activeConnection.providerId,
-        connectionEmail: activeConnection.email,
       });
     }
 

@@ -30,6 +30,8 @@ class TraceContextClass {
     private traces = new Map<string, RequestTrace>();
 
     createTrace(traceId: string, metadata: RequestTrace['metadata']): RequestTrace {
+        const existing = this.traces.get(traceId);
+        if (existing) return existing;
         const trace: RequestTrace = {
             traceId,
             startTime: Date.now(),
