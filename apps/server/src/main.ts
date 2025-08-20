@@ -31,7 +31,7 @@ import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { EProviders, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
-import { LoggingDurableObject } from './lib/logging-durable-object';
+
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
@@ -1258,5 +1258,4 @@ export {
   SyncThreadsWorkflow,
   SyncThreadsCoordinatorWorkflow,
   ShardRegistry,
-  LoggingDurableObject,
 };

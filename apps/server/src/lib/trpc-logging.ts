@@ -1,5 +1,5 @@
-import type { TRPCCallLog } from './logging-durable-object';
-import { logTRPCCall, initializeLoggingSession } from './server-utils';
+import type { TRPCCallLog } from '../types/logging';
+import { LoggingService } from './logging-service';
 import { getContext } from 'hono/context-storage';
 import type { HonoContext } from '../ctx';
 
@@ -42,13 +42,14 @@ export const createLoggingMiddleware = () => {
         const sessionId = c.var.sessionUser?.id || 'anonymous';
         const userId = c.var.sessionUser?.id;
 
-        // Initialize session if this is the first call
-
-        if (userId) {
+        // Initialize logging service
+        let loggingService: LoggingService | undefined;
+        if (userId && c.env) {
             try {
-                await initializeLoggingSession(sessionId, userId);
+                loggingService = new LoggingService(c.env);
+                loggingService.initializeSession(sessionId, userId);
             } catch (error) {
-                console.error('Failed to initialize logging session:', error);
+                console.error('Failed to initialize logging service:', error);
             }
         }
 
@@ -130,8 +131,8 @@ export const createLoggingMiddleware = () => {
                 },
             };
 
-            // Log to Durable Object which will immediately export to Datadog
-            if (c.env && userId) {
+            // Log using the new logging service
+            if (loggingService) {
                 const { getRequestTrace } = await import('./trace-context');
 
                 // Get the complete trace for this request
@@ -153,8 +154,8 @@ export const createLoggingMiddleware = () => {
                     callData.metadata.requestDuration = trace.duration;
                 }
 
-                // Send to DO which will immediately log to Datadog
-                logTRPCCall(sessionId, callData).catch((err) => {
+                // Log using the new service which will immediately log to Datadog
+                loggingService.logCall(callData).catch((err) => {
                     console.error('Failed to log TRPC call:', err);
                 });
 
@@ -201,8 +202,8 @@ export const createLoggingMiddleware = () => {
                 },
             };
 
-            // Log error to Durable Object which will immediately export to Datadog
-            if (c.env && userId) {
+            // Log error using the new logging service
+            if (loggingService) {
                 const { getRequestTrace } = await import('./trace-context');
 
                 // Get the complete trace for this request
@@ -224,8 +225,8 @@ export const createLoggingMiddleware = () => {
                     callData.metadata.requestDuration = trace.duration;
                 }
 
-                // Send to DO which will immediately log to Datadog
-                logTRPCCall(sessionId, callData).catch((logErr) => {
+                // Log using the new service which will immediately log to Datadog
+                loggingService.logCall(callData).catch((logErr) => {
                     console.error('Failed to log TRPC error:', logErr);
                 });
 

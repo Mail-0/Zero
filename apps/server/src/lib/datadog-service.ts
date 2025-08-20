@@ -1,5 +1,5 @@
 import { client, v2 } from '@datadog/datadog-api-client';
-import type { TRPCCallLog } from './logging-durable-object';
+import type { TRPCCallLog } from '../types/logging';
 import type { ZeroEnv } from '../env';
 
 export class DatadogService {

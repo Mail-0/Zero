@@ -1,5 +1,5 @@
 import { privateProcedure, router } from '../trpc';
-import { getLoggingDO } from '../../lib/server-utils';
+import { LoggingService } from '../../lib/logging-service';
 import { TRPCError } from '@trpc/server';
 
 export const loggingRouter = router({
@@ -12,8 +12,8 @@ export const loggingRouter = router({
                 });
             }
             const sessionId = ctx.sessionUser.id;
-            const loggingDO = await getLoggingDO(sessionId);
-            return await loggingDO.getSessionStats();
+            const loggingService = new LoggingService(ctx.c.env);
+            return loggingService.getSessionStats(sessionId);
         }),
 
     clearSession: privateProcedure
@@ -25,8 +25,8 @@ export const loggingRouter = router({
                 });
             }
             const sessionId = ctx.sessionUser.id;
-            const loggingDO = await getLoggingDO(sessionId);
-            await loggingDO.clearSession();
+            const loggingService = new LoggingService(ctx.c.env);
+            loggingService.clearSession(sessionId);
             return { success: true };
         }),
 
@@ -39,7 +39,7 @@ export const loggingRouter = router({
                 });
             }
             const sessionId = ctx.sessionUser.id;
-            const loggingDO = await getLoggingDO(sessionId);
-            return await loggingDO.getState();
+            const loggingService = new LoggingService(ctx.c.env);
+            return loggingService.getState(sessionId);
         }),
 }); 

@@ -604,21 +604,7 @@ export const verifyToken = async (token: string) => {
   return !!data;
 };
 
-// Logging utility functions
-export const getLoggingDO = async (sessionId: string) => {
-  const stub = env.LOGGING.get(env.LOGGING.idFromName(sessionId));
-  return stub;
-};
 
-export const logTRPCCall = async (sessionId: string, callData: any) => {
-  const loggingDO = await getLoggingDO(sessionId);
-  await loggingDO.logCall(callData);
-};
-
-export const initializeLoggingSession = async (sessionId: string, userId: string) => {
-  const loggingDO = await getLoggingDO(sessionId);
-  await loggingDO.initializeSession(userId);
-};
 
 export const resetConnection = async (connectionId: string) => {
   const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
