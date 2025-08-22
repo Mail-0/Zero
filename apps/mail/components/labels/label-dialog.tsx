@@ -132,18 +132,21 @@ export function LabelDialog({
               <div className="space-y-2">
                 <Label>{m['common.labels.color']()}</Label>
                 <div className="w-full">
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="relative mt-2 flex flex-wrap gap-2">
                     {LABEL_COLORS.map((color) => (
                       <button
-                        key={color.backgroundColor}
                         type="button"
+                        key={color.backgroundColor}
                         className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
                           formColor?.backgroundColor.toString() === color.backgroundColor &&
                           formColor.textColor.toString() === color.textColor
                             ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}
-                        style={{ backgroundColor: color.backgroundColor }}
+                        style={{
+                          backgroundColor: color.backgroundColor,
+                          filter: 'brightness(1.4)',
+                        }}
                         onClick={() =>
                           form.setValue('color', {
                             backgroundColor: color.backgroundColor,
