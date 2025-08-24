@@ -122,7 +122,7 @@ export function Navigation() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white">
+                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -136,7 +136,7 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white">
+                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
                     Resources
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -155,15 +155,13 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem className="bg-transparent text-white">
-                  <a href="/pricing">
-                    <Button variant="ghost" className="h-9 bg-transparent">
-                      Pricing
-                    </Button>
-                  </a>
+                  <Button asChild variant="ghost" className="h-9 bg-transparent cursor-pointer">
+                    <a href="/pricing">Pricing</a>
+                  </Button>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white">
+                <NavigationMenuItem className="bg-transparent text-white cursor-pointer">
                   <a href="/privacy">
-                    <Button variant="ghost" className="h-9 bg-transparent ml-1">
+                    <Button variant="ghost" className="ml-1 h-9 bg-transparent">
                       Privacy
                     </Button>
                   </a>
@@ -186,12 +184,12 @@ export function Navigation() {
                 <span className="ml-1 hidden lg:inline">GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <Star className="relative top-px size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <Star className="relative top-px size-4 fill-gray-400 duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
                 <AnimatedNumber value={stars} className="font-medium text-white" />
               </div>
             </a>
             <Button
-              className="h-8 bg-white text-black hover:bg-white hover:text-black"
+              className="h-8 bg-white text-black hover:bg-white hover:text-black cursor-pointer"
               onClick={() => {
                 if (session) {
                   navigate('/mail/inbox');
@@ -262,8 +260,8 @@ export function Navigation() {
               </div>
               <a
                 target="_blank"
-                rel="noreferrer"
-                href="https://cal.com/team/0"
+                rel="noreferrer noopener"
+                href="https://cal.com/team/0/chat"
                 className="font-medium"
               >
                 Contact Us

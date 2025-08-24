@@ -201,13 +201,13 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
                       </button>
 
                       <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedProviders[provider.id] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                        className={`overflow-hidden duration-300 ease-in-out ${expandedProviders[provider.id] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
                       >
-                        <div className="bg-black/3 p-4 font-mono text-sm dark:bg-white/3">
+                        <div className="bg-black/3 dark:bg-white/3 p-4 font-mono text-sm">
                           {provider.envVarStatus.map((envVar) => (
                             <div
                               key={envVar.name}
-                              className={`mb-3 flex items-start transition-all duration-300 ease-in-out last:mb-0 ${expandedProviders[provider.id] ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                              className={`mb-3 flex items-start duration-300 ease-in-out last:mb-0 ${expandedProviders[provider.id] ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
                               style={{
                                 transitionDelay: expandedProviders[provider.id]
                                   ? `${provider.envVarStatus.indexOf(envVar) * 50}ms`
@@ -303,19 +303,19 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           )}
         </div>
       </div>
-      <a href={'/'}>Return home</a>
+      <a href={'/'} className='text-white hover:text-gray-200'>Return home</a>
 
       <footer className="w-full px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
           <a
             href="/terms"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Terms of Service
           </a>
           <a
             href="/privacy"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Privacy Policy
           </a>

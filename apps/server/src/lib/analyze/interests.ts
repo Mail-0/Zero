@@ -15,9 +15,9 @@
  */
 
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import { env } from 'cloudflare:workers';
+import { env } from '../../env';
 
 export interface GenerateTopicsOptions {
   sampleSize?: number;
@@ -41,8 +41,8 @@ export async function generateWhatUserCaresAbout(
     return [];
   }
 
-  if (!env.OPENAI_API_KEY) {
-    console.warn('OPENAI_API_KEY not configured - topics generation disabled');
+  if (!env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    console.warn('GOOGLE_GENERATIVE_AI_API_KEY not configured - topics generation disabled');
     return [];
   }
 
@@ -91,7 +91,7 @@ ${sample.join('\n')}`;
 
   try {
     const { object } = await generateObject({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o-mini'),
+      model: google(env.GEMINI_FLASH_MODEL || 'gemini-2.0-flash'),
       schema,
       system: systemPrompt,
       prompt: userPrompt,

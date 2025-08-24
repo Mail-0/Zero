@@ -11,19 +11,19 @@ import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { getZeroDB, resetConnection } from './server-utils';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
-import { getContext } from 'hono/context-storage';
 import { dubAnalytics } from '@dub/better-auth';
 import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
-import { getZeroDB } from './server-utils';
 import { type EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { createDriver } from './driver';
 import { createDb } from '../db';
 import { Effect } from 'effect';
+import { env } from '../env';
 import { env } from '../env';
 import { Dub } from 'dub';
 
@@ -92,7 +92,9 @@ const scheduleCampaign = (userInfo: { address: string; name: string }) =>
 const connectionHandlerHook = async (account: Account) => {
   if (!account.accessToken || !account.refreshToken) {
     console.error('Missing Access/Refresh Tokens', { account });
-    throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
+    throw new APIError('EXPECTATION_FAILED', {
+      message: 'Missing Access/Refresh Tokens, contact us on Discord for support',
+    });
   }
 
   const driver = createDriver(account.providerId, {
@@ -104,13 +106,26 @@ const connectionHandlerHook = async (account: Account) => {
     },
   });
 
-  const userInfo = await driver.getUserInfo().catch(() => {
-    throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
+  const userInfo = await driver.getUserInfo().catch(async () => {
+    if (account.accessToken) {
+      await driver.revokeToken(account.accessToken);
+      await resetConnection(account.id);
+    }
+    throw new Response(null, { status: 301, headers: { Location: '/' } });
   });
 
   if (!userInfo?.address) {
-    console.error('Missing email in user info:', { userInfo });
-    throw new APIError('BAD_REQUEST', { message: 'Missing "email" in user info' });
+    try {
+      await Promise.allSettled(
+        [account.accessToken, account.refreshToken]
+          .filter(Boolean)
+          .map((t) => driver.revokeToken(t as string)),
+      );
+      await resetConnection(account.id);
+    } catch (error) {
+      console.error('Failed to revoke tokens:', error);
+    }
+    throw new Response(null, { status: 303, headers: { Location: '/' } });
   }
 
   const updatingInfo = {
@@ -356,6 +371,7 @@ const createAuthConfig = () => {
       'https://staging.0.email',
       'https://0.email',
       'http://localhost:3000',
+      'http://localhost:3500',
     ],
     session: {
       cookieCache: {

@@ -3,7 +3,7 @@ import {
   type PersistedClient,
   type Persister,
 } from '@tanstack/react-query-persist-client';
-import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
+import { QueryCache, QueryClient, hashKey, type InfiniteData } from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useMemo, type PropsWithChildren } from 'react';
@@ -53,7 +53,7 @@ export const makeQueryClient = (connectionId: string | null) =>
         retry: false,
         refetchOnWindowFocus: false,
         queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
-        gcTime: 1000 * 60 * 1 * 1, // 60 minutes, we're storing in DOs,
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours,
       },
       mutations: {
         onError: (err) => console.error(err.message),
@@ -107,6 +107,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
   ],
 });
 
+type TrpcHook = ReturnType<typeof useTRPC>;
 export function QueryProvider({
   children,
   connectionId,
@@ -123,7 +124,25 @@ export function QueryProvider({
       persistOptions={{
         persister,
         buster: CACHE_BURST_KEY,
-        maxAge: 1000 * 60 * 1 * 1, // 60 minutes, we're storing in DOs,
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      }}
+      onSuccess={() => {
+        const threadQueryKey = [['mail', 'listThreads'], { type: 'infinite' }];
+        queryClient.setQueriesData(
+          { queryKey: threadQueryKey },
+          (data: InfiniteData<TrpcHook['mail']['listThreads']['~types']['output']>) => {
+            if (!data) return data;
+            // We only keep few pages of threads in the cache before we invalidate them
+            // invalidating will attempt to refetch every page that was in cache, if someone have too many pages in cache, it will refetch every page every time
+            // We don't want that, just keep like 3 pages (20 * 3 = 60 threads) in cache
+            return {
+              pages: data.pages.slice(0, 3),
+              pageParams: data.pageParams.slice(0, 3),
+            };
+          },
+        );
+        // invalidate the query, it will refetch when the data is it is being accessed
+        queryClient.invalidateQueries({ queryKey: threadQueryKey });
       }}
     >
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>

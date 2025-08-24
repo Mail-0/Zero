@@ -165,8 +165,13 @@
       "attachments": "添付ファイル",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "添付ファイル",
             "countPlural=one": "添付ファイル",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ファイル",
             "countPlural=one": "ファイル",
@@ -249,8 +259,13 @@
       "search": "メモを検索…",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Add notes",
             "countPlural=one": "# 件のメモ",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "返信",
             "countPlural=one": "# 件の返信",
@@ -416,7 +436,7 @@
       "signatures": "署名",
       "shortcuts": "ショートカット",
       "labels": "ラベル",
-      "categories": "カテゴリー",
+      "categories": "表示",
       "dangerZone": "危険ゾーン",
       "deleteAccount": "アカウントを削除",
       "privacy": "プライバシー"
@@ -448,6 +468,8 @@
         "noResultsFound": "結果が見つかりませんでした",
         "zeroSignature": "Zero署名",
         "zeroSignatureDescription": "メールにZero署名を追加します。",
+        "undoSendEnabled": "送信取り消し",
+        "undoSendEnabledDescription": "メール送信後30秒以内の取り消しを許可します。",
         "defaultEmailAlias": "デフォルトのメールエイリアス",
         "selectDefaultEmail": "デフォルトのメールを選択",
         "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます",

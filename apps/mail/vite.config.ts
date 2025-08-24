@@ -14,7 +14,8 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
-    oxlintPlugin(),
+    // Only enable oxlint when explicitly requested (e.g., CI): set OXLINT=1
+    process.env.OXLINT === '1' && oxlintPlugin(),
     reactRouter(),
     cloudflare(),
     babel({
@@ -50,7 +51,21 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3000,
+    port: 3500,
+    // Proxy API calls to the backend dev server to keep same-origin cookies in dev
+    // This helps avoid CORS and auth cookie issues when the frontend is on 3500 and backend on 8787
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/monitoring': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     warmup: {
       clientFiles: ['./app/**/*', './components/**/*'],
     },

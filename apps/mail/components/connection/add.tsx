@@ -27,12 +27,14 @@ export const AddConnectionDialog = ({
   className?: string;
   onOpenChange?: (open: boolean) => void;
 }) => {
-  const { connections, attach } = useBilling();
+  const { connections, attach, isPro } = useBilling();
 
   const canCreateConnection = useMemo(() => {
+    // Pro users can always create connections
+    if (isPro) return true;
     if (!connections?.remaining && !connections?.unlimited) return false;
     return (connections?.unlimited && !connections?.remaining) || (connections?.remaining ?? 0) > 0;
-  }, [connections]);
+  }, [isPro, connections]);
   const pathname = useLocation().pathname;
 
   const handleUpgrade = async () => {

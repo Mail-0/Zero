@@ -165,8 +165,13 @@
       "attachments": "پیوست‌ها",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پیوست",
             "countPlural=one": "پیوست",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "فایل",
             "countPlural=one": "فایل",
@@ -249,8 +259,13 @@
       "search": "جستجوی یادداشت‌ها...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "افزودن یادداشت‌ها",
             "countPlural=one": "# یادداشت",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پاسخ‌ها",
             "countPlural=one": "# پاسخ",
@@ -416,7 +436,7 @@
       "signatures": "امضاها",
       "shortcuts": "میانبرها",
       "labels": "برچسب‌ها",
-      "categories": "دسته‌بندی‌ها",
+      "categories": "نماها",
       "dangerZone": "منطقه خطر",
       "deleteAccount": "حذف حساب کاربری",
       "privacy": "حریم خصوصی"
@@ -448,6 +468,8 @@
         "noResultsFound": "نتیجه‌ای یافت نشد",
         "zeroSignature": "امضای Zero",
         "zeroSignatureDescription": "افزودن امضای Zero به ایمیل‌های شما.",
+        "undoSendEnabled": "لغو ارسال",
+        "undoSendEnabledDescription": "امکان لغو ایمیل‌ها در مدت ۳۰ ثانیه پس از ارسال.",
         "defaultEmailAlias": "نام مستعار ایمیل پیش‌فرض",
         "selectDefaultEmail": "انتخاب ایمیل پیش‌فرض",
         "defaultEmailDescription": "این ایمیل به عنوان آدرس پیش‌فرض 'از طرف' هنگام نوشتن ایمیل‌های جدید استفاده خواهد شد",

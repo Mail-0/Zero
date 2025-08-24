@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   ArrowRight,
   Calendar as CalendarIcon,
   Clock,
@@ -1098,7 +1099,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       <>
         <div className="flex items-center border-b px-3">
           <button
-            className="text-muted-foreground hover:text-foreground mr-2"
+            className="text-muted-foreground hover:text-foreground ml-2"
             onClick={() => {
               if (selectedDateFilter) {
                 setSelectedDateFilter(null);
@@ -1109,7 +1110,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               }
             }}
           >
-            ←
+            <ArrowLeft className="h-4 w-4"/>
           </button>
           <CommandInput
             autoFocus
@@ -1405,10 +1406,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     <>
       <div className="flex items-center border-b px-3">
         <button
-          className="text-muted-foreground hover:text-foreground mr-2"
+          className="text-muted-foreground hover:text-foreground ml-2"
           onClick={() => setCurrentView('filter')}
         >
-          ←
+          <ArrowLeft className="h-4 w-4"/>
         </button>
         <CommandInput
           autoFocus

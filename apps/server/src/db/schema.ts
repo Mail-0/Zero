@@ -194,7 +194,10 @@ export const userSettings = createTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' })
       .unique(),
-    settings: jsonb('settings').notNull().default(defaultUserSettings),
+    settings: jsonb('settings')
+      .$type<typeof defaultUserSettings>()
+      .notNull()
+      .default(defaultUserSettings),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },

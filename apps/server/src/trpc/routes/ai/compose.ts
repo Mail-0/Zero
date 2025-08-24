@@ -10,7 +10,7 @@ import { getPrompt } from '../../../lib/brain';
 import { stripHtml } from 'string-strip-html';
 import { EPrompts } from '../../../types';
 import { env } from '../../../env';
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { z } from 'zod';
 
@@ -86,7 +86,7 @@ export async function composeEmail(input: ComposeEmailInput) {
         ];
 
   const { text } = await generateText({
-    model: openai(env.OPENAI_MINI_MODEL || 'gpt-4o-mini'),
+    model: google(env.GEMINI_FLASH_MODEL || 'gemini-2.0-flash'),
     messages: [
       {
         role: 'system',
@@ -267,7 +267,7 @@ const generateSubject = async (message: string, styleProfile?: WritingStyleMatri
   );
 
   const { text } = await generateText({
-    model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+    model: google(env.GEMINI_FLASH_MODEL || 'gemini-2.0-flash'),
     messages: [
       {
         role: 'system',

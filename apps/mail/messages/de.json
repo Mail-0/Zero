@@ -165,8 +165,13 @@
       "attachments": "Anhänge",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Anhänge",
             "countPlural=one": "Anhang",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Dateien",
             "countPlural=one": "Datei",
@@ -249,8 +259,13 @@
       "search": "Notizen durchsuchen...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Füge Notizen hinzu",
             "countPlural=one": "# Notiz",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Antworten",
             "countPlural=one": "# Antwort",
@@ -416,7 +436,7 @@
       "signatures": "Signaturen",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
-      "categories": "Kategorien",
+      "categories": "Ansichten",
       "dangerZone": "Gefahrenbereich",
       "deleteAccount": "Konto löschen",
       "privacy": "Datenschutz"
@@ -448,6 +468,8 @@
         "noResultsFound": "Keine Ergebnisse gefunden",
         "zeroSignature": "Zero-Signatur",
         "zeroSignatureDescription": "Füge deinen E-Mails eine Zero-Signatur hinzu.",
+        "undoSendEnabled": "Senden rückgängig machen",
+        "undoSendEnabledDescription": "Ermöglicht das Abbrechen von E-Mails innerhalb von 30 Sekunden nach dem Senden.",
         "defaultEmailAlias": "Standard-E-Mail-Alias",
         "selectDefaultEmail": "Standard-E-Mail auswählen",
         "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet",

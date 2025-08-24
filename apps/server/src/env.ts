@@ -1,16 +1,24 @@
-import type { ThinkingMCP, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
-import type { ZeroAgent, ZeroDriver } from './routes/agent';
+import type { ThinkingMCP, ThreadSyncWorker, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
+import type { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
 
 export type ZeroEnv = {
   ZERO_DRIVER: DurableObjectNamespace<ZeroDriver & QueryableHandler>;
+  SHARD_REGISTRY: DurableObjectNamespace<ShardRegistry & QueryableHandler>;
   ZERO_DB: DurableObjectNamespace<ZeroDB>;
   ZERO_AGENT: DurableObjectNamespace<ZeroAgent>;
   ZERO_MCP: DurableObjectNamespace<ZeroMCP & QueryableHandler>;
   THINKING_MCP: DurableObjectNamespace<ThinkingMCP & QueryableHandler>;
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
+  THREAD_SYNC_WORKER: DurableObjectNamespace<ThreadSyncWorker>;
+  SYNC_THREADS_WORKFLOW: Workflow;
+  SYNC_THREADS_COORDINATOR_WORKFLOW: Workflow;
   HYPERDRIVE: { connectionString: string };
+  pending_emails_status: KVNamespace;
+  pending_emails_payload: KVNamespace;
+  scheduled_emails: KVNamespace;
+  send_email_queue: Queue;
   snoozed_emails: KVNamespace;
   gmail_sub_age: KVNamespace;
   subscribe_queue: Queue;
@@ -60,6 +68,7 @@ export type ZeroEnv = {
   GROQ_API_KEY: string;
   EARLY_ACCESS_ENABLED: string;
   GOOGLE_GENERATIVE_AI_API_KEY: string;
+  GEMINI_FLASH_MODEL: string;
   AUTUMN_SECRET_KEY: string;
   AI_SYSTEM_PROMPT: string;
   PERPLEXITY_API_KEY: string;
@@ -82,6 +91,13 @@ export type ZeroEnv = {
   thread_queue: Queue;
   VECTORIZE: VectorizeIndex;
   VECTORIZE_MESSAGE: VectorizeIndex;
+  DEV_PROXY: string;
+  MEET_AUTH_HEADER: string;
+  MEET_API_URL: string;
+  ENABLE_MEET: 'true' | 'false';
+  OTEL_EXPORTER_OTLP_ENDPOINT?: string;
+  OTEL_EXPORTER_OTLP_HEADERS?: string;
+  OTEL_SERVICE_NAME?: string;
 };
 
 const env = _env as ZeroEnv;

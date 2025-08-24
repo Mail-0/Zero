@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -64,12 +65,12 @@ export function LabelDialog({
       if (editingLabel) {
         form.reset({
           name: editingLabel.name,
-          color: editingLabel.color || { backgroundColor: '#E2E2E2', textColor: '#000000' },
+          color: editingLabel.color || { backgroundColor: '#202020', textColor: '#FFFFFF' },
         });
       } else {
         form.reset({
           name: '',
-          color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+          color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
         });
       }
     }
@@ -85,7 +86,7 @@ export function LabelDialog({
     setDialogOpen(false);
     form.reset({
       name: '',
-      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+      color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
     });
   };
 
@@ -97,6 +98,11 @@ export function LabelDialog({
           <DialogTitle>
             {editingLabel ? m['common.labels.editLabel']() : m['common.mail.createNewLabel']()}
           </DialogTitle>
+          <DialogDescription>
+            {editingLabel
+              ? 'Modify the label name and color to update this label.'
+              : 'Create a new label to organize your emails. Choose a name and color for easy identification.'}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -126,18 +132,21 @@ export function LabelDialog({
               <div className="space-y-2">
                 <Label>{m['common.labels.color']()}</Label>
                 <div className="w-full">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="relative mt-2 flex flex-wrap gap-2">
                     {LABEL_COLORS.map((color) => (
                       <button
-                        key={color.backgroundColor}
                         type="button"
-                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
+                        key={color.backgroundColor}
+                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
                           formColor?.backgroundColor.toString() === color.backgroundColor &&
                           formColor.textColor.toString() === color.textColor
                             ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}
-                        style={{ backgroundColor: color.backgroundColor }}
+                        style={{
+                          backgroundColor: color.backgroundColor,
+                          filter: 'brightness(1.4)',
+                        }}
                         onClick={() =>
                           form.setValue('color', {
                             backgroundColor: color.backgroundColor,

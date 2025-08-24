@@ -165,8 +165,13 @@
       "attachments": "المرفقات",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "مرفقات",
             "countPlural=one": "مرفق",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ملفات",
             "countPlural=one": "ملف",
@@ -249,8 +259,13 @@
       "search": "البحث في الملاحظات...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "إضافة ملاحظات",
             "countPlural=one": "ملاحظة واحدة",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ردود",
             "countPlural=one": "رد واحد",
@@ -416,7 +436,7 @@
       "signatures": "التوقيعات",
       "shortcuts": "الاختصارات",
       "labels": "التصنيفات",
-      "categories": "الفئات",
+      "categories": "العروض",
       "dangerZone": "منطقة الخطر",
       "deleteAccount": "حذف الحساب",
       "privacy": "الخصوصية"
@@ -448,6 +468,8 @@
         "noResultsFound": "لم يتم العثور على نتائج",
         "zeroSignature": "توقيع Zero",
         "zeroSignatureDescription": "إضافة توقيع Zero إلى رسائل البريد الإلكتروني الخاصة بك.",
+        "undoSendEnabled": "التراجع عن الإرسال",
+        "undoSendEnabledDescription": "السماح بإلغاء رسائل البريد الإلكتروني خلال 30 ثانية من إرسالها.",
         "defaultEmailAlias": "الاسم المستعار الافتراضي للبريد الإلكتروني",
         "selectDefaultEmail": "اختر البريد الإلكتروني الافتراضي",
         "defaultEmailDescription": "سيتم استخدام هذا البريد الإلكتروني كعنوان \"من\" الافتراضي عند إنشاء رسائل إلكترونية جديدة",

@@ -74,6 +74,7 @@ export interface MailManager {
     nextPageToken: string | null;
   }>;
   delete(id: string): Promise<void>;
+  deleteDraft(id: string): Promise<void>;
   list(params: {
     folder: string;
     query?: string;

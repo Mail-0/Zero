@@ -1,0 +1,241 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "d0cc0b99-8d5a-4611-98c6-aae528e105af",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "labels": {
+      "name": "labels",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "labels_name_idx": {
+          "name": "labels_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "thread_labels": {
+      "name": "thread_labels",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label_id": {
+          "name": "label_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "thread_labels_thread_id_idx": {
+          "name": "thread_labels_thread_id_idx",
+          "columns": [
+            "thread_id"
+          ],
+          "isUnique": false
+        },
+        "thread_labels_label_id_idx": {
+          "name": "thread_labels_label_id_idx",
+          "columns": [
+            "label_id"
+          ],
+          "isUnique": false
+        },
+        "thread_labels_thread_label_idx": {
+          "name": "thread_labels_thread_label_idx",
+          "columns": [
+            "thread_id",
+            "label_id"
+          ],
+          "isUnique": false
+        },
+        "thread_labels_thread_id_label_id_unique": {
+          "name": "thread_labels_thread_id_label_id_unique",
+          "columns": [
+            "thread_id",
+            "label_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "thread_labels_thread_id_threads_id_fk": {
+          "name": "thread_labels_thread_id_threads_id_fk",
+          "tableFrom": "thread_labels",
+          "tableTo": "threads",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "thread_labels_label_id_labels_id_fk": {
+          "name": "thread_labels_label_id_labels_id_fk",
+          "tableFrom": "thread_labels",
+          "tableTo": "labels",
+          "columnsFrom": [
+            "label_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "threads": {
+      "name": "threads",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latest_sender": {
+          "name": "latest_sender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "latest_received_on": {
+          "name": "latest_received_on",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "latest_subject": {
+          "name": "latest_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "latest_label_ids": {
+          "name": "latest_label_ids",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "threads_thread_id_idx": {
+          "name": "threads_thread_id_idx",
+          "columns": [
+            "thread_id"
+          ],
+          "isUnique": false
+        },
+        "threads_provider_id_idx": {
+          "name": "threads_provider_id_idx",
+          "columns": [
+            "provider_id"
+          ],
+          "isUnique": false
+        },
+        "threads_latest_received_on_idx": {
+          "name": "threads_latest_received_on_idx",
+          "columns": [
+            "latest_received_on"
+          ],
+          "isUnique": false
+        },
+        "threads_latest_subject_idx": {
+          "name": "threads_latest_subject_idx",
+          "columns": [
+            "latest_subject"
+          ],
+          "isUnique": false
+        },
+        "threads_latest_sender_idx": {
+          "name": "threads_latest_sender_idx",
+          "columns": [
+            "latest_sender"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

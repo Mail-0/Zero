@@ -1,13 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { ReactNode, HTMLAttributes } from 'react';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { cn } from '@/lib/utils';
 
-interface SettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SettingsCardProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
   description?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
-  action?: React.ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  action?: ReactNode;
 }
 
 export function SettingsCard({

@@ -526,7 +526,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-screen overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
+          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark max-w-screen fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
           onClick={handlePanelClick}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
@@ -706,7 +706,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                         <button
                                           onClick={() => setSelectedColor(color.value)}
                                           className={cn(
-                                            'h-5 w-5 rounded-full transition-all',
+                                            'h-5 w-5 rounded-full',
                                             color.value === 'default' ? 'bg-background border' : '',
                                             color.value === 'red' ? 'bg-red-500' : '',
                                             color.value === 'orange' ? 'bg-orange-500' : '',

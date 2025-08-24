@@ -165,8 +165,13 @@
       "attachments": "Csatolmányok",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "csatolmány",
             "countPlural=one": "csatolmány",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "fájl",
             "countPlural=one": "fájl",
@@ -249,8 +259,13 @@
       "search": "Jegyzetek keresése...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Jegyzetek hozzáadása",
             "countPlural=one": "# jegyzet",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "válasz",
             "countPlural=one": "# válasz",
@@ -416,7 +436,7 @@
       "signatures": "Aláírások",
       "shortcuts": "Gyorsbillentyűk",
       "labels": "Címkék",
-      "categories": "Kategóriák",
+      "categories": "Nézetek",
       "dangerZone": "Veszélyes zóna",
       "deleteAccount": "Fiók törlése",
       "privacy": "Adatvédelem"
@@ -448,6 +468,8 @@
         "noResultsFound": "Nincs találat",
         "zeroSignature": "Zero aláírás",
         "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez.",
+        "undoSendEnabled": "Küldés visszavonása",
+        "undoSendEnabledDescription": "Lehetővé teszi az e-mailek visszavonását a küldéstől számított 30 másodpercen belül.",
         "defaultEmailAlias": "Alapértelmezett e-mail álnév",
         "selectDefaultEmail": "Alapértelmezett e-mail kiválasztása",
         "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor",

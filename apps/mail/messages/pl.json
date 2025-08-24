@@ -165,8 +165,13 @@
       "attachments": "Załączniki",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "załączników",
             "countPlural=one": "załącznik",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "plików",
             "countPlural=one": "plik",
@@ -249,8 +259,13 @@
       "search": "Szukaj notatek...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Dodaj notatki",
             "countPlural=one": "# notatka",
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "odpowiedzi",
             "countPlural=one": "# odpowiedź",
@@ -416,7 +436,7 @@
       "signatures": "Podpisy",
       "shortcuts": "Skróty",
       "labels": "Etykiety",
-      "categories": "Kategorie",
+      "categories": "Widoki",
       "dangerZone": "Strefa zagrożenia",
       "deleteAccount": "Usuń konto",
       "privacy": "Prywatność"
@@ -448,6 +468,8 @@
         "noResultsFound": "Nie znaleziono wyników",
         "zeroSignature": "Podpis Zero",
         "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili.",
+        "undoSendEnabled": "Cofnij wysyłanie",
+        "undoSendEnabledDescription": "Pozwala anulować wysyłanie e-maili w ciągu 30 sekund od ich wysłania.",
         "defaultEmailAlias": "Domyślny alias e-mail",
         "selectDefaultEmail": "Wybierz domyślny e-mail",
         "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail",

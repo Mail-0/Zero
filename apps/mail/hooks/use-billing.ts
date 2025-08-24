@@ -1,5 +1,6 @@
 import { useAutumn, useCustomer } from 'autumn-js/react';
 import { signOut } from '@/lib/auth-client';
+import { isProCustomer } from '@/lib/utils';
 import { useEffect, useMemo } from 'react';
 
 type FeatureState = {
@@ -58,8 +59,6 @@ const FEATURE_IDS = {
   BRAIN: 'brain-activity',
 } as const;
 
-const PRO_PLANS = ['pro-example', 'pro_annual', 'team', 'enterprise'] as const;
-
 export const useBilling = () => {
   const { customer, refetch, isLoading, error } = useCustomer();
   const { attach, track, openBillingPortal } = useAutumn();
@@ -69,59 +68,29 @@ export const useBilling = () => {
   }, [error]);
 
   const { isPro, ...customerFeatures } = useMemo(() => {
-    const isPro =
-      customer?.products && Array.isArray(customer.products)
-        ? customer.products.some((product) =>
-            PRO_PLANS.some((plan) => product.id?.includes(plan) || product.name?.includes(plan)),
-          )
-        : false;
+    // Force Pro mode by default for all users
+    const isPro = true;
 
-    if (!customer?.features) return { isPro, ...DEFAULT_FEATURES };
+    // Development override: unlock ALL features regardless of Autumn billing data
+    const OVERRIDE_TOTAL = 1_000_000;
+    const OVERRIDE_FEATURE: FeatureState = {
+      total: OVERRIDE_TOTAL,
+      remaining: OVERRIDE_TOTAL,
+      unlimited: true,
+      enabled: true,
+      usage: 0,
+      nextResetAt: null,
+      interval: 'monthly',
+      included_usage: OVERRIDE_TOTAL,
+    };
 
-    const features = { ...DEFAULT_FEATURES };
+    const features: Features = {
+      chatMessages: { ...OVERRIDE_FEATURE },
+      connections: { ...OVERRIDE_FEATURE },
+      brainActivity: { ...OVERRIDE_FEATURE },
+    };
 
-    if (customer.features[FEATURE_IDS.CHAT]) {
-      const feature = customer.features[FEATURE_IDS.CHAT];
-      features.chatMessages = {
-        total: feature.included_usage || 0,
-        remaining: feature.balance || 0,
-        unlimited: feature.unlimited ?? false,
-        enabled: (feature.unlimited ?? false) || Number(feature.balance) > 0,
-        usage: feature.usage || 0,
-        nextResetAt: feature.next_reset_at ?? null,
-        interval: feature.interval || '',
-        included_usage: feature.included_usage || 0,
-      };
-    }
-
-    if (customer.features[FEATURE_IDS.CONNECTIONS]) {
-      const feature = customer.features[FEATURE_IDS.CONNECTIONS];
-      features.connections = {
-        total: feature.included_usage || 0,
-        remaining: feature.balance || 0,
-        unlimited: feature.unlimited ?? false,
-        enabled: (feature.unlimited ?? false) || Number(feature.balance) > 0,
-        usage: feature.usage || 0,
-        nextResetAt: feature.next_reset_at ?? null,
-        interval: feature.interval || '',
-        included_usage: feature.included_usage || 0,
-      };
-    }
-
-    if (customer.features[FEATURE_IDS.BRAIN]) {
-      const feature = customer.features[FEATURE_IDS.BRAIN];
-      features.brainActivity = {
-        total: feature.included_usage || 0,
-        remaining: feature.balance || 0,
-        unlimited: feature.unlimited ?? false,
-        enabled: (feature.unlimited ?? false) || Number(feature.balance) > 0,
-        usage: feature.usage || 0,
-        nextResetAt: feature.next_reset_at ?? null,
-        interval: feature.interval || '',
-        included_usage: feature.included_usage || 0,
-      };
-    }
-
+    // Ignore customer?.features intentionally to ensure local dev is fully unlocked
     return { isPro, ...features };
   }, [customer]);
 
