@@ -345,7 +345,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
     setOpen,
     isFullScreen,
     setIsFullScreen,
-    toggleViewMode,
     isSidebar,
     isPopup,
     setViewMode,
