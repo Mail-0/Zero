@@ -1,30 +1,23 @@
-import { Suspense } from 'react';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { SettingsLayoutContent } from '@/components/ui/settings-content';
-export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  
+import { Outlet } from 'react-router';
+import { authProxy } from '@/lib/auth-proxy';
+import type { Route } from './+types/layout';
+
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const session = await authProxy.api.getSession({ headers: request.headers });
+
   if (!session) {
-    redirect('/login');
+    return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/login`);
   }
 
-  return (
-    <Suspense fallback={<SettingsLayoutSkeleton />}>
-      <SettingsLayoutContent>{children}</SettingsLayoutContent>
-    </Suspense>
-  );
+  
+  return null;
 }
 
-function SettingsLayoutSkeleton() {
+export default function SettingsLayout() {
   return (
-    <>
-      <div className="hidden lg:flex lg:w-80" />
-      <div className="bg-sidebar w-full md:p-3">
-        <div className="bg-muted h-[calc(100svh-1.5rem)] animate-pulse md:rounded-2xl" />
-      </div>
-    </>
+    <SettingsLayoutContent>
+      <Outlet />
+    </SettingsLayoutContent>
   );
 }

@@ -1,7 +1,7 @@
 export default function Envelop() {
   return (
     <div className="relative h-[303.33px] w-[455px]">
-      <div className="absolute left-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-slate-600 bg-gradient-to-b from-[#eeeff1] to-[#f9f9fa] backdrop-blur-[85.60px]" />
+      <div className="absolute left-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-slate-600 bg-linear-to-b from-[#eeeff1] to-[#f9f9fa] backdrop-blur-[85.60px]" />
       <div className="overflow-hidden">
         <div className="absolute h-[303.33px] w-[455px] rounded-[28.61px] bg-black/10" />
         <div data-svg-wrapper className="absolute left-4 top-2">

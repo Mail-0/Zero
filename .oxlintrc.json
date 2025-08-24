@@ -1,0 +1,19 @@
+{
+  "plugins": ["react", "unicorn", "typescript", "oxc"],
+  "rules": {
+    "no-alert": "error",
+    "oxc/approx-constant": "warn",
+    "no-plusplus": "off",
+    "no-useless-call": "error",
+    "no-accumulating-spread": "error",
+    "no-array-index-key": "error",
+    "jsx-no-jsx-as-prop": "error",
+    "jsx-no-new-array-as-prop": "error",
+    "jsx-no-new-function-as-prop": "error",
+    "jsx-no-new-object-as-prop": "error",
+    "prefer-array-find": "error",
+    "prefer-set-has": "error",
+    "exhaustive-deps": "off",
+    "@typescript-eslint/no-this-alias": "off"
+  }
+}

@@ -7,8 +7,6 @@
 
 # Zero
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnizzyabi%2FMail0&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,BETTER_AUTH_TRUSTED_ORIGINS,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,GITHUB_REDIRECT_URI&envDescription=For%20more%20info%20on%20setting%20up%20your%20API%20keys%2C%20checkout%20the%20Readme%20below&envLink=https%3A%2F%2Fgithub.com%2Fnizzyabi%2FMail0%2Fblob%2Fmain%2FREADME.md&project-name=0&repository-name=0&redirect-url=0.email&demo-title=0&demo-description=An%20open%20source%20email%20app&demo-url=0.email)
-
 An Open-Source Gmail Alternative for the Future of Email
 
 ## What is Zero?
@@ -40,12 +38,22 @@ Zero is built with modern and reliable technologies:
 
 ## Getting Started
 
+### Video Tutorial
+
+Watch this helpful video tutorial on how to set up Zero locally:
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=yIXLQcjbeEM">
+    <img src="https://img.youtube.com/vi/yIXLQcjbeEM/0.jpg" alt="Zero Setup Tutorial" />
+  </a>
+</p>
+
 ### Prerequisites
 
 **Required Versions:**
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [Bun](https://bun.sh) (v1.2 or higher)
+- [pnpm](https://pnpm.io) (v10 or higher)
 - [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
@@ -55,7 +63,7 @@ Before running the application, you'll need to set up services and configure env
 You can set up Zero in two ways:
 
 <details open>
-<summary><b>Option 1: Standard Setup (Recommended)</b></summary>
+<summary><b>Standard Setup (Recommended)</b></summary>
 
 #### Quick Start Guide
 
@@ -67,26 +75,23 @@ You can set up Zero in two ways:
    cd Zero
 
    # Install dependencies
-   bun install
+   pnpm install
 
    # Start database locally
-   bun docker:up
+   pnpm docker:db:up
    ```
 
 2. **Set Up Environment**
 
-   - Copy `.env.example` to `.env` in project root
-     ```bash
-     cp .env.example .env
-     ```
-   - Configure your environment variables (see below)
-   - Start the database with the provided docker compose setup: `bun docker:up`
-   - Initialize the database: `bun db:push`
+   - Run `pnpm nizzy env` to setup your environment variables
+   - Run `pnpm nizzy sync` to sync your environment variables and types
+   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
+   - Initialize the database: `pnpm db:push`
 
 3. **Start the App**
 
    ```bash
-   bun dev
+   pnpm dev
    ```
 
 4. **Open in Browser**
@@ -94,36 +99,40 @@ You can set up Zero in two ways:
    Visit [http://localhost:3000](http://localhost:3000)
    </details>
 
-<details>
-<summary><b>Option 2: Dev Container Setup (For VS Code Users)</b></summary>
+<details open>
+<summary><b>Devcontainer Setup</b></summary>
 
-This option uses VS Code's Dev Containers feature to provide a fully configured development environment with all dependencies pre-installed. It's great for ensuring everyone on the team has the same setup.
+#### Quick Start guide
 
-1. **Prerequisites**
+1. **Clone and Install**
 
-   - [Docker](https://docs.docker.com/get-docker/)
-   - [VS Code](https://code.visualstudio.com/) or compatible editor
-   - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   ```bash
+   # Clone the repository
+   git clone https://github.com/Mail-0/Zero.git
+   cd Zero
+   ```
 
-2. **Open in Dev Container**
+   Then open the code in devcontainer and install the dependencies:
 
-   - Clone the repository: `git clone https://github.com/Mail-0/Zero.git`
-   - Open the folder in VS Code
-   - When prompted, click "Reopen in Container" or run the "Dev Containers: Open Folder in Container" command
-   - VS Code will build and start the dev container (this may take a few minutes the first time)
+   ```
+   pnpm install
 
-3. **Access the App**
+   # Start the database locally
+   pnpm docker:db:up
+   ```
 
-   - The app will be available at [http://localhost:3000](http://localhost:3000)
+2. **Set Up Environment**
 
-4. **Troubleshooting**
-   - If you encounter issues with the container, try rebuilding it using the "Dev Containers: Rebuild Container" command
-   - For dependency issues inside the container:
-     `bash
-rm -rf node_modules
-rm bun.lockb
-bun install
-`
+   - Run `pnpm nizzy env` to setup your environment variables
+   - Run `pnpm nizzy sync` to sync your environment variables and types
+   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
+   - Initialize the database: `pnpm db:push`
+
+3. **Start The App**
+   ```bash
+   pnpm dev
+   ```
+   Visit [http://localhost:3000](http://localhost:3000)
      </details>
 
 ### Environment Setup
@@ -148,7 +157,7 @@ bun install
    - Create OAuth 2.0 credentials (Web application type)
    - Add authorized redirect URIs:
      - Development:
-       - `http://localhost:3000/api/auth/callback/google`
+       - `http://localhost:8787/api/auth/callback/google`
      - Production:
        - `https://your-production-url/api/auth/callback/google`
    - Add to `.env`:
@@ -167,27 +176,47 @@ bun install
 > [!WARNING]
 > The authorized redirect URIs in Google Cloud Console must match **exactly** what you configure in the `.env`, including the protocol (http/https), domain, and path - these are provided above.
 
+3. **Autumn Setup** (Required for some encryption)
+
+   - Go to [Autumn](https://useautumn.com/)
+   - For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
+   - For production, select the production mode from upper left corner and generate and fill the other fields. After that, generate an Autumn Secret Key
+
+   - Add to `.env`:
+
+   ```env
+   AUTUMN_SECRET_KEY=your_autumn_secret
+   ```
+
+4. **Twilio Setup** (Required for SMS Integration)
+
+   - Go to the [Twilio](https://www.twilio.com/)
+   - Create a Twilio account if you don’t already have one
+   - From the dashboard, locate your:
+
+     - Account SID
+     - Auth Token
+     - Phone Number
+
+   - Add to your `.env` file:
+
+   ```env
+   TWILIO_ACCOUNT_SID=your_account_sid
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_PHONE_NUMBER=your_twilio_phone_number
+   ```
+
 ### Environment Variables
 
-Copy `.env.example` located in the project folder to `.env` in the same folder and configure the following variables:
-
-```env
-# Auth
-BETTER_AUTH_SECRET=     # Required: Secret key for authentication
-
-# Google OAuth (Required for Gmail integration)
-GOOGLE_CLIENT_ID=       # Required for Gmail integration
-GOOGLE_CLIENT_SECRET=   # Required for Gmail integration
-
-# Database
-DATABASE_URL=           # Required: PostgreSQL connection string for backend connection
-
-# Redis
-REDIS_URL=              # Redis URL for caching (http://localhost:8079 for local dev)
-REDIS_TOKEN=            # Redis token (upstash-local-token for local dev)
-```
-
+Run `pnpm nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.
 For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
+
+#### Gemini Model & API Migration
+
+We migrated Gemini integration to be fully environment-driven. See the detailed guide: [GEMINI_GenerativeAI_Migration.md](.Documentation/GEMINI_GenerativeAI_Migration.md).
+
+- __GOOGLE_GENERATIVE_AI_API_KEY__: Your Google Generative AI API key (replaces `GEMINI_API_KEY`).
+- __GEMINI_FLASH_MODEL__: Gemini model identifier to use. Defaults to `gemini-2.0-flash` when unset.
 
 ### Database Setup
 
@@ -198,7 +227,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    Run this command to start a local PostgreSQL instance:
 
    ```bash
-   bun docker:up
+   pnpm docker:db:up
    ```
 
    This creates a database with:
@@ -210,7 +239,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
 2. **Set Up Database Connection**
 
-   Make sure your database connection string is in `.env` file.
+   Make sure your database connection string is in `.env` file. And you have ran `pnpm nizzy sync` to sync the latest env.
 
    For local development use:
 
@@ -223,26 +252,35 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    - **Set up database tables**:
 
      ```bash
-     bun db:push
+     pnpm db:push
      ```
 
    - **Create migration files** (after schema changes):
 
      ```bash
-     bun db:generate
+     pnpm db:generate
      ```
 
    - **Apply migrations**:
 
      ```bash
-     bun db:migrate
+     pnpm db:migrate
      ```
 
    - **View database content**:
      ```bash
-     bun db:studio
+     pnpm db:studio
      ```
-     > If you run `bun dev` in your terminal, the studio command should be automatically running with the app.
+     > If you run `pnpm dev` in your terminal, the studio command should be automatically running with the app.
+
+### Sync
+
+Background: https://x.com/cmdhaus/status/1940886269950902362
+We're now storing the user's emails in their Durable Object & an R2 bucket. This allow us to speed things up, a lot.
+This also introduces 3 environment variables, `DROP_AGENT_TABLES`,`THREAD_SYNC_MAX_COUNT`, `THREAD_SYNC_LOOP`.
+`DROP_AGENT_TABLES`: should the durable object drop the threads table before starting a sync
+`THREAD_SYNC_MAX_COUNT`: how many threads should we sync? max `500` because it's using the same number for the maxResults number from the driver. i.e 500 results per page.
+`THREAD_SYNC_LOOP`: should make sure to sync all of the items inside a folder? i.e if THREAD_SYNC_MAX_COUNT=500 it will sync 500 threads per request until the folder is fully synced. (should be true in production)
 
 ## Contribute
 
@@ -252,7 +290,7 @@ If you'd like to help with translating Zero to other languages, check out our [t
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Mail-0/Zero&type=Timeline)](https://star-history.com/#Mail-0/Zero&Timeline)
+[![Star History Chart](https://api.star-history.com/svg?repos=Mail-0/Zero&type=Timeline)](https://www.star-history.com/#Mail-0/Zero&Timeline)
 
 ## This project wouldn't be possible without these awesome companies
 

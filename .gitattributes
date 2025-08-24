@@ -1,0 +1,9 @@
+# Keep our versions on merges/rebases
+apps/server/wrangler.jsonc              merge=ours
+apps/server/worker-configuration.d.ts   merge=ours
+apps/mail/worker-configuration.d.ts     merge=ours
+apps/server/src/routes/agent/index.ts   merge=ours
+apps/server/src/trpc/routes/ai/compose.ts merge=ours
+apps/server/src/trpc/routes/ai/search.ts  merge=ours
+apps/server/src/lib/analyze/interests.ts  merge=ours
+apps/server/src/services/writing-style-service.ts merge=ours

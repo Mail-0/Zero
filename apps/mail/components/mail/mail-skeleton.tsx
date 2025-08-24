@@ -1,5 +1,5 @@
 import { Archive, Copy, Maximize2, Minimize2, X, Reply, MoreVertical } from 'lucide-react';
-import { Separator } from '@radix-ui/react-separator';
+import { Separator } from '../ui/separator';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -10,7 +10,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
       <div
         className={cn(
           'relative flex-1 overflow-hidden p-4',
-          isFullscreen && 'h-[calc(100vh-4rem)]',
+          isFullscreen && 'h-[calc(100dvh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -31,7 +31,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -51,7 +51,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
       <div
         className={cn(
           'relative flex-1 overflow-hidden p-4',
-          isFullscreen && 'h-[calc(100vh-4rem)]',
+          isFullscreen && 'h-[calc(100dvh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -72,7 +72,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -92,7 +92,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
       <div
         className={cn(
           'relative flex-1 overflow-hidden p-4',
-          isFullscreen && 'h-[calc(100vh-4rem)]',
+          isFullscreen && 'h-[calc(100dvh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -113,7 +113,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />

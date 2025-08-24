@@ -1,0 +1,69 @@
+name: Close Old Conflicted PRs
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  close_conflicted_prs:
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Close PRs with conflicts older than 3 days
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+
+            const now = new Date();
+            for (const pr of prs.data) {
+              const details = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              if (details.data.mergeable === null) {
+                continue;
+              }
+              
+              if (details.data.mergeable === false) {
+                const timeline = await github.rest.issues.listEventsForTimeline({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, per_page: 100 });
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number
+                });
+
+                let conflictStartTime = new Date(pr.updated_at);
+                
+                for (const event of timeline.data) {
+                  if (event.event === 'cross-referenced' && event.commit_id) {
+                    conflictStartTime = new Date(event.created_at);
+                    break;
+                  }
+                }
+
+                const conflictAgeDays = (now - conflictStartTime) / (1000 * 60 * 60 * 24);
+                
+                if (conflictAgeDays >= 3) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: "This PR has had merge conflicts for more than 3 days. It will be automatically closed. Please resolve the conflicts and reopen the PR if you'd like to continue working on it."
+                  });
+                  
+                  await github.rest.pulls.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number,
+                    state: 'closed'
+                  });
+                }
+              }
+            }

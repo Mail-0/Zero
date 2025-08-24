@@ -1,31 +1,24 @@
-'use client';
-
-import { keyboardShortcuts, type Shortcut } from '@/config/shortcuts';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { formatDisplayKeys } from '@/lib/hotkeys/use-hotkey-utils';
 import { useShortcutCache } from '@/lib/hotkeys/use-hotkey-utils';
-import { useState, type ReactNode, useEffect } from 'react';
-import type { MessageKey } from '@/config/navigation';
-import { HotkeyRecorder } from './hotkey-recorder';
-import { Button } from '@/components/ui/button';
-import { useSession } from '@/lib/auth-client';
-import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
+import { useCategorySettings } from '@/hooks/use-categories';
+import { type Shortcut } from '@/config/shortcuts';
+import { m } from '@/paraglide/messages';
+import { type ReactNode } from 'react';
 
 export default function ShortcutsPage() {
-  const t = useTranslations();
-  const { data: session } = useSession();
   const {
     shortcuts,
     // TODO: Implement shortcuts syncing and caching
     // updateShortcut,
-  } = useShortcutCache(session?.user?.id);
+  } = useShortcutCache();
+  const categorySettings = useCategorySettings();
 
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.shortcuts.title')}
-        description={t('pages.settings.shortcuts.description')}
+        title={m['pages.settings.shortcuts.title']()}
+        description={m['pages.settings.shortcuts.description']()}
         // footer={
         //   <div className="flex gap-4">
         //     <Button
@@ -45,7 +38,7 @@ export default function ShortcutsPage() {
         //   </div>
         // }
       >
-        <div className="grid gap-6">
+        <div className="grid max-w-3xl gap-6">
           {Object.entries(
             shortcuts.reduce<Record<string, Shortcut[]>>((acc, shortcut) => {
               const scope = shortcut.scope;
@@ -58,12 +51,39 @@ export default function ShortcutsPage() {
               <h3 className="mb-4 text-lg font-semibold capitalize">
                 {scope.split('-').join(' ')}
               </h3>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                {scopedShortcuts.map((shortcut, index) => (
-                  <Shortcut key={`${scope}-${index}`} keys={shortcut.keys} action={shortcut.action}>
-                    {t(`pages.settings.shortcuts.actions.${shortcut.action}` as MessageKey)}
-                  </Shortcut>
-                ))}
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {scopedShortcuts.map((shortcut, index) => {
+                  const categoryActionIndex: Record<string, number> = {
+                    showImportant: 0,
+                    showAllMail: 1,
+                    showPersonal: 2,
+                    showUpdates: 3,
+                    showPromotions: 4,
+                    showUnread: 5,
+                  };
+
+                  let label: string;
+
+                  if (shortcut.action in categoryActionIndex && categorySettings.length) {
+                    const idx = categoryActionIndex[shortcut.action];
+                    const cat = categorySettings[idx];
+                    label = cat
+                      ? `Show ${cat.name}`
+                      : m[`pages.settings.shortcuts.actions.${shortcut.action}`]();
+                  } else {
+                    label = m[`pages.settings.shortcuts.actions.${shortcut.action}`]();
+                  }
+
+                  return (
+                    <ShortcutItem
+                      key={`${scope}-${index}`}
+                      keys={shortcut.keys}
+                      //   action={shortcut.action}
+                    >
+                      {label}
+                    </ShortcutItem>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -73,18 +93,10 @@ export default function ShortcutsPage() {
   );
 }
 
-function Shortcut({
-  children,
-  keys,
-  action,
-}: {
-  children: ReactNode;
-  keys: string[];
-  action: string;
-}) {
+function ShortcutItem({ children, keys }: { children: ReactNode; keys: string[] }) {
   // const [isRecording, setIsRecording] = useState(false);
   const displayKeys = formatDisplayKeys(keys);
-  const { data: session } = useSession();
+
   // const { updateShortcut } = useShortcutCache(session?.user?.id);
 
   // const handleHotkeyRecorded = async (newKeys: string[]) => {

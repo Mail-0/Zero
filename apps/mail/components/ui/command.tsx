@@ -1,10 +1,12 @@
-'use client';
-
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { type DialogProps } from '@radix-ui/react-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  type DialogProps,
+} from '@/components/ui/dialog';
 import { Command as CommandPrimitive } from 'cmdk';
-
-import { Search } from 'lucide-react';
+import { Search } from '../icons/icons';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -28,7 +30,10 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
     <Dialog {...props}>
       <DialogTitle className="sr-only">Command</DialogTitle>
       <DialogDescription className="sr-only">Command</DialogDescription>
-      <DialogContent showOverlay={true} className="overflow-hidden p-0 sm:max-w-lg border rounded-xl w-full [&>button:last-child]:hidden bg-white dark:bg-[#1A1A1A]">
+      <DialogContent
+        showOverlay={true}
+        className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 sm:max-w-lg [&>button:last-child]:hidden"
+      >
         <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
           {children}
         </Command>
@@ -41,8 +46,8 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="border-input flex items-center border-b px-5" cmdk-input-wrapper="">
-    <Search size={16} strokeWidth={2} className="text-muted-foreground/80 me-3" />
+  <div className="border-input flex items-center border-none w-full px-5" cmdk-input-wrapper="">
+    <Search className="fill-iconLight me-3 relative top-0.5 text-muted-foreground/80 h-4 w-4" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -126,7 +131,8 @@ const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanE
   return (
     <kbd
       className={cn(
-        'border-border bg-background text-muted-foreground/70 -me-1 ms-auto inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium',
+        'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+        '-me-1 ms-auto inline-flex max-h-full items-center',
         className,
       )}
       {...props}

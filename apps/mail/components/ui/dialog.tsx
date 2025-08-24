@@ -1,10 +1,7 @@
-'use client';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import * as React from 'react';
-
-import { X } from '../icons/icons';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 const Dialog = DialogPrimitive.Root;
 
@@ -25,7 +22,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-[99] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+      'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-99',
       showOverlay ? 'bg-black/50 backdrop-blur-sm' : 'bg-[#FAFAFA] dark:bg-[#141414]',
       className,
     )}
@@ -34,7 +31,8 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+interface DialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   showOverlay?: boolean;
 }
 
@@ -47,13 +45,14 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-[100] translate-x-[-50%] translate-y-[-50%] duration-200',
+        'fixed left-1/2 top-1/2 z-100 -translate-x-1/2 -translate-y-1/2 duration-200',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
-        'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
-        className
+        showOverlay
+          ? 'bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl border p-6'
+          : '',
+        className,
       )}
       {...props}
     >
@@ -99,6 +98,8 @@ const DialogDescription = React.forwardRef<
   />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
+
+export type DialogProps = DialogPrimitive.DialogProps;
 
 export {
   Dialog,

@@ -1,41 +1,20 @@
-import { authProviders, customProviders, isProviderEnabled } from '@/lib/auth-providers';
 import { LoginClient } from './login-client';
+import { useLoaderData } from 'react-router';
+
+export async function clientLoader() {
+  const isProd = !import.meta.env.DEV;
+
+  const response = await fetch(import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/public/providers');
+  const data = (await response.json()) as { allProviders: any[] };
+
+  return {
+    allProviders: data.allProviders,
+    isProd,
+  };
+}
 
 export default function LoginPage() {
-  const envNodeEnv = process.env.NODE_ENV;
-  const isProd = envNodeEnv === 'production';
-
-  const authProviderStatus = authProviders.map((provider) => {
-    const envVarStatus =
-      provider.envVarInfo?.map((envVar) => ({
-        name: envVar.name,
-        set: !!process.env[envVar.name],
-        source: envVar.source,
-        defaultValue: envVar.defaultValue,
-      })) || [];
-
-    return {
-      id: provider.id,
-      name: provider.name,
-      enabled: isProviderEnabled(provider),
-      required: provider.required,
-      envVarInfo: provider.envVarInfo,
-      envVarStatus,
-    };
-  });
-
-  const customProviderStatus = customProviders.map((provider) => {
-    return {
-      id: provider.id,
-      name: provider.name,
-      enabled: true,
-      isCustom: provider.isCustom,
-      customRedirectPath: provider.customRedirectPath,
-      envVarStatus: [],
-    };
-  });
-
-  const allProviders = [...customProviderStatus, ...authProviderStatus];
+  const { allProviders, isProd } = useLoaderData<typeof clientLoader>();
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-white dark:bg-black">

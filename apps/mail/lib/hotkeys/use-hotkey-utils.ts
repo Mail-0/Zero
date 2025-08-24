@@ -1,15 +1,12 @@
-'use client';
-
 // TODO: Implement shortcuts syncing and caching
-import { Shortcut, keyboardShortcuts } from '@/config/shortcuts';
+import { type Shortcut, keyboardShortcuts, enhancedKeyboardShortcuts } from '@/config/shortcuts';
+import { keyboardLayoutMapper, type KeyboardLayout } from '@/utils/keyboard-layout-map';
+import { getKeyCodeFromKey } from '@/utils/keyboard-utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
-import useSWR from 'swr';
+import { isMac } from '@/lib/platform';
 
-import { updateShortcuts } from '@/actions/shortcuts';
-import axios from 'axios';
-
-export const useShortcutCache = (userId?: string) => {
+export const useShortcutCache = () => {
   // const { data: shortcuts, mutate } = useSWR<Shortcut[]>(
   //   userId ? `/hotkeys/${userId}` : null,
   //   () => axios.get('/api/v1/shortcuts').then((res) => res.data),
@@ -53,16 +50,72 @@ export const useShortcutCache = (userId?: string) => {
   };
 };
 
-const isMac =
-  typeof window !== 'undefined' &&
-  (/macintosh|mac os x/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+const dvorakToQwerty: Record<string, string> = {
+  a: 'a',
+  b: 'x',
+  c: 'j',
+  d: 'e',
+  e: '.',
+  f: 'u',
+  g: 'i',
+  h: 'd',
+  i: 'c',
+  j: 'h',
+  k: 't',
+  l: 'n',
+  m: 'm',
+  n: 'b',
+  o: 'r',
+  p: 'l',
+  q: "'",
+  r: 'p',
+  s: 'o',
+  t: 'k',
+  u: 'g',
+  v: 'q',
+  w: ',',
+  x: 'z',
+  y: 'f',
+  z: ';',
+  ';': 's',
+  "'": '-',
+  ',': 'w',
+  '.': 'v',
+  '/': 'z',
+  '-': '[',
+  '[': '/',
+  ']': '=',
+  '=': ']',
+};
+
+const qwertyToDvorak: Record<string, string> = Object.entries(dvorakToQwerty).reduce(
+  (acc, [dvorak, qwerty]) => {
+    acc[qwerty] = dvorak;
+    return acc;
+  },
+  {} as Record<string, string>,
+);
 
 export const formatKeys = (keys: string[] | undefined): string => {
   if (!keys || !keys.length) return '';
 
   const mapKey = (key: string) => {
-    switch (key) {
+    const lowerKey = key.toLowerCase();
+
+    // Use enhanced keyboard layout mapping
+    const detectedLayout = keyboardLayoutMapper.getDetectedLayout();
+    let mappedKey = key;
+
+    if (detectedLayout?.layout === 'dvorak') {
+      // Use the existing Dvorak mapping for backward compatibility
+      mappedKey = qwertyToDvorak[lowerKey] || key;
+    } else if (detectedLayout?.layout && detectedLayout.layout !== 'qwerty') {
+      // Use the KeyboardLayoutMap API for other layouts
+      const keyCode = getKeyCodeFromKey(key);
+      mappedKey = keyboardLayoutMapper.getKeyForCode(keyCode);
+    }
+
+    switch (mappedKey) {
       case 'mod':
         return isMac ? 'meta' : 'control';
       case '⌘':
@@ -72,7 +125,7 @@ export const formatKeys = (keys: string[] | undefined): string => {
       case '!':
         return 'shift+1';
       default:
-        return key;
+        return mappedKey;
     }
   };
 
@@ -85,9 +138,28 @@ export const formatKeys = (keys: string[] | undefined): string => {
   return mapKey(firstKey);
 };
 
+/**
+ * Convert a key string to its corresponding KeyCode for the keyboard layout mapper
+ */
+
 export const formatDisplayKeys = (keys: string[]): string[] => {
   return keys.map((key) => {
-    switch (key) {
+    const lowerKey = key.toLowerCase();
+
+    // Use enhanced keyboard layout mapping
+    const detectedLayout = keyboardLayoutMapper.getDetectedLayout();
+    let mappedKey = key;
+
+    if (detectedLayout?.layout === 'dvorak') {
+      // Use the existing Dvorak mapping for backward compatibility
+      mappedKey = qwertyToDvorak[lowerKey] || key;
+    } else if (detectedLayout?.layout && detectedLayout.layout !== 'qwerty') {
+      // Use the KeyboardLayoutMap API for other layouts
+      const keyCode = getKeyCodeFromKey(key);
+      mappedKey = keyboardLayoutMapper.getKeyForCode(keyCode);
+    }
+
+    switch (mappedKey) {
       case 'mod':
         return isMac ? '⌘' : 'Ctrl';
       case 'meta':
@@ -108,10 +180,42 @@ export const formatDisplayKeys = (keys: string[]): string[] => {
         return '⌦';
       case 'space':
         return 'Space';
+      case 'click':
+        return 'Click';
       default:
-        return key.length === 1 ? key.toUpperCase() : key;
+        return mappedKey.length === 1 ? mappedKey.toUpperCase() : mappedKey;
     }
   });
+};
+
+/**
+ * Enhanced shortcut utilities with layout mapping support, here incase needed
+ */
+export const useEnhancedShortcuts = () => {
+  const layoutInfo = keyboardLayoutMapper.getDetectedLayout();
+
+  const getShortcutsForLayout = useCallback((layout: KeyboardLayout) => {
+    return enhancedKeyboardShortcuts.map((shortcut) => ({
+      ...shortcut,
+      mappedKeys: shortcut.keys.map((key) =>
+        keyboardLayoutMapper.convertKey(key, 'qwerty', layout),
+      ),
+    }));
+  }, []);
+
+  return {
+    layoutInfo,
+    formatKeysWithLayout: (keys: string[], targetLayout?: KeyboardLayout) => {
+      if (!targetLayout || !layoutInfo) return formatKeys(keys);
+
+      return keys
+        .map((key) => {
+          return keyboardLayoutMapper.convertKey(key, layoutInfo.layout, targetLayout);
+        })
+        .join('+');
+    },
+    getShortcutsForLayout,
+  };
 };
 
 export type HotkeyOptions = {
@@ -195,7 +299,11 @@ export function useShortcuts(
   useHotkeys(
     shortcutString,
     (event: KeyboardEvent, hotkeysEvent) => {
+      if (hotkeysEvent.keys?.includes('click')) {
+        return;
+      }
       const getModifierString = (e: typeof hotkeysEvent) => {
+        console.log(e);
         const modifiers = [];
         if (e.meta) modifiers.push('meta');
         if (e.ctrl) modifiers.push('control');

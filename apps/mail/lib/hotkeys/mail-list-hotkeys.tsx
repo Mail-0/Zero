@@ -1,44 +1,52 @@
-'use client';
-
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
+// import { useSearchValue } from '@/hooks/use-search-value';
 import {
-  bulkArchive,
-  markAsUnread as markAsUnreadAction,
-  muteThread as muteThreadAction,
-  markAsRead as markAsReadAction,
-} from '@/actions/mail';
-import { keyboardShortcuts } from '@/config/shortcuts';
-import { useCallback, useEffect, useRef } from 'react';
+  // useLocation,
+  useParams,
+} from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
+import { useCallback, useMemo, useRef } from 'react';
+// import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
-import { useStats } from '@/hooks/use-stats';
-import { useTranslations } from 'next-intl';
+// import { cleanSearchValue } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import { toast } from 'sonner';
 
 export function MailListHotkeys() {
   const scope = 'mail-list';
   const [mail, setMail] = useMail();
-  const {
-    data: { threads: items },
-    mutate,
-  } = useThreads();
-  const { mutate: mutateStats } = useStats();
-  const t = useTranslations();
+  const [, items] = useThreads();
   const hoveredEmailId = useRef<string | null>(null);
+  // const categories = Categories();
+  // const [searchValue, setSearchValue] = useSearchValue();
+  // const pathname = useLocation().pathname;
+  const params = useParams<{ folder: string }>();
+  const folder = params?.folder ?? 'inbox';
+  const shouldUseHover = mail.bulkSelected.length === 0;
 
-  useEffect(() => {
-    const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
-      hoveredEmailId.current = event.detail.id;
-    };
+  const {
+    optimisticMarkAsRead,
+    optimisticMarkAsUnread,
+    optimisticMoveThreadsTo,
+    optimisticToggleImportant,
+    optimisticDeleteThreads,
+    optimisticToggleStar,
+  } = useOptimisticActions();
 
-    window.addEventListener('emailHover', handleEmailHover as EventListener);
-    return () => {
-      window.removeEventListener('emailHover', handleEmailHover as EventListener);
-    };
-  }, []);
+  //   useEffect(() => {
+  //     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
+  //       hoveredEmailId.current = event.detail.id;
+  //     };
+
+  //     window.addEventListener('emailHover', handleEmailHover as EventListener);
+  //     return () => {
+  //       window.removeEventListener('emailHover', handleEmailHover as EventListener);
+  //     };
+  //   }, []);
 
   const selectAll = useCallback(() => {
-    console.log('selectAll');
     if (mail.bulkSelected.length > 0) {
       setMail((prev) => ({
         ...prev,
@@ -51,143 +59,190 @@ export function MailListHotkeys() {
         bulkSelected: allIds,
       }));
     } else {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
     }
   }, [items, mail]);
 
   const markAsRead = useCallback(() => {
-    if (hoveredEmailId.current) {
-      toast.promise(markAsReadAction({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
-          return t('common.mail.markedAsRead');
-        },
-        error: t('common.mail.failedToMarkAsRead'),
-      });
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticMarkAsRead([hoveredEmailId.current]);
       return;
     }
 
     const idsToMark = mail.bulkSelected;
     if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
-    toast.promise(markAsReadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
-        return t('common.mail.markedAsRead');
-      },
-      error: t('common.mail.failedToMarkAsRead'),
-    });
-  }, [mail.bulkSelected, mutate, mutateStats, t]);
+    optimisticMarkAsRead(idsToMark);
+  }, [mail.bulkSelected, optimisticMarkAsRead, shouldUseHover]);
 
   const markAsUnread = useCallback(() => {
-    if (hoveredEmailId.current) {
-      toast.promise(markAsUnreadAction({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
-          return t('common.mail.markedAsUnread');
-        },
-        error: t('common.mail.failedToMarkAsUnread'),
-      });
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticMarkAsUnread([hoveredEmailId.current]);
       return;
     }
 
     const idsToMark = mail.bulkSelected;
     if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
-    toast.promise(markAsUnreadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
-        return t('common.mail.markedAsUnread');
-      },
-      error: t('common.mail.failedToMarkAsUnread'),
-    });
-  }, [mail]);
+    optimisticMarkAsUnread(idsToMark);
+  }, [mail.bulkSelected, optimisticMarkAsUnread, shouldUseHover]);
+
+  const markAsImportant = useCallback(() => {
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticToggleImportant([hoveredEmailId.current], true);
+      return;
+    }
+
+    const idsToMark = mail.bulkSelected;
+    if (idsToMark.length === 0) {
+      toast.info(m['common.mail.noEmailsToSelect']());
+      return;
+    }
+
+    optimisticToggleImportant(idsToMark, true);
+  }, [mail.bulkSelected, optimisticToggleImportant, shouldUseHover]);
 
   const archiveEmail = useCallback(async () => {
-    if (hoveredEmailId.current) {
-      toast.promise(bulkArchive({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
-          return t('common.mail.archived');
-        },
-        error: t('common.mail.failedToArchive'),
-      });
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticMoveThreadsTo([hoveredEmailId.current], folder, 'archive');
       return;
     }
 
-    const idsToMark = mail.bulkSelected;
-    if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+    const idsToArchive = mail.bulkSelected;
+    if (idsToArchive.length === 0) {
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
-    toast.promise(markAsUnreadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
-        return t('common.mail.archived');
-      },
-      error: t('common.mail.failedToArchive'),
-    });
-  }, [mail]);
+    optimisticMoveThreadsTo(idsToArchive, folder, 'archive');
+  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, shouldUseHover]);
+
+  const bulkArchive = useCallback(() => {
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticMoveThreadsTo([hoveredEmailId.current], folder, 'archive');
+      return;
+    }
+
+    const idsToArchive = mail.bulkSelected;
+    if (idsToArchive.length === 0) {
+      toast.info(m['common.mail.noEmailsToSelect']());
+      return;
+    }
+
+    optimisticMoveThreadsTo(idsToArchive, folder, 'archive');
+  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, shouldUseHover]);
+
+  const bulkDelete = useCallback(() => {
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticDeleteThreads([hoveredEmailId.current], folder);
+      return;
+    }
+
+    const idsToDelete = mail.bulkSelected;
+    if (idsToDelete.length === 0) {
+      toast.info(m['common.mail.noEmailsToSelect']());
+      return;
+    }
+
+    optimisticDeleteThreads(idsToDelete, folder);
+  }, [mail.bulkSelected, folder, optimisticDeleteThreads, shouldUseHover]);
+
+  const bulkStar = useCallback(() => {
+    if (shouldUseHover && hoveredEmailId.current) {
+      optimisticToggleStar([hoveredEmailId.current], true);
+      return;
+    }
+
+    const idsToStar = mail.bulkSelected;
+    if (idsToStar.length === 0) {
+      toast.info(m['common.mail.noEmailsToSelect']());
+      return;
+    }
+
+    optimisticToggleStar(idsToStar, true);
+  }, [mail.bulkSelected, optimisticToggleStar, shouldUseHover]);
 
   const exitSelectionMode = useCallback(() => {
     setMail((prev) => ({
       ...prev,
       bulkSelected: [],
     }));
-  }, []);
+  }, [shouldUseHover]);
 
-  // const muteThread = useCallback(async () => {
-  //   if (hoveredEmailId.current) {
-  //     toast.promise(muteThreadAction({ ids: [hoveredEmailId.current] }), {
-  //       loading: t('common.actions.loading'),
-  //       success: async () => {
-  //         await Promise.all([mutate(), mutateStats()]);
-  //         return t('common.mail.muted');
-  //       },
-  //       error: t('common.mail.failedToMute'),
-  //     });
-  //     return;
-  //   }
+  // const switchMailListCategory = useCallback(
+  //   (category: string | null) => {
+  //     if (pathname?.includes('/mail/inbox')) {
+  //       const cat = categories.find((cat) => cat.id === category);
+  //       if (!cat) {
+  //         // setCategory(null);
+  //         setSearchValue({
+  //           value: '',
+  //           highlight: searchValue.highlight,
+  //           folder: '',
+  //         });
+  //         return;
+  //       }
+  //       // setCategory(cat.id);
+  //       setSearchValue({
+  //         value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+  //         highlight: searchValue.highlight,
+  //         folder: '',
+  //       });
+  //     }
+  //   },
+  //   [categories, pathname, searchValue, setSearchValue],
+  // );
 
-  //   const idsToMark = mail.bulkSelected;
-  //   if (idsToMark.length === 0) {
-  //     toast.info(t('common.mail.noEmailsToSelect'));
-  //     return;
-  //   }
+  // const switchCategoryByIndex = useCallback(
+  //   (idx: number) => {
+  //     const cat = categories[idx];
+  //     if (!cat) return;
+  //     switchMailListCategory(cat.id);
+  //   },
+  //   [categories, switchMailListCategory],
+  // );
 
-  //   toast.promise(muteThreadAction({ ids: idsToMark }), {
-  //     loading: t('common.actions.loading'),
-  //     success: async () => {
-  //       await Promise.all([mutate(), mutateStats()]);
-  //       return t('common.mail.muted');
-  //     },
-  //     error: t('common.mail.failedToMute'),
-  //   });
-  // }, [items, mutate, t]);
+  const handlers = useMemo(
+    () => ({
+      markAsRead,
+      markAsUnread,
+      markAsImportant,
+      selectAll,
+      archiveEmail,
+      bulkArchive,
+      bulkDelete,
+      bulkStar,
+      exitSelectionMode,
+      // showImportant: () => switchCategoryByIndex(0),
+      // showAllMail: () => switchCategoryByIndex(1),
+      // showPersonal: () => switchCategoryByIndex(2),
+      // showUpdates: () => switchCategoryByIndex(3),
+      // showPromotions: () => switchCategoryByIndex(4),
+      // showUnread: () => switchCategoryByIndex(5),
+    }),
+    [
+      // switchCategoryByIndex,
+      markAsRead,
+      markAsUnread,
+      markAsImportant,
+      selectAll,
+      archiveEmail,
+      bulkArchive,
+      bulkDelete,
+      bulkStar,
+      exitSelectionMode,
+    ],
+  );
 
-  const handlers = {
-    markAsRead,
-    markAsUnread,
-    selectAll,
-    archiveEmail,
-    exitSelectionMode,
-    // muteThread,
-  };
-
-  const mailListShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const mailListShortcuts = enhancedKeyboardShortcuts.filter(
+    (shortcut) => shortcut.scope === scope,
+  );
 
   useShortcuts(mailListShortcuts, handlers, { scope });
 

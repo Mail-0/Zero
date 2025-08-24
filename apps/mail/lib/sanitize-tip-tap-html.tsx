@@ -1,11 +1,18 @@
+import { renderToString } from 'react-dom/server';
 import { Html } from '@react-email/components';
-import { render } from '@react-email/render';
 import sanitizeHtml from 'sanitize-html';
 
 export const sanitizeTipTapHtml = async (html: string) => {
-  const clean = sanitizeHtml(html);
+  const clean = sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ['src', 'alt', 'width', 'height', 'style'],
+    },
+    allowedSchemes: ['http', 'https', 'cid', 'data'],
+  });
 
-  return render(
+  return renderToString(
     <Html>
       <div dangerouslySetInnerHTML={{ __html: clean }} />
     </Html>,

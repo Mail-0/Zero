@@ -1,10 +1,8 @@
 import { atom, useAtom } from 'jotai';
 
-import { type InitialThread } from '@/types';
-
 export type Config = {
-  selected: InitialThread['id'] | null;
-  bulkSelected: InitialThread['id'][];
+  selected: string | null;
+  bulkSelected: string[];
   replyComposerOpen: boolean;
   replyAllComposerOpen: boolean;
   forwardComposerOpen: boolean;

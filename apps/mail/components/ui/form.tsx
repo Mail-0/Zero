@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Controller,
   type ControllerProps,
@@ -8,8 +6,7 @@ import {
   FormProvider,
   useFormContext,
 } from 'react-hook-form';
-import type * as LabelPrimitive from '@radix-ui/react-label';
-import { Slot } from '@radix-ui/react-slot';
+import { Label as LabelPrimitive, Slot } from 'radix-ui';
 import * as React from 'react';
 
 import { Label } from '@/components/ui/label';
@@ -99,13 +96,13 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = 'FormLabel';
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
+  React.ElementRef<typeof Slot.Slot>,
+  React.ComponentPropsWithoutRef<typeof Slot.Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
-    <Slot
+    <Slot.Slot
       className="bg-popover"
       ref={ref}
       id={formItemId}

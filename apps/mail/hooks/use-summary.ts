@@ -1,29 +1,30 @@
-'use client';
-import { GetState, GetSummary } from '@/actions/getSummary';
-import { useSession } from '@/lib/auth-client';
-import useSWR from 'swr';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 
 export const useSummary = (threadId: string | null) => {
-  const { data: session } = useSession();
-  const { data, isLoading } = useSWR<{ short: string; long: string } | null>(
-    session && threadId ? `ai:summary:${threadId}` : null,
-    async () => {
-      if (!threadId) return null;
-      return await GetSummary(threadId);
-    },
+  const trpc = useTRPC();
+  const summaryQuery = useQuery(
+    trpc.brain.generateSummary.queryOptions(
+      { threadId: threadId! },
+      {
+        enabled: !!threadId,
+      },
+    ),
   );
 
-  return { data, isLoading };
+  return summaryQuery;
 };
 
 export const useBrainState = () => {
-  const { data: session } = useSession();
-  const { data, isLoading } = useSWR<{ enabled: boolean } | null>(
-    session ? `brain:state:${session?.connectionId}` : null,
-    async () => {
-      return await GetState();
-    },
+  const trpc = useTRPC();
+  const brainStateQuery = useQuery(
+    trpc.brain.getState.queryOptions(undefined, {
+      staleTime: 1000 * 60 * 60, // 1 hour
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    }),
   );
 
-  return { data, isLoading };
+  return brainStateQuery;
 };

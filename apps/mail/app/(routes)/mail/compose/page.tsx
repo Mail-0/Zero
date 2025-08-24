@@ -1,46 +1,53 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { CreateEmail } from '@/components/create/create-email';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { authProxy } from '@/lib/auth-proxy';
+import { useLoaderData } from 'react-router';
+import type { Route } from './+types/page';
 
-// Define the type for search params
-interface ComposePageProps {
-  searchParams: Promise<{
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const session = await authProxy.api.getSession({ headers: request.headers });
+  if (!session) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/login`);
+  const url = new URL(request.url);
+  if (url.searchParams.get('to')?.startsWith('mailto:')) {
+    return Response.redirect(
+      `${import.meta.env.VITE_PUBLIC_APP_URL}/mail/compose/handle-mailto?mailto=${encodeURIComponent(url.searchParams.get('to') ?? '')}`,
+    );
+  }
+
+  return Object.fromEntries(url.searchParams.entries()) as {
     to?: string;
     subject?: string;
     body?: string;
     draftId?: string;
-  }>;
+    cc?: string;
+    bcc?: string;
+  };
 }
 
-export default async function ComposePage({ searchParams }: ComposePageProps) {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  
-  if (!session) {
-    redirect('/login');
-  }
+export default function ComposePage() {
+  const params = useLoaderData<typeof clientLoader>();
 
-  // Need to await searchParams in Next.js 15+
-  const params = await searchParams;
-  
-  // Check if this is a mailto URL
-  const toParam = params.to || '';
-  if (toParam.startsWith('mailto:')) {
-    // Redirect to our dedicated mailto handler
-    redirect(`/mail/compose/handle-mailto?mailto=${encodeURIComponent(toParam)}`);
-  }
-  
-  // Handle normal compose page (direct or with draftId)
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="h-full flex-1">
-        <CreateEmail 
+    <Dialog open={true}>
+      <DialogTitle></DialogTitle>
+      <DialogDescription></DialogDescription>
+      <DialogTrigger></DialogTrigger>
+      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
+        <CreateEmail
           initialTo={params.to || ''}
           initialSubject={params.subject || ''}
           initialBody={params.body || ''}
+          initialCc={params.cc || ''}
+          initialBcc={params.bcc || ''}
+          draftId={params.draftId || null}
         />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-} 
+}

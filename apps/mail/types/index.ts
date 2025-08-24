@@ -1,4 +1,13 @@
-import { Label } from '@/hooks/use-labels';
+export type Label = {
+  id: string;
+  name: string;
+  color?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+  type: string;
+  labels?: Label[];
+};
 
 export interface User {
   name: string;
@@ -46,6 +55,7 @@ export interface SidebarData {
 export interface Sender {
   name?: string;
   email: string;
+  subject?: string;
 }
 
 export interface ParsedMessage {
@@ -72,6 +82,7 @@ export interface ParsedMessage {
   replyTo?: string;
   messageId?: string;
   threadId?: string;
+  isDraft?: boolean;
   attachments?: Attachment[];
 }
 
@@ -80,10 +91,8 @@ export interface IConnection {
   email: string;
   name?: string;
   picture?: string;
-}
-
-export interface InitialThread {
-  id: string;
+  createdAt: Date;
+  providerId: string;
 }
 
 export interface Attachment {
@@ -92,8 +101,7 @@ export interface Attachment {
   mimeType: string;
   size: number;
   body: string;
-  // TODO: Fix typing
-  headers: any;
+  headers: { name?: string | null; value?: string | null }[];
 }
 export interface MailListProps {
   isCompact?: boolean;
@@ -102,33 +110,33 @@ export interface MailListProps {
 export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
 
 export type ThreadProps = {
-  message: { id: string };
-  selectMode: MailSelectMode;
-  // TODO: enforce types instead of sprinkling "any"
+  message: { id: string; historyId?: string | null };
   onClick?: (message: ParsedMessage) => () => void;
-  isCompact?: boolean;
-  folder?: string;
   isKeyboardFocused?: boolean;
-  isInQuickActionMode?: boolean;
-  selectedQuickActionIndex?: number;
-  resetNavigation?: () => void;
-  demoMessage?: ParsedMessage;
 };
-
-export type ConditionalThreadProps = ThreadProps &
-  (
-    | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
-    | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
-  );
 
 export interface IOutgoingMessage {
   to: Sender[];
-  cc?: Sender[];
-  bcc?: Sender[];
   subject: string;
   message: string;
-  attachments: any[];
-  headers: Record<string, string>;
+  attachments?: File[];
+  headers?: Record<string, string>;
+  cc?: Sender[];
+  bcc?: Sender[];
   threadId?: string;
   fromEmail?: string;
+  isForward?: boolean;
+  originalMessage?: string;
+}
+
+export interface Note {
+  id: string;
+  userId: string;
+  threadId: string;
+  content: string;
+  color: string;
+  isPinned: boolean | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

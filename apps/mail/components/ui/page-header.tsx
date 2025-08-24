@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 import React from 'react';
 
@@ -47,7 +45,9 @@ const PageHeaderDescription = React.forwardRef<HTMLParagraphElement, PageHeaderD
 PageHeaderDescription.displayName = 'PageHeaderDescription';
 
 // Attach subcomponents to PageHeader
+// @ts-expect-error, fix types
 PageHeader.Title = PageHeaderTitle;
+// @ts-expect-error, fix types
 PageHeader.Description = PageHeaderDescription;
 
 export { PageHeader };

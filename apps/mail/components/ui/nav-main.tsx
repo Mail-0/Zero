@@ -1,64 +1,32 @@
-'use client';
-
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-  SidebarMenuSub,
-} from './sidebar';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Label as LabelType, useLabels } from '@/hooks/use-labels';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useSearchValue } from '@/hooks/use-search-value';
-import { clearBulkSelectionAtom } from '../mail/use-mail';
-import { Label as UILabel } from '@/components/ui/label';
-import { type MessageKey } from '@/config/navigation';
-import { Command, SettingsIcon } from 'lucide-react';
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
+import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useCommandPalette } from '../context/command-palette-context.jsx';
+import { LabelDialog } from '@/components/labels/label-dialog';
+import { useActiveConnection } from '@/hooks/use-connections';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import Intercom from '@intercom/messenger-js-sdk';
+import { useSidebar } from '../context/sidebar-context';
+import { useTRPC } from '@/providers/query-provider';
 import { type NavItem } from '@/config/navigation';
-import { createLabel } from '@/hooks/use-labels';
+import type { Label as LabelType } from '@/types';
+import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { HexColorPicker } from 'react-colorful';
-import { useSession } from '@/lib/auth-client';
+import { useLabels } from '@/hooks/use-labels';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { GoldenTicketModal } from '../golden';
 import { useStats } from '@/hooks/use-stats';
-import { CurvedArrow } from '../icons/icons';
-import { useTranslations } from 'next-intl';
-import { useRef, useCallback } from 'react';
+import SidebarLabels from './sidebar-labels';
+import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
-import { useForm } from 'react-hook-form';
-import { useQueryState } from 'nuqs';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import * as React from 'react';
-import Link from 'next/link';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
   startAnimation?: () => void;
   stopAnimation?: () => void;
 }
-
 interface NavItemProps extends NavItem {
   isActive?: boolean;
   isExpanded?: boolean;
@@ -81,21 +49,26 @@ type IconRefType = SVGSVGElement & {
 };
 
 export function NavMain({ items }: NavMainProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [category] = useQueryState('category');
-  const [searchValue, setSearchValue] = useSearchValue();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const form = useForm<LabelType>({
-    defaultValues: {
-      name: '',
-      color: { backgroundColor: '', textColor: '#ffffff' },
-    },
-  });
+  const location = useLocation();
+  const pathname = location.pathname;
+  const searchParams = new URLSearchParams();
 
-  const formColor = form.watch('color');
+  const trpc = useTRPC();
+  const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
 
-  const { labels, mutate } = useLabels();
+  React.useEffect(() => {
+    if (intercomToken) {
+      Intercom({
+        app_id: 'aavenrba',
+        intercom_user_jwt: intercomToken,
+      });
+    }
+  }, [intercomToken]);
+
+  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
+
+  const { userLabels, refetch } = useLabels();
+
   const { state } = useSidebar();
 
   // Check if these are bottom navigation items by looking at the first section's title
@@ -131,9 +104,7 @@ export function NavMain({ items }: NavMainProps) {
       // Handle settings navigation
       if (item.isSettingsButton) {
         // Include current path with category query parameter if present
-        const currentPath = category
-          ? `${pathname}?category=${encodeURIComponent(category)}`
-          : pathname;
+        const currentPath = pathname;
         return `${item.url}?from=${encodeURIComponent(currentPath)}`;
       }
 
@@ -160,15 +131,12 @@ export function NavMain({ items }: NavMainProps) {
         return `${item.url}?from=/mail`;
       }
 
-      // Handle category links
-      if (category) {
-        return `${item.url}?category=${encodeURIComponent(category)}`;
-      }
-
       return item.url;
     },
-    [pathname, category, searchParams, isValidInternalUrl],
+    [pathname, searchParams, isValidInternalUrl],
   );
+
+  const { data: activeAccount } = useActiveConnection();
 
   const isUrlActive = useCallback(
     (url: string) => {
@@ -192,60 +160,29 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, searchParams],
   );
 
-  const handleFilterByLabel = (label: LabelType) => () => {
-    const existingValue = searchValue.value;
-    if (existingValue.includes(`label:${label.name}`)) {
-      setSearchValue({
-        value: existingValue.replace(`label:${label.name}`, ''),
-        highlight: '',
-        folder: '',
-      });
-      return;
-    }
-    const newValue = existingValue ? `${existingValue} label:${label.name}` : `label:${label.name}`;
-    setSearchValue({
-      value: newValue,
-      highlight: '',
-      folder: '',
-    });
-  };
-
   const onSubmit = async (data: LabelType) => {
-    if (!data.color?.backgroundColor) {
-      form.setError('color', {
-        type: 'required',
-        message: 'Please select a color',
-      });
-      return;
-    }
-
     try {
-      toast.promise(createLabel(data), {
+      const promise = createLabel(data).then(async (result) => {
+        await refetch();
+        return result;
+      });
+      
+      toast.promise(promise, {
         loading: 'Creating label...',
         success: 'Label created successfully',
         error: 'Failed to create label',
-        finally: () => {
-          mutate();
-        },
       });
+      
+      await promise;
     } catch (error) {
-      console.error('Error creating label:', error);
-    } finally {
-      handleClose();
+      console.error('Failed to create label:', error);
     }
   };
 
-  const handleClose = () => {
-    setIsDialogOpen(false);
-    form.reset({
-      name: '',
-      color: { backgroundColor: '', textColor: '#ffffff' },
-    });
-  };
-
   return (
-    <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0`}>
+    <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0 md:px-0`}>
       <SidebarMenu>
+        {isBottomNav ? null : null}
         {items.map((section) => (
           <Collapsible
             key={section.title}
@@ -255,12 +192,12 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
                 section.title ? (
-                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                  <p className="text-muted-foreground mx-2 mb-2 text-[13px] dark:text-[#898989]">
                     {section.title}
                   </p>
                 ) : null
               ) : (
-                <div className="mx-2 mb-4 mt-2 h-[0.5px] bg-[#6D6D6D]/50 dark:bg-[#262626]" />
+                <div className="bg-muted-foreground/50 mx-2 mb-4 mt-2 h-[0.5px] dark:bg-[#262626]" />
               )}
               <div className="z-20 space-y-1 pb-2">
                 {section.items.map((item) => (
@@ -278,174 +215,29 @@ export function NavMain({ items }: NavMainProps) {
           </Collapsible>
         ))}
         {!pathname.includes('/settings') && !isBottomNav && state !== 'collapsed' && (
-          <Collapsible defaultOpen={true} className="group/collapsible">
+          <Collapsible defaultOpen={true} className="group/collapsible flex-col">
             <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
               <div className="mx-2 mb-4 flex items-center justify-between">
-                <span className="text-[13px] text-[#6D6D6D] dark:text-[#898989]">Labels</span>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
-                    >
-                      <Plus className="h-3 w-3 text-[#6D6D6D] dark:text-[#898989]" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent
-                    showOverlay={true}
-                    className="bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl p-4"
-                  >
-                    <DialogHeader>
-                      <DialogTitle>Create New Label</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-4"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            form.handleSubmit(onSubmit)();
-                          }
-                        }}
+                <span className="text-muted-foreground text-[13px] dark:text-[#898989]">
+                  {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
+                </span>
+                {activeAccount?.providerId === 'google' ? (
+                  <LabelDialog
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
                       >
-                        <div className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Label Name</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter label name" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="color"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Color</FormLabel>
-                                  <FormControl>
-                                    <div className="w-full">
-                                      <div className="grid grid-cols-7 gap-4">
-                                        {[
-                                          // Row 1 - Grayscale
-                                          '#000000',
-                                          '#434343',
-                                          '#666666',
-                                          '#999999',
-                                          '#cccccc',
-                                          '#ffffff',
-                                          // Row 2 - Warm colors
-                                          '#fb4c2f',
-                                          '#ffad47',
-                                          '#fad165',
-                                          '#ff7537',
-                                          '#cc3a21',
-                                          '#8a1c0a',
-                                          // Row 3 - Cool colors
-                                          '#16a766',
-                                          '#43d692',
-                                          '#4a86e8',
-                                          '#285bac',
-                                          '#3c78d8',
-                                          '#0d3472',
-                                          // Row 4 - Purple tones
-                                          '#a479e2',
-                                          '#b99aff',
-                                          '#653e9b',
-                                          '#3d188e',
-                                          '#f691b3',
-                                          '#994a64',
-                                          // Row 5 - Pastels
-                                          '#f6c5be',
-                                          '#ffe6c7',
-                                          '#c6f3de',
-                                          '#c9daf8',
-                                        ].map((color) => (
-                                          <button
-                                            key={color}
-                                            type="button"
-                                            className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
-                                              field.value?.backgroundColor === color
-                                                ? 'ring-2 ring-blue-500'
-                                                : ''
-                                            }`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={() =>
-                                              form.setValue('color', {
-                                                backgroundColor: color,
-                                                textColor: '#ffffff',
-                                              })
-                                            }
-                                          />
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            className="h-8"
-                            type="button"
-                            variant="outline"
-                            onClick={handleClose}
-                          >
-                            Cancel
-                          </Button>
-                          <Button className="h-8" type="submit">
-                            Create Label
-                            <div className="gap- flex h-5 items-center justify-center rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                              <Command className="h-2 w-2 text-white dark:text-[#929292]" />
-                              <CurvedArrow className="mt-1.5 h-3 w-3 fill-white dark:fill-[#929292]" />
-                            </div>
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
+                        <Plus className="text-muted-foreground h-3 w-3 dark:text-[#898989]" />
+                      </Button>
+                    }
+                    onSubmit={onSubmit}
+                  />
+                ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <div className="mr-0 pr-0">
-                <div
-                  className={cn(
-                    'hide-scrollbar flex h-full max-h-[13vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-[16vh]',
-                  )}
-                >
-                  {labels.map((label) => (
-                    <div
-                      onClick={handleFilterByLabel(label)}
-                      key={label.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <span
-                        className={cn(
-                          'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
-                          searchValue.value.includes(`label:${label.name}`)
-                            ? 'border-accent-foreground'
-                            : 'dark:bg-subtleBlack',
-                        )}
-                      >
-                        {label.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {activeAccount ? <SidebarLabels data={userLabels ?? []} /> : null}
             </SidebarMenuItem>
           </Collapsible>
         )}
@@ -457,64 +249,57 @@ export function NavMain({ items }: NavMainProps) {
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
-  const t = useTranslations();
-  const { state } = useSidebar();
+  const { clearAllFilters } = useCommandPalette();
+
+  const { state, setOpenMobile } = useSidebar();
 
   if (item.disabled) {
     return (
       <SidebarMenuButton
-        tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
+        tooltip={state === 'collapsed' ? item.title : undefined}
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 truncate text-[13px]">{t(item.title as MessageKey)}</p>
+        <p className="relative bottom-px mt-0.5 truncate text-[13px]">{item.title}</p>
       </SidebarMenuButton>
     );
   }
 
-  // Apply animation handlers to all buttons including back buttons
-  const linkProps = {
-    href: item.href,
-    onMouseEnter: () => iconRef.current?.startAnimation?.(),
-    onMouseLeave: () => iconRef.current?.stopAnimation?.(),
+  const handleClick = (e: React.MouseEvent) => {
+    if (item.onClick) {
+      item.onClick(e as React.MouseEvent<HTMLAnchorElement>);
+    }
+    clearAllFilters();
+    setOpenMobile(false);
   };
-
-  const { setOpenMobile } = useSidebar();
-
-  const buttonContent = (
-    <SidebarMenuButton
-      tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
-      className={cn(
-        'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
-        item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-[#202020]',
-      )}
-      onClick={() => setOpenMobile(false)}
-    >
-      {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
-      <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px]">{t(item.title as MessageKey)}</p>
-      {stats
-        ? stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-            <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
-              {stats
-                .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-                ?.count?.toLocaleString() || '0'}
-            </Badge>
-          )
-        : null}
-    </SidebarMenuButton>
-  );
 
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link
-          {...linkProps}
-          prefetch
-          onClick={item.onClick ? item.onClick : undefined}
-          target={item.target}
+        <SidebarMenuButton
+          asChild
+          tooltip={state === 'collapsed' ? item.title : undefined}
+          className={cn(
+            'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
+            item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-[#202020]',
+          )}
+          onClick={handleClick}
         >
-          {buttonContent}
-        </Link>
+          <Link target={item.target} to={item.href}>
+            {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+            <p className="relative bottom-px mt-0.5 min-w-0 flex-1 truncate text-[13px]">
+              {item.title}
+            </p>
+            {stats &&
+              stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
+                <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
+                  {stats
+                    .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
+                    ?.count?.toLocaleString() || '0'}
+                </Badge>
+              )}
+          </Link>
+        </SidebarMenuButton>
       </CollapsibleTrigger>
     </Collapsible>
   );

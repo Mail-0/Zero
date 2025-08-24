@@ -12,37 +12,37 @@ import {
 import {
   Archive,
   ArchiveX,
-  BellOff,
+  ExternalLink,
   Forward,
   Inbox,
-  MailPlus,
+  MailOpen,
   Reply,
   ReplyAll,
-  Tag,
-  Mail,
   Star,
   StarOff,
+  Tag,
+  Plus,
   Trash,
-  MailOpen,
 } from 'lucide-react';
-import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
+import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
+import { LabelDialog } from '@/components/labels/label-dialog';
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { ExclamationCircle, Mail, Clock } from '../icons/icons';
+import { SnoozeDialog } from '@/components/mail/snooze-dialog';
+import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { useSearchValue } from '@/hooks/use-search-value';
-import { useParams, useRouter } from 'next/navigation';
+import { useMemo, type ReactNode, useState, useCallback } from 'react';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useLabels } from '@/hooks/use-labels';
-import { modifyLabels } from '@/actions/mail';
-import { LABELS, FOLDERS } from '@/lib/utils';
-import { useStats } from '@/hooks/use-stats';
-import { useTranslations } from 'next-intl';
+import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
 import { Checkbox } from '../ui/checkbox';
-import { type ReactNode } from 'react';
+import { m } from '@/paraglide/messages';
+import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
-import { useMemo } from 'react';
-import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import type { Label as LabelType } from '@/types';
 
 interface EmailAction {
   id: string;
@@ -56,8 +56,7 @@ interface EmailAction {
 
 interface EmailContextMenuProps {
   children: ReactNode;
-  emailId: string;
-  threadId?: string;
+  threadId: string;
   isInbox?: boolean;
   isSpam?: boolean;
   isSent?: boolean;
@@ -65,99 +64,151 @@ interface EmailContextMenuProps {
   refreshCallback?: () => void;
 }
 
-const LabelsList = ({ threadId }: { threadId: string }) => {
-  const { labels } = useLabels();
-  const { data: thread, mutate } = useThread(threadId);
-  const t = useTranslations();
+const LabelsList = ({ threadId, bulkSelected, onCreateLabel }: { threadId: string; bulkSelected: string[]; onCreateLabel: () => void }) => {
+  const { userLabels: labels } = useLabels();
+  const { optimisticToggleLabel } = useOptimisticActions();
+  const targetThreadIds = bulkSelected.length > 0 ? bulkSelected : [threadId];
+
+  const { data: thread } = useThread(threadId);
+  const rightClickedThreadOptimisticState = useOptimisticThreadState(threadId);
 
   if (!labels || !thread) return null;
 
-  const handleToggleLabel = async (labelId: string) => {
+  const handleToggleLabel = (labelId: string) => {
     if (!labelId) return;
-    const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
-    await modifyLabels({
-      threadId: [threadId],
-      addLabels: hasLabel ? [] : [labelId],
-      removeLabels: hasLabel ? [labelId] : [],
-    });
-    mutate();
+
+    // Determine current label state considering optimistic updates
+    let hasLabel = thread!.labels?.some((l) => l.id === labelId) ?? false;
+
+    if (rightClickedThreadOptimisticState.optimisticLabels) {
+      if (rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(labelId)) {
+        hasLabel = true;
+      } else if (
+        rightClickedThreadOptimisticState.optimisticLabels.removedLabelIds.includes(labelId)
+      ) {
+        hasLabel = false;
+      }
+    }
+
+    optimisticToggleLabel(targetThreadIds, labelId, !hasLabel);
   };
+
+  // If no labels exist, show create label button
+  if (!labels || labels.length === 0) {
+    return (
+      <ContextMenuItem 
+        onClick={onCreateLabel}
+        className="font-normal"
+      >
+        <Plus className="mr-2 h-4 w-4 opacity-60" />
+        {m['common.mail.createNewLabel']()}
+      </ContextMenuItem>
+    );
+  }
 
   return (
     <>
       {labels
         .filter((label) => label.id)
-        .map((label) => (
-          <ContextMenuItem
-            key={label.id}
-            onClick={() => label.id && handleToggleLabel(label.id)}
-            className="font-normal"
-          >
-            <div className="flex items-center">
-              <Checkbox
-                checked={
-                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
-                }
-                className="mr-2 h-4 w-4"
-              />
-              {label.name}
-            </div>
-          </ContextMenuItem>
-        ))}
+        .map((label) => {
+          let isChecked = label.id
+            ? (thread!.labels?.some((l) => l.id === label.id) ?? false)
+            : false;
+
+          if (rightClickedThreadOptimisticState.optimisticLabels) {
+            if (
+              rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)
+            ) {
+              isChecked = true;
+            } else if (
+              rightClickedThreadOptimisticState.optimisticLabels.removedLabelIds.includes(label.id)
+            ) {
+              isChecked = false;
+            }
+          }
+
+          return (
+            <ContextMenuItem
+              key={label.id}
+              onClick={() => label.id && handleToggleLabel(label.id)}
+              className="font-normal"
+            >
+              <div className="flex items-center">
+                <Checkbox checked={isChecked} className="mr-2 h-4 w-4" />
+                {label.name}
+              </div>
+            </ContextMenuItem>
+          );
+        })}
     </>
   );
 };
 
 export function ThreadContextMenu({
   children,
-  emailId,
-  threadId = emailId,
+  threadId,
   isInbox = true,
   isSpam = false,
   isSent = false,
   isBin = false,
-  refreshCallback,
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
-  const { mutate, isLoading, isValidating } = useThreads();
+  const [{ isLoading, isFetching }] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-  const { mutate: mutateStats } = useStats();
-  const t = useTranslations();
+  const isSnoozedFolder = currentFolder === FOLDERS.SNOOZED;
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
-  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
-  const { mutate: mutateThread, data: threadData } = useThread(threadId);
-  //   const selectedThreads = useMemo(() => {
-  //     if (mail.bulkSelected.length) {
-  //       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
-  //     }
-  //     return threads.filter((thread) => thread.id === threadId);
-  //   }, [mail.bulkSelected, threadId, threads]);
+  const { data: threadData } = useThread(threadId);
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
+  const optimisticState = useOptimisticThreadState(threadId);
+  const trpc = useTRPC();
+  const { refetch: refetchLabels } = useLabels();
+  const {
+    optimisticMoveThreadsTo,
+    optimisticToggleStar,
+    optimisticToggleImportant,
+    optimisticMarkAsRead,
+    optimisticMarkAsUnread,
+    // optimisticDeleteThreads,
+    optimisticSnooze,
+    optimisticUnsnooze,
+  } = useOptimisticActions();
+  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
+  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
 
-  const isUnread = useMemo(() => {
-    return threadData?.hasUnread ?? false;
-  }, [threadData]);
+  const { isUnread, isStarred, isImportant } = useMemo(() => {
+    const unread = threadData?.hasUnread ?? false;
 
-  const isStarred = useMemo(() => {
-    // TODO support bulk select
-    return threadData?.messages.some((message) =>
-      message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
-    );
-  }, [threadData]);
+    let starred;
+    if (optimisticState.optimisticStarred !== null) {
+      starred = optimisticState.optimisticStarred;
+    } else {
+      starred = threadData?.messages.some((message) =>
+        message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
+      );
+    }
 
-  const noopAction = () => async () => {
-    toast.info(t('common.actions.featureNotImplemented'));
-  };
+    let important;
+    if (optimisticState.optimisticImportant !== null) {
+      important = optimisticState.optimisticImportant;
+    } else {
+      important = threadData?.messages.some((message) =>
+        message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
+      );
+    }
 
-  const handleMove = (from: string, to: string) => async () => {
+    return { isUnread: unread, isStarred: starred, isImportant: important };
+  }, [threadData, optimisticState.optimisticStarred, optimisticState.optimisticImportant]);
+
+  const handleMove = (from: string, to: string) => () => {
     try {
       let targets = [];
       if (mail.bulkSelected.length) {
-        targets = mail.bulkSelected.map((id) => `thread:${id}`);
+        targets = mail.bulkSelected;
       } else {
-        targets = [threadId ? `thread:${threadId}` : emailId];
+        targets = [threadId];
       }
 
       let destination: ThreadDestination = null;
@@ -166,52 +217,60 @@ export function ThreadContextMenu({
       else if (to === LABELS.TRASH) destination = FOLDERS.BIN;
       else if (from && !to) destination = FOLDERS.ARCHIVE;
 
-      const promise = moveThreadsTo({
-        threadIds: targets,
-        currentFolder: currentFolder,
-        destination,
-      });
-      targets.forEach((threadId) => setBackgroundQueue({ type: 'add', threadId }));
-      toast.promise(promise, {
-        finally: async () => {
-          await Promise.all([mutate(), mutateStats()]);
-          setMail({ ...mail, bulkSelected: [] });
-          targets.forEach((threadId) => setBackgroundQueue({ type: 'delete', threadId }));
-        },
-        error: t('common.actions.failedToMove'),
-      });
+      optimisticMoveThreadsTo(targets, currentFolder, destination);
+
+      if (mail.bulkSelected.length) {
+        setMail({ ...mail, bulkSelected: [] });
+      }
     } catch (error) {
       console.error(`Error moving ${threadId ? 'email' : 'thread'}:`, error);
+      toast.error(m['common.actions.failedToMove']());
     }
   };
 
-  const handleFavorites = async () => {
+  const handleFavorites = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    if (!isStarred) {
-      toast.success(t('common.actions.addedToFavorites'));
-    } else {
-      toast.success(t('common.actions.removedFromFavorites'));
+
+    const newStarredState = !isStarred;
+
+    optimisticToggleStar(targets, newStarredState);
+
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
     }
-    await toggleStar({ ids: targets });
-    setMail((prev) => ({ ...prev, bulkSelected: [] }));
-    return await Promise.allSettled([mutateThread(), mutate()]);
+  };
+
+  const handleToggleImportant = () => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    const newImportantState = !isImportant;
+
+    // Use optimistic update with undo functionality
+    optimisticToggleImportant(targets, newImportantState);
+
+    // Clear bulk selection after action
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
   };
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    const action = isUnread ? markAsRead : markAsUnread;
+    const newReadState = isUnread; // If currently unread, mark as read (true)
 
-    const promise = action({ ids: targets });
+    // Use optimistic update with undo functionality
+    if (newReadState) {
+      optimisticMarkAsRead(targets);
+    } else if (!newReadState) {
+      optimisticMarkAsUnread(targets);
+    } else {
+      toast.error('Failed to mark as read');
+    }
 
-    toast.promise(promise, {
-      error: t(isUnread ? 'common.mail.failedToMarkAsRead' : 'common.mail.failedToMarkAsUnread'),
-      async finally() {
-        setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        await Promise.allSettled([mutateThread(), mutate()]);
-      },
-    });
+    // Clear bulk selection after action
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
   };
-  const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   const handleThreadReply = () => {
     setMode('reply');
@@ -231,59 +290,75 @@ export function ThreadContextMenu({
     if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
-  const primaryActions: EmailAction[] = [
-    {
-      id: 'reply',
-      label: t('common.mail.reply'),
-      icon: <Reply className="mr-2.5 h-4 w-4" />,
-      action: handleThreadReply,
-      disabled: false,
-    },
-    {
-      id: 'reply-all',
-      label: t('common.mail.replyAll'),
-      icon: <ReplyAll className="mr-2.5 h-4 w-4" />,
-      action: handleThreadReplyAll,
-      disabled: false,
-    },
-    {
-      id: 'forward',
-      label: t('common.mail.forward'),
-      icon: <Forward className="mr-2.5 h-4 w-4" />,
-      action: handleThreadForward,
-      disabled: false,
-    },
-  ];
-  const handleDelete = () => async () => {
-    try {
-      const promise = deleteThread({ id: threadId }).then(() => {
-        setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        return mutate();
-      });
-      toast.promise(promise, {
-        loading: t('common.actions.deletingMail'),
-        success: t('common.actions.deletedMail'),
-        error: t('common.actions.failedToDeleteMail'),
-      });
-    } catch (error) {
-      console.error(`Error deleting ${threadId ? 'email' : 'thread'}:`, error);
-    }
+  const handleOpenInNewTab = () => {
+    window.open(`/mail/${folder}?threadId=${threadId}`, '_blank');
   };
 
-  const getActions = () => {
+  const primaryActions: EmailAction[] = useMemo(
+    () => [
+      {
+        id: 'open-in-new-tab',
+        label: m['common.mail.openInNewTab'](),
+        icon: <ExternalLink className="mr-2.5 h-4 w-4" />,
+        action: handleOpenInNewTab,
+        disabled: false,
+      },
+      {
+        id: 'reply',
+        label: m['common.mail.reply'](),
+        icon: <Reply className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadReply,
+        disabled: false,
+      },
+      {
+        id: 'reply-all',
+        label: m['common.mail.replyAll'](),
+        icon: <ReplyAll className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadReplyAll,
+        disabled: false,
+      },
+      {
+        id: 'forward',
+        label: m['common.mail.forward'](),
+        icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadForward,
+        disabled: false,
+      },
+    ],
+    [m, handleThreadReply, handleThreadReplyAll, handleThreadForward],
+  );
+
+  const handleDelete = () => () => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+
+    toast.promise(
+      Promise.all(
+        targets.map(async (id) => {
+          return deleteThread({ id });
+        }),
+      ),
+      {
+        loading: 'Deleting...',
+        success: 'Deleted',
+        error: 'Failed to delete',
+      },
+    );
+  };
+
+  const getActions = useMemo(() => {
     if (isSpam) {
       return [
         {
           id: 'move-to-inbox',
-          label: t('common.mail.moveToInbox'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.moveToInbox'](),
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.moveToBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.TRASH),
           disabled: false,
         },
@@ -294,16 +369,40 @@ export function ThreadContextMenu({
       return [
         {
           id: 'restore-from-bin',
-          label: t('common.mail.restoreFromBin'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.restoreFromBin'](),
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'delete-from-bin',
-          label: t('common.mail.deleteFromBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.deleteFromBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleDelete(),
+        },
+      ];
+    }
+
+    if (isSnoozedFolder) {
+      return [
+        {
+          id: 'unsnooze',
+          label: 'Unsnooze',
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: () => {
+            const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+            optimisticUnsnooze(targets, currentFolder);
+            if (mail.bulkSelected.length) {
+              setMail({ ...mail, bulkSelected: [] });
+            }
+          },
+          disabled: false,
+        },
+        {
+          id: 'move-to-bin',
+          label: m['common.mail.moveToBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: handleMove(LABELS.SNOOZED, LABELS.TRASH),
           disabled: false,
         },
       ];
@@ -313,15 +412,15 @@ export function ThreadContextMenu({
       return [
         {
           id: 'move-to-inbox',
-          label: t('common.mail.unarchive'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.unarchive'](),
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.moveToBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.TRASH),
           disabled: false,
         },
@@ -332,15 +431,15 @@ export function ThreadContextMenu({
       return [
         {
           id: 'archive',
-          label: t('common.mail.archive'),
-          icon: <Archive className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.archive'](),
+          icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, ''),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          label: m['common.mail.moveToBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, LABELS.TRASH),
           disabled: false,
         },
@@ -350,58 +449,111 @@ export function ThreadContextMenu({
     return [
       {
         id: 'archive',
-        label: t('common.mail.archive'),
-        icon: <Archive className="mr-2.5 h-4 w-4" />,
+        label: m['common.mail.archive'](),
+        icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, ''),
         disabled: false,
       },
       {
         id: 'move-to-spam',
-        label: t('common.mail.moveToSpam'),
-        icon: <ArchiveX className="mr-2.5 h-4 w-4" />,
+        label: m['common.mail.moveToSpam'](),
+        icon: <ArchiveX className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.SPAM),
         disabled: !isInbox,
       },
       {
         id: 'move-to-bin',
-        label: t('common.mail.moveToBin'),
-        icon: <Trash className="mr-2.5 h-4 w-4" />,
+        label: m['common.mail.moveToBin'](),
+        icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.TRASH),
         disabled: false,
       },
     ];
+  }, [isSpam, isBin, isArchiveFolder, isInbox, isSent, handleMove, handleDelete]);
+
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [createLabelOpen, setCreateLabelOpen] = useState(false);
+
+  const handleOpenCreateLabel = useCallback(() => {
+    setCreateLabelOpen(true);
+  }, []);
+
+  const handleSnoozeConfirm = (wakeAt: Date) => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    optimisticSnooze(targets, currentFolder, wakeAt);
+    setSnoozeOpen(false);
   };
 
-  const otherActions: EmailAction[] = [
-    {
-      id: 'toggle-read',
-      label: isUnread ? t('common.mail.markAsRead') : t('common.mail.markAsUnread'),
-      icon: isUnread ? (
-        <Mail className="mr-2.5 h-4 w-4" />
-      ) : (
-        <MailOpen className="mr-2.5 h-4 w-4" />
-      ),
-      action: handleReadUnread,
-      disabled: false,
-    },
-    {
-      id: 'favorite',
-      label: isStarred ? t('common.mail.removeFavorite') : t('common.mail.addFavorite'),
-      icon: isStarred ? (
-        <StarOff className="mr-2.5 h-4 w-4" />
-      ) : (
-        <Star className="mr-2.5 h-4 w-4" />
-      ),
-      action: handleFavorites,
-    },
-    // {
-    //   id: 'mute',
-    //   label: t('common.mail.muteThread'),
-    //   icon: <BellOff className="mr-2.5 h-4 w-4" />,
-    //   action: noopAction,
-    //   disabled: true, // TODO: Mute thread functionality to be implemented
-    // },
-  ];
+  const handleCreateLabel = async (data: LabelType) => {
+    const labelData = {
+      name: data.name,
+      color: {
+        backgroundColor: data.color?.backgroundColor || '#202020',
+        textColor: data.color?.textColor || '#FFFFFF'
+      }
+    };
+    
+    try {
+      const promise = createLabel(labelData).then(async (result) => {
+        await refetchLabels();
+        return result;
+      });
+      
+      toast.promise(promise, {
+        loading: m['common.labels.savingLabel'](),
+        success: m['common.labels.saveLabelSuccess'](),
+        error: m['common.labels.failedToSavingLabel'](),
+      });
+      
+      await promise;
+    } catch (error) {
+      console.error('Failed to create label:', error);
+    } finally {
+      setCreateLabelOpen(false);
+    }
+  };
+
+  const otherActions: EmailAction[] = useMemo(
+    () => [
+      {
+        id: 'toggle-read',
+        label: isUnread ? m['common.mail.markAsRead']() : m['common.mail.markAsUnread'](),
+        icon: !isUnread ? (
+          <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
+        ) : (
+          <MailOpen className="mr-2.5 h-4 w-4 opacity-60" />
+        ),
+        action: handleReadUnread,
+        disabled: false,
+      },
+      {
+        id: 'toggle-important',
+        label: isImportant
+          ? m['common.mail.removeFromImportant']()
+          : m['common.mail.markAsImportant'](),
+        icon: <ExclamationCircle className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />,
+        action: handleToggleImportant,
+      },
+      {
+        id: 'favorite',
+        label: isStarred ? m['common.mail.removeFavorite']() : m['common.mail.addFavorite'](),
+        icon: isStarred ? (
+          <StarOff className="mr-2.5 h-4 w-4 opacity-60" />
+        ) : (
+          <Star className="mr-2.5 h-4 w-4 opacity-60" />
+        ),
+        action: handleFavorites,
+      },
+      {
+        id: 'snooze',
+        label: 'Snooze',
+        icon: <Clock className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: () => setSnoozeOpen(true),
+        disabled: false,
+      },
+    ],
+    [isUnread, isImportant, isStarred, m, handleReadUnread, handleToggleImportant, handleFavorites],
+  );
 
   const renderAction = (action: EmailAction) => {
     return (
@@ -419,33 +571,48 @@ export function ThreadContextMenu({
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger disabled={isLoading || isValidating} className="w-full">
-        {children}
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-56" onContextMenu={(e) => e.preventDefault()}>
-        {primaryActions.map(renderAction)}
+    <>
+      <LabelDialog
+        open={createLabelOpen}
+        onOpenChange={setCreateLabelOpen}
+        onSubmit={handleCreateLabel}
+      />
+      <ContextMenu>
+        <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent
+          className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="font-normal">
-            <Tag className="mr-2.5 h-4 w-4" />
-            {t('common.mail.labels')}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48">
-            <LabelsList threadId={threadId} />
-          </ContextMenuSubContent>
-        </ContextMenuSub>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="font-normal">
+              <Tag className="mr-2.5 h-4 w-4 opacity-60" />
+              {m['common.mail.labels']()}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
+              <LabelsList threadId={threadId} bulkSelected={mail.bulkSelected} onCreateLabel={handleOpenCreateLabel} />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
 
-        <ContextMenuSeparator />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {getActions().map(renderAction as any)}
+          {getActions.map(renderAction)}
 
-        <ContextMenuSeparator />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {otherActions.map(renderAction)}
-      </ContextMenuContent>
-    </ContextMenu>
+          {otherActions.map(renderAction)}
+        </ContextMenuContent>
+      </ContextMenu>
+      <SnoozeDialog
+        open={snoozeOpen}
+        onOpenChange={setSnoozeOpen}
+        onConfirm={handleSnoozeConfirm}
+      />
+    </>
   );
 }

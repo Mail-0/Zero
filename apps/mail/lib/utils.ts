@@ -1,14 +1,12 @@
-import { format, isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
+import { isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
 import { getBrowserTimezone } from './timezones';
 import { formatInTimeZone } from 'date-fns-tz';
 import { MAX_URL_LENGTH } from './constants';
-import { filterSuggestions } from './filter';
 import { clsx, type ClassValue } from 'clsx';
+import type { Customer } from 'autumn-js';
 import { twMerge } from 'tailwind-merge';
-import { JSONContent } from 'novel';
+import type { Sender } from '@/types';
 import LZString from 'lz-string';
-import { Sender } from '@/types';
-import axios from 'axios';
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -17,6 +15,7 @@ export const FOLDERS = {
   BIN: 'bin',
   DRAFT: 'draft',
   SENT: 'sent',
+  SNOOZED: 'snoozed',
 } as const;
 
 export const LABELS = {
@@ -26,6 +25,7 @@ export const LABELS = {
   IMPORTANT: 'IMPORTANT',
   SENT: 'SENT',
   TRASH: 'TRASH',
+  SNOOZED: 'SNOOZED',
 } as const;
 
 export const FOLDER_NAMES = [
@@ -37,6 +37,7 @@ export const FOLDER_NAMES = [
   'important',
   'sent',
   'draft',
+  'snoozed',
 ];
 
 export const FOLDER_TAGS: Record<string, string[]> = {
@@ -45,6 +46,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.ARCHIVE]: [],
   [FOLDERS.SENT]: [LABELS.SENT],
   [FOLDERS.BIN]: [LABELS.TRASH],
+  [FOLDERS.SNOOZED]: [LABELS.SNOOZED],
 };
 
 export const getFolderTags = (folder: string): string[] => {
@@ -69,23 +71,82 @@ export const getCookie = (key: string): string | null => {
   return cookies?.[key] ?? null;
 };
 
-export const formatDate = (date: string) => {
+export const parseAndValidateDate = (dateString: string): Date | null => {
   try {
-    // Handle empty or invalid input
-    if (!date) {
-      return '';
+    // Handle empty input
+    if (!dateString) {
+      return null;
     }
 
-    const timezone = getBrowserTimezone();
     // Parse the date string to a Date object
-    const dateObj = new Date(date);
-    const now = new Date();
+    const dateObj = new Date(dateString);
 
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
-      console.error('Invalid date', date);
-      return '';
+      console.error('Invalid date', dateString);
+      return null;
     }
+
+    return dateObj;
+  } catch (error) {
+    console.error('Error parsing date', error);
+    return null;
+  }
+};
+
+/**
+ * Helper function to determine if a separate time display is needed
+ * Returns false for emails from today or within last 12 hours since formatDate already shows time for these
+ */
+export const shouldShowSeparateTime = (dateString: string | undefined): boolean => {
+  if (!dateString) return false;
+
+  const dateObj = parseAndValidateDate(dateString);
+  if (!dateObj) return false;
+
+  const now = new Date();
+
+  // Don't show separate time if email is from today
+  if (isToday(dateObj)) return false;
+
+  // Don't show separate time if email is within the last 12 hours
+  const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+  if (hoursDifference <= 12) return false;
+
+  // Show separate time for older emails
+  return true;
+};
+
+/**
+ * Formats a date with different formatting logic based on parameters
+ * Overloaded to handle both mail date formatting and notes date formatting
+ */
+export function formatDate(dateInput: string | Date | number): string {
+  if (typeof dateInput === 'number') {
+    dateInput = new Date(dateInput).toISOString();
+  }
+
+  // Notes formatting logic (when date is a Date object)
+  if (dateInput instanceof Date) {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : (dateInput as Date);
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Original mail formatting logic
+  const dateObj = parseAndValidateDate(dateInput as string);
+  if (!dateObj) {
+    return '';
+  }
+
+  try {
+    const timezone = getBrowserTimezone();
+    const now = new Date();
 
     // If it's today, always show the time
     if (isToday(dateObj)) {
@@ -111,6 +172,23 @@ export const formatDate = (date: string) => {
     console.error('Error formatting date', error);
     return '';
   }
+}
+
+export const formatTime = (date: string) => {
+  const dateObj = parseAndValidateDate(date);
+  if (!dateObj) {
+    return '';
+  }
+
+  try {
+    const timezone = getBrowserTimezone();
+
+    // Always return the time in h:mm a format
+    return formatInTimeZone(dateObj, timezone, 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time', error);
+    return '';
+  }
 };
 
 export const cleanEmailAddress = (email: string = '') => {
@@ -124,15 +202,6 @@ export const truncateFileName = (name: string, maxLength = 15) => {
     return `${name.slice(0, maxLength - 5)}...${name.slice(extIndex)}`;
   }
   return `${name.slice(0, maxLength)}...`;
-};
-
-export const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-
-export type FilterSuggestion = {
-  filter: string;
-  description: string;
-  icon: React.ReactNode;
-  prefix: string;
 };
 
 export const extractFilterValue = (filter: string): string => {
@@ -253,115 +322,9 @@ export const convertJSONToHTML = (json: any): string => {
   return '';
 };
 
-export const createAIJsonContent = (text: string): JSONContent => {
-  // Try to identify common sign-off patterns with a more comprehensive regex
-  const signOffPatterns = [
-    /\b((?:Best regards|Regards|Sincerely|Thanks|Thank you|Cheers|Best|All the best|Yours truly|Yours sincerely|Kind regards|Cordially)(?:,)?)\s*\n+\s*([A-Za-z][A-Za-z\s.]*)$/i,
-  ];
-
-  let mainContent = text;
-  let signatureLines: string[] = [];
-
-  // Extract sign-off if found
-  for (const pattern of signOffPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      // Find the index where the sign-off starts
-      const signOffIndex = text.lastIndexOf(match[0]);
-      if (signOffIndex > 0) {
-        // Split the content
-        mainContent = text.substring(0, signOffIndex).trim();
-
-        // Split the signature part into separate lines
-        const signature = text.substring(signOffIndex).trim();
-        signatureLines = signature
-          .split(/\n+/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        break;
-      }
-    }
-  }
-
-  // If no signature was found with regex but there are newlines at the end,
-  // check if the last lines could be a signature
-  if (signatureLines.length === 0) {
-    const allLines = text.split(/\n+/);
-    if (allLines.length > 1) {
-      // Check if last 1-3 lines might be a signature (short lines at the end)
-      const potentialSigLines = allLines
-        .slice(-3)
-        .filter(
-          (line) =>
-            line.trim().length < 60 && !line.trim().endsWith('?') && !line.trim().endsWith('.'),
-        );
-
-      if (potentialSigLines.length > 0) {
-        signatureLines = potentialSigLines;
-        mainContent = allLines
-          .slice(0, allLines.length - potentialSigLines.length)
-          .join('\n')
-          .trim();
-      }
-    }
-  }
-
-  // Split the main content into paragraphs
-  const paragraphs = mainContent
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length === 0 && signatureLines.length === 0) {
-    // If no paragraphs and no signature were found, treat the whole text as one paragraph
-    paragraphs.push(text);
-  }
-
-  // Create a content array with appropriate spacing between paragraphs
-  const content = [];
-
-  paragraphs.forEach((paragraph, index) => {
-    // Add the content paragraph
-    content.push({
-      type: 'paragraph',
-      content: [{ type: 'text', text: paragraph }],
-    });
-
-    // Add an empty paragraph between main paragraphs
-    if (index < paragraphs.length - 1) {
-      content.push({
-        type: 'paragraph',
-      });
-    }
-  });
-
-  // If we found a signature, add it with proper spacing
-  if (signatureLines.length > 0) {
-    // Add spacing before the signature if there was content
-    if (paragraphs.length > 0) {
-      content.push({
-        type: 'paragraph',
-      });
-    }
-
-    // Add each line of the signature as a separate paragraph
-    signatureLines.forEach((line) => {
-      content.push({
-        type: 'paragraph',
-        content: [{ type: 'text', text: line }],
-      });
-    });
-  }
-
-  return {
-    type: 'doc',
-    content: content,
-  };
-};
-
 export const getEmailLogo = (email: string) => {
-  if (!process.env.NEXT_PUBLIC_IMAGE_API_URL) return '';
-  return process.env.NEXT_PUBLIC_IMAGE_API_URL + email;
+  if (!import.meta.env.VITE_PUBLIC_IMAGE_API_URL) return '';
+  return import.meta.env.VITE_PUBLIC_IMAGE_API_URL + email;
 };
 
 export const generateConversationId = (): string => {
@@ -384,7 +347,6 @@ export const constructReplyBody = (
   originalDate: string,
   originalSender: Sender | undefined,
   otherRecipients: Sender[],
-  quotedMessage?: string,
 ) => {
   const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
   const recipientEmails = otherRecipients.map((r) => r.email).join(', ');
@@ -398,8 +360,32 @@ export const constructReplyBody = (
         <div style="font-size: 12px;">
           On ${originalDate}, ${senderName} ${recipientEmails ? `&lt;${recipientEmails}&gt;` : ''} wrote:
         </div>
-        <div style="">
-          ${quotedMessage || ''}
+      </div>
+    </div>
+  `;
+};
+
+export const constructForwardBody = (
+  formattedMessage: string,
+  originalDate: string,
+  originalSender: Sender | undefined,
+  otherRecipients: Sender[],
+) => {
+  const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
+  const recipientEmails = otherRecipients.map((r) => r.email).join(', ');
+
+  return `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <div style="">
+        ${formattedMessage}
+      </div>
+      <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">
+          ---------- Forwarded message ----------<br/>
+          From: ${senderName} ${originalSender?.email ? `&lt;${originalSender.email}&gt;` : ''}<br/>
+          Date: ${originalDate}<br/>
+          Subject: ${originalSender?.subject || 'No Subject'}<br/>
+          To: ${recipientEmails || 'No Recipients'}
         </div>
       </div>
     </div>
@@ -502,7 +488,6 @@ export function parseNaturalLanguageSearch(query: string): string {
 export function parseNaturalLanguageDate(query: string): { from?: Date; to?: Date } | null {
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
 
   // Common date patterns
   const patterns = [
@@ -579,19 +564,67 @@ export function parseNaturalLanguageDate(query: string): { from?: Date; to?: Dat
   return null;
 }
 
+export const categorySearchValues = [
+  'is:important NOT is:sent NOT is:draft',
+  'NOT is:draft (is:inbox OR (is:sent AND to:me))',
+  'is:personal NOT is:sent NOT is:draft',
+  'is:updates NOT is:sent NOT is:draft',
+  'is:promotions NOT is:sent NOT is:draft',
+  'is:unread NOT is:sent NOT is:draft',
+];
+
 export const cleanSearchValue = (q: string): string => {
-  if (!q) return '';
-
-  const filterRegex = new RegExp(
-    filterSuggestions
-      .map((s) => s.filter)
-      .filter(Boolean) // Remove any empty strings
-      .join('|'),
-    'gi', // Case insensitive
+  const escapedValues = categorySearchValues.map((value) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
   );
-
   return q
-    .replace(filterRegex, '')
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(new RegExp(escapedValues.join('|'), 'g'), '')
+    .replace(/\s+/g, ' ')
     .trim();
+};
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const withExponentialBackoff = async <T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 1000,
+  maxDelay = 10000,
+): Promise<T> => {
+  let retries = 0;
+  let delayMs = initialDelay;
+
+  while (true) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      if (retries >= maxRetries) {
+        throw error;
+      }
+
+      const isRateLimit =
+        error?.code === 429 ||
+        error?.errors?.[0]?.reason === 'rateLimitExceeded' ||
+        error?.errors?.[0]?.reason === 'userRateLimitExceeded';
+
+      if (!isRateLimit) {
+        throw error;
+      }
+
+      await delay(delayMs);
+
+      delayMs = Math.min(delayMs * 2 + Math.random() * 1000, maxDelay);
+      retries++;
+    }
+  }
+};
+
+const PRO_PLANS = ['pro-example', 'pro_annual', 'team', 'enterprise'] as const;
+
+export const isProCustomer = (customer: Customer) => {
+  return customer?.products && Array.isArray(customer.products)
+    ? customer.products.some((product) =>
+        PRO_PLANS.some((plan) => product.id?.includes(plan) || product.name?.includes(plan)),
+      )
+    : false;
 };

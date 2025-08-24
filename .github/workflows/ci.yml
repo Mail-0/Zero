@@ -10,23 +10,19 @@ concurrency:
 jobs:
   autofix:
     timeout-minutes: 10
-    env:
-      RUNNER_IMAGE: ubuntu-latest
-    runs-on: ${{ env.RUNNER_IMAGE }}
+    runs-on: ${{ vars.RUNNER_IMAGE || 'ubuntu-latest' }}
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
 
-      - name: Setup Bun 🌟
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+      - name: Setup pnpm 🌟
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node 📦
         uses: actions/setup-node@v4
-        with:
-          node-version: latest
-          cache: 'bun'
 
       - name: Install dependencies 📦
-        run: bun install
+        run: pnpm install
+
+      - name: Lint JS
+        run: pnpm dlx oxlint@latest --deny-warnings

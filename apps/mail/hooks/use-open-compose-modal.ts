@@ -1,10 +1,8 @@
-"use client";
-
-import { parseAsBoolean, useQueryState } from "nuqs";
+import { parseAsBoolean, useQueryState } from 'nuqs';
 
 export const useOpenComposeModal = () => {
   const [isOpen, setIsOpen] = useQueryState(
-    "open-compose",
+    'open-compose',
     parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true }),
   );
 

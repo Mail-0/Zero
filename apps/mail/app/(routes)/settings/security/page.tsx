@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Form,
   FormControl,
@@ -12,9 +10,9 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
+import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
-import { KeyRound } from 'lucide-react';
+
 import { useState } from 'react';
 import * as z from 'zod';
 
@@ -25,7 +23,6 @@ const formSchema = z.object({
 
 export default function SecurityPage() {
   const [isSaving, setIsSaving] = useState(false);
-  const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,31 +45,31 @@ export default function SecurityPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.security.title')}
-        description={t('pages.settings.security.description')}
+        title={m['pages.settings.security.title']()}
+        description={m['pages.settings.security.description']()}
         footer={
           <div className="flex gap-4">
-            <Button variant="destructive">{t('pages.settings.security.deleteAccount')}</Button>
+            <Button variant="destructive">{m['pages.settings.security.deleteAccount']()}</Button>
             <Button type="submit" form="security-form" disabled={isSaving}>
-              {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+              {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
             </Button>
           </div>
         }
       >
         <Form {...form}>
           <form id="security-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex flex-col md:flex-row w-full items-center gap-5">
+            <div className="flex w-full flex-col items-center gap-5 md:flex-row">
               <FormField
                 control={form.control}
                 name="twoFactorAuth"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
+                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        {t('pages.settings.security.twoFactorAuth')}
+                      {m['pages.settings.security.twoFactorAuth']()}
                       </FormLabel>
                       <FormDescription>
-                        {t('pages.settings.security.twoFactorAuthDescription')}
+                      {m['pages.settings.security.twoFactorAuthDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -85,13 +82,13 @@ export default function SecurityPage() {
                 control={form.control}
                 name="loginNotifications"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
+                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        {t('pages.settings.security.loginNotifications')}
+                      {m['pages.settings.security.loginNotifications']()}
                       </FormLabel>
                       <FormDescription>
-                        {t('pages.settings.security.loginNotificationsDescription')}
+                      {m['pages.settings.security.loginNotificationsDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">

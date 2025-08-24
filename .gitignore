@@ -1,9 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/apps/*/node_modules
-/packages/*/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -16,11 +14,12 @@
 /coverage
 
 # next.js
-/.next/
-/out/
+.next
+out
 
 # production
-/build
+build
+dist
 
 # misc
 .DS_Store
@@ -34,6 +33,7 @@ yarn-error.log*
 bun-debug.log*
 # env files (can opt-in for committing if needed)
 .env
+.dev.vars
 
 # vercel
 .vercel
@@ -48,3 +48,15 @@ next-env.d.ts
 .turbo
 i18n.cache
 apps/mail/scripts.ts
+
+.wrangler
+worker-configuration.d.ts
+
+.dev.vars.*
+.react-router
+
+# devcontainer
+.pnpm-store
+tsx-0/
+
+tools.json

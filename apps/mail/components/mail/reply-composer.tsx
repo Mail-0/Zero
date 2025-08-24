@@ -1,17 +1,21 @@
-'use client';
-
+import { useUndoSend } from '@/hooks/use-undo-send';
+import { constructReplyBody, constructForwardBody } from '@/lib/utils';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
 import { useHotkeysContext } from 'react-hotkeys-hook';
-import { constructReplyBody } from '@/lib/utils';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
+import { useSettings } from '@/hooks/use-settings';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
+import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useTranslations } from 'next-intl';
-import { sendEmail } from '@/actions/send';
+import { m } from '@/paraglide/messages';
+import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useEffect } from 'react';
-import { Sender } from '@/types';
+import posthog from 'posthog-js';
 import { toast } from 'sonner';
 
 interface ReplyComposeProps {
@@ -19,15 +23,21 @@ interface ReplyComposeProps {
 }
 
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
-  const [threadId] = useQueryState('threadId');
-  const { data: emailData, mutate } = useThread(threadId);
-  const { data: session } = useSession();
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
-  const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
-  const t = useTranslations();
+  const { data: aliases } = useEmailAliases();
+
   const [draftId, setDraftId] = useQueryState('draftId');
-  const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
+  const [threadId] = useQueryState('threadId');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
+  const { data: emailData, refetch, latestDraft } = useThread(threadId);
+  const { data: draft } = useDraft(draftId ?? null);
+  const trpc = useTRPC();
+  const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
+  const { data: activeConnection } = useActiveConnection();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
+  const { data: session } = useSession();
+  const { handleUndoSend } = useUndoSend();
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -35,18 +45,12 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
 
   // Initialize recipients and subject when mode changes
   useEffect(() => {
-    if (!replyToMessage || !mode || !session?.activeConnection?.email) return;
+    if (!replyToMessage || !mode || !activeConnection?.email) return;
 
-    const userEmail = session.activeConnection.email.toLowerCase();
+    const userEmail = activeConnection.email.toLowerCase();
     const senderEmail = replyToMessage.sender.email.toLowerCase();
 
     // Set subject based on mode
-    const subject =
-      mode === 'forward'
-        ? `Fwd: ${replyToMessage.subject || ''}`
-        : replyToMessage.subject?.startsWith('Re:')
-          ? replyToMessage.subject
-          : `Re: ${replyToMessage.subject || ''}`;
 
     if (mode === 'reply') {
       // Reply to sender
@@ -92,7 +96,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // For forward, we start with empty recipients
       // Just set the subject and include the original message
     }
-  }, [mode, replyToMessage, session?.activeConnection?.email]);
+  }, [mode, replyToMessage, activeConnection?.email]);
 
   const handleSendEmail = async (data: {
     to: string[];
@@ -101,13 +105,41 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     subject: string;
     message: string;
     attachments: File[];
+    scheduleAt?: string;
   }) => {
-    if (!replyToMessage || !session?.activeConnection?.email) return;
+    if (!replyToMessage || !activeConnection?.email) return;
 
     try {
-      const userEmail = session.activeConnection.email.toLowerCase();
+      const userEmail = activeConnection.email.toLowerCase();
+      const userName = activeConnection.name || session?.user?.name || '';
 
-      // Convert email strings to Sender objects
+      let fromEmail = userEmail;
+
+      if (aliases && aliases.length > 0 && replyToMessage) {
+        const allRecipients = [
+          ...(replyToMessage.to || []),
+          ...(replyToMessage.cc || []),
+          ...(replyToMessage.bcc || []),
+        ];
+        const matchingAlias = aliases.find((alias) =>
+          allRecipients.some(
+            (recipient) => recipient.email.toLowerCase() === alias.email.toLowerCase(),
+          ),
+        );
+
+        if (matchingAlias) {
+          fromEmail = userName.trim()
+            ? `${userName.replace(/[<>]/g, '')} <${matchingAlias.email}>`
+            : matchingAlias.email;
+        } else {
+          const primaryEmail =
+            aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
+          fromEmail = userName.trim()
+            ? `${userName.replace(/[<>]/g, '')} <${primaryEmail}>`
+            : primaryEmail;
+        }
+      }
+
       const toRecipients: Sender[] = data.to.map((email) => ({
         email,
         name: email.split('@')[0] || 'User',
@@ -127,22 +159,36 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           }))
         : undefined;
 
-      const replyBody = constructReplyBody(
-        data.message,
-        new Date(replyToMessage.receivedOn || '').toLocaleString(),
-        replyToMessage.sender,
-        toRecipients,
-        replyToMessage.decodedBody,
-      );
+      const zeroSignature = settings?.settings.zeroSignature
+        ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
+        : '';
 
-      await sendEmail({
+      const emailBody =
+        mode === 'forward'
+          ? constructForwardBody(
+              data.message + zeroSignature,
+              new Date(replyToMessage.receivedOn || '').toLocaleString(),
+              { ...replyToMessage.sender, subject: replyToMessage.subject },
+              toRecipients,
+              //   replyToMessage.decodedBody,
+            )
+          : constructReplyBody(
+              data.message + zeroSignature,
+              new Date(replyToMessage.receivedOn || '').toLocaleString(),
+              replyToMessage.sender,
+              toRecipients,
+              //   replyToMessage.decodedBody,
+            );
+
+      const result = await sendEmail({
         to: toRecipients,
         cc: ccRecipients,
         bcc: bccRecipients,
         subject: data.subject,
-        message: replyBody,
-        attachments: data.attachments,
-        fromEmail: aliases?.[0]?.email || userEmail,
+        message: emailBody,
+        attachments: await serializeFiles(data.attachments),
+        fromEmail: fromEmail,
+        draftId: draftId ?? undefined,
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
           References: [
@@ -154,19 +200,31 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           'Thread-Id': replyToMessage?.threadId ?? '',
         },
         threadId: replyToMessage?.threadId,
+        isForward: mode === 'forward',
+        originalMessage: replyToMessage.decodedBody,
+        scheduleAt: data.scheduleAt,
       });
+
+      posthog.capture('Reply Email Sent');
 
       // Reset states
       setMode(null);
-      await mutate();
-      toast.success(t('pages.createEmail.emailSent'));
+      await refetch();
+      
+      handleUndoSend(result, settings, {
+        to: data.to,
+        cc: data.cc,
+        bcc: data.bcc,
+        subject: data.subject,
+        message: data.message,
+        attachments: data.attachments,
+        scheduleAt: data.scheduleAt,
+      });
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error(t('pages.createEmail.failedToSendEmail'));
+      toast.error(m['pages.createEmail.failedToSendEmail']());
     }
   };
-
-  console.log('draftcontent', draft);
 
   useEffect(() => {
     if (mode) {
@@ -179,46 +237,42 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     };
   }, [mode, enableScope, disableScope]);
 
+  const ensureEmailArray = (emails: string | string[] | undefined | null): string[] => {
+    if (!emails) return [];
+    if (Array.isArray(emails)) {
+      return emails.map((email) => email.trim().replace(/[<>]/g, ''));
+    }
+    if (typeof emails === 'string') {
+      return emails
+        .split(',')
+        .map((email) => email.trim())
+        .filter((email) => email.length > 0)
+        .map((email) => email.replace(/[<>]/g, ''));
+    }
+    return [];
+  };
+
   if (!mode || !emailData) return null;
 
-  if (draftId && isDraftLoading) {
-    // wait for the draft if requesting one
-    return null;
-  }
-
   return (
-    <div className="w-full rounded-xl bg-white dark:bg-[#141414]">
+    <div className="w-full rounded-2xl overflow-visible border">
       <EmailComposer
-        className="w-full !max-w-none border pb-1 dark:bg-[#141414]"
+        editorClassName="min-h-[50px]"
+        className="w-full max-w-none! pb-1 overflow-visible"
         onSendEmail={handleSendEmail}
         onClose={async () => {
-          await setMode(null);
-          await setDraftId(null);
+          setMode(null);
+          setDraftId(null);
+          setActiveReplyId(null);
         }}
-        initialMessage={draft?.content}
-        initialTo={draft?.to}
+        initialMessage={draft?.content ?? latestDraft?.decodedBody}
+        initialTo={ensureEmailArray(draft?.to)}
+        initialCc={ensureEmailArray(draft?.cc)}
+        initialBcc={ensureEmailArray(draft?.bcc)}
         initialSubject={draft?.subject}
-        threadContent={emailData.messages.map((message) => {
-          return {
-            body: message.decodedBody ?? '',
-            from: message.sender.name ?? message.sender.email,
-            to: message.to.reduce<string[]>((to, recipient) => {
-              if (recipient.name) {
-                to.push(recipient.name);
-              }
-
-              return to;
-            }, []),
-            cc: message.cc?.reduce<string[]>((cc, recipient) => {
-              if (recipient.name) {
-                cc.push(recipient.name);
-              }
-
-              return cc;
-            }, []),
-            subject: message.subject,
-          };
-        })}
+        autofocus={true}
+        settingsLoading={settingsLoading}
+        replyingTo={replyToMessage?.sender.email}
       />
     </div>
   );

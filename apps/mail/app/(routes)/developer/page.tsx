@@ -1,10 +1,7 @@
-'use client';
-
 import { Github, Book, Users, Terminal, Code2, Webhook, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useNavigate } from 'react-router';
 
 const developerResources = [
   {
@@ -70,17 +67,17 @@ const developerResources = [
 ] as const;
 
 export default function DeveloperPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div className="bg-background flex min-h-screen w-full flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1600px] p-4 md:p-6 lg:p-8">
-          <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 mb-8 backdrop-blur">
+          <div className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-10 mb-8 backdrop-blur">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.back()}
+              onClick={() => navigate(-1)}
               className="text-muted-foreground hover:text-foreground mb-6 gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -97,7 +94,7 @@ export default function DeveloperPage() {
 
           <div className="grid grid-cols-1 gap-4 pb-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {developerResources.map((resource) => (
-              <Card key={resource.title} className="transition-all hover:shadow-md">
+              <Card key={resource.title} className="hover:shadow-md">
                 <CardHeader className="sm:p-6">
                   <div className="flex items-start gap-4 sm:items-center">
                     <div className={`shrink-0 rounded-lg ${resource.bgColor} p-2.5`}>
@@ -116,12 +113,12 @@ export default function DeveloperPage() {
                     variant="outline"
                     className="hover:bg-secondary w-full justify-between"
                   >
-                    <Link href={resource.href}>
+                    <a href={resource.href}>
                       <span className="flex items-center justify-between">
                         {resource.linkText}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </span>
-                    </Link>
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
@@ -138,7 +135,7 @@ export default function DeveloperPage() {
                 </p>
               </div>
               <Button asChild variant="default" className="w-full sm:w-auto">
-                <Link href="/support">Contact Support</Link>
+                <a href="/support">Contact Support</a>
               </Button>
             </div>
           </div>

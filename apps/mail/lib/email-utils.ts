@@ -1,8 +1,14 @@
-import { parseFrom as _parseFrom, parseAddressList as _parseAddressList } from 'email-addresses';
-import { Sender } from '@/types';
+import * as emailAddresses from 'email-addresses';
+import type { Sender } from '@/types';
+import DOMPurify from 'dompurify';
 import Color from 'color';
+import { z } from 'zod';
 
-export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {
+export const fixNonReadableColors = (
+  rootElement: HTMLElement,
+  options?: { minContrast?: number; defaultBackground?: string },
+) => {
+  const { minContrast = 3.5, defaultBackground = '#ffffff' } = options || {};
   const elements = Array.from<HTMLElement>(rootElement.querySelectorAll('*'));
   elements.unshift(rootElement);
 
@@ -19,29 +25,33 @@ export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5
       continue;
     }
 
-    const textColor = Color(style.color);
-    const effectiveBg = getEffectiveBackgroundColor(el);
+    try {
+      const textColor = Color(style.color);
+      const effectiveBg = getEffectiveBackgroundColor(el, defaultBackground);
 
-    const blendedText =
-      textColor.alpha() < 1 ? effectiveBg.mix(textColor, effectiveBg.alpha()) : textColor;
-    const contrast = blendedText.contrast(effectiveBg);
+      const blendedText =
+        textColor.alpha() < 1 ? effectiveBg.mix(textColor, effectiveBg.alpha()) : textColor;
+      const contrast = blendedText.contrast(effectiveBg);
 
-    if (contrast < minContrast) {
-      const blackContrast = Color('#000000').contrast(effectiveBg);
-      const whiteContrast = Color('#ffffff').contrast(effectiveBg);
-      el.style.color = blackContrast >= whiteContrast ? '#000000' : '#ffffff';
+      if (contrast < minContrast) {
+        const blackContrast = Color('#000000').contrast(effectiveBg);
+        const whiteContrast = Color('#ffffff').contrast(effectiveBg);
+        el.style.color = blackContrast >= whiteContrast ? '#000000' : '#ffffff';
+      }
+    } catch (error) {
+      console.error('Error fixing non-readable colors:', error);
     }
   }
 };
 
-const getEffectiveBackgroundColor = (element: HTMLElement) => {
+const getEffectiveBackgroundColor = (element: HTMLElement, defaultBackground: string) => {
   let current: HTMLElement | null = element;
   while (current) {
     const bg = Color(getComputedStyle(current).backgroundColor);
     if (bg.alpha() >= 1) return bg.rgb();
     current = current.parentElement;
   }
-  return Color('#ffffff');
+  return Color(defaultBackground);
 };
 
 type ListUnsubscribeAction =
@@ -110,7 +120,7 @@ const FALLBACK_SENDER = {
 };
 
 export const parseFrom = (fromHeader: string) => {
-  const parsedSender = _parseFrom(fromHeader);
+  const parsedSender = emailAddresses.parseFrom(fromHeader);
   if (!parsedSender) return FALLBACK_SENDER;
 
   // Technically the "From" header can include multiple email addresses according to
@@ -133,7 +143,7 @@ export const parseFrom = (fromHeader: string) => {
 };
 
 export const parseAddressList = (header: string): Sender[] => {
-  const parsedAddressList = _parseAddressList(header);
+  const parsedAddressList = emailAddresses.parseAddressList(header);
   if (!parsedAddressList) return [FALLBACK_SENDER];
 
   return parsedAddressList?.flatMap((address) => {
@@ -149,6 +159,35 @@ export const parseAddressList = (header: string): Sender[] => {
       email: address.address || FALLBACK_SENDER.email,
     };
   });
+};
+
+// Helper function to clean email addresses by removing angle brackets
+export const cleanEmailAddresses = (emails: string | undefined) => {
+  if (!emails || emails.trim() === '') return undefined;
+  // Split by commas and clean each address individually
+  return emails
+    .split(',')
+    .map((email) => email.trim().replace(/^<|>$/g, ''))
+    .filter(Boolean); // Remove any empty entries
+};
+
+// Format recipients for display or sending
+export const formatRecipients = (recipients: string[] | undefined) => {
+  if (!recipients || recipients.length === 0) return undefined;
+  return recipients.join(', ');
+};
+
+/**
+ * Format recipients for MIME message creation
+ * Handles both string and array formats for recipients
+ */
+export const formatMimeRecipients = (recipients: string | string[]) => {
+  if (Array.isArray(recipients)) {
+    return recipients.map((recipient) => ({ addr: recipient }));
+  } else if (typeof recipients === 'string' && recipients.trim() !== '') {
+    return recipients.split(',').map((recipient) => ({ addr: recipient.trim() }));
+  }
+  return null;
 };
 
 export const wasSentWithTLS = (receivedHeaders: string[]) => {
@@ -169,4 +208,43 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
   }
 
   return false;
+};
+
+// cleans up html string for xss attacks and returns html
+export const cleanHtml = (html: string) => {
+  if (!html) return '<p><em>No email content available</em></p>';
+
+  try {
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.warn('DOMPurify Failed or not Available, falling back to Default HTML ', error);
+    return '<p><em>No email content available</em></p>';
+  }
+};
+
+export const queuedSendEmailResultSchema = z.object({
+  queued: z.literal(true),
+  messageId: z.string(),
+  sendAt: z.number().optional(),
+});
+
+export const scheduledSendEmailResultSchema = z.object({
+  scheduled: z.literal(true),
+  messageId: z.string(),
+  sendAt: z.number().optional(),
+});
+
+export type QueuedSendEmailResult = z.infer<typeof queuedSendEmailResultSchema>;
+export type ScheduledSendEmailResult = z.infer<typeof scheduledSendEmailResultSchema>;
+
+export const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
+  return queuedSendEmailResultSchema.safeParse(value).success;
+};
+
+export const isScheduledSendResult = (value: unknown): value is ScheduledSendEmailResult => {
+  return scheduledSendEmailResultSchema.safeParse(value).success;
+};
+
+export const isSendResult = (value: unknown): value is QueuedSendEmailResult | ScheduledSendEmailResult => {
+  return isQueuedSendResult(value) || isScheduledSendResult(value);
 };

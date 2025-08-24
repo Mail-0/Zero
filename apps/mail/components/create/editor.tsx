@@ -1,20 +1,3 @@
-'use client';
-
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Underline,
-  Code,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
-  Paperclip,
-  Plus,
-} from 'lucide-react';
 import {
   EditorCommand,
   EditorCommandEmpty,
@@ -22,40 +5,25 @@ import {
   EditorCommandList,
   EditorContent,
   EditorRoot,
-  useEditor,
   type JSONContent,
 } from 'novel';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
-import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TextButtons } from '@/components/create/selectors/text-buttons';
+
 import { suggestionItems } from '@/components/create/slash-command';
 import { defaultExtensions } from '@/components/create/extensions';
-import { ImageResizer, handleCommandNavigation } from 'novel';
-import { handleImageDrop, handleImagePaste } from 'novel';
 import EditorMenu from '@/components/create/editor-menu';
-import { UploadedFileIcon } from './uploaded-file-icon';
-import { Separator } from '@/components/ui/separator';
+import { Editor as TiptapEditor } from '@tiptap/react';
+import { handleCommandNavigation } from 'novel';
+import { handleImageDrop } from 'novel';
+
 import { AutoComplete } from './editor-autocomplete';
-import { Editor as CoreEditor } from '@tiptap/core';
-import { cn, truncateFileName } from '@/lib/utils';
-import { TextSelection } from 'prosemirror-state';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { EditorView } from 'prosemirror-view';
-import { useTranslations } from 'next-intl';
-import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
-import { Slice } from 'prosemirror-model';
+
+import { TextSelection } from 'prosemirror-state';
+
+import { cn } from '@/lib/utils';
+
+import { Markdown } from 'tiptap-markdown';
+
 import { useState } from 'react';
 import React from 'react';
 
@@ -124,217 +92,6 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-// Update the MenuBar component with icons
-interface MenuBarProps {
-  onAttachmentsChange?: (attachments: File[]) => void;
-  includeSignature?: boolean;
-  onSignatureToggle?: (include: boolean) => void;
-  hasSignature?: boolean;
-}
-
-const MenuBar = () => {
-  const { editor } = useCurrentEditor();
-  const t = useTranslations();
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-
-  if (!editor) {
-    return null;
-  }
-
-  // Replace the old setLink function with this new implementation
-  const handleLinkDialogOpen = () => {
-    // If a link is already active, pre-fill the input with the current URL
-    if (editor.isActive('link')) {
-      const attrs = editor.getAttributes('link');
-      setLinkUrl(attrs.href || '');
-    } else {
-      setLinkUrl('');
-    }
-    setLinkDialogOpen(true);
-  };
-
-  const handleSaveLink = () => {
-    // empty
-    if (linkUrl === '') {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      // Format the URL with proper protocol if missing
-      let formattedUrl = linkUrl;
-      if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
-        formattedUrl = `https://${formattedUrl}`;
-      }
-      // set link
-      editor.chain().focus().setLink({ href: formattedUrl }).run();
-    }
-    setLinkDialogOpen(false);
-  };
-
-  const handleRemoveLink = () => {
-    editor.chain().focus().unsetLink().run();
-    setLinkDialogOpen(false);
-  };
-
-  return (
-    <>
-      <TooltipProvider>
-        <div className="control-group mb-2 overflow-x-auto">
-          <div className="button-group ml-0 mt-1 flex flex-wrap gap-1 border-b pb-2">
-            <div className="mr-2 flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    disabled={!editor.can().chain().focus().toggleBold().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bold') ? 'bg-muted' : 'bg-background'}`}
-                    title="Bold"
-                  >
-                    <Bold className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bold')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    disabled={!editor.can().chain().focus().toggleItalic().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('italic') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Italic className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.italic')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleStrike().run()}
-                    disabled={!editor.can().chain().focus().toggleStrike().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('strike') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Strikethrough className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('pages.createEmail.editor.menuBar.strikethrough')}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleUnderline().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('underline') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Underline className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.underline')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLinkDialogOpen}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('link') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.link')}</TooltipContent>
-              </Tooltip>
-            </div>
-
-            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
-
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bulletList') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bulletList')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('orderedList') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <ListOrdered className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </TooltipProvider>
-
-      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('pages.createEmail.addLink')}</DialogTitle>
-            <DialogDescription>{t('pages.createEmail.addUrlToCreateALink')}</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-2">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="url" className="text-sm font-medium">
-                URL
-              </label>
-              <Input
-                id="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <Button variant="outline" onClick={handleRemoveLink} type="button">
-              {t('common.actions.cancel')}
-            </Button>
-            <Button onClick={handleSaveLink} type="button">
-              {t('common.actions.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
 export default function Editor({
   initialValue,
   onChange,
@@ -348,7 +105,6 @@ export default function Editor({
   senderInfo,
   myInfo,
   readOnly,
-  hideToolbar,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -357,46 +113,43 @@ export default function Editor({
     openAI: false,
   });
 
-  // Remove context usage
   const contentRef = useRef<string>('');
-  const editorRef = useRef<TiptapEditor>(null);
-  const t = useTranslations();
-
+  const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { openNode, openColor, openLink, openAI } = state;
+  const { openAI } = state;
 
   // Function to focus the editor
-  const focusEditor = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (editorRef.current?.commands) {
-      editorRef.current.commands.focus('end');
+  const focusEditor = () => {
+    if (editor && !readOnly) {
+      editor.commands.focus('end');
     }
   };
 
   // Function to clear editor content
   const clearEditorContent = React.useCallback(() => {
-    if (editorRef.current) {
-      editorRef.current.commands.clearContent(true);
+    if (editor) {
+      editor.commands.clearContent(true);
       // Also update our reference and notify parent
       contentRef.current = '';
       onChange('');
     }
-  }, [onChange]);
+  }, [editor, onChange]);
 
   // Reset editor content when initialValue changes
   React.useEffect(() => {
     // We need to make sure both the editor reference exists AND initialValue is provided
-    if (editorRef.current && initialValue) {
+    if (editor && initialValue) {
       try {
         // Make sure the editor is ready before setting content
         setTimeout(() => {
           // Double-check that the editor still exists in case of unmounting
-          if (editorRef.current?.commands?.setContent) {
-            editorRef.current.commands.setContent(initialValue);
+          if (editor?.commands?.setContent) {
+            editor.commands.setContent(initialValue);
 
             // Important: after setting content, manually trigger an update
             // to ensure the parent component gets the latest content
-            const html = editorRef.current.getHTML();
+            const html = editor.getHTML();
             contentRef.current = html;
             onChange(html);
           }
@@ -405,20 +158,7 @@ export default function Editor({
         console.error('Error setting editor content:', error);
       }
     }
-  }, [initialValue, onChange]);
-
-  // Fix useImperativeHandle type errors
-  React.useImperativeHandle(editorRef, () => {
-    // Only extend the current editor if it exists
-    if (!editorRef.current) {
-      return {} as TiptapEditor;
-    }
-    // Otherwise return the editor with our additional methods
-    return {
-      ...editorRef.current,
-      clearContent: clearEditorContent,
-    } as TiptapEditor & { clearContent: () => void };
-  }, [clearEditorContent]);
+  }, [initialValue, editor, onChange]);
 
   // Handle command+enter or ctrl+enter
   const handleCommandEnter = React.useCallback(() => {
@@ -427,11 +167,11 @@ export default function Editor({
 
     // Clear the editor content after sending
     setTimeout(() => {
-      if (editorRef.current?.commands?.clearContent) {
+      if (editor?.commands?.clearContent) {
         clearEditorContent();
       }
     }, 200);
-  }, [onCommandEnter, clearEditorContent]);
+  }, [onCommandEnter, clearEditorContent, editor]);
 
   return (
     <div
@@ -497,12 +237,13 @@ export default function Editor({
             }),
           ]}
           ref={containerRef}
-          className="hide-scrollbar relative min-h-[220px] max-h-[500px] cursor-text overflow-auto"
+          className="no-scrollbar relative max-h-[500px] min-h-[220px] cursor-text overflow-auto"
           editorProps={{
             editable: () => !readOnly,
             handleDOMEvents: {
               mousedown: (view, event) => {
                 if (readOnly) return false;
+                focusEditor();
                 const coords = view.posAtCoords({
                   left: event.clientX,
                   top: event.clientY,
@@ -514,7 +255,6 @@ export default function Editor({
                   const selection = TextSelection.create(view.state.doc, pos);
                   tr.setSelection(selection);
                   view.dispatch(tr);
-                  view.focus();
                 }
 
                 // Let the default handler also run
@@ -560,21 +300,23 @@ export default function Editor({
               'data-placeholder': placeholder,
             },
           }}
-          onCreate={({ editor }) => {
-            editorRef.current = editor;
+          onCreate={({ editor: ed }) => {
+            setEditor(ed);
           }}
-          onDestroy={() => {}}
-          onUpdate={({ editor }) => {
+          onDestroy={() => {
+            setEditor(null);
+          }}
+          onUpdate={({ editor: ed }) => {
             if (readOnly) return;
             // Store the content in the ref to prevent losing it
-            contentRef.current = editor.getHTML();
-            onChange(editor.getHTML());
+            contentRef.current = ed.getHTML();
+            onChange(ed.getHTML());
           }}
           slotAfter={null}
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand
-            className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
+            className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md"
             onKeyDown={(e) => {
               // Prevent form submission on any key that might trigger it
               if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {

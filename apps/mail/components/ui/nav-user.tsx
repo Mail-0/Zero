@@ -1,22 +1,15 @@
-'use client';
-
 import {
   HelpCircle,
-  LogIn,
   LogOut,
   MoonIcon,
   Settings,
   Plus,
-  ChevronDown,
-  BrainCircuitIcon,
-  BrainIcon,
   CopyCheckIcon,
+  BadgeCheck,
+  BanknoteIcon,
+  RefreshCcw,
+  Trash2,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CircleCheck, ThreeDots } from '../icons/icons';
-import { SunIcon } from '../icons/animated/sun';
-import Link from 'next/link';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,91 +17,154 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { DisableBrain, EnableBrain } from '@/actions/brain';
-import { useConnections } from '@/hooks/use-connections';
+import { useDoState } from '@/components/mail/use-do-state';
+import { useLoading } from '../context/loading-context';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
-import { putConnection } from '@/actions/connections';
+import { CircleCheck, ThreeDots } from '../icons/icons';
+import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useBrainState } from '@/hooks/use-summary';
-import { dexieStorageProvider } from '@/lib/idb';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { type IConnection } from '@/types';
+import { useBilling } from '@/hooks/use-billing';
+import { SunIcon } from '../icons/animated/sun';
+import { clear as idbClear } from 'idb-keyval';
+import { useLocation } from 'react-router';
+import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
+import { useQueryState } from 'nuqs';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export function NavUser() {
-  const { data: session, refetch } = useSession();
-  const router = useRouter();
-  const { data: connections, isLoading, mutate } = useConnections();
-  const [isRendered, setIsRendered] = useState(false);
-  const { theme, resolvedTheme, setTheme } = useTheme();
-  const t = useTranslations();
-  const { state } = useSidebar();
+const bytesToMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(2);
 
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+interface SyncingStatusIndicatorProps {
+  isSyncing: boolean;
+  storageSize: number;
+  syncingFolders: string[];
+}
+
+function SyncingStatusIndicator({
+  isSyncing,
+  storageSize,
+  syncingFolders,
+}: SyncingStatusIndicatorProps) {
+  const statusContent = (
+    <div className="flex items-center gap-2">
+      <div className="flex h-4 w-4 items-center justify-center">
+        <div
+          className={cn(
+            'h-2 w-2 rounded-full',
+            isSyncing || storageSize === 0 ? 'animate-pulse bg-orange-500' : 'bg-green-500',
+          )}
+        />
+      </div>
+      <p className="text-[13px] opacity-60">
+        {isSyncing || storageSize === 0
+          ? 'Syncing emails...'
+          : `Synced${storageSize ? ` • ${bytesToMB(storageSize)} MB` : ''}`}
+      </p>
+    </div>
+  );
+
+  if (isSyncing && syncingFolders.length > 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuItem className="cursor-default">{statusContent}</DropdownMenuItem>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={10} avoidCollisions={false}>
+          <p className="text-xs">Syncing: {syncingFolders.join(', ')}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return <DropdownMenuItem className="cursor-default">{statusContent}</DropdownMenuItem>;
+}
+
+export function NavUser() {
+  const { data: session } = useSession();
+  const { data } = useConnections();
+  const [isRendered, setIsRendered] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const { state } = useSidebar();
+  const trpc = useTRPC();
+  const [, setThreadId] = useQueryState('threadId');
+  const { mutateAsync: setDefaultConnection } = useMutation(
+    trpc.connections.setDefault.mutationOptions(),
+  );
+  const { mutateAsync: handleForceSync } = useMutation(trpc.mail.forceSync.mutationOptions());
+  const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
+  const pathname = useLocation().pathname;
+  const queryClient = useQueryClient();
+  const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
+  const [, setPricingDialog] = useQueryState('pricingDialog');
+  const [category] = useQueryState('category', { defaultValue: 'All Mail' });
+  const { setLoading } = useLoading();
+  const [{ isSyncing, syncingFolders, storageSize, shards }] = useDoState();
 
   const getSettingsHref = useCallback(() => {
-    const category = searchParams.get('category');
     const currentPath = category
       ? `${pathname}?category=${encodeURIComponent(category)}`
       : pathname;
     return `/settings/general?from=${encodeURIComponent(currentPath)}`;
-  }, [pathname, searchParams]);
+  }, [pathname, category]);
 
   const handleClearCache = useCallback(async () => {
-    dexieStorageProvider().clear();
+    queryClient.clear();
+    await idbClear();
     toast.success('Cache cleared successfully');
   }, []);
 
   const handleCopyConnectionId = useCallback(async () => {
-    await navigator.clipboard.writeText(session?.connectionId || '');
+    await navigator.clipboard.writeText(activeConnection?.id || '');
     toast.success('Connection ID copied to clipboard');
-  }, [session]);
+  }, [activeConnection]);
 
-  const handleEnableBrain = useCallback(async () => {
-    // This takes too long, not waiting
-    const enabled = await EnableBrain({});
-    if (enabled) toast.success('Brain enabled successfully');
-  }, []);
-
-  const handleDisableBrain = useCallback(async () => {
-    // This takes too long, not waiting
-    const enabled = await DisableBrain({});
-    if (enabled) toast.success('Brain disabled');
-  }, []);
-
-  const activeAccount = useMemo(() => {
-    if (!session) return null;
-    return connections?.find((connection) => connection.id === session?.connectionId);
-  }, [session, connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => setIsRendered(true), []);
 
-  const handleAccountSwitch = (connection: IConnection) => async () => {
-    await putConnection(connection.id);
-    refetch();
-    mutate();
+  const handleAccountSwitch = (connectionId: string) => async () => {
+    if (connectionId === activeConnection?.id) return;
+
+    try {
+      setLoading(true, m['common.navUser.switchingAccounts']());
+      setThreadId(null);
+      await setDefaultConnection({ connectionId });
+      queryClient.clear();
+      await queryClient.refetchQueries({ queryKey: trpc.mail.listThreads.infiniteQueryKey() });
+    } catch (error) {
+      console.error('Error switching accounts:', error);
+      toast.error(m['common.navUser.failedToSwitchAccount']());
+
+      await refetchActiveConnection();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
-    toast.promise(
-      signOut().then(() => router.push('/login')),
-      {
-        loading: 'Signing out...',
-        success: () => 'Signed out successfully!',
-        error: 'Error signing out',
+    toast.promise(signOut(), {
+      loading: 'Signing out...',
+      success: () => 'Signed out successfully!',
+      error: 'Error signing out',
+      async finally() {
+        // await handleClearCache();
+        window.location.href = '/login';
       },
-    );
+    });
   };
 
-  const { data: brainState } = useBrainState();
+  const otherConnections = useMemo(() => {
+    if (!data || !activeAccount) return [];
+    return data.connections.filter((connection) => connection.id !== activeAccount?.id);
+  }, [data, activeAccount]);
 
   const handleThemeToggle = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -126,16 +182,17 @@ export function NavUser() {
               <DropdownMenuTrigger asChild>
                 <div className="flex cursor-pointer items-center">
                   <div className="relative">
-                    <Avatar className="size-8 rounded-[5px]">
+                    <Avatar className="relative left-0.5 size-7 rounded-[5px]">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={activeAccount?.picture || undefined}
                         alt={activeAccount?.name || activeAccount?.email}
                       />
+
                       <AvatarFallback className="rounded-[5px] text-[10px]">
-                        {(activeAccount?.name || activeAccount?.email)
+                        {(activeAccount?.name || activeAccount?.email || '')
                           .split(' ')
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join('')
                           .toUpperCase()
                           .slice(0, 2)}
@@ -145,7 +202,7 @@ export function NavUser() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="ml-3 w-[--radix-dropdown-menu-trigger-width] min-w-56 bg-white font-medium dark:bg-[#131313]"
+                className="w-(--radix-dropdown-menu-trigger-width) ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
                 align="end"
                 side={'bottom'}
                 sideOffset={8}
@@ -174,8 +231,14 @@ export function NavUser() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="w-full">
-                        <div className="text-sm font-medium">
+                        <div className="flex items-center justify-center gap-0.5 text-sm font-medium">
                           {activeAccount.name || session.user.name || 'User'}
+                          {isPro && (
+                            <BadgeCheck
+                              className="h-4 w-4 text-white dark:text-[#141414]"
+                              fill="#1D9BF0"
+                            />
+                          )}
                         </div>
                         <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
                       </div>
@@ -186,15 +249,15 @@ export function NavUser() {
                 <div className="space-y-1">
                   <>
                     <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
-                      {t('common.navUser.accounts')}
+                      {m['common.navUser.accounts']()}
                     </p>
 
-                    {connections
-                      ?.filter((connection) => connection.id !== session.connectionId)
+                    {data?.connections
+                      ?.filter((connection) => connection.id !== activeConnection?.id)
                       .map((connection) => (
                         <DropdownMenuItem
                           key={connection.id}
-                          onClick={handleAccountSwitch(connection)}
+                          onClick={handleAccountSwitch(connection.id)}
                           className="flex cursor-pointer items-center gap-3 py-1"
                         >
                           <Avatar className="size-7 rounded-lg">
@@ -235,23 +298,28 @@ export function NavUser() {
                         ) : (
                           <SunIcon className="size-4 opacity-60" />
                         )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href={getSettingsHref()} className="cursor-pointer">
+                      <a href={getSettingsHref()} className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Settings size={16} className="opacity-60" />
-                          <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
+                          <p className="text-[13px] opacity-60">{m['common.actions.settings']()}</p>
                         </div>
-                      </Link>
+                      </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a
+                        href="https://discord.gg/mail0"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full"
+                      >
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
-                            {t('common.navUser.customerSupport')}
+                            {m['common.navUser.customerSupport']()}
                           </p>
                         </div>
                       </a>
@@ -259,7 +327,7 @@ export function NavUser() {
                     <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
                       </div>
                     </DropdownMenuItem>
                   </>
@@ -275,19 +343,49 @@ export function NavUser() {
                       Terms
                     </a>
                   </div>
+                  <DropdownMenuSeparator className="mt-1" />
+                  <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">Debug</p>
+                  <DropdownMenuItem onClick={handleCopyConnectionId}>
+                    <div className="flex items-center gap-2">
+                      <CopyCheckIcon size={16} className="opacity-60" />
+                      <p className="text-[13px] opacity-60">Copy Connection ID</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleClearCache}>
+                    <div className="flex items-center gap-2">
+                      <Trash2 size={16} className="opacity-60" />
+                      <p className="text-[13px] opacity-60">Clear Local Cache</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleForceSync()}>
+                    <div className="flex items-center gap-2">
+                      <RefreshCcw size={16} className="opacity-60" />
+                      <p className="text-[13px] opacity-60">Force re-sync</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <SyncingStatusIndicator
+                    isSyncing={isSyncing}
+                    storageSize={storageSize}
+                    syncingFolders={syncingFolders}
+                  />
+                  <DropdownMenuItem>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] opacity-60">Shards: {shards}</p>
+                    </div>
+                  </DropdownMenuItem>
                 </>
               </DropdownMenuContent>
             </DropdownMenu>
           )
         ) : (
-          <div className="mt-0. flex w-full items-center justify-between">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              {connections?.map((connection) => (
+              {data && activeAccount ? (
                 <div
-                  key={connection.id}
-                  onClick={handleAccountSwitch(connection)}
+                  key={activeAccount.id}
+                  onClick={handleAccountSwitch(activeAccount.id)}
                   className={`flex cursor-pointer items-center ${
-                    connection.id === session.connectionId && connections.length > 1
+                    activeAccount.id === activeConnection?.id && data.connections.length > 1
                       ? 'outline-mainBlue rounded-[5px] outline outline-2'
                       : ''
                   }`}
@@ -296,11 +394,11 @@ export function NavUser() {
                     <Avatar className="size-7 rounded-[5px]">
                       <AvatarImage
                         className="rounded-[5px]"
-                        src={connection.picture || undefined}
-                        alt={connection.name || connection.email}
+                        src={activeAccount.picture || undefined}
+                        alt={activeAccount.name || activeAccount.email}
                       />
                       <AvatarFallback className="rounded-[5px] text-[10px]">
-                        {(connection.name || connection.email)
+                        {(activeAccount.name || activeAccount.email)
                           .split(' ')
                           .map((n) => n[0])
                           .join('')
@@ -308,20 +406,131 @@ export function NavUser() {
                           .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    {connection.id === session.connectionId && connections.length > 1 && (
-                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
+                    {activeAccount.id === activeConnection?.id && data.connections.length > 1 && (
+                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
                     )}
                   </div>
                 </div>
+              ) : (
+                <div className="flex cursor-pointer items-center">
+                  <div className="relative">
+                    <div className="bg-muted size-6 animate-pulse rounded-[5px]" />
+                  </div>
+                </div>
+              )}
+              {otherConnections.slice(0, 2).map((connection) => (
+                <Tooltip key={connection.id}>
+                  <TooltipTrigger asChild>
+                    <div
+                      onClick={handleAccountSwitch(connection.id)}
+                      className={`flex cursor-pointer items-center ${
+                        connection.id === activeConnection?.id && otherConnections.length > 1
+                          ? 'outline-mainBlue rounded-[5px] outline outline-2'
+                          : ''
+                      }`}
+                    >
+                      <div className="relative">
+                        <Avatar className="size-7 rounded-[5px]">
+                          <AvatarImage
+                            className="rounded-[5px]"
+                            src={connection.picture || undefined}
+                            alt={connection.name || connection.email}
+                          />
+                          <AvatarFallback className="rounded-[5px] text-[10px]">
+                            {(connection.name || connection.email)
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {connection.id === activeConnection?.id && otherConnections.length > 1 && (
+                          <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
+                        )}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-muted-foreground text-xs">
+                    {connection.email}
+                  </TooltipContent>
+                </Tooltip>
               ))}
 
-              <AddConnectionDialog>
-                <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
-                  <Plus className="size-4" />
-                </button>
-              </AddConnectionDialog>
+              {otherConnections.length > 3 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="hover:bg-muted flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px]">
+                      <span className="text-[10px]">+{otherConnections.length - 3}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
+                    align="end"
+                    side={'bottom'}
+                    sideOffset={8}
+                  >
+                    {otherConnections.slice(3).map((connection) => (
+                      <DropdownMenuItem
+                        key={connection.id}
+                        onClick={handleAccountSwitch(connection.id)}
+                        className="flex cursor-pointer items-center gap-3 py-1"
+                      >
+                        <Avatar className="size-7 rounded-lg">
+                          <AvatarImage
+                            className="rounded-lg"
+                            src={connection.picture || undefined}
+                            alt={connection.name || connection.email}
+                          />
+                          <AvatarFallback className="rounded-lg text-[10px]">
+                            {(connection.name || connection.email)
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="-space-y-0.5">
+                          <p className="text-[12px]">{connection.name || connection.email}</p>
+                          {connection.name && (
+                            <p className="text-muted-foreground text-[11px]">
+                              {connection.email.length > 25
+                                ? `${connection.email.slice(0, 25)}...`
+                                : connection.email}
+                            </p>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {isPro ? (
+                <AddConnectionDialog>
+                  <Button className="hover:bg-offsetLight/80 dark:hover:bg-offsetDark/80 flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent px-0 text-black dark:bg-[#262626] dark:text-[#929292]">
+                    <Plus className="size-4" />
+                  </Button>
+                </AddConnectionDialog>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => setPricingDialog('true')}
+                    className="hover:bg-offsetLight/80 dark:hover:bg-offsetDark/80 flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent px-0 text-black dark:bg-[#262626] dark:text-[#929292]"
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </>
+              )}
             </div>
-            <div>
+
+            <div className="flex items-center justify-center gap-1">
+              {/* {isSessionPending ? null : !session.user.phoneNumberVerified ? (
+                <SetupInboxDialog />
+              ) : (
+                <CallInboxDialog />
+              )} */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
@@ -335,6 +544,14 @@ export function NavUser() {
                   sideOffset={8}
                 >
                   <div className="space-y-1">
+                    {billingCustomer?.stripe_id ? (
+                      <DropdownMenuItem onClick={() => openBillingPortal()}>
+                        <div className="flex items-center gap-2">
+                          <BanknoteIcon size={16} className="opacity-60" />
+                          <p className="text-[13px] opacity-60">Billing</p>
+                        </div>
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
                       <div className="flex w-full items-center gap-2">
                         {theme === 'dark' ? (
@@ -342,23 +559,20 @@ export function NavUser() {
                         ) : (
                           <SunIcon className="size-4 opacity-60" />
                         )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
                       </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={getSettingsHref()} className="cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <Settings size={16} className="opacity-60" />
-                          <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a
+                        href="https://discord.gg/mail0"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full"
+                      >
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
-                            {t('common.navUser.customerSupport')}
+                            {m['common.navUser.customerSupport']()}
                           </p>
                         </div>
                       </a>
@@ -366,7 +580,7 @@ export function NavUser() {
                     <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
                       </div>
                     </DropdownMenuItem>
                   </div>
@@ -391,39 +605,56 @@ export function NavUser() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleClearCache}>
                     <div className="flex items-center gap-2">
-                      <HelpCircle size={16} className="opacity-60" />
+                      <Trash2 size={16} className="opacity-60" />
                       <p className="text-[13px] opacity-60">Clear Local Cache</p>
                     </div>
                   </DropdownMenuItem>
-                  {!brainState?.enabled ? (
-                    <DropdownMenuItem onClick={handleEnableBrain}>
-                      <div className="flex items-center gap-2">
-                        <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Enable Brain Activity</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : null}
-                  {brainState?.enabled ? (
-                    <DropdownMenuItem onClick={handleDisableBrain}>
-                      <div className="flex items-center gap-2">
-                        <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Disable Brain Activity</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : null}
+                  <DropdownMenuItem onClick={() => handleForceSync()}>
+                    <div className="flex items-center gap-2">
+                      <RefreshCcw size={16} className="opacity-60" />
+                      <p className="text-[13px] opacity-60">Force re-sync</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <SyncingStatusIndicator
+                    isSyncing={isSyncing}
+                    storageSize={storageSize}
+                    syncingFolders={syncingFolders}
+                  />
+                  <DropdownMenuItem>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] opacity-60">Shards: {shards}</p>
+                    </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         )}
       </div>
+
       {state !== 'collapsed' && (
-        <div className="my-2 flex flex-col items-start gap-1 space-y-1">
-          <div className="text-[13px] leading-none text-black dark:text-white">
-            {activeAccount?.name || session.user.name || 'User'}
-          </div>
-          <div className="text-xs font-normal leading-none text-[#898989]">
-            {activeAccount?.email || session.user.email}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
+            <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
+              <p className={cn('max-w-[14.5ch] truncate text-[13px]')}>
+                {activeAccount?.name || session.user.name || 'User'}
+              </p>
+              {isPro ? (
+                <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
+              ) : null}
+            </div>
+            <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+              {activeAccount?.email || session.user.email}
+            </div>
+            {!isPro && (
+              <button
+                onClick={() => setPricingDialog('true')}
+                className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
+              >
+                <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
+                <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
+              </button>
+            )}
           </div>
         </div>
       )}

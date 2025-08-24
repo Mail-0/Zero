@@ -1,17 +1,15 @@
-'use client';
-
-import { ParsedDraft } from '@/app/api/driver/types';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
-import { fetcher } from '@/lib/utils';
-import useSWR from 'swr';
 
 export const useDraft = (id: string | null) => {
   const { data: session } = useSession();
-
-  const { data, isLoading, error, mutate } = useSWR<ParsedDraft>(
-    session?.user.id && id ? `/api/driver/drafts/${id}` : null,
-    fetcher,
+  const trpc = useTRPC();
+  const draftQuery = useQuery(
+    trpc.drafts.get.queryOptions(
+      { id: id! },
+      { enabled: !!session?.user.id && !!id, staleTime: 1000 * 60 * 60 },
+    ),
   );
-
-  return { data, isLoading, error, mutate };
+  return draftQuery;
 };

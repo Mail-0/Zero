@@ -1,0 +1,12 @@
+{
+  "name": "@zero/cli",
+  "type": "module",
+  "private": true,
+  "author": "BlankParticle",
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "@clack/prompts": "0.10.1",
+    "@zero/tsconfig": "workspace:*",
+    "tiny-glob": "0.2.9"
+  }
+}

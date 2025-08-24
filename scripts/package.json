@@ -1,0 +1,13 @@
+{
+  "name": "scripts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "@faker-js/faker": "9.8.0",
+    "@inquirer/prompts": "7.5.1",
+    "cmd-ts": "^0.13.0",
+    "resend": "4.5.1"
+  }
+}

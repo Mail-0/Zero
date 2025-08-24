@@ -1,5 +1,3 @@
-'use client';
-
 import type React from 'react';
 
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';

@@ -1,52 +1,15 @@
 import { useEditor, type KeyboardShortcutCommand, Extension, generateJSON } from '@tiptap/react';
 import { AutoComplete } from '@/components/create/editor-autocomplete';
 import { defaultExtensions } from '@/components/create/extensions';
+import Emoji, { gitHubEmojis } from '@tiptap/extension-emoji';
+import { FileHandler } from '@tiptap/extension-file-handler';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from 'prosemirror-state';
+import { Image } from '@tiptap/extension-image';
 import { Markdown } from 'tiptap-markdown';
 import { isObjectType } from 'remeda';
 import { cn } from '@/lib/utils';
-
-const PreventNavigateOnDragOver = (handleFiles: (files: File[]) => void | Promise<void>) => {
-  return Extension.create({
-    name: 'preventNavigateOnDrop',
-    addProseMirrorPlugins: () => {
-      return [
-        new Plugin({
-          key: new PluginKey('preventNavigateOnDrop'),
-          props: {
-            handleDOMEvents: {
-              dragover: (_view, event) => {
-                if (event.dataTransfer?.types?.includes('Files')) {
-                  event.preventDefault();
-
-                  return true;
-                }
-
-                return false;
-              },
-              drop: (_view, event) => {
-                const fileList = event.dataTransfer?.files;
-                if (fileList && fileList.length) {
-                  event.preventDefault();
-                  event.stopPropagation();
-
-                  const files = Array.from(fileList);
-                  void handleFiles(files);
-
-                  return true;
-                }
-
-                return false;
-              },
-            },
-          },
-        }),
-      ];
-    },
-  });
-};
 
 const CustomModEnter = (onModEnter: KeyboardShortcutCommand) => {
   return Extension.create({
@@ -147,7 +110,6 @@ const useComposeEditor = ({
   isReadOnly,
   placeholder,
   onChange,
-  onAttachmentsChange,
   onLengthChange,
   onBlur,
   onFocus,
@@ -157,6 +119,7 @@ const useComposeEditor = ({
   onTab,
   myInfo,
   sender,
+  autofocus = false,
 }: {
   initialValue?: Record<string, unknown> | string | null;
   isReadOnly?: boolean;
@@ -181,10 +144,58 @@ const useComposeEditor = ({
     name?: string;
     email?: string;
   };
+  autofocus?: boolean;
 }) => {
   const extensions = [
     ...defaultExtensions,
     Markdown,
+    Image,
+    FileHandler.configure({
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+      onDrop: (currentEditor, files, pos) => {
+        files.forEach((file) => {
+          const fileReader = new FileReader();
+
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () => {
+            currentEditor
+              .chain()
+              .insertContentAt(pos, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              })
+              .focus()
+              .run();
+          };
+        });
+      },
+      onPaste: (currentEditor, files, htmlContent) => {
+        files.forEach((file) => {
+          if (htmlContent) {
+            console.log(htmlContent); // eslint-disable-line no-console
+            return false;
+          }
+
+          const fileReader = new FileReader();
+
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () => {
+            currentEditor
+              .chain()
+              .insertContentAt(currentEditor.state.selection.anchor, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              })
+              .focus()
+              .run();
+          };
+        });
+      },
+    }),
     AutoCompleteExtension({
       myInfo,
       sender,
@@ -207,21 +218,33 @@ const useComposeEditor = ({
     Placeholder.configure({
       placeholder,
     }),
-    ...(onAttachmentsChange
-      ? [
-          PreventNavigateOnDragOver((files) => {
-            onAttachmentsChange(files);
-          }),
-        ]
-      : []),
+    Emoji.configure({
+      emojis: gitHubEmojis,
+      enableEmoticons: true,
+      // suggestion,
+    }),
+    // breaks the image upload
+    // ...(onAttachmentsChange
+    //   ? [
+    //       PreventNavigateOnDragOver((files) => {
+    //         onAttachmentsChange(files);
+    //       }),
+    //     ]
+    //   : []),
   ];
 
   return useEditor({
     editable: !isReadOnly,
+    autofocus: autofocus ? 'end' : false,
     onCreate: ({ editor }) => {
-      if (onLengthChange) {
-        const content = editor.getText();
-        void onLengthChange(content.length);
+      //   if (onLengthChange) {
+      //     const content = editor.getText();
+      //     void onLengthChange(content.length);
+      //   }
+      if (autofocus) {
+        setTimeout(() => {
+          editor.commands.focus('end');
+        }, 100);
       }
     },
     onUpdate: ({ editor }) => {
@@ -247,7 +270,7 @@ const useComposeEditor = ({
     editorProps: {
       attributes: {
         class: cn(
-          'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full min-h-[200px]',
+          'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full',
           isReadOnly && 'pointer-events-none select-text',
         ),
       },

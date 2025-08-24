@@ -1,5 +1,3 @@
-'use client';
-
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import type { Transition, Variants } from 'motion/react';
 import { motion, useAnimation } from 'motion/react';

@@ -1,171 +1,168 @@
-'use client';
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
-import { useParams, useSearchParams } from 'next/navigation';
-import { IGetThreadResponse } from '@/app/api/driver/types';
-import type { InitialThread, ParsedMessage } from '@/types';
+import { useInfiniteQuery, useQuery, useMutation } from '@tanstack/react-query';
+import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { useTRPC } from '@/providers/query-provider';
+import useSearchLabels from './use-labels-search';
 import { useSession } from '@/lib/auth-client';
-import { defaultPageSize } from '@/lib/utils';
 import { useAtom, useAtomValue } from 'jotai';
-import { useDebounce } from './use-debounce';
-import useSWRInfinite from 'swr/infinite';
-import useSWR, { preload } from 'swr';
+import { useSettings } from './use-settings';
+import { useParams } from 'react-router';
+import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
-import axios from 'axios';
 
-export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
-  console.log(`🔄 Prefetching email ${threadId}...`);
-  await preload([userId, threadId, connectionId], fetchThread);
-};
-
-type FetchEmailsTuple = [
-  connectionId: string,
-  folder: string,
-  q?: string,
-  max?: number,
-  labelIds?: string[],
-  pageToken?: string,
-];
-
-const fetchThread = async (args: any[]) => {
-  const [_, id] = args;
-  try {
-    const response = await axios.get<IGetThreadResponse>(`/api/driver/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching email:', error);
-    throw error;
-  }
-};
-
-// Based on gmail
-export interface RawResponse {
-  nextPageToken: string | undefined;
-  threads: InitialThread[];
-  resultSizeEstimate: number;
-}
-
-const getKey = (
-  previousPageData: RawResponse | null,
-  [connectionId, folder, query, max, labelIds]: FetchEmailsTuple,
-): FetchEmailsTuple | null => {
-  if (previousPageData && !previousPageData.nextPageToken) return null; // reached the end);
-  return [connectionId, folder, query, max, labelIds, previousPageData?.nextPageToken];
-};
-
-// Deprecated, we move this to be prefetched on the server
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
-  const { data: session } = useSession();
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
+  const trpc = useTRPC();
+  const { labels } = useSearchLabels();
 
-  const {
-    data,
-    error,
-    size,
-    setSize,
-    isLoading,
-    isValidating,
-    mutate: originalMutate,
-  } = useSWRInfinite(
-    (_, previousPageData) => {
-      if (!session?.user.id || !session.connectionId) return null;
-      return getKey(previousPageData, [
-        session.connectionId,
+  const threadsQuery = useInfiniteQuery(
+    trpc.mail.listThreads.infiniteQueryOptions(
+      {
+        q: searchValue.value,
         folder,
-        searchValue.value, // Always apply search filter
-        defaultPageSize,
-      ]);
-    },
-    async (key) => {
-      const [, folder, query, max, , pageToken] = key;
-      const searchParams = new URLSearchParams({
-        q: query,
-        folder,
-        max: max?.toString() ?? defaultPageSize.toString(),
-        pageToken: pageToken ?? '',
-      } as Record<string, string>);
-      console.log('Fetching emails with params:', {
-        q: query,
-        folder,
-        max: max?.toString() ?? defaultPageSize.toString(),
-        pageToken: pageToken ?? '',
-      });
-      const res = await axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`);
-      return res.data;
-    },
-    {
-      revalidateOnFocus: true,
-      revalidateIfStale: true,
-      revalidateOnMount: true,
-    },
+        labelIds: labels,
+      },
+      {
+        initialCursor: '',
+        getNextPageParam: (lastPage) => lastPage?.nextPageToken ?? null,
+        staleTime: 60 * 1000 * 1, // 1 minute
+        refetchOnMount: true,
+        refetchIntervalInBackground: true,
+      },
+    ),
   );
 
   // Flatten threads from all pages and sort by receivedOn date (newest first)
-  const threads = useMemo(
-    () =>
-      data
-        ? data
-            .flatMap((e) => e.threads)
-            .filter(Boolean)
-            .filter((e) => !isInQueue(`thread:${e.id}`))
-        : [],
-    [data, session, backgroundQueue, isInQueue],
-  );
+
+  const threads = useMemo(() => {
+    return threadsQuery.data
+      ? threadsQuery.data.pages
+          .flatMap((e) => e.threads)
+          .filter(Boolean)
+          .filter((e) => !isInQueue(`thread:${e.id}`))
+      : [];
+  }, [threadsQuery.data, threadsQuery.dataUpdatedAt, isInQueue, backgroundQueue]);
+
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
-  const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
+  const isReachingEnd =
+    isEmpty ||
+    (threadsQuery.data &&
+      !threadsQuery.data.pages[threadsQuery.data.pages.length - 1]?.nextPageToken);
+
   const loadMore = async () => {
-    if (isLoading || isValidating) return;
-    await setSize(size + 1);
+    if (threadsQuery.isLoading || threadsQuery.isFetching) return;
+    await threadsQuery.fetchNextPage();
   };
 
-  const debouncedMutate = useDebounce(originalMutate, 3000);
-
-  return {
-    data: {
-      threads,
-      nextPageToken: data?.[data.length - 1]?.nextPageToken,
-    },
-    isLoading,
-    isValidating,
-    error,
-    loadMore,
-    isReachingEnd,
-    mutate: debouncedMutate,
-  };
+  return [threadsQuery, threads, isReachingEnd, loadMore] as const;
 };
 
 export const useThread = (threadId: string | null) => {
   const { data: session } = useSession();
   const [_threadId] = useQueryState('threadId');
   const id = threadId ? threadId : _threadId;
+  const trpc = useTRPC();
+  const { data: settings } = useSettings();
+  const { theme: systemTheme } = useTheme();
 
-  const { data, isLoading, error, mutate } = useSWR<IGetThreadResponse>(
-    session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
-    () => axios.get<IGetThreadResponse>(`/api/driver/${id}`).then((res) => res.data),
+  const threadQuery = useQuery(
+    trpc.mail.get.queryOptions(
+      {
+        id: id!,
+      },
+      {
+        enabled: !!id && !!session?.user.id,
+        staleTime: 1000 * 60 * 60, // 1 minute
+      },
+    ),
   );
 
-  const isGroupThread = useMemo(() => {
-    if (!data?.latest?.id) return false;
-    const totalRecipients = [
-      ...(data.latest.to || []),
-      ...(data.latest.cc || []),
-      ...(data.latest.bcc || []),
-    ].length;
-    return totalRecipients > 1;
-  }, [data]);
+  const { latestDraft, isGroupThread, finalData, latestMessage } = useMemo(() => {
+    if (!threadQuery.data) {
+      return {
+        latestDraft: undefined,
+        isGroupThread: false,
+        finalData: undefined,
+        latestMessage: undefined,
+      };
+    }
 
-  return {
-    data,
-    isLoading,
-    labels: data?.labels,
-    error,
-    isGroupThread,
-    hasUnread: data?.hasUnread,
-    mutate,
-  };
+    const latestDraft = threadQuery.data.latest?.id
+      ? threadQuery.data.messages.findLast((e) => e.isDraft)
+      : undefined;
+
+    const isGroupThread = threadQuery.data.latest?.id
+      ? (() => {
+          const totalRecipients = [
+            ...(threadQuery.data.latest.to || []),
+            ...(threadQuery.data.latest.cc || []),
+            ...(threadQuery.data.latest.bcc || []),
+          ].length;
+          return totalRecipients > 1;
+        })()
+      : false;
+
+    const nonDraftMessages = threadQuery.data.messages.filter((e) => !e.isDraft);
+    const latestMessage = nonDraftMessages[nonDraftMessages.length - 1];
+
+    const finalData: IGetThreadResponse = {
+      ...threadQuery.data,
+      messages: nonDraftMessages,
+    };
+
+    return { latestDraft, isGroupThread, finalData, latestMessage };
+  }, [threadQuery.data]);
+
+  const { mutateAsync: processEmailContent } = useMutation(
+    trpc.mail.processEmailContent.mutationOptions(),
+  );
+
+  // Extract image loading condition to avoid duplication
+  const shouldLoadImages = useMemo(() => {
+    if (!settings?.settings || !latestMessage?.sender?.email) return false;
+    
+    return settings.settings.externalImages ||
+      settings.settings.trustedSenders?.includes(latestMessage.sender.email) ||
+      false;
+  }, [settings?.settings, latestMessage?.sender?.email]);
+
+  // Prefetch query - intentionally unused, just for caching
+  useQuery({
+    queryKey: [
+      'email-content',
+      latestMessage?.id,
+      shouldLoadImages,
+      systemTheme,
+    ],
+    queryFn: async () => {
+      if (!latestMessage?.decodedBody || !settings?.settings) return null;
+
+      const userTheme =
+        settings.settings.colorTheme === 'system' ? systemTheme : settings.settings.colorTheme;
+      const theme = userTheme === 'dark' ? 'dark' : 'light';
+
+      const result = await processEmailContent({
+        html: latestMessage.decodedBody,
+        shouldLoadImages,
+        theme,
+      });
+
+      return {
+        html: result.processedHtml,
+        hasBlockedImages: result.hasBlockedImages,
+      };
+    },
+    enabled: !!latestMessage?.decodedBody && !!settings?.settings,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  return { ...threadQuery, data: finalData, isGroupThread, latestDraft };
 };

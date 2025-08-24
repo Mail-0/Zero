@@ -1,12 +1,12 @@
-'use client';
-
-import { keyboardShortcuts } from '@/config/shortcuts';
+import { mailNavigationCommandAtom } from '@/hooks/use-mail-navigation';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import useMoveTo from '@/hooks/driver/use-move-to';
 import useDelete from '@/hooks/driver/use-delete';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThread } from '@/hooks/use-threads';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
+import { useSetAtom } from 'jotai';
 
 const closeView = (event: KeyboardEvent) => {
   event.preventDefault();
@@ -14,8 +14,8 @@ const closeView = (event: KeyboardEvent) => {
 
 export function ThreadDisplayHotkeys() {
   const scope = 'thread-display';
-  const [mode, setMode] = useQueryState('mode');
-  const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
+  const [, setMode] = useQueryState('mode');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
   const [openThreadId] = useQueryState('threadId');
   const { data: thread } = useThread(openThreadId);
   const params = useParams<{
@@ -23,6 +23,7 @@ export function ThreadDisplayHotkeys() {
   }>();
   const { mutate: deleteThread } = useDelete();
   const { mutate: moveTo } = useMoveTo();
+  const setMailNavigationCommand = useSetAtom(mailNavigationCommandAtom);
 
   const handlers = {
     closeView: () => closeView(new KeyboardEvent('keydown', { key: 'Escape' })),
@@ -42,17 +43,21 @@ export function ThreadDisplayHotkeys() {
       if (!openThreadId) return;
       if (params.folder === 'bin') {
         deleteThread(openThreadId);
+        setMailNavigationCommand('next');
       } else {
         moveTo({
           threadIds: [openThreadId],
-          currentFolder: params.folder,
+          currentFolder: params.folder ?? 'inbox',
           destination: 'bin',
         });
+        setMailNavigationCommand('next');
       }
     },
   };
 
-  const threadDisplayShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const threadDisplayShortcuts = enhancedKeyboardShortcuts.filter(
+    (shortcut) => shortcut.scope === scope,
+  );
 
   useShortcuts(threadDisplayShortcuts, handlers, { scope });
 
