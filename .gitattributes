@@ -1,1 +1,4 @@
-merge=ours
+# Keep our versions on merges/rebases
+apps/server/wrangler.jsonc              merge=ours
+apps/server/worker-configuration.d.ts   merge=ours
+apps/mail/worker-configuration.d.ts     merge=ours
