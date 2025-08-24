@@ -82,7 +82,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
         <button
           type="button"
           className={cn(
-            'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+            'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent cursor-pointer',
             className,
           )}
         >
