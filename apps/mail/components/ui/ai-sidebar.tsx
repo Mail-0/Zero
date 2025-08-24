@@ -283,8 +283,10 @@ export function useAISidebar() {
   // Update query parameter and localStorage when viewMode changes
   const setViewMode = useCallback(
     (mode: ViewMode) => {
+      console.log('[useAISidebar] setViewMode called', { mode });
       setViewModeState(mode);
-      setViewModeQuery(mode === 'popup' ? null : mode);
+      // Always set query param to keep multiple hook instances in sync (including 'popup')
+      setViewModeQuery(mode);
 
       // Save to localStorage for persistence across sessions
       if (typeof window !== 'undefined') {
@@ -296,6 +298,7 @@ export function useAISidebar() {
 
   const setOpen = useCallback(
     (openState: boolean) => {
+      console.log('[useAISidebar] setOpen called', { openState });
       if (!openState) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('ai-sidebar-open');
@@ -313,7 +316,10 @@ export function useAISidebar() {
     [setOpenQuery],
   );
 
-  const toggleOpen = useCallback(() => setOpen(open !== 'true'), [open, setOpen]);
+  const toggleOpen = useCallback(() => {
+    console.log('[useAISidebar] toggleOpen called', { current: !!open, next: open !== 'true' });
+    setOpen(open !== 'true');
+  }, [open, setOpen]);
 
   useEffect(() => {
     if (viewModeQuery && viewModeQuery !== viewMode) {
@@ -337,8 +343,16 @@ export function useAISidebar() {
 }
 
 function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
-  const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
-    useAISidebar();
+  const {
+    open,
+    setOpen,
+    isFullScreen,
+    setIsFullScreen,
+    toggleViewMode,
+    isSidebar,
+    isPopup,
+    setViewMode,
+  } = useAISidebar();
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -475,6 +489,7 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
   });
 
   useHotkeys('Meta+0', () => {
+    logState('hotkey Meta+0 (toggle AI assistant) before');
     setOpen(!open);
   });
 
@@ -482,8 +497,50 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
     chatState.setMessages([]);
   }, [chatState]);
 
+  const logState = useCallback(
+    (label: string) => {
+      console.log('[AISidebar]', label, {
+        open,
+        isSidebar,
+        isPopup,
+        isFullScreen,
+      });
+    },
+    [open, isSidebar, isPopup, isFullScreen],
+  );
+
+  // Ensure correct state transition when toggling between sidebar and popup from the header button
+  const handleToggleViewMode = useCallback(() => {
+    logState('onToggleViewMode: before');
+    // Always exit fullscreen when switching modes
+    setIsFullScreen(false);
+    // Ensure the AI is open in the new mode
+    setOpen(true);
+    if (isSidebar) {
+      // Go to popup
+      setViewMode('popup');
+    } else {
+      // Go to sidebar
+      setViewMode('sidebar');
+    }
+    // Note: logs after state setters may reflect previous values due to async state; added an effect below too
+    console.log('[AISidebar] onToggleViewMode: requested', { requestedMode: isSidebar ? 'popup' : 'sidebar' });
+  }, [isSidebar, setIsFullScreen, setOpen, setViewMode, logState]);
+
   const shouldRenderSidebarPanel = open && isSidebar && !isFullScreen;
   const shouldRenderOverlay = open && ((isPopup && !isFullScreen) || isFullScreen);
+
+  // Debug current state and render flags
+  useEffect(() => {
+    console.log('[AISidebar] state changed', {
+      open,
+      isSidebar,
+      isPopup,
+      isFullScreen,
+      shouldRenderSidebarPanel,
+      shouldRenderOverlay,
+    });
+  }, [open, isSidebar, isPopup, isFullScreen, shouldRenderSidebarPanel, shouldRenderOverlay]);
 
   // Sidebar panel content (to be embedded inside a ResizablePanel by the parent)
   const SidebarPanelContent = (
@@ -491,11 +548,12 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
       <div className="flex h-full flex-col">
         <ChatHeader
           onClose={() => {
+            logState('ChatHeader.onClose (close chat) before');
             setOpen(false);
             setIsFullScreen(false);
           }}
           onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-          onToggleViewMode={toggleViewMode}
+          onToggleViewMode={handleToggleViewMode}
           isFullScreen={isFullScreen}
           isPopup={isPopup}
           isPro={isPro ?? false}
@@ -536,11 +594,12 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
         >
           <ChatHeader
             onClose={() => {
+              logState('ChatHeader.onClose (close chat) before');
               setOpen(false);
               setIsFullScreen(false);
             }}
             onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-            onToggleViewMode={toggleViewMode}
+            onToggleViewMode={handleToggleViewMode}
             isFullScreen={isFullScreen}
             isPopup={isPopup}
             isPro={isPro ?? false}

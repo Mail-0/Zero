@@ -19,11 +19,11 @@ import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { type EProviders } from '../types';
+import { getContext } from 'hono/context-storage';
 import type { HonoContext } from '../ctx';
 import { createDriver } from './driver';
 import { createDb } from '../db';
 import { Effect } from 'effect';
-import { env } from '../env';
 import { env } from '../env';
 import { Dub } from 'dub';
 
@@ -207,20 +207,16 @@ export const createAuth = () => {
           const db = await getZeroDB(user.id);
           const connections = await db.findManyConnections();
           const context = getContext<HonoContext>();
-          const customer = await context.var.autumn.customers.get(user.id);
-          if (customer.data) {
-            try {
-              await Promise.all(
-                customer.data.products.map(async (product) =>
-                  context.var.autumn.cancel({
-                    customer_id: user.id,
-                    product_id: product.id,
-                  }),
-                ),
-              );
-            } catch (error) {
-              console.error('Failed to delete Autumn customer:', error);
+          try {
+            const autumn = context?.var?.autumn;
+            if (autumn) {
+              await autumn.customers.delete(user.id);
+            } else {
+              console.warn('Autumn context not available during user deletion');
             }
+          } catch (error) {
+            console.error('Failed to delete Autumn customer:', error);
+            // Continue with deletion process despite Autumn failure
           }
 
           const revokedAccounts = (
