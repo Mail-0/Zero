@@ -124,11 +124,30 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
           `[SyncThreadsWorkflow] Processing single page ${pageNumber} for folder ${folder}`,
         );
 
-        const listResult = await driver.list({
-          folder,
-          maxResults: effectiveMaxCount,
-          pageToken: pageToken || undefined,
-        });
+        let listResult;
+        try {
+          listResult = await driver.list({
+            folder,
+            maxResults: effectiveMaxCount,
+            pageToken: pageToken || undefined,
+          });
+        } catch (err: any) {
+          // Gracefully handle Gmail not enabled for the account
+          if (err?.name === 'StandardizedError' && err?.code === 'MAIL_SERVICE_NOT_ENABLED') {
+            console.warn(
+              `[SyncThreadsWorkflow] Skipping sync: mail service not enabled for connection ${connectionId}`,
+              { folder },
+            );
+            return {
+              threads: [],
+              nextPageToken: null,
+              processedCount: 0,
+              successCount: 0,
+              failureCount: 0,
+            } as PageProcessingResult;
+          }
+          throw err;
+        }
 
         const pageProcessingResult: PageProcessingResult = {
           threads: listResult.threads,

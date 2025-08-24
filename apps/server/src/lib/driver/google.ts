@@ -1371,6 +1371,13 @@ export class GoogleMailManager implements MailManager {
       return await Promise.resolve(fn());
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+      // Normalize well-known Google API errors to stable codes/messages
+      const rawMessage = String(error?.errors?.[0]?.message || error?.message || '');
+      if (rawMessage.toLowerCase().includes('mail service not enabled')) {
+        error.code = 'MAIL_SERVICE_NOT_ENABLED';
+        error.message = 'Mail service not enabled';
+      }
+
       const isFatal = FatalErrors.includes(error.message);
       console.error(
         `[${isFatal ? 'FATAL_ERROR' : 'ERROR'}] [Gmail Driver] Operation: ${operation}`,

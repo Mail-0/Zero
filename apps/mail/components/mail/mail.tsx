@@ -7,7 +7,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -402,9 +402,9 @@ export function MailLayout() {
           className="rounded-inherit overflow-hidden"
         >
           <ResizablePanel
-            defaultSize={35}
-            minSize={35}
-            maxSize={35}
+            defaultSize={32}
+            minSize={20}
+            maxSize={60}
             className={cn(
               `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
               isDesktop && threadId && 'hidden lg:block',
@@ -526,7 +526,7 @@ export function MailLayout() {
             </div>
           </ResizablePanel>
 
-          {/* <ResizableHandle className="mr-0.5 hidden opacity-0 md:block" /> */}
+          <ResizableHandle className="mr-0.5 hidden md:block" withHandle />
 
           {isDesktop && (
             <ResizablePanel
@@ -535,13 +535,28 @@ export function MailLayout() {
                 // Only show on md screens and larger when there is a threadId
                 !threadId && 'hidden lg:block',
               )}
-              defaultSize={30}
-              minSize={30}
+              defaultSize={48}
+              minSize={20}
             >
               <div className="relative flex-1">
                 <ThreadDisplay />
               </div>
             </ResizablePanel>
+          )}
+
+          {/* Right handle and AI sidebar panel */}
+          {isDesktop && !!activeConnection?.id && (
+            <>
+              <ResizableHandle className="mr-0.5 hidden md:block" withHandle />
+              <ResizablePanel
+                defaultSize={20}
+                minSize={16}
+                maxSize={40}
+                className={cn('mb-1 w-fit rounded-2xl lg:h-[calc(100dvh-8px)]')}
+              >
+                <AISidebar asPanelContent />
+              </ResizablePanel>
+            </>
           )}
 
           {/* Mobile Thread View */}
@@ -555,9 +570,11 @@ export function MailLayout() {
             </div>
           )}
 
-          {activeConnection?.id ? <AISidebar /> : null}
           {activeConnection?.id ? <AIToggleButton /> : null}
         </ResizablePanelGroup>
+
+        {/* Overlay instance for popup/fullscreen modes */}
+        <AISidebar />
       </div>
     </TooltipProvider>
   );

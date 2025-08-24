@@ -211,6 +211,13 @@ You can set up Zero in two ways:
 Run `pnpm nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.
 For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
 
+#### Gemini Model & API Migration
+
+We migrated Gemini integration to be fully environment-driven. See the detailed guide: [GEMINI_GenerativeAI_Migration.md](.Documentation/GEMINI_GenerativeAI_Migration.md).
+
+- __GOOGLE_GENERATIVE_AI_API_KEY__: Your Google Generative AI API key (replaces `GEMINI_API_KEY`).
+- __GEMINI_FLASH_MODEL__: Gemini model identifier to use. Defaults to `gemini-2.0-flash` when unset.
+
 ### Database Setup
 
 Zero uses PostgreSQL for storing data. Here's how to set it up:

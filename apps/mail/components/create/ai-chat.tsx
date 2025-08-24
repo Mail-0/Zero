@@ -238,9 +238,14 @@ export function AIChat({
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    try {
+      const text = editor.getText();
+      console.log('[AIChat] onSubmit', { length: text?.length });
+    } catch {}
     handleSubmit(e);
     editor.commands.clearContent(true);
     setTimeout(() => {
+      console.log('[AIChat] after submit: scrolling to bottom');
       scrollToBottom();
     }, 100);
   };

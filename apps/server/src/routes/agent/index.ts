@@ -57,18 +57,18 @@ import { ToolOrchestrator } from './orchestrator';
 import { eq, desc, isNotNull } from 'drizzle-orm';
 import migrations from './db/drizzle/migrations';
 import { getPromptName } from '../../pipelines';
-import { anthropic } from '@ai-sdk/anthropic';
+import { google } from '@ai-sdk/google';
 import { connection } from '../../db/schema';
 import type { WSMessage } from 'partyserver';
 import { tools as authTools } from './tools';
 import { processToolCalls } from './utils';
 import { type ZeroEnv } from '../../env';
 import { type Connection } from 'agents';
-import { openai } from '@ai-sdk/openai';
+// removed OpenAI import in favor of Google Gemini
 import * as schema from './db/schema';
 import { threads } from './db/schema';
 import { Effect, pipe } from 'effect';
-import { groq } from '@ai-sdk/groq';
+// removed Groq import in favor of Google Gemini
 import { createDb } from '../../db';
 import type { Message } from 'ai';
 import { create } from './db';
@@ -1126,7 +1126,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
     const genQueryEffect = Effect.tryPromise(() =>
       generateText({
-        model: openai(this.env.OPENAI_MODEL || 'gpt-4o'),
+        model: google(this.env.GEMINI_FLASH_MODEL || 'gemini-2.0-flash'),
         system: GmailSearchAssistantSystemPrompt(),
         prompt: params.query,
       }).then((response) => response.text),
@@ -1761,6 +1761,10 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
         };
 
         const tools = orchestrator.processTools(rawTools);
+        console.log('[ZeroAgent] getDataStreamResponse: tools prepared', {
+          connectionId,
+          toolCount: Object.keys(tools || {}).length,
+        });
         const processedMessages = await processToolCalls(
           {
             messages: this.messages,
@@ -1770,10 +1774,15 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           {},
         );
 
-        const model =
-          this.env.USE_OPENAI === 'true'
-            ? groq('openai/gpt-oss-120b')
-            : anthropic(this.env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
+        const selectedModel = 'gemini-2.0-flash';
+        const model = google(selectedModel);
+        console.log('[ZeroAgent] getDataStreamResponse: model selected', {
+          provider: 'google',
+          model: selectedModel,
+          currentThreadId,
+          currentFolder,
+          currentFilter,
+        });
 
         const result = streamText({
           model,
@@ -1848,6 +1857,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
         // TODO: log errors with log levels
         return;
       }
+      console.log('[ZeroAgent] onMessage', { type: (data as any).type, connectionId: connection.id });
       switch (data.type) {
         case IncomingMessageType.UseChatRequest: {
           if (data.init.method !== 'POST') break;
@@ -1862,6 +1872,13 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
             currentFilter: string;
             messages: Message[];
           };
+          console.log('[ZeroAgent] UseChatRequest received', {
+            msgCount: messages?.length,
+            threadId,
+            currentFolder,
+            currentFilter,
+          });
+          console.log('[ZeroAgent] Broadcasting and persisting user messages');
           this.broadcastChatMessage(
             {
               type: OutgoingMessageType.ChatMessages,
@@ -1874,6 +1891,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           const chatMessageId = data.id;
           //   const abortSignal = this.getAbortSignal(chatMessageId);
 
+          console.log('[ZeroAgent] Starting onChatMessageWithContext', { chatMessageId });
           return this.tryCatchChat(async () => {
             const response = await this.onChatMessageWithContext(
               async ({ response }) => {
@@ -1963,6 +1981,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
   private async reply(id: string, response: Response) {
     // now take chunks out from dataStreamResponse and send them to the client
     return this.tryCatchChat(async () => {
+      console.log('[ZeroAgent] reply: start streaming', { id });
       for await (const chunk of response.body!) {
         const body = decoder.decode(chunk);
 
@@ -1980,6 +1999,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
         body: '',
         done: true,
       });
+      console.log('[ZeroAgent] reply: end streaming', { id });
     });
   }
 

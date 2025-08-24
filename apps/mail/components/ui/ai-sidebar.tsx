@@ -1,7 +1,6 @@
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ArrowsPointingIn, PanelLeftOpen, Phone } from '../icons/icons';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { ResizablePanel } from '@/components/ui/resizable';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useState, useEffect, useCallback } from 'react';
 import useSearchLabels from '@/hooks/use-labels-search';
@@ -173,6 +172,9 @@ function ChatHeader({
 
 interface AISidebarProps {
   className?: string;
+  // When true, render only the sidebar content (for embedding inside a ResizablePanel)
+  // and skip popup/fullscreen overlays. When false (default), render only overlay modes.
+  asPanelContent?: boolean;
 }
 
 type ViewMode = 'sidebar' | 'popup' | 'fullscreen';
@@ -334,7 +336,7 @@ export function useAISidebar() {
   };
 }
 
-function AISidebar({ className }: AISidebarProps) {
+function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
   const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
     useAISidebar();
   const { isPro, track, refetch: refetchBilling } = useBilling();
@@ -389,6 +391,11 @@ function AISidebar({ className }: AISidebarProps) {
     onError: (e) => console.log(e),
     onMessage,
   });
+  console.log('[AISidebar] useAgent init', {
+    agent: 'ZeroAgent',
+    name: activeConnection?.id ? String(activeConnection.id) : 'general',
+    host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
+  });
 
   const chatState = useAgentChat({
     getInitialMessages: async () => {
@@ -402,7 +409,7 @@ function AISidebar({ className }: AISidebarProps) {
       currentFilter: searchValue.value ?? undefined,
     },
     onError(error) {
-      console.error('Error in useChat', error);
+      console.error('[AISidebar] useAgentChat onError', { message: error.message });
       posthog.capture('AI Chat Error', {
         error: error.message,
         threadId: threadId ?? undefined,
@@ -413,6 +420,7 @@ function AISidebar({ className }: AISidebarProps) {
       toast.error('Error, please try again later');
     },
     onResponse: (response) => {
+      console.log('[AISidebar] useAgentChat onResponse', { ok: response.ok, status: response.status });
       posthog.capture('AI Chat Response', {
         response,
         threadId: threadId ?? undefined,
@@ -425,7 +433,10 @@ function AISidebar({ className }: AISidebarProps) {
       }
     },
     async onToolCall({ toolCall }) {
-      console.warn('toolCall', toolCall);
+      console.log('[AISidebar] onToolCall', {
+        tool: toolCall.toolName,
+        argsKeys: toolCall?.args ? Object.keys(toolCall.args) : [],
+      });
       posthog.capture('AI Chat Tool Call', {
         toolCall,
         threadId: threadId ?? undefined,
@@ -471,90 +482,83 @@ function AISidebar({ className }: AISidebarProps) {
     chatState.setMessages([]);
   }, [chatState]);
 
-  return (
-    <>
-      {open && (
-        <>
-          {/* Desktop view - visible on md and larger screens */}
-          {isSidebar && !isFullScreen && (
-            <>
-              <div className="w-px opacity-0" />
-              <ResizablePanel
-                defaultSize={24}
-                minSize={24}
-                maxSize={24}
-                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-[calc(100dvh-8px)] shadow-sm md:block md:rounded-2xl md:shadow-sm"
-              >
-                <div className={cn('h-[calc(98vh)]', 'flex flex-col', '', className)}>
-                  <div className="flex h-full flex-col">
-                    <ChatHeader
-                      onClose={() => {
-                        setOpen(false);
-                        setIsFullScreen(false);
-                      }}
-                      onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-                      onToggleViewMode={toggleViewMode}
-                      isFullScreen={isFullScreen}
-                      isPopup={isPopup}
-                      isPro={isPro ?? false}
-                      onNewChat={handleNewChat}
-                    />
-                    <div className="relative flex-1 overflow-hidden">
-                      <AIChat {...chatState} />
-                    </div>
-                  </div>
-                </div>
-              </ResizablePanel>
-            </>
-          )}
+  const shouldRenderSidebarPanel = open && isSidebar && !isFullScreen;
+  const shouldRenderOverlay = open && ((isPopup && !isFullScreen) || isFullScreen);
 
-          {/* Popup view - visible on small screens or when popup mode is selected */}
-          <div
-            tabIndex={0}
-            className={cn(
-              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-sm transition-opacity duration-150 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0 lg:opacity-40 lg:hover:opacity-100',
-              'md:hidden',
-              isPopup && !isFullScreen && 'md:flex',
-              isFullScreen && 'inset-0! flex! p-0! opacity-100! backdrop-blur-none!',
-              'rounded-2xl focus:opacity-100',
-            )}
-          >
-            <div
-              className={cn(
-                'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-[#E7E7E7] shadow-lg dark:border-[#252525]',
-                'md:hidden',
-                isPopup && !isFullScreen && 'w-[600px] max-w-[90vw] sm:w-[400px] md:block',
-                isFullScreen && 'block! max-w-none! rounded-none! border-none!',
-              )}
-            >
-              <div
-                className={cn(
-                  'flex w-full flex-col',
-                  isFullScreen ? 'h-screen' : 'h-[90vh] sm:h-[600px] sm:max-h-[85vh]',
-                )}
-              >
-                <ChatHeader
-                  onClose={() => {
-                    setOpen(false);
-                    setIsFullScreen(false);
-                  }}
-                  onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-                  onToggleViewMode={toggleViewMode}
-                  isFullScreen={isFullScreen}
-                  isPopup={isPopup}
-                  isPro={isPro ?? false}
-                  onNewChat={handleNewChat}
-                />
-                <div className="relative flex-1 overflow-hidden">
-                  <AIChat {...chatState} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </>
+  // Sidebar panel content (to be embedded inside a ResizablePanel by the parent)
+  const SidebarPanelContent = (
+    <div className={cn('h-[calc(98vh)]', 'flex flex-col', '', className)}>
+      <div className="flex h-full flex-col">
+        <ChatHeader
+          onClose={() => {
+            setOpen(false);
+            setIsFullScreen(false);
+          }}
+          onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+          onToggleViewMode={toggleViewMode}
+          isFullScreen={isFullScreen}
+          isPopup={isPopup}
+          isPro={isPro ?? false}
+          onNewChat={handleNewChat}
+        />
+        <div className="relative flex-1 overflow-hidden">
+          <AIChat {...chatState} />
+        </div>
+      </div>
+    </div>
   );
+
+  // Popup/fullscreen overlay content
+  const OverlayContent = (
+    <div
+      tabIndex={0}
+      className={cn(
+        'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-sm transition-opacity duration-150 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0 lg:opacity-40 lg:hover:opacity-100',
+        'md:hidden',
+        isPopup && !isFullScreen && 'md:flex',
+        isFullScreen && 'inset-0! flex! p-0! opacity-100! backdrop-blur-none!',
+        'rounded-2xl focus:opacity-100',
+      )}
+    >
+      <div
+        className={cn(
+          'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-[#E7E7E7] shadow-lg dark:border-[#252525]',
+          'md:hidden',
+          isPopup && !isFullScreen && 'w-[600px] max-w-[90vw] sm:w-[400px] md:block',
+          isFullScreen && 'block! max-w-none! rounded-none! border-none!',
+        )}
+      >
+        <div
+          className={cn(
+            'flex w-full flex-col',
+            isFullScreen ? 'h-screen' : 'h-[90vh] sm:h-[600px] sm:max-h-[85vh]',
+          )}
+        >
+          <ChatHeader
+            onClose={() => {
+              setOpen(false);
+              setIsFullScreen(false);
+            }}
+            onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+            onToggleViewMode={toggleViewMode}
+            isFullScreen={isFullScreen}
+            isPopup={isPopup}
+            isPro={isPro ?? false}
+            onNewChat={handleNewChat}
+          />
+          <div className="relative flex-1 overflow-hidden">
+            <AIChat {...chatState} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!open) return null;
+  if (asPanelContent) {
+    return shouldRenderSidebarPanel ? SidebarPanelContent : null;
+  }
+  return shouldRenderOverlay ? OverlayContent : null;
 }
 
 export default AISidebar;

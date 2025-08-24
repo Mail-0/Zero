@@ -153,7 +153,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@localhost:5433/zerodotemail",
         },
       ],
       "vars": {
@@ -177,6 +177,8 @@
         "MEET_AUTH_HEADER": "",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-local",
+        "GEMINI_FLASH_MODEL": "gemini-2.5-flash",
+        "GOOGLE_GENERATIVE_AI_API_KEY": ""
       },
       "kv_namespaces": [
         {
@@ -393,6 +395,8 @@
         "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-staging",
+        "GEMINI_FLASH_MODEL": "gemini-2.0-flash",
+        "GOOGLE_GENERATIVE_AI_API_KEY": ""
       },
       "kv_namespaces": [
         {
@@ -606,6 +610,8 @@
         "DISABLE_WORKFLOWS": "true",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-production",
+        "GEMINI_FLASH_MODEL": "gemini-2.0-flash",
+        "GOOGLE_GENERATIVE_AI_API_KEY": ""
       },
       "kv_namespaces": [
         {

@@ -339,7 +339,7 @@ const extractStyleMatrix = async (emailBody: string) => {
   }
 
   const { object: result } = await generateObject({
-    model: google('gemini-2.0-flash'),
+    model: google(env.GEMINI_FLASH_MODEL || 'gemini-2.0-flash'),
     schema,
     temperature: 0,
     maxTokens: 600,
