@@ -249,9 +249,6 @@ export function Navigation() {
                 <Link to="/pricing" className="mt-2" onClick={() => setOpen(false)}>
                   Pricing
                 </Link>
-                <Link to="/privacy" className="mt-2" onClick={() => setOpen(false)}>
-                  Privacy
-                </Link>
                 {aboutLinks.map((link) => (
                   <a key={link.title} href={link.href} className="block font-medium">
                     {link.title}
