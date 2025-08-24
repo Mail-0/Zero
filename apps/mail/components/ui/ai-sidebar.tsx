@@ -283,7 +283,6 @@ export function useAISidebar() {
   // Update query parameter and localStorage when viewMode changes
   const setViewMode = useCallback(
     (mode: ViewMode) => {
-      console.log('[useAISidebar] setViewMode called', { mode });
       setViewModeState(mode);
       // Always set query param to keep multiple hook instances in sync (including 'popup')
       setViewModeQuery(mode);
@@ -298,7 +297,6 @@ export function useAISidebar() {
 
   const setOpen = useCallback(
     (openState: boolean) => {
-      console.log('[useAISidebar] setOpen called', { openState });
       if (!openState) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('ai-sidebar-open');
@@ -317,7 +315,6 @@ export function useAISidebar() {
   );
 
   const toggleOpen = useCallback(() => {
-    console.log('[useAISidebar] toggleOpen called', { current: !!open, next: open !== 'true' });
     setOpen(open !== 'true');
   }, [open, setOpen]);
 
@@ -405,11 +402,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
     onError: (e) => console.log(e),
     onMessage,
   });
-  console.log('[AISidebar] useAgent init', {
-    agent: 'ZeroAgent',
-    name: activeConnection?.id ? String(activeConnection.id) : 'general',
-    host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
-  });
 
   const chatState = useAgentChat({
     getInitialMessages: async () => {
@@ -434,7 +426,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
       toast.error('Error, please try again later');
     },
     onResponse: (response) => {
-      console.log('[AISidebar] useAgentChat onResponse', { ok: response.ok, status: response.status });
       posthog.capture('AI Chat Response', {
         response,
         threadId: threadId ?? undefined,
@@ -447,10 +438,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
       }
     },
     async onToolCall({ toolCall }) {
-      console.log('[AISidebar] onToolCall', {
-        tool: toolCall.toolName,
-        argsKeys: toolCall?.args ? Object.keys(toolCall.args) : [],
-      });
       posthog.capture('AI Chat Tool Call', {
         toolCall,
         threadId: threadId ?? undefined,
@@ -472,7 +459,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
         case Tools.MarkThreadsUnread:
         case Tools.ModifyLabels:
         case Tools.BulkDelete:
-          console.log('modifyLabels', toolCall.args);
           await refetchLabels();
           await Promise.all(
             (toolCall.args as { threadIds: string[] }).threadIds.map((id) =>
@@ -489,7 +475,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
   });
 
   useHotkeys('Meta+0', () => {
-    logState('hotkey Meta+0 (toggle AI assistant) before');
     setOpen(!open);
   });
 
@@ -497,21 +482,8 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
     chatState.setMessages([]);
   }, [chatState]);
 
-  const logState = useCallback(
-    (label: string) => {
-      console.log('[AISidebar]', label, {
-        open,
-        isSidebar,
-        isPopup,
-        isFullScreen,
-      });
-    },
-    [open, isSidebar, isPopup, isFullScreen],
-  );
-
   // Ensure correct state transition when toggling between sidebar and popup from the header button
   const handleToggleViewMode = useCallback(() => {
-    logState('onToggleViewMode: before');
     // Always exit fullscreen when switching modes
     setIsFullScreen(false);
     // Ensure the AI is open in the new mode
@@ -523,24 +495,12 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
       // Go to sidebar
       setViewMode('sidebar');
     }
-    // Note: logs after state setters may reflect previous values due to async state; added an effect below too
-    console.log('[AISidebar] onToggleViewMode: requested', { requestedMode: isSidebar ? 'popup' : 'sidebar' });
-  }, [isSidebar, setIsFullScreen, setOpen, setViewMode, logState]);
+  }, [isSidebar, setIsFullScreen, setOpen, setViewMode]);
 
   const shouldRenderSidebarPanel = open && isSidebar && !isFullScreen;
   const shouldRenderOverlay = open && ((isPopup && !isFullScreen) || isFullScreen);
 
-  // Debug current state and render flags
-  useEffect(() => {
-    console.log('[AISidebar] state changed', {
-      open,
-      isSidebar,
-      isPopup,
-      isFullScreen,
-      shouldRenderSidebarPanel,
-      shouldRenderOverlay,
-    });
-  }, [open, isSidebar, isPopup, isFullScreen, shouldRenderSidebarPanel, shouldRenderOverlay]);
+  // (removed debug state logs)
 
   // Sidebar panel content (to be embedded inside a ResizablePanel by the parent)
   const SidebarPanelContent = (
@@ -548,7 +508,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
       <div className="flex h-full flex-col">
         <ChatHeader
           onClose={() => {
-            logState('ChatHeader.onClose (close chat) before');
             setOpen(false);
             setIsFullScreen(false);
           }}
@@ -594,7 +553,6 @@ function AISidebar({ className, asPanelContent = false }: AISidebarProps) {
         >
           <ChatHeader
             onClose={() => {
-              logState('ChatHeader.onClose (close chat) before');
               setOpen(false);
               setIsFullScreen(false);
             }}

@@ -1,6 +1,5 @@
 import { useAutumn, useCustomer } from 'autumn-js/react';
 import { signOut } from '@/lib/auth-client';
-import { isProCustomer } from '@/lib/utils';
 import { useEffect, useMemo } from 'react';
 
 type FeatureState = {
@@ -19,45 +18,6 @@ type Features = {
   connections: FeatureState;
   brainActivity: FeatureState;
 };
-
-const DEFAULT_FEATURES: Features = {
-  chatMessages: {
-    total: 0,
-    remaining: 0,
-    unlimited: false,
-    enabled: false,
-    usage: 0,
-    nextResetAt: null,
-    interval: '',
-    included_usage: 0,
-  },
-  connections: {
-    total: 0,
-    remaining: 0,
-    unlimited: false,
-    enabled: false,
-    usage: 0,
-    nextResetAt: null,
-    interval: '',
-    included_usage: 0,
-  },
-  brainActivity: {
-    total: 0,
-    remaining: 0,
-    unlimited: false,
-    enabled: false,
-    usage: 0,
-    nextResetAt: null,
-    interval: '',
-    included_usage: 0,
-  },
-};
-
-const FEATURE_IDS = {
-  CHAT: 'chat-messages',
-  CONNECTIONS: 'connections',
-  BRAIN: 'brain-activity',
-} as const;
 
 export const useBilling = () => {
   const { customer, refetch, isLoading, error } = useCustomer();

@@ -20,7 +20,6 @@ import { MailList } from '@/components/mail/mail-list';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
-import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useEffect, useRef, useState } from 'react';
 import AISidebar, { useAISidebar } from '@/components/ui/ai-sidebar';
@@ -330,18 +329,7 @@ export function MailLayout() {
   const showRightPanel = !!(isDesktop && activeConnection?.id && aiOpen && aiIsSidebar && !aiIsFullScreen);
   const layoutKey = showRightPanel ? 'with-ai' : 'no-ai';
 
-  // Debug AI/layout state changes
-  useEffect(() => {
-    console.debug('[MailLayout] state', {
-      isDesktop,
-      activeConnectionId: activeConnection?.id ?? null,
-      aiOpen,
-      aiIsSidebar,
-      aiIsFullScreen,
-      showRightPanel,
-      layoutKey,
-    });
-  }, [isDesktop, activeConnection?.id, aiOpen, aiIsSidebar, aiIsFullScreen, showRightPanel, layoutKey]);
+  // (removed debug AI/layout state changes)
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -362,17 +350,14 @@ export function MailLayout() {
 
   useEffect(() => {
     if (threadId) {
-      console.log('Enabling thread-display scope, disabling mail-list');
       enableScope('thread-display');
       disableScope('mail-list');
     } else {
-      console.log('Enabling mail-list scope, disabling thread-display');
       enableScope('mail-list');
       disableScope('thread-display');
     }
 
     return () => {
-      console.log('Cleaning up mail/thread scopes');
       disableScope('thread-display');
       disableScope('mail-list');
     };
