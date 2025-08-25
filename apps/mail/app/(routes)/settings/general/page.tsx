@@ -223,7 +223,7 @@ export default function GeneralPage() {
 
   const renderTimezoneField = useCallback(
     ({ field }: { field: any }) => (
-      <FormItem className="w-full md:w-[200px]">
+      <FormItem className="w-full md:w-[200px] self-start">
         <FormLabel className="text-sm font-medium">
           {m['pages.settings.general.timezone']()}
         </FormLabel>
