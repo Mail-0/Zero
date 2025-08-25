@@ -52,6 +52,14 @@ export default defineConfig({
   ],
   server: {
     port: 3500,
+    // Ensure Vite HMR websocket connects correctly when behind SSR/proxies
+    hmr: {
+      host: 'localhost',
+      port: 3500,
+      protocol: 'ws',
+      // Use the standard Vite HMR path to avoid connecting to root '/'
+      path: '/vite-hmr',
+    },
     // Proxy API calls to the backend dev server to keep same-origin cookies in dev
     // This helps avoid CORS and auth cookie issues when the frontend is on 3500 and backend on 8787
     proxy: {
@@ -59,6 +67,14 @@ export default defineConfig({
         target: 'http://localhost:8787',
         changeOrigin: true,
         secure: false,
+      },
+      // Proxy agent websocket connections to backend (Cloudflare DO/Party endpoints)
+      // This ensures ws://localhost:3500/agents/... is forwarded to http://localhost:8787
+      '/agents': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
       },
       '/monitoring': {
         target: 'http://localhost:8787',

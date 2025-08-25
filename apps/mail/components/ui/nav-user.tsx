@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDoState } from '@/components/mail/use-do-state';
 import { useLoading } from '../context/loading-context';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -108,6 +108,36 @@ export function NavUser() {
   const { setLoading } = useLoading();
   const [{ isSyncing, syncingFolders, storageSize, shards }] = useDoState();
 
+  // Optimistic syncing flag for immediate visual feedback on force re-sync
+  const [optimisticSyncing, setOptimisticSyncing] = useState(false);
+  const doStateSnapshotRef = useRef({
+    isSyncing,
+    storageSize,
+    shards,
+    syncingFoldersLen: syncingFolders?.length || 0,
+  });
+
+  // Clear optimistic state once we detect any DO-state change after triggering
+  useEffect(() => {
+    const prev = doStateSnapshotRef.current;
+    const changed =
+      prev.isSyncing !== isSyncing ||
+      prev.storageSize !== storageSize ||
+      prev.shards !== shards ||
+      prev.syncingFoldersLen !== (syncingFolders?.length || 0);
+
+    if (optimisticSyncing && changed) {
+      setOptimisticSyncing(false);
+    }
+
+    doStateSnapshotRef.current = {
+      isSyncing,
+      storageSize,
+      shards,
+      syncingFoldersLen: syncingFolders?.length || 0,
+    };
+  }, [isSyncing, storageSize, shards, syncingFolders, optimisticSyncing]);
+
   const getSettingsHref = useCallback(() => {
     const currentPath = category
       ? `${pathname}?category=${encodeURIComponent(category)}`
@@ -169,6 +199,15 @@ export function NavUser() {
   const handleThemeToggle = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
+
+  const triggerForceSync = useCallback(() => {
+    setOptimisticSyncing(true);
+    toast.promise(handleForceSync(), {
+      loading: 'Starting re-sync…',
+      success: 'Re-sync started. We\'ll refresh counts as data arrives.',
+      error: 'Failed to start re-sync',
+    });
+  }, [handleForceSync]);
 
   if (!isRendered) return null;
   if (!session) return null;
@@ -357,14 +396,14 @@ export function NavUser() {
                       <p className="text-[13px] opacity-60">Clear Local Cache</p>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleForceSync()}>
+                  <DropdownMenuItem onClick={triggerForceSync}>
                     <div className="flex items-center gap-2">
                       <RefreshCcw size={16} className="opacity-60" />
                       <p className="text-[13px] opacity-60">Force re-sync</p>
                     </div>
                   </DropdownMenuItem>
                   <SyncingStatusIndicator
-                    isSyncing={isSyncing}
+                    isSyncing={optimisticSyncing || isSyncing || storageSize === 0}
                     storageSize={storageSize}
                     syncingFolders={syncingFolders}
                   />
@@ -609,7 +648,7 @@ export function NavUser() {
                       <p className="text-[13px] opacity-60">Clear Local Cache</p>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleForceSync()}>
+                  <DropdownMenuItem onClick={triggerForceSync}>
                     <div className="flex items-center gap-2">
                       <RefreshCcw size={16} className="opacity-60" />
                       <p className="text-[13px] opacity-60">Force re-sync</p>

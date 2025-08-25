@@ -10,7 +10,7 @@ import {
 import { pluginManager } from '@/lib/plugin-manager';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { PluginOptions } from '@/types/plugin';
+import type { PluginOptions } from '@/types/plugin';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
@@ -87,7 +87,7 @@ export function PluginOptionsForm({
         return (
           <Switch
             {...commonProps}
-            checked={values[key]}
+            checked={!!values[key]}
             onCheckedChange={(checked) => setValues((prev) => ({ ...prev, [key]: checked }))}
           />
         );

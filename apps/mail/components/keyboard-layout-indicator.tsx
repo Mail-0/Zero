@@ -40,7 +40,7 @@ export function useKeyboardLayout() {
     const updateLayoutInfo = () => {
       const info = keyboardLayoutMapper.getDetectedLayout();
       setLayoutInfo(info);
-      console.log('Detected keyboard layout:', info);
+      //console.log('Detected keyboard layout:', info);
     };
 
     updateLayoutInfo();

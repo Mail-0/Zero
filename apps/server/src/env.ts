@@ -37,7 +37,7 @@ export type ZeroEnv = {
   THREAD_SYNC_LOOP: 'false' | 'true';
   DISABLE_WORKFLOWS: 'true';
   AUTORAG_ID: '';
-  USE_OPENAI: 'true';
+  USE_OPENAI: 'true' | '';
   CLOUDFLARE_ACCOUNT_ID: '';
   CLOUDFLARE_API_TOKEN: '';
   BASE_URL: string;
@@ -60,6 +60,9 @@ export type ZeroEnv = {
   ZERO_CLIENT_ID: string;
   ZERO_CLIENT_SECRET: string;
   VITE_PUBLIC_BACKEND_URL: string;
+  // Optional overrides for local OAuth callback base URL/port
+  OAUTH_CALLBACK_BASE_URL?: string;
+  OAUTH_CALLBACK_PORT?: string;
   REDIS_URL: string;
   REDIS_TOKEN: string;
   OPENAI_API_KEY: string;

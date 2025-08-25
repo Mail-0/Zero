@@ -1,71 +1,32 @@
-"use server";
-
-import { pluginSettings } from "@zero/db/schema";
-import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { db } from "@zero/db";
+// Thin client wrappers calling Workers API routes under /api/plugins
 
 export async function getPluginSettings(pluginId: string) {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session?.user?.id) return { enabled: true, added: false }; // Default state if no user
-
-  const settings = await db
-    .select()
-    .from(pluginSettings)
-    .where(and(eq(pluginSettings.pluginId, pluginId), eq(pluginSettings.userId, session.user.id)))
-    .execute();
-
-  const setting = settings[0];
-  return {
-    enabled: setting?.enabled ?? false,
-    added: setting?.added ?? false,
-  };
+  const res = await fetch(`/api/plugins/settings/${encodeURIComponent(pluginId)}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return { enabled: false, added: false };
+  return (await res.json()) as { enabled: boolean; added: boolean };
 }
 
 export async function setPluginSettings(pluginId: string, enabled: boolean) {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  if (!session?.user?.id) throw new Error("User not authenticated");
-
-  const existingSetting = await db.query.pluginSettings.findFirst({
-    where: and(eq(pluginSettings.pluginId, pluginId), eq(pluginSettings.userId, session.user.id)),
+  const res = await fetch(`/api/plugins/settings/${encodeURIComponent(pluginId)}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ enabled }),
   });
-
-  if (!existingSetting?.added) {
-    throw new Error("Cannot toggle a plugin that is not added to your account");
-  }
-
-  await db
-    .update(pluginSettings)
-    .set({
-      enabled,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(eq(pluginSettings.pluginId, pluginId), eq(pluginSettings.userId, session.user.id)),
-    )
-    .execute();
-
-  return { success: true };
+  if (!res.ok) throw new Error("Failed to set plugin settings");
+  return { success: true } as const;
 }
 
 export async function getAllPluginSettings() {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  if (!session?.user?.id) return {};
-
-  const settings = await db
-    .select()
-    .from(pluginSettings)
-    .where(eq(pluginSettings.userId, session.user.id))
-    .execute();
-
-  return Object.fromEntries(
-    settings
-      .filter((s) => s.added) // Only return settings for added plugins
-      .map((s) => [s.pluginId, { enabled: s.enabled, added: s.added }])
-  );
+  const res = await fetch(`/api/plugins/settings`, {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return {} as Record<string, { enabled: boolean; added: boolean }>;
+  return (await res.json()) as Record<string, { enabled: boolean; added: boolean }>;
 }

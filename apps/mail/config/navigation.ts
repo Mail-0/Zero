@@ -191,7 +191,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             shortcut: '?',
           },
           {
-            title: 'navigation.settings.plugins',
+            title: 'Plugins',
             url: '/settings/plugins',
             icon: Tabs,
           },

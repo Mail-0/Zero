@@ -14,7 +14,7 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 import { WorkflowEntrypoint, WorkflowStep } from 'cloudflare:workers';
-import { connectionToDriver } from '../lib/server-utils';
+import { connectionToDriver, sendDoState } from '../lib/server-utils';
 import type { WorkflowEvent } from 'cloudflare:workers';
 import { connection } from '../db/schema';
 import type { ZeroEnv } from '../env';
@@ -199,6 +199,13 @@ export class SyncThreadsCoordinatorWorkflow extends WorkflowEntrypoint<
     console.info(
       `[SyncThreadsCoordinatorWorkflow] Completed ${folder}: ${result.totalSynced} synced across ${result.totalPagesProcessed} pages`,
     );
+
+    // Broadcast final DO state so UI reflects completion (isSyncing=false, updated counts)
+    try {
+      await sendDoState(connectionId);
+    } catch (err) {
+      console.error('[SyncThreadsCoordinatorWorkflow] Failed to send final DO state', err);
+    }
 
     return result;
   }

@@ -102,7 +102,7 @@ export default function NotificationsPage() {
                     <FormDescription>Receive updates about new features</FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}

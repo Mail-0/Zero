@@ -1,49 +1,30 @@
-"use server";
-
-import { pluginSettings } from "@zero/db/schema";
-import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { db } from "@zero/db";
-
+// Thin client wrapper: toggle plugin enabled state by using the settings endpoint
 export async function togglePlugin(pluginId: string) {
-  try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
+  if (!pluginId) throw new Error("Plugin ID is required");
 
-    if (!session?.user?.id) {
-      throw new Error("Unauthorized");
-    }
-
-    const existingSetting = await db.query.pluginSettings.findFirst({
-      where: and(eq(pluginSettings.pluginId, pluginId), eq(pluginSettings.userId, session.user.id)),
-    });
-
-    if (!existingSetting) {
-      throw new Error("Plugin not installed");
-    }
-
-    if (!existingSetting.added) {
-      throw new Error("Plugin not added to user account");
-    }
-
-    await db
-      .update(pluginSettings)
-      .set({
-        enabled: !existingSetting.enabled,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(eq(pluginSettings.pluginId, pluginId), eq(pluginSettings.userId, session.user.id)),
-      );
-
-    revalidatePath("/plugins");
-    revalidatePath("/settings/plugins");
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error toggling plugin:", error);
-    throw error;
+  // Get current state
+  const getRes = await fetch(`/api/plugins/settings/${encodeURIComponent(pluginId)}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!getRes.ok) {
+    const text = await getRes.text().catch(() => "");
+    throw new Error(text || "Failed to fetch plugin settings");
   }
+  const curr = (await getRes.json()) as { enabled: boolean; added: boolean };
+  if (!curr.added) throw new Error("Plugin not added to user account");
+
+  // Set flipped state
+  const postRes = await fetch(`/api/plugins/settings/${encodeURIComponent(pluginId)}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ enabled: !curr.enabled }),
+  });
+  if (!postRes.ok) {
+    const text = await postRes.text().catch(() => "");
+    throw new Error(text || "Failed to toggle plugin");
+  }
+  return { success: true } as const;
 }

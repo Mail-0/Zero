@@ -73,7 +73,7 @@ export default function SecurityPage() {
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -92,7 +92,7 @@ export default function SecurityPage() {
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}

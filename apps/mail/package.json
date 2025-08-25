@@ -53,6 +53,7 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "@zero/server": "workspace:*",
+    "@zero/db": "workspace:*",
     "accept-language-parser": "^1.5.0",
     "agents": "0.0.93",
     "ai": "^4.3.9",
@@ -119,7 +120,8 @@
     "vite-plugin-babel": "1.3.1",
     "vite-plugin-oxlint": "1.4.0",
     "workers-og": "0.0.25",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.3.1",

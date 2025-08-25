@@ -105,7 +105,23 @@ export const getEmbeddingVector = async (text: string) => {
       log('[getEmbeddingVector] Empty or invalid text provided');
       return null;
     }
-
+    // Only call Cloudflare Workers AI when credentials are present
+    const credsPresent =
+      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+    // Previously: unguarded AI call
+    // const embeddingResponse = await env.AI.run(
+    //   '@cf/baai/bge-large-en-v1.5',
+    //   { text: text.trim() },
+    //   {
+    //     gateway: {
+    //       id: 'vectorize-save',
+    //     },
+    //   },
+    // );
+    if (!credsPresent) {
+      log('[getEmbeddingVector] Skipping CF AI (no token/account or USE_OPENAI).');
+      return null;
+    }
     const embeddingResponse = await env.AI.run(
       '@cf/baai/bge-large-en-v1.5',
       { text: text.trim() },

@@ -188,7 +188,7 @@ export default function GeneralPage() {
           <FormDescription>{m['pages.settings.general.animationsDescription']()}</FormDescription>
         </div>
         <FormControl>
-          <Switch checked={field.value} onCheckedChange={field.onChange} />
+          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
         </FormControl>
       </FormItem>
     ),
@@ -280,7 +280,7 @@ export default function GeneralPage() {
           <FormDescription>{m['pages.settings.general.zeroSignatureDescription']()}</FormDescription>
         </div>
         <FormControl>
-          <Switch checked={field.value} onCheckedChange={field.onChange} />
+          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
         </FormControl>
       </FormItem>
     ),
@@ -295,7 +295,7 @@ export default function GeneralPage() {
           <FormDescription>{m['pages.settings.general.autoReadDescription']()}</FormDescription>
         </div>
         <FormControl>
-          <Switch checked={field.value} onCheckedChange={field.onChange} />
+          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
         </FormControl>
       </FormItem>
     ),
@@ -312,7 +312,7 @@ export default function GeneralPage() {
           </FormDescription>
         </div>
         <FormControl>
-          <Switch checked={field.value} onCheckedChange={field.onChange} />
+          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
         </FormControl>
       </FormItem>
     ),

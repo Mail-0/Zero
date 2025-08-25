@@ -26,7 +26,7 @@ import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getPromptName } from '../pipelines';
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 import { Effect } from 'effect';
 
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
@@ -38,7 +38,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     }
     const latestMessage = context.thread.latest!;
 
-    if (latestMessage.tags.some((tag) => tag.name.toLowerCase() === 'spam')) {
+    if ((latestMessage.tags ?? []).some((tag) => tag.name.toLowerCase() === 'spam')) {
       console.log('[WORKFLOW_FUNCTIONS] Skipping analysis for spam message');
       return {
         isQuestion: false,
@@ -62,7 +62,14 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   validateResponseNeeded: async (context) => {
-    const intentResult = context.results?.get('analyze-email-intent');
+    // Narrow the unknown result from the workflow engine to the expected intent shape
+    type EmailIntent = {
+      isQuestion: boolean;
+      isRequest: boolean;
+      isMeeting: boolean;
+      isUrgent: boolean;
+    };
+    const intentResult = context.results?.get('analyze-email-intent') as EmailIntent | undefined;
     if (!intentResult) {
       console.log('[WORKFLOW_FUNCTIONS] Email intent analysis not available');
       throw new Error('Email intent analysis not available');
@@ -170,6 +177,16 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     const getExistingMessagesBatch = (batch: string[]): Effect.Effect<any[], never> =>
       Effect.tryPromise(async () => {
         console.log('[WORKFLOW_FUNCTIONS] Fetching batch of', batch.length, 'message IDs');
+        const credsPresent =
+          env.USE_OPENAI !== 'true' &&
+          !!env.CLOUDFLARE_API_TOKEN &&
+          !!env.CLOUDFLARE_ACCOUNT_ID;
+        // Previously: unguarded CF Vectorize MESSAGE getByIds
+        // return await env.VECTORIZE_MESSAGE.getByIds(batch);
+        if (!credsPresent) {
+          console.log('[WORKFLOW_FUNCTIONS] Skipping CF Vectorize MESSAGE getByIds (no creds)');
+          return [];
+        }
         return await env.VECTORIZE_MESSAGE.getByIds(batch);
       }).pipe(
         Effect.catchAll((error) => {
@@ -243,6 +260,17 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
           { role: 'user', content: prompt },
         ];
 
+        // Safeguard: avoid CF OAuth locally when credentials are missing
+        if (
+          !(
+            env.USE_OPENAI !== 'true' &&
+            !!env.CLOUDFLARE_API_TOKEN &&
+            !!env.CLOUDFLARE_ACCOUNT_ID
+          )
+        ) {
+          console.log('[WORKFLOW_FUNCTIONS] Skipping CF AI summarize message (no creds)');
+          return null;
+        }
         const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
           messages,
         });
@@ -303,7 +331,17 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       '[WORKFLOW_FUNCTIONS] Upserting message vectors:',
       vectorizeResult.embeddings.length,
     );
-    await env.VECTORIZE_MESSAGE.upsert(vectorizeResult.embeddings);
+    // Previously: unguarded upsert to CF Vectorize MESSAGE index
+    // await env.VECTORIZE_MESSAGE.upsert(vectorizeResult.embeddings);
+    if (
+      env.USE_OPENAI !== 'true' &&
+      !!env.CLOUDFLARE_API_TOKEN &&
+      !!env.CLOUDFLARE_ACCOUNT_ID
+    ) {
+      await env.VECTORIZE_MESSAGE.upsert(vectorizeResult.embeddings);
+    } else {
+      console.log('[WORKFLOW_FUNCTIONS] Skipping CF Vectorize upsert for messages (no creds)');
+    }
     console.log('[WORKFLOW_FUNCTIONS] Successfully upserted message vectors');
 
     return { upserted: vectorizeResult.embeddings.length };
@@ -323,7 +361,13 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   checkExistingSummary: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Getting existing thread summary for:', context.threadId);
-    const threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
+    const credsPresent =
+      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+    // Previously: unguarded CF Vectorize getByIds
+    // const threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
+    const threadSummary = credsPresent
+      ? await env.VECTORIZE.getByIds([context.threadId.toString()])
+      : [];
     if (!threadSummary.length) {
       console.log('[WORKFLOW_FUNCTIONS] No existing thread summary found');
       return { existingSummary: null };
@@ -394,18 +438,29 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     console.log('[WORKFLOW_FUNCTIONS] Upserting thread vector');
     const newestMessage = context.thread.messages[context.thread.messages.length - 1];
-    await env.VECTORIZE.upsert([
-      {
-        id: context.threadId.toString(),
-        metadata: {
-          connection: context.connectionId.toString(),
-          thread: context.threadId.toString(),
-          summary: summaryResult.summary,
-          lastMsg: newestMessage?.id,
+    // Previously: unguarded upsert to CF Vectorize
+    // await env.VECTORIZE.upsert([...])
+    if (
+      env.USE_OPENAI !== 'true' &&
+      !!env.CLOUDFLARE_API_TOKEN &&
+      !!env.CLOUDFLARE_ACCOUNT_ID
+    ) {
+      await env.VECTORIZE.upsert([
+        {
+          id: context.threadId.toString(),
+          metadata: {
+            connection: context.connectionId.toString(),
+            thread: context.threadId.toString(),
+            summary: summaryResult.summary,
+            lastMsg: newestMessage?.id,
+          },
+          values: embeddingVector,
         },
-        values: embeddingVector,
-      },
-    ]);
+      ]);
+    } else {
+      console.log('[WORKFLOW_FUNCTIONS] Skipping CF Vectorize upsert for thread (no creds)');
+      return { upserted: false };
+    }
     console.log('[WORKFLOW_FUNCTIONS] Successfully upserted thread vector');
 
     return { upserted: true };
@@ -497,6 +552,12 @@ Instructions:
 
 Thread Summary: ${summaryResult.summary}`;
 
+    const credsPresent =
+      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+    if (!credsPresent) {
+      console.log('[WORKFLOW_FUNCTIONS] Skipping CF AI label suggestion (no creds)');
+      return { suggestions: [], accountLabelsMap };
+    }
     const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
       messages: [
         {
@@ -508,17 +569,32 @@ Thread Summary: ${summaryResult.summary}`;
       ],
     });
 
-    const suggestions: { name: string; source: string }[] = labelsResponse.response;
+    // Robust parsing: response may be a string or an already-parsed object
+    let suggestions: { name: string; source: string }[] = [];
+    const raw = (labelsResponse as any).response;
+    try {
+      if (Array.isArray(raw)) {
+        suggestions = raw as { name: string; source: string }[];
+      } else if (typeof raw === 'string') {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) suggestions = parsed;
+      }
+    } catch (e) {
+      console.log('[WORKFLOW_FUNCTIONS] Failed to parse label suggestions JSON');
+      suggestions = [];
+    }
 
     console.log('[WORKFLOW_FUNCTIONS] Generated label suggestions:', suggestions);
     return { suggestions, accountLabelsMap };
   },
 
   syncLabels: async (context) => {
-    const suggestionsResult: {
+    const suggestionsResult = (
+      context.results?.get('generate-label-suggestions') ?? { suggestions: [], accountLabelsMap: {} }
+    ) as {
       suggestions: { name: string; source: string }[];
       accountLabelsMap: Record<string, any>;
-    } = context.results?.get('generate-label-suggestions') || { suggestions: [] };
+    };
     const userLabelsResult = context.results?.get('get-user-labels');
 
     if (!suggestionsResult?.suggestions || suggestionsResult.suggestions.length === 0) {
@@ -655,6 +731,9 @@ const summarizeThread = async (
       return null;
     }
 
+    const credsPresent =
+      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+
     if (existingSummary) {
       const ReSummarizeThreadPrompt = await getPrompt(
         getPromptName(connectionId, EPrompts.ReSummarizeThread),
@@ -667,6 +746,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
+      if (!credsPresent) {
+        console.log('[SUMMARIZE_THREAD] Skipping CF AI re-summarize (no creds)');
+        return null;
+      }
       const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });
@@ -684,6 +767,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
+      if (!credsPresent) {
+        console.log('[SUMMARIZE_THREAD] Skipping CF AI summarize (no creds)');
+        return null;
+      }
       const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });

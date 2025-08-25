@@ -4,6 +4,13 @@
   "compatibility_date": "2025-05-01",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/main.ts",
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.sql"],
+      "fallthrough": true,
+    },
+  ],
   "env": {
     "local": {
       "rules": [
@@ -161,24 +168,26 @@
         "COOKIE_DOMAIN": "localhost",
         "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+        "OAUTH_CALLBACK_PORT": "8787",
+        "OAUTH_CALLBACK_BASE_URL": "http://localhost:8787",
         "JWT_SECRET": "secret",
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
         "GOOGLE_S_ACCOUNT": "{}",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "60",
-        "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "THREAD_SYNC_MAX_COUNT": "100",
+        "THREAD_SYNC_LOOP": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
-        "USE_OPENAI": "true",
-        "CLOUDFLARE_ACCOUNT_ID": "",
-        "CLOUDFLARE_API_TOKEN": "",
+        "USE_OPENAI": "",
+        "CLOUDFLARE_ACCOUNT_ID": "67bfa4e8330da2fa50e381e6c280cd04",
+        "CLOUDFLARE_API_TOKEN": "MlevFmzYlfq6c0fmaq9HiQUXLAVOEIMY77kzUqHv",
         "MEET_AUTH_HEADER": "",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-local",
         "GEMINI_FLASH_MODEL": "gemini-2.5-flash",
-        "GOOGLE_GENERATIVE_AI_API_KEY": ""
+        "GOOGLE_GENERATIVE_AI_API_KEY": "AIzaSyDn080J0aFun1wCQoM-O8SU-qySW3oSm6M"
       },
       "kv_namespaces": [
         {
@@ -390,12 +399,12 @@
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "60",
+        "THREAD_SYNC_MAX_COUNT": "100",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-staging",
-        "GEMINI_FLASH_MODEL": "gemini-2.0-flash",
+        "GEMINI_FLASH_MODEL": "gemini-2.5-flash",
         "GOOGLE_GENERATIVE_AI_API_KEY": ""
       },
       "kv_namespaces": [
@@ -607,10 +616,10 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-production",
-        "GEMINI_FLASH_MODEL": "gemini-2.0-flash",
+        "GEMINI_FLASH_MODEL": "gemini-2.5-flash",
         "GOOGLE_GENERATIVE_AI_API_KEY": ""
       },
       "kv_namespaces": [

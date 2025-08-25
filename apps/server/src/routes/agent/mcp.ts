@@ -20,7 +20,7 @@ import { composeEmail } from '../../trpc/routes/ai/compose';
 import { getCurrentDateContext } from '../../lib/prompts';
 import { connection } from '../../db/schema';
 import { FOLDERS } from '../../lib/utils';
-import { env } from 'cloudflare:workers';
+import { env } from '../../env';
 import { eq, and } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { createDb } from '../../db';
@@ -84,7 +84,11 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
             ],
           };
         }
-        const response = await env.VECTORIZE.getByIds([s.id]);
+        const credsPresent =
+          env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+        // Previously: unguarded Vectorize call
+        // const response = await env.VECTORIZE.getByIds([s.id]);
+        const response = credsPresent ? await env.VECTORIZE.getByIds([s.id]) : [];
         const { result: thread } = await getThread(this.activeConnectionId, s.id);
         if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
           const result = response[0].metadata as { summary: string; connection: string };
@@ -95,6 +99,20 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
                   type: 'text' as const,
                   text: 'No summary found for this connection',
                 },
+              ],
+            };
+          }
+          // Safeguard: avoid CF OAuth locally when credentials are missing
+          if (!credsPresent) {
+            return {
+              content: [
+                { type: 'text' as const, text: 'CF credentials missing; returning basic details.' },
+                { type: 'text' as const, text: `Subject: ${thread.latest?.subject}` },
+                {
+                  type: 'text' as const,
+                  text: `Sender: ${thread.latest?.sender.name} <${thread.latest?.sender.email}>`,
+                },
+                { type: 'text' as const, text: `Date: ${thread.latest?.receivedOn}` },
               ],
             };
           }

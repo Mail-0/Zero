@@ -1,4 +1,4 @@
-import {
+import type {
   Plugin,
   PluginHook,
   UIExtensionPoint,
@@ -59,10 +59,10 @@ class PluginManager {
 
     this.plugins.set(plugin.metadata.id, plugin);
 
-    const enabled = await getPluginSettings(plugin.metadata.id);
-    this.enabledStates.set(plugin.metadata.id, enabled);
+    const settings = await getPluginSettings(plugin.metadata.id);
+    this.enabledStates.set(plugin.metadata.id, settings);
 
-    if (enabled) {
+    if (settings.enabled) {
       await this.registerPluginExtensions(plugin);
       await plugin.onActivate?.(storage);
     }
@@ -156,7 +156,7 @@ class PluginManager {
       throw new Error(`Plugin with ID ${pluginId} is not registered`);
     }
 
-    const currentlyEnabled = this.enabledStates.get(pluginId) ?? true;
+    const currentlyEnabled = this.isPluginEnabled(pluginId);
     if (enabled !== currentlyEnabled) {
       if (enabled) {
         await this.registerPluginExtensions(plugin);

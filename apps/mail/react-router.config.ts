@@ -1,11 +1,11 @@
 import type { Config } from '@react-router/dev/config';
 
 export default {
-  ssr: false,
+  ssr: true,
   buildDirectory: 'build',
   appDirectory: 'app',
   routeDiscovery: {
-    mode: 'initial',
+    mode: 'lazy',
   },
   prerender: ['/manifest.webmanifest'],
   future: {

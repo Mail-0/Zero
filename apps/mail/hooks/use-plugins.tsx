@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { Plugin, UIExtensionPoint } from '@/types/plugin';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
+import type { Plugin, UIExtensionPoint } from '@/types/plugin';
 import { pluginManager } from '@/lib/plugin-manager';
 
 interface PluginContextType {
@@ -46,8 +47,9 @@ export function PluginProvider({ children }: { children: ReactNode }) {
 
   const togglePlugin = useCallback(async (pluginId: string) => {
     try {
-      const { togglePlugin: togglePluginAction } = await import('@/actions/toggle-plugin');
-      await togglePluginAction(pluginId);
+      // Use plugin manager to toggle the enabled state
+      const isCurrentlyEnabled = enabledPlugins.has(pluginId);
+      await pluginManager.setPluginEnabled(pluginId, !isCurrentlyEnabled);
 
       setEnabledPlugins((prev) => {
         const next = new Set(prev);
@@ -62,7 +64,7 @@ export function PluginProvider({ children }: { children: ReactNode }) {
       console.error('Error toggling plugin:', error);
       throw error;
     }
-  }, []);
+  }, [enabledPlugins]);
 
   const value = {
     plugins,

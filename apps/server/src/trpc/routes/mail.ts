@@ -7,6 +7,7 @@ import {
   modifyThreadLabelsInDB,
   deleteAllSpam,
   reSyncThread,
+  sendDoState,
 } from '../../lib/server-utils';
 import {
   IGetThreadResponseSchema,
@@ -57,7 +58,42 @@ export const mailRouter = router({
     }),
   forceSync: activeDriverProcedure.mutation(async ({ ctx }) => {
     const { activeConnection } = ctx;
-    return await forceReSync(activeConnection.id);
+    // First, clear and reset state
+    const res = await forceReSync(activeConnection.id);
+    // Broadcast initial DO state (likely cleared) to update UI counters/storage
+    try {
+      ctx.c.executionCtx.waitUntil(sendDoState(activeConnection.id));
+    } catch (err) {
+      console.error('[forceSync] Failed to queue sendDoState after reset', err);
+    }
+
+    // Kick off a coordinated, multi-page backfill for the inbox
+    // Note: THREAD_SYNC_LOOP must be true in wrangler vars to continue across pages
+    try {
+      const instance = await env.SYNC_THREADS_COORDINATOR_WORKFLOW.create({
+        params: {
+          connectionId: activeConnection.id,
+          folder: 'inbox',
+        },
+      });
+      console.info('[forceSync] Started coordinator workflow', {
+        workflowId: instance.id,
+        connectionId: activeConnection.id,
+        folder: 'inbox',
+      });
+    } catch (error) {
+      console.error('[forceSync] Failed to start coordinator workflow', error);
+    }
+
+    // Queue another state push in case shard/registry changed after workflow start
+    try {
+      ctx.c.executionCtx.waitUntil(sendDoState(activeConnection.id));
+    } catch (err) {
+      console.error('[forceSync] Failed to queue sendDoState after workflow start', err);
+    }
+
+    // Always return the base result to preserve API contract
+    return res;
   }),
   get: activeDriverProcedure
     .input(

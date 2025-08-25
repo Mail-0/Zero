@@ -335,6 +335,26 @@ export const createAuth = () => {
 const createAuthConfig = () => {
   const cache = redis();
   const { db } = createDb(env.HYPERDRIVE.connectionString);
+  // Compute effective base URL for OAuth callbacks, allowing local overrides
+  const computeBaseURL = (): string => {
+    // Highest precedence: explicit base URL override
+    if (env.OAUTH_CALLBACK_BASE_URL && env.OAUTH_CALLBACK_BASE_URL.trim().length > 0) {
+      return env.OAUTH_CALLBACK_BASE_URL;
+    }
+    // Next: override just the port on the existing backend URL when provided
+    try {
+      const u = new URL(env.VITE_PUBLIC_BACKEND_URL);
+      if (env.OAUTH_CALLBACK_PORT && env.OAUTH_CALLBACK_PORT.trim().length > 0) {
+        u.port = String(Number(env.OAUTH_CALLBACK_PORT));
+      }
+      return u.toString().replace(/\/$/, '');
+    } catch {
+      // Fallback to the raw value if URL parsing fails
+      return env.VITE_PUBLIC_BACKEND_URL;
+    }
+  };
+
+  const effectiveBaseURL = computeBaseURL();
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
@@ -360,7 +380,7 @@ const createAuthConfig = () => {
         domain: env.COOKIE_DOMAIN,
       },
     },
-    baseURL: env.VITE_PUBLIC_BACKEND_URL,
+    baseURL: effectiveBaseURL,
     trustedOrigins: [
       'https://app.0.email',
       'https://sapi.0.email',
@@ -368,6 +388,7 @@ const createAuthConfig = () => {
       'https://0.email',
       'http://localhost:3000',
       'http://localhost:3500',
+      effectiveBaseURL,
     ],
     session: {
       cookieCache: {

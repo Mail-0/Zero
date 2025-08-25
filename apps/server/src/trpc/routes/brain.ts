@@ -36,10 +36,29 @@ export const brainRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { threadId } = input;
-      const response = await env.VECTORIZE.getByIds([threadId]);
+      const credsPresent =
+        env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+      // Safely fetch vector by ID; if Vectorize errors, log and degrade gracefully
+      let response: any[] = [];
+      if (credsPresent) {
+        try {
+          response = await env.VECTORIZE.getByIds([threadId]);
+        } catch (error) {
+          console.error('[brain.generateSummary] VECTORIZE.getByIds failed:', {
+            threadId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // fall through with empty response
+          response = [];
+        }
+      }
       if (response.length && response?.[0]?.metadata?.['summary']) {
         const result = response[0].metadata as { summary: string; connection: string };
         if (result.connection !== ctx.activeConnection.id) return null;
+        if (!credsPresent) {
+          // Skip CF AI summarization when creds missing; fall back to returning nothing
+          return null;
+        }
         const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
           input_text: result.summary,
         });

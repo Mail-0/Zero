@@ -1774,7 +1774,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           {},
         );
 
-        const selectedModel = 'gemini-2.0-flash';
+        const selectedModel = 'gemini-2.5-flash';
         const model = google(selectedModel);
         console.log('[ZeroAgent] getDataStreamResponse: model selected', {
           provider: 'google',

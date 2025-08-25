@@ -5,6 +5,12 @@ export default [
   route('/home', 'home/page.tsx'),
 
   route('/api/mailto-handler', 'mailto-handler.ts'),
+  // Plugins API (Workers-compatible)
+  route('/api/plugins/settings', '(routes)/api/plugins/settings.ts'),
+  route('/api/plugins/settings/:id', '(routes)/api/plugins/settings/[id].ts'),
+  route('/api/plugins/install/:id', '(routes)/api/plugins/install/[id].ts'),
+  route('/api/plugins/uninstall/:id', '(routes)/api/plugins/uninstall/[id].ts'),
+  route('/api/plugins/data/:id', '(routes)/api/plugins/data/[id].ts'),
 
   layout('(full-width)/layout.tsx', [
     route('/about', '(full-width)/about.tsx'),
@@ -44,6 +50,7 @@ export default [
         route('/labels', '(routes)/settings/labels/page.tsx'),
         route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),
+        route('/plugins', '(routes)/settings/plugins/page.tsx'),
         route('/privacy', '(routes)/settings/privacy/page.tsx'),
         route('/security', '(routes)/settings/security/page.tsx'),
         route('/shortcuts', '(routes)/settings/shortcuts/page.tsx'),
