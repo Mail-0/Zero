@@ -2,7 +2,7 @@
   "name": "zero",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
     "go": "pnpm docker:db:up && pnpm run dev",
     "prepare": "husky",
@@ -40,19 +40,19 @@
     "eval:ci": "dotenv -- pnpm --filter=@zero/server run eval:ci"
   },
   "devDependencies": {
-    "@types/node": "22.15.29",
+    "@types/node": "24.3.0",
     "@zero/tsconfig": "workspace:*",
-    "dotenv-cli": "^8.0.0",
+    "dotenv-cli": "^10.0.0",
     "husky": "9.1.7",
-    "prettier": "3.5.3",
+    "prettier": "3.6.2",
     "prettier-plugin-sort-imports": "1.8.8",
-    "prettier-plugin-tailwindcss": "0.6.12",
-    "tsx": "4.19.4",
-    "turbo": "^2.5.4",
+    "prettier-plugin-tailwindcss": "0.6.14",
+    "tsx": "4.20.5",
+    "turbo": "^2.5.6",
     "typescript": "catalog:"
   },
   "dependencies": {
     "zod-to-json-schema": "3.24.6",
-    "zod": "3.25.42"
+    "zod": "4.1.1"
   }
 }

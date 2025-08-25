@@ -30,7 +30,7 @@ class MockExecutionContext implements ExecutionContext {
       console.error('MockExecutionContext: Error in waitUntil', error);
     }
   }
-  passThroughOnException(): void {}
+  passThroughOnException(): void { }
   props: any;
 }
 
@@ -286,15 +286,15 @@ export const getThread: (
   connectionId: string,
   threadId: string,
 ) => {
-  const result = await Effect.runPromise(getThreadEffect(connectionId, threadId));
-  if (!result.result) {
-    throw new Error(`Thread ${threadId} not found`);
-  }
-  if (!result.shardId) {
-    throw new Error(`Thread ${threadId} not found in any shard`);
-  }
-  return { result: result.result, shardId: result.shardId };
-};
+    const result = await Effect.runPromise(getThreadEffect(connectionId, threadId));
+    if (!result.result) {
+      throw new Error(`Thread ${threadId} not found`);
+    }
+    if (!result.shardId) {
+      throw new Error(`Thread ${threadId} not found in any shard`);
+    }
+    return { result: result.result, shardId: result.shardId };
+  };
 
 export const modifyThreadLabelsInDB = async (
   connectionId: string,
@@ -501,7 +501,7 @@ const getCounts = async (connectionId: string): Promise<CountResult[]> => {
 export const sendDoState = async (connectionId: string) => {
   try {
     const agent = await getZeroSocketAgent(connectionId);
-    
+
     const cached = await agent.getCachedDoState();
     if (cached) {
       console.log(`[sendDoState] Using cached data for connection ${connectionId}`);
@@ -522,9 +522,9 @@ export const sendDoState = async (connectionId: string) => {
       getCounts(connectionId),
     ]);
     const shards = await listShards(registry);
-    
+
     await agent.setCachedDoState(size, counts, shards.length);
-    
+
     return agent.broadcastChatMessage({
       type: OutgoingMessageType.Do_State,
       isSyncing: false,
@@ -603,6 +603,8 @@ export const verifyToken = async (token: string) => {
   const data = (await response.json()) as any;
   return !!data;
 };
+
+
 
 export const resetConnection = async (connectionId: string) => {
   const { db, conn } = createDb(env.HYPERDRIVE.connectionString);

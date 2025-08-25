@@ -842,4 +842,38 @@ export const mailRouter = router({
         });
       }
     }),
+  getRawEmail: activeDriverProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { activeConnection } = ctx;
+      const { stub: agent } = await getZeroAgent(activeConnection.id);
+      return agent.getRawEmail(input.id);
+    }),
+  verifyEmail: activeDriverProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      try {
+        const { activeConnection } = ctx;
+        const { stub: agent } = await getZeroAgent(activeConnection.id);
+
+        console.log(`[VERIFY_EMAIL] Getting raw email for message ID: ${input.id}`);
+        const rawEmail = await agent.getRawEmail(input.id);
+
+        const { verify } = await import('../../lib/email-verification');
+        const result = await verify(rawEmail);
+        console.log(`[VERIFY_EMAIL] Verification result for message ID ${input.id}:`, result);
+        return result;
+      } catch (error) {
+        console.error('Email verification error:', error);
+        return { isVerified: false };
+      }
+    }),
 });
