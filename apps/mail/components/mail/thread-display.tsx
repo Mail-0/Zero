@@ -732,7 +732,7 @@ export function ThreadDisplay() {
                 <div className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-2">
                   <button
                     onClick={toggleAISidebar}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131]"
+                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
                   >
                     <Sparkles className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
@@ -743,7 +743,7 @@ export function ThreadDisplay() {
                   </button>
                   <button
                     onClick={() => setIsComposeOpen('true')}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131]"
+                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
                   >
                     <Mail className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
@@ -802,7 +802,7 @@ export function ThreadDisplay() {
                     setMode('replyAll');
                     setActiveReplyId(emailData?.latest?.id ?? '');
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
@@ -817,7 +817,7 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={handleToggleStar}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
                       >
                         <Star
                           className={cn(
@@ -842,7 +842,7 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => moveThreadTo('archive')}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
                       >
                         <Archive className="fill-iconLight dark:fill-iconDark" />
                       </button>
@@ -859,7 +859,7 @@ export function ThreadDisplay() {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => moveThreadTo('bin')}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
+                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] hover:bg-[#fccdd5]/70 dark:border-[#6E2532] dark:bg-[#411D23] dark:hover:bg-[#6E2532]/70 cursor-pointer transition-colors"
                         >
                           <Trash className="fill-[#F43F5E]" />
                         </button>
@@ -873,7 +873,7 @@ export function ThreadDisplay() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" aria-label="Thread actions" aria-haspopup="menu" className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white cursor-pointer focus:outline-hidden focus:ring-0 dark:bg-[#313131]">
+                    <button type="button" aria-label="Thread actions" aria-haspopup="menu" className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white cursor-pointer focus:outline-hidden focus:ring-0 dark:bg-[#313131] transition-colors">
                       <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                     </button>
                   </DropdownMenuTrigger>

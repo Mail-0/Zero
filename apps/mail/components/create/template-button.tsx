@@ -196,7 +196,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button size={'xs'} variant={'secondary'} disabled={isSaving}>
+          <Button type="button" size={'xs'} variant={'secondary'} className="bg-background border hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer" disabled={isSaving}>
             Templates
           </Button>
         </DropdownMenuTrigger>

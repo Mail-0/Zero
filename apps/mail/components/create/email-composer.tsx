@@ -635,14 +635,14 @@ export function EmailComposer({
             <div className="flex gap-2">
               <button
                 tabIndex={-1}
-                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
                 onClick={() => setShowCc(!showCc)}
               >
                 <span>Cc</span>
               </button>
               <button
                 tabIndex={-1}
-                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
                 onClick={() => setShowBcc(!showBcc)}
               >
                 <span>Bcc</span>
@@ -650,7 +650,7 @@ export function EmailComposer({
               {onClose && (
                 <button
                   tabIndex={-1}
-                  className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+                  className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
                   onClick={handleClose}
                 >
                   <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
@@ -705,6 +705,7 @@ export function EmailComposer({
             <button
               onClick={handleGenerateSubject}
               disabled={isLoading || isGeneratingSubject || messageLength < 1}
+              className="hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded p-1"
             >
               <div className="flex items-center justify-center gap-2.5 pl-0.5">
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
@@ -787,7 +788,7 @@ export function EmailComposer({
               onChange={handleScheduleChange}
               onValidityChange={handleScheduleValidityChange}
             />
-            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
+            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()} className="bg-background border hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer">
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
             </Button>
@@ -819,7 +820,7 @@ export function EmailComposer({
               <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <button
-                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B]"
+                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B] cursor-pointer"
                     aria-label={`View ${attachments.length} attached ${pluralize('file', attachments.length)}`}
                   >
                     <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
@@ -917,7 +918,7 @@ export function EmailComposer({
                                   toast.error('Failed to remove attachment');
                                 }
                               }}
-                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
+                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 cursor-pointer"
                               aria-label={`Remove ${file.name}`}
                             >
                               <XIcon className="text-muted-foreground h-3.5 w-3.5 hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
@@ -939,7 +940,7 @@ export function EmailComposer({
                     variant="ghost"
                     size="icon"
                     onClick={() => setToggleToolbar(!toggleToolbar)}
-                    className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
+                    className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer`}
                   >
                     <Type className="h-4 w-4" />
                   </Button>
@@ -976,7 +977,7 @@ export function EmailComposer({
             <Button
               size={'xs'}
               variant={'ghost'}
-              className="border border-[#8B5CF6]"
+              className="border border-[#8B5CF6] cursor-pointer"
               onClick={async () => {
                 if (!subjectInput.trim()) {
                   await handleGenerateSubject();
@@ -1013,10 +1014,10 @@ export function EmailComposer({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={cancelLeave}>
+            <Button variant="outline" onClick={cancelLeave} className="cursor-pointer">
               Stay
             </Button>
-            <Button variant="destructive" onClick={confirmLeave}>
+            <Button variant="destructive" onClick={confirmLeave} className="cursor-pointer">
               Leave
             </Button>
           </DialogFooter>
@@ -1038,6 +1039,7 @@ export function EmailComposer({
               onClick={() => {
                 setShowAttachmentWarning(false);
               }}
+              className="cursor-pointer"
             >
               Recheck
             </Button>
@@ -1046,6 +1048,7 @@ export function EmailComposer({
                 setShowAttachmentWarning(false);
                 void proceedWithSend();
               }}
+              className="cursor-pointer"
             >
               Send Anyway
             </Button>
@@ -1137,7 +1140,7 @@ const ContentPreview = ({
     </div>
     <div className="flex justify-end gap-2 p-2">
       <button
-        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-red-700 px-1.5 text-sm shadow-sm hover:bg-red-800 dark:border-none"
+        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-red-700 px-1.5 text-sm shadow-sm hover:bg-red-800 dark:border-none cursor-pointer transition-colors"
         onClick={async () => {
           if (onReject) {
             await onReject();
@@ -1150,7 +1153,7 @@ const ContentPreview = ({
         <span>Reject</span>
       </button>
       <button
-        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-green-700 px-1.5 text-sm shadow-sm hover:bg-green-800 dark:border-none"
+        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-green-700 px-1.5 text-sm shadow-sm hover:bg-green-800 dark:border-none cursor-pointer transition-colors"
         onClick={async () => {
           if (onAccept) {
             await onAccept(content);

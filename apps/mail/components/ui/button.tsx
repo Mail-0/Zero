@@ -18,7 +18,7 @@ const buttonVariants = cva(
         main: 'bg-muted text-primary',
         // A button that resembles a dropdownItem
         dropdownItem:
-          'cursor-default select-none gap-2 rounded-sm text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground hover:bg-accent',
+          'select-none gap-2 rounded-sm text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground hover:bg-accent',
       },
       size: {
         dropdownItem: 'px-2 py-1.5',

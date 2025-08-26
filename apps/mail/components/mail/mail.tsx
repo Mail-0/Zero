@@ -485,9 +485,9 @@ export function MailLayout() {
                         refetchThreads();
                       }}
                       variant="ghost"
-                      className="md:h-fit md:px-2"
+                      className="md:h-fit md:px-2 hover:bg-accent/50"
                     >
-                      <RefreshCcw className="text-muted-foreground h-4 w-4 cursor-pointer" />
+                      <RefreshCcw className="text-muted-foreground h-4 w-4" />
                     </Button>
                     {mail.bulkSelected.length > 0 ? (
                       <div className="flex items-center gap-2">
