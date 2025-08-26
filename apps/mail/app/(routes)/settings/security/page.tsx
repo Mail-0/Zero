@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import * as z from 'zod';
 
 const formSchema = z.object({
@@ -24,15 +24,19 @@ const formSchema = z.object({
 });
 
 export default function SecurityPage() {
-  const [isSaving, setIsSaving] = useState(false);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   // Fetch current user settings
-  const { data: settingsData, isLoading } = useQuery(trpc.settings.get.queryOptions());
+  const { data: settingsData, isLoading } = useQuery({
+    ...trpc.settings.get.queryOptions(),
+    select: (data: any) => data?.settings,
+  });
   
   // Save settings mutation
-  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
+  const { mutateAsync: saveUserSettings, isPending: isSaving } = useMutation(
+    trpc.settings.save.mutationOptions(),
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,17 +48,16 @@ export default function SecurityPage() {
 
   // Update form when settings are loaded
   useEffect(() => {
-    if (settingsData?.settings) {
+    if (settingsData) {
       form.reset({
-        twoFactorAuth: settingsData.settings.twoFactorAuth,
-        loginNotifications: settingsData.settings.loginNotifications,
+        twoFactorAuth: settingsData.twoFactorAuth ?? false,
+        loginNotifications: settingsData.loginNotifications ?? true,
       });
     }
   }, [settingsData, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSaving(true);
-    const saved = settingsData?.settings ? { ...settingsData.settings } : undefined;
+    const saved = settingsData? { ...settingsData } : undefined;
 
     try {
       // Optimistically update the UI
@@ -74,12 +77,13 @@ export default function SecurityPage() {
       toast.error(m['common.settings.failedToSave']());
       
       // Revert optimistic update on error
-      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater: any) => {
-        if (!updater) return;
-        return saved ? { settings: { ...updater.settings, ...saved } } : updater;
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (prev: any) => {
+        if (!prev || !saved) return;
+        return {
+          ...prev,
+          settings: { ...(prev?.settings ?? {}), ...saved },
+        };
       });
-    } finally {
-      setIsSaving(false);
     }
   }
 
