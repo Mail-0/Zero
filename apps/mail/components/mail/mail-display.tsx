@@ -35,6 +35,7 @@ import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { EmailVerificationBadge } from './email-verification-badge';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useAttachments } from '@/hooks/use-attachments';
@@ -1327,20 +1328,23 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     <div className="flex w-full flex-col">
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-1">
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              setResearchSender({
-                                name: emailData?.sender?.name || '',
-                                email: emailData?.sender?.email || '',
-                                //   extra: emailData?.sender?.extra || '',
-                              });
-                            }}
-                            className="hover:bg-muted max-w-36 truncate whitespace-nowrap font-semibold md:max-w-none"
-                          >
-                            {cleanNameDisplay(emailData?.sender?.name)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setResearchSender({
+                                  name: emailData?.sender?.name || '',
+                                  email: emailData?.sender?.email || '',
+                                  //   extra: emailData?.sender?.extra || '',
+                                });
+                              }}
+                              className="hover:bg-muted font-semibold"
+                            >
+                              {cleanNameDisplay(emailData?.sender?.name)}
+                            </span>
+                            <EmailVerificationBadge messageId={emailData?.id} />
+                          </div>
 
                           <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
                             <PopoverTrigger asChild>

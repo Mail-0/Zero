@@ -1,9 +1,15 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock } from 'lucide-react';
-import { format, isValid } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { format, startOfToday } from 'date-fns';
+import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+
+const pad2 = (n: number) => n.toString().padStart(2, '0');
+const getLocalTimeFromDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const getNowTime = () => getLocalTimeFromDate(new Date());
 
 interface ScheduleSendPickerProps {
   value?: string | undefined;
@@ -12,107 +18,191 @@ interface ScheduleSendPickerProps {
   onValidityChange?: (isValid: boolean) => void;
 }
 
-const toLocalInputValue = (date: Date) => {
-  const tzOffsetMs = date.getTimezoneOffset() * 60 * 1000;
-  const local = new Date(date.getTime() - tzOffsetMs);
-  return local.toISOString().slice(0, 16);
-};
-
 export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   value,
   onChange,
   className,
   onValidityChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
 
-  const [localValue, setLocalValue] = useState<string>(() => {
-    if (value) {
-      const d = new Date(value);
-      if (!isNaN(d.getTime())) return toLocalInputValue(d);
-    }
-    return '';
-  });
+  const isScheduling = !!value;
+  const selectedDate = value ? new Date(value) : undefined;
+  const time = value ? getLocalTimeFromDate(new Date(value)) : getNowTime();
 
-  useEffect(() => {
-    if (value) {
-      const d = new Date(value);
-      if (!isNaN(d.getTime())) {
-        setLocalValue(toLocalInputValue(d));
-      }
-    } else {
-      setLocalValue('');
-    }
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setLocalValue(val);
-
-    if (!val) {
+  const emitChange = useCallback((datePart: Date | undefined, timePart: string, validate: boolean = false) => {
+    if (!datePart) {
       onChange(undefined);
-      onValidityChange?.(true);
+      if (validate) {
+        onValidityChange?.(true);
+      }
       return;
     }
 
-    const maybeDate = new Date(val);
+    const [hhStr, mmStr = '00'] = timePart.split(':');
+    const hours = Number(hhStr);
+    const minutes = Number(mmStr);
 
-    // Invalid date string
-    if (isNaN(maybeDate.getTime())) {
-      onValidityChange?.(false);
+    if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      if (validate) {
+        onValidityChange?.(false);
+      }
       return;
     }
 
-    const now = new Date();
-    if (maybeDate.getTime() < now.getTime()) {
+    const combinedDate = new Date(datePart);
+    combinedDate.setHours(hours, minutes, 0, 0);
+
+    if (validate && combinedDate.getTime() < Date.now()) {
       toast.error('Scheduled time cannot be in the past');
       onValidityChange?.(false);
       return;
     }
 
-    onValidityChange?.(true);
-    onChange(maybeDate.toISOString());
+    if (validate) {
+      onValidityChange?.(true);
+    }
+    onChange(combinedDate.toISOString());
+  }, [onChange, onValidityChange]);
+
+  const handleDateSelect = useCallback((d?: Date) => {
+    emitChange(d, time, false);
+  }, [emitChange, time]);
+
+  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    emitChange(selectedDate, val, false);
+  }, [selectedDate, emitChange]);
+
+  const handleDatePickerClose = useCallback((open: boolean) => {
+    setDatePickerOpen(open);
+    if (!open && selectedDate) {
+      emitChange(selectedDate, time, true);
+    }
+  }, [selectedDate, time, emitChange]);
+
+  const handleTimePickerClose = useCallback((open: boolean) => {
+    setTimePickerOpen(open);
+    if (!open && selectedDate) {
+      emitChange(selectedDate, time, true);
+    }
+  }, [selectedDate, time, emitChange]);
+
+  const handleToggleScheduling = useCallback(() => {
+    if (isScheduling) {
+      onChange(undefined);
+    } else {
+      const now = new Date();
+      emitChange(now, getNowTime());
+    }
+  }, [isScheduling, onChange, emitChange]);
+
+  const formatTime12Hour = (timeStr: string) => {
+    try {
+      const [hhStr, mmStr = '00'] = timeStr.split(':');
+      const preview = new Date();
+      preview.setHours(Number(hhStr), Number(mmStr), 0, 0);
+      return format(preview, 'hh:mm aaa');
+    } catch {
+      return timeStr;
+    }
   };
 
-  const displayValue = localValue || toLocalInputValue(new Date());
+  const triggerLabel = (() => {
+    if (!selectedDate) return 'Send later';
+    try {
+      const formattedTime = formatTime12Hour(time);
+      const formattedDate = format(selectedDate, 'dd MMM yyyy');
+      return `${formattedDate} ${formattedTime}`;
+    } catch {
+      return 'Send later';
+    }
+  })();
 
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
+  if (isScheduling) {
+    return (
+      <>
+        <Popover open={datePickerOpen} onOpenChange={handleDatePickerClose}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+                className,
+              )}
+            >
+              <CalendarIcon className="h-4 w-4" />
+              <span>
+                {selectedDate ? format(selectedDate, 'dd MMM yyyy') : 'Select Date'}
+              </span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="z-[100] w-auto p-4" align="start" side="top" sideOffset={8}>
+            <div className="space-y-4">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                disabled={{ before: startOfToday() }}
+                className="rounded-md"
+                captionLayout="dropdown"
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover open={timePickerOpen} onOpenChange={handleTimePickerClose}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+                className,
+              )}
+            >
+              <Clock className="h-4 w-4" />
+              <span>{formatTime12Hour(time)}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="z-[100] w-auto p-4" align="start" side="top" sideOffset={8}>
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Select Time</h3>
+              <Input
+                type="time"
+                value={time}
+                onChange={handleTimeChange}
+                className="w-full"
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <button
           type="button"
+          onClick={handleToggleScheduling}
           className={cn(
             'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
             className,
           )}
         >
-          <Clock className="h-4 w-4" />
-          <span>
-            {(() => {
-              if (!localValue) return 'Send later';
-              const parsed = new Date(localValue);
-              if (!isValid(parsed)) return 'Send later';
-              try {
-                return format(parsed, 'dd MMM yyyy hh:mm aaa');
-              } catch (error) {
-                console.error('Error formatting date', error);
-                return 'Send later';
-              }
-            })()}
-          </span>
+          <span>Cancel</span>
         </button>
-      </PopoverTrigger>
-      <PopoverContent className="z-[100] w-64 p-4" align="start" side="top" sideOffset={8}>
-        <div className="flex flex-col gap-4">
-          <label className="text-sm font-semibold">Choose date & time</label>
-          <input
-            type="datetime-local"
-            value={displayValue}
-            onChange={handleChange}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0"
-          />
-        </div>
-      </PopoverContent>
-    </Popover>
+      </>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggleScheduling}
+      className={cn(
+        'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+        className,
+      )}
+    >
+      <Clock className="h-4 w-4" />
+      <span>{triggerLabel}</span>
+    </button>
   );
 };

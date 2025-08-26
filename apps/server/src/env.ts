@@ -1,5 +1,6 @@
 import type { ThinkingMCP, ThreadSyncWorker, WorkflowRunner, ZeroDB, ZeroMCP } from './main';
 import type { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
+
 import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
 
@@ -11,6 +12,7 @@ export type ZeroEnv = {
   ZERO_MCP: DurableObjectNamespace<ZeroMCP & QueryableHandler>;
   THINKING_MCP: DurableObjectNamespace<ThinkingMCP & QueryableHandler>;
   WORKFLOW_RUNNER: DurableObjectNamespace<WorkflowRunner & QueryableHandler>;
+
   THREAD_SYNC_WORKER: DurableObjectNamespace<ThreadSyncWorker>;
   SYNC_THREADS_WORKFLOW: Workflow;
   SYNC_THREADS_COORDINATOR_WORKFLOW: Workflow;
@@ -97,6 +99,9 @@ export type ZeroEnv = {
   OTEL_EXPORTER_OTLP_ENDPOINT?: string;
   OTEL_EXPORTER_OTLP_HEADERS?: string;
   OTEL_SERVICE_NAME?: string;
+  DD_API_KEY: string;
+  DD_APP_KEY: string;
+  DD_SITE: string;
 };
 
 const env = _env as ZeroEnv;

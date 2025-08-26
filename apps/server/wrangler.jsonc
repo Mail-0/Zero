@@ -58,6 +58,7 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+
           {
             "name": "THREAD_SYNC_WORKER",
             "class_name": "ThreadSyncWorker",
@@ -144,6 +145,7 @@
           "tag": "v9",
           "new_sqlite_classes": ["ShardRegistry"],
         },
+
       ],
 
       "observability": {
@@ -177,6 +179,9 @@
         "MEET_AUTH_HEADER": "",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-local",
+        "DD_API_KEY": "",
+        "DD_APP_KEY": "",
+        "DD_SITE": "datadoghq.com",
       },
       "kv_namespaces": [
         {
@@ -282,6 +287,7 @@
             "name": "SHARD_REGISTRY",
             "class_name": "ShardRegistry",
           },
+
         ],
       },
       "workflows": [
@@ -370,6 +376,7 @@
           "tag": "v10",
           "new_sqlite_classes": ["ShardRegistry"],
         },
+
       ],
       "observability": {
         "enabled": true,
@@ -393,6 +400,9 @@
         "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-staging",
+        "DD_API_KEY": "",
+        "DD_APP_KEY": "",
+        "DD_SITE": "datadoghq.com",
       },
       "kv_namespaces": [
         {
@@ -511,6 +521,7 @@
             "name": "SHARD_REGISTRY",
             "class_name": "ShardRegistry",
           },
+
         ],
       },
       "workflows": [
@@ -593,6 +604,7 @@
           "tag": "v10",
           "new_sqlite_classes": ["ShardRegistry"],
         },
+
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -606,6 +618,9 @@
         "DISABLE_WORKFLOWS": "true",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-production",
+        "DD_API_KEY": "",
+        "DD_APP_KEY": "",
+        "DD_SITE": "datadoghq.com",
       },
       "kv_namespaces": [
         {

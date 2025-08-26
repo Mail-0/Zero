@@ -968,7 +968,7 @@ export const MailList = memo(
                     <p className="text-lg">It's empty here</p>
                     <p className="text-md text-muted-foreground dark:text-white/50">
                       Search for another email or{' '}
-                      <button className="underline" onClick={clearFilters}>
+                      <button type="button" className="underline cursor-pointer" onClick={clearFilters}>
                         clear filters
                       </button>
                     </p>
