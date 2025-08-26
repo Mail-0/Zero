@@ -873,7 +873,7 @@ export function ThreadDisplay() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]">
+                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white focus:outline-none focus:ring-0 dark:bg-[#313131] cursor-pointer">
                       <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                     </button>
                   </DropdownMenuTrigger>

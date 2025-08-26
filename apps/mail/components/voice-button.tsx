@@ -29,7 +29,7 @@ export function VoiceButton() {
   if (!isConnected) {
     return (
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-        <button type="button" onClick={handleStartConversation}>
+        <button type="button" onClick={handleStartConversation} className="cursor-pointer">
           <div className="dark:bg[#141414] flex h-7 items-center justify-center rounded-sm bg-[#262626] px-2">
             <Mic className="h-4 w-4 text-white dark:text-[#929292]" />
           </div>
@@ -40,7 +40,7 @@ export function VoiceButton() {
 
   return (
     isConnected && (
-      <button type="button" onClick={endConversation}>
+      <button type="button" onClick={endConversation} className="cursor-pointer">
         <div className="dark:bg[#141414] flex h-7 items-center justify-center rounded-sm bg-[#262626] px-2">
           {isInitializing && (
             <div className="flex items-center justify-center gap-2">
