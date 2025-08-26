@@ -8,6 +8,8 @@ export type HonoVariables = {
   auth: Auth;
   sessionUser?: SessionUser;
   autumn?: Autumn;
+  traceId?: string;
+  requestId?: string;
 };
 
 export type HonoContext = { Variables: HonoVariables; Bindings: ZeroEnv };

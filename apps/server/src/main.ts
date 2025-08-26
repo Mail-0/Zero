@@ -31,6 +31,7 @@ import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { EProviders, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
+
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
@@ -563,32 +564,141 @@ class ZeroDB extends DurableObject<ZeroEnv> {
   }
 }
 
+// Utility function to hash IP addresses for PII protection
+function hashIpAddress(ip: string | undefined): string | undefined {
+  if (!ip) return undefined;
+
+  // Simple but effective hash for IP addresses
+  // This preserves uniqueness while protecting PII
+  const salt = 'zero-mail-ip-salt-2024'; // Consider using env variable for production
+  let hash = 0;
+  const str = ip + salt;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  // Return a prefixed hex representation
+  return `ip_${Math.abs(hash).toString(16).padStart(8, '0')}`;
+}
+
 const api = new Hono<HonoContext>()
   .use(contextStorage())
   .use('*', async (c, next) => {
+    // Initialize request tracing using headers (no context pollution)
+    const traceId = c.req.header('X-Trace-ID') || crypto.randomUUID();
+    const requestId = c.req.header('X-Request-Id') || crypto.randomUUID();
+
+    // Set trace ID in response headers for client correlation
+    c.header('X-Trace-ID', traceId);
+    c.header('X-Request-ID', requestId);
+
+    // Store trace ID in context variables for TRPC access
+    c.set('traceId', traceId);
+    c.set('requestId', requestId);
+
+    const { TraceContext } = await import('./lib/trace-context');
+
+    // Create trace for this request
+    const rawIp = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For');
+    const trace = TraceContext.createTrace(traceId, {
+      requestId,
+      ip: hashIpAddress(rawIp), // Hash IP address to protect PII
+      userAgent: c.req.header('User-Agent'),
+    });
+
+    // Start authentication span
+    const authSpan = TraceContext.startSpan(traceId, 'authentication', {
+      method: c.req.method,
+      url: c.req.url,
+      hasAuthHeader: !!c.req.header('Authorization'),
+    }, {
+      'auth.method': c.req.header('Authorization') ? 'bearer_token' : 'session_cookie'
+    });
+
     const auth = createAuth();
     c.set('auth', auth);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     c.set('sessionUser', session?.user);
 
     if (c.req.header('Authorization') && !session?.user) {
+      // Start token verification span
+      const tokenSpan = TraceContext.startSpan(traceId, 'token_verification', {
+        tokenPresent: true,
+      }, {
+        'auth.token_type': 'jwt'
+      });
+
       const token = c.req.header('Authorization')?.split(' ')[1];
 
       if (token) {
-        const localJwks = await auth.api.getJwks();
-        const jwks = createLocalJWKSet(localJwks);
+        try {
+          const localJwks = await auth.api.getJwks();
+          const jwks = createLocalJWKSet(localJwks);
 
-        const { payload } = await jwtVerify(token, jwks);
-        const userId = payload.sub;
+          const { payload } = await jwtVerify(token, jwks);
+          const userId = payload.sub;
 
-        if (userId) {
-          const db = await getZeroDB(userId);
-          c.set('sessionUser', await db.findUser());
+          if (userId) {
+            const db = await getZeroDB(userId);
+            const user = await db.findUser();
+            c.set('sessionUser', user);
+
+            TraceContext.completeSpan(traceId, tokenSpan.id, {
+              success: true,
+              userId,
+            });
+          } else {
+            TraceContext.completeSpan(traceId, tokenSpan.id, {
+              success: false,
+              reason: 'no_user_id_in_token',
+            });
+          }
+        } catch (error) {
+          TraceContext.completeSpan(traceId, tokenSpan.id, {
+            success: false,
+            reason: 'token_verification_failed',
+          }, error instanceof Error ? error.message : 'Unknown token error');
         }
+      } else {
+        TraceContext.completeSpan(traceId, tokenSpan.id, {
+          success: false,
+          reason: 'no_token_provided',
+        });
       }
     }
 
-    await next();
+    // Complete auth span
+    TraceContext.completeSpan(traceId, authSpan.id, {
+      authenticated: !!c.var.sessionUser,
+      userId: c.var.sessionUser?.id,
+      authMethod: session?.user ? 'session' : (c.req.header('Authorization') ? 'token' : 'none'),
+    });
+
+    // Update trace metadata with user info
+    trace.metadata.userId = c.var.sessionUser?.id;
+    trace.metadata.sessionId = c.var.sessionUser?.id || 'anonymous';
+
+    // Start request processing span
+    const requestSpan = TraceContext.startSpan(traceId, 'request_processing', {
+      authenticated: !!c.var.sessionUser,
+      path: new URL(c.req.url).pathname,
+    });
+
+    try {
+      await next();
+      // Don't complete the request span here - let TRPC middleware handle it
+    } catch (error) {
+      TraceContext.completeSpan(traceId, requestSpan.id, {
+        success: false,
+
+        statusCode: c.res.status,
+      }, error instanceof Error ? error.message : 'Unknown request error');
+      throw error;
+    }
+    // Note: Trace will be completed by TRPC middleware after logging
 
     c.set('sessionUser', undefined);
     c.set('auth', undefined as any);

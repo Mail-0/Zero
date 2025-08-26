@@ -243,14 +243,11 @@ export function Navigation() {
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="flex flex-col space-y-3">
-                <Link to="/" className="mt-2" onClick={() => setOpen(false)}>
+                <Link to="/" onClick={() => setOpen(false)}>
                   Home
                 </Link>
-                <Link to="/pricing" className="mt-2" onClick={() => setOpen(false)}>
+                <Link to="/pricing" onClick={() => setOpen(false)}>
                   Pricing
-                </Link>
-                <Link to="/privacy" className="mt-2" onClick={() => setOpen(false)}>
-                  Privacy
                 </Link>
                 {aboutLinks.map((link) => (
                   <a key={link.title} href={link.href} className="block font-medium">

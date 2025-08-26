@@ -25,11 +25,11 @@ const Toaster = () => {
           description: 'text-black! dark:text-white! text-xs',
           toast: 'p-1',
           actionButton:
-            'inline-flex h-5 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]! pointer-events-auto cursor-pointer',
+            'inline-flex h-5 items-center justify-between mr-1 gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]! pointer-events-auto cursor-pointer',
           cancelButton:
-            'inline-flex h-5 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
+            'inline-flex h-5 items-center justify-between mr-1 gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
           closeButton:
-            'inline-flex h-5 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
+            'inline-flex h-5 items-center justify-between mr-1 gap-1 overflow-hidden rounded-md! border px-1 text-xs dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
           loading: 'pl-3 -mr-3 loading',
           loader: 'pl-3 loader -mr-3',
           icon: 'pl-3 icon mr-2',

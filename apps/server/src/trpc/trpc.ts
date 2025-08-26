@@ -3,6 +3,7 @@ import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
+import { createLoggingMiddleware } from '../lib/trpc-logging';
 
 import { redis } from '../lib/services';
 import type { Context } from 'hono';
@@ -14,13 +15,39 @@ type TrpcContext = {
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 
+const loggingMiddleware = createLoggingMiddleware();
+
 export const router = t.router;
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(loggingMiddleware);
 
 export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
+
+  // Start auth validation span
+  const authSpan = addRequestSpan(ctx.c, 'trpc_auth_validation', {
+    hasSessionUser: !!ctx.sessionUser,
+    procedure: 'private',
+  }, {
+    'trpc.auth_required': 'true'
+  });
+
   if (!ctx.sessionUser) {
+    if (authSpan) {
+      completeRequestSpan(ctx.c, authSpan.id, {
+        success: false,
+        reason: 'no_session_user',
+      }, 'UNAUTHORIZED: No session user found');
+    }
+
     throw new TRPCError({
       code: 'UNAUTHORIZED',
+    });
+  }
+
+  if (authSpan) {
+    completeRequestSpan(ctx.c, authSpan.id, {
+      success: true,
+      userId: ctx.sessionUser.id,
     });
   }
 
@@ -28,10 +55,35 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
 });
 
 export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next }) => {
+  const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
+
+  // Start connection validation span
+  const connectionSpan = addRequestSpan(ctx.c, 'trpc_connection_validation', {
+    userId: ctx.sessionUser.id,
+  }, {
+    'trpc.connection_required': 'true'
+  });
+
   try {
     const activeConnection = await getActiveConnection();
+
+    if (connectionSpan) {
+      completeRequestSpan(ctx.c, connectionSpan.id, {
+        success: true,
+        connectionId: activeConnection.id,
+        connectionType: activeConnection.providerId,
+      });
+    }
+
     return next({ ctx: { ...ctx, activeConnection } });
   } catch (err) {
+    if (connectionSpan) {
+      completeRequestSpan(ctx.c, connectionSpan.id, {
+        success: false,
+        reason: 'connection_not_found',
+      }, err instanceof Error ? err.message : 'Failed to get active connection');
+    }
+
     await ctx.c.var.auth.api.signOut({ headers: ctx.c.req.raw.headers });
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -69,12 +121,12 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
         accessToken: null,
         refreshToken: null,
       });
-      if (activeConnection.accessToken) {
-        ctx.c.header(
-          'X-Zero-Redirect',
-          `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
-        );
-      }
+
+      ctx.c.header(
+        'X-Zero-Redirect',
+        `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
+      );
+
       throw new TRPCError({
         code: 'UNAUTHORIZED',
         message: 'Connection expired. Please reconnect.',

@@ -913,6 +913,28 @@ export class GoogleMailManager implements MailManager {
     );
   }
 
+  public getRawEmail(messageId: string) {
+    return this.withErrorHandler(
+      'getRawEmail',
+      async () => {
+        const res = await this.gmail.users.messages.get({
+          userId: 'me',
+          id: messageId,
+          format: 'raw',
+          quotaUser: this.config.auth?.email,
+        });
+
+        if (!res.data.raw) {
+          throw new Error('No raw email data found');
+        }
+
+        const rawEmail = Buffer.from(res.data.raw, 'base64').toString('utf-8');
+        return rawEmail;
+      },
+      { messageId, email: this.config.auth?.email },
+    );
+  }
+
   private async getThreadMetadata(threadId: string) {
     return this.withErrorHandler(
       'getThreadMetadata',
