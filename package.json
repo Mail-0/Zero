@@ -52,7 +52,9 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "zod-to-json-schema": "3.24.6",
-    "zod": "4.1.1"
+    "drizzle-kit": "catalog:",
+    "react-router": "^7.6.3",
+    "zod": "4.1.1",
+    "zod-to-json-schema": "3.24.6"
   }
 }
