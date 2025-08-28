@@ -91,7 +91,7 @@ export function NavUser() {
   const { data: session } = useSession();
   const { data } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const { state } = useSidebar();
   const trpc = useTRPC();
   const [, setThreadId] = useQueryState('threadId');
@@ -333,9 +333,9 @@ export function NavUser() {
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="mt-1" />
-                  <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
+                  <DropdownMenuItem onSelect={() => handleThemeToggle()} className="cursor-pointer">
                     <div className="flex w-full items-center gap-2">
-                      {theme === 'dark' ? (
+                    {resolvedTheme === 'dark' ? (
                         <MoonIcon className="size-4 opacity-60" />
                       ) : (
                         <SunIcon className="size-4 opacity-60" />
@@ -343,11 +343,11 @@ export function NavUser() {
                       <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <a
                       href="https://discord.gg/mail0"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="w-full"
                     >
                       <div className="flex items-center gap-2">
@@ -358,7 +358,7 @@ export function NavUser() {
                       </div>
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                  <DropdownMenuItem className="cursor-pointer" onSelect={() => handleLogout()}>
                     <div className="flex items-center gap-2">
                       <LogOut size={16} className="opacity-60" />
                       <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
