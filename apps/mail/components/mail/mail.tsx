@@ -11,6 +11,7 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
@@ -22,7 +23,6 @@ import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
-import { useEffect, useRef, useState } from 'react';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
 import AIToggleButton from '../ai-toggle-button';
@@ -392,6 +392,26 @@ export function MailLayout() {
   const defaultCategoryId = useDefaultCategoryId();
   const [category] = useQueryState('category', { defaultValue: defaultCategoryId });
 
+  const handleClearFilters = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      clearAllFilters();
+    },
+    [clearAllFilters],
+  );
+
+  const handleExitBulkSelection = useCallback(() => {
+    setMail({ ...mail, bulkSelected: [] });
+  }, [mail, setMail]);
+
+  const handleRefetchThreads = useCallback(() => {
+    refetchThreads();
+  }, [refetchThreads]);
+
+  const handleOpenCommandPalette = useCallback(() => {
+    setIsCommandPaletteOpen('true');
+  }, [setIsCommandPaletteOpen]);
+
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
@@ -424,7 +444,7 @@ export function MailLayout() {
                         className={cn(
                           'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 focus-visible:ring-ring dark:border-border/20 dark:bg-background/40 relative flex h-10 flex-1 select-none items-center justify-start overflow-hidden rounded-lg border pl-3 text-left text-sm font-normal shadow-none ring-0 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-offset-2',
                         )}
-                        onClick={() => setIsCommandPaletteOpen('true')}
+                        onClick={handleOpenCommandPalette}
                       >
                         <Search className="fill-muted-foreground h-4 w-4" />
 
@@ -450,10 +470,7 @@ export function MailLayout() {
                               variant="secondary"
                               size="sm"
                               className="h-6 rounded-md px-2 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                clearAllFilters();
-                              }}
+                              onClick={handleClearFilters}
                             >
                               Clear
                             </Button>
@@ -481,9 +498,7 @@ export function MailLayout() {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => {
-                              setMail({ ...mail, bulkSelected: [] });
-                            }}
+                            onClick={handleExitBulkSelection}
                             className="h-8 gap-2 rounded-lg"
                           >
                             <X className="h-3 w-3" />
@@ -498,12 +513,10 @@ export function MailLayout() {
                   )}
 
                   <Button
-                    onClick={() => {
-                      refetchThreads();
-                    }}
+                    onClick={handleRefetchThreads}
                     variant="ghost"
                     size="icon"
-                    className="border-border/40 bg-background/50 hover:bg-accent/50 dark:border-border/20 dark:bg-background/40 h-10 w-10 rounded-lg border backdrop-blur-sm"
+                    className="border-none bg-transparent hover:bg-accent/50 h-10 w-10 rounded-lg backdrop-blur-sm"
                   >
                     <RefreshCcw className="text-muted-foreground h-4 w-4" />
                   </Button>
@@ -561,6 +574,14 @@ export function MailLayout() {
       </div>
     </TooltipProvider>
   );
+}
+
+interface CategoryItem {
+  id: string;
+  name: string;
+  searchValue: string;
+  icon?: React.ReactNode;
+  colors?: string;
 }
 
 export const Categories = () => {
@@ -661,11 +682,11 @@ export const Categories = () => {
           ),
         };
       default:
-        return base as any;
+        return base;
     }
   });
 
-  return categories;
+  return categories as CategoryItem[];
 };
 interface CategoryDropdownProps {
   isMultiSelectMode?: boolean;
@@ -746,7 +767,7 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
           <span className="text-sm font-medium">
             {labels.length > 0
               ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
-              : 'Categories'}
+              : m['navigation.settings.categories']()}
           </span>
           <ChevronDown
             className={cn(
