@@ -415,13 +415,7 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div className="z-15 sticky top-0 p-4 pb-0">
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="border-border/40 bg-background/50 hover:bg-accent/50 dark:border-border/20 dark:bg-background/40 h-10 w-10 rounded-lg border backdrop-blur-sm"
-                  >
-                    <SidebarToggle className="h-4 w-4" />
-                  </Button>
+                  <SidebarToggle className="h-10 w-10" />
 
                   {mail.bulkSelected.length === 0 ? (
                     <>
