@@ -15,7 +15,7 @@ import {
   LockIcon,
   Clock,
 } from '@/components/icons/icons';
-import { MessageSquareIcon } from 'lucide-react';
+import { MessageSquareIcon, Zap } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 
 export interface NavItem {
@@ -55,6 +55,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/inbox',
             icon: Inbox,
             shortcut: 'g + i',
+          },
+          {
+            id: 'founder-mode',
+            title: 'Founder Mode',
+            url: '/founder-mode',
+            icon: Zap,
+            shortcut: 'g + f',
           },
           {
             id: 'drafts',

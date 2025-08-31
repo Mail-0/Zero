@@ -23,6 +23,7 @@ export default [
 
   layout('(routes)/layout.tsx', [
     route('/developer', '(routes)/developer/page.tsx'),
+    route('/founder-mode', '(routes)/founder-mode/page.tsx'),
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [
