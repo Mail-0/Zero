@@ -648,13 +648,20 @@ export function EmailComposer({
                 <span>Bcc</span>
               </button>
               {onClose && (
-                <button
-                  tabIndex={-1}
-                  className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
-                  onClick={handleClose}
-                >
-                  <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      tabIndex={-1}
+                      className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
+                      onClick={handleClose}
+                    >
+                      <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Close (ESC)</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>
