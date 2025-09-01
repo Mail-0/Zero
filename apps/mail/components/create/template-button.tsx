@@ -254,7 +254,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
       </DropdownMenu>
 
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent showOverlay>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Save as Template</DialogTitle>
           </DialogHeader>

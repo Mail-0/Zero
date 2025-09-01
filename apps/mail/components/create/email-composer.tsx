@@ -1005,7 +1005,7 @@ export function EmailComposer({
       </div>
 
       <Dialog open={showLeaveConfirmation} onOpenChange={setShowLeaveConfirmation}>
-        <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
+        <DialogContent className="z-99999 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Discard message?</DialogTitle>
             <DialogDescription>
@@ -1025,7 +1025,7 @@ export function EmailComposer({
       </Dialog>
 
       <Dialog open={showAttachmentWarning} onOpenChange={setShowAttachmentWarning}>
-        <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
+        <DialogContent className="z-99999 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Attachment Warning</DialogTitle>
             <DialogDescription>

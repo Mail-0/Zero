@@ -76,7 +76,7 @@ function DeleteAccountDialog() {
       <DialogTrigger asChild>
         <Button variant="destructive">{m['pages.settings.dangerZone.deleteAccount']()}</Button>
       </DialogTrigger>
-      <DialogContent showOverlay>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{m['pages.settings.dangerZone.title']()}</DialogTitle>
           <DialogDescription>{m['pages.settings.dangerZone.description']()}</DialogDescription>

@@ -64,7 +64,7 @@ export const AddConnectionDialog = ({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent showOverlay={true}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{m['pages.settings.connections.connectEmail']()}</DialogTitle>
           <DialogDescription>
