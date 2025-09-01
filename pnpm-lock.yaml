@@ -24,6 +24,9 @@ catalogs:
     drizzle-kit:
       specifier: 0.31.4
       version: 0.31.4
+    drizzle-orm:
+      specifier: ^0.43.1
+      version: 0.43.1
     react:
       specifier: ^19.1.0
       version: 19.1.0
@@ -197,6 +200,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 1.2.8
         version: 1.2.8(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-visually-hidden':
+        specifier: 1.2.3
+        version: 1.2.3(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@react-email/components':
         specifier: ^0.0.36
         version: 0.0.36(react-dom@19.1.0(react@19.1.0))(react@19.1.0)

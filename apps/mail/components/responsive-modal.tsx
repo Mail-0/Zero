@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { VisuallyHidden } from 'radix-ui';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { type ReactElement } from 'react';
 // import { useMedia } from 'react-use';
 

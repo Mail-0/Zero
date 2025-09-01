@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Slot } from 'radix-ui';
+import { Slot } from '@radix-ui/react-slot';
 import * as React from 'react';
 
 const Sidebar = React.forwardRef<
