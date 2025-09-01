@@ -1,6 +1,5 @@
 import { useUndoSend, type EmailData, deserializeFiles } from '@/hooks/use-undo-send';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { cleanEmailAddresses } from '@/lib/email-utils';
 
@@ -15,7 +14,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { Attachment } from '@/types';
 import { useQueryState } from 'nuqs';
-import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import './prosemirror.css';
@@ -176,14 +174,6 @@ export function CreateEmail({
   // Cast draft to our extended type that includes CC and BCC
   const typedDraft = draft as unknown as DraftType;
 
-  const handleDialogClose = (open: boolean) => {
-    setIsComposeOpen(open ? 'true' : null);
-    if (!open) {
-      setDraftId(null);
-      clearUndoData();
-    }
-  };
-
   const base64ToFile = (base64: string, filename: string, mimeType: string): File | null => {
     try {
       const byteString = atob(base64);
@@ -204,70 +194,48 @@ export function CreateEmail({
     .filter((file): file is File => file !== null);
 
   return (
-    <>
-      <Dialog open={!!isComposeOpen} onOpenChange={handleDialogClose}>
-        <div className="flex min-h-screen flex-col items-center justify-center gap-1">
-          <div className="flex w-[750px] justify-start">
-            <DialogClose asChild className="flex">
-              <button className="dark:bg-panelDark flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1 hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer">
-                <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5 dark:fill-[#929292]" />
-                <span className="text-muted-foreground text-sm font-medium dark:text-white">
-                  esc
-                </span>
-              </button>
-            </DialogClose>
+    <div className="min-w-screen fixed left-1/2 top-1/2 flex min-h-screen -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+      {isDraftLoading ? (
+        <div className="flex h-[600px] w-full items-center justify-center rounded-2xl border">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+            <p>Loading draft...</p>
           </div>
-          {isDraftLoading ? (
-            <div className="flex h-[600px] w-[750px] items-center justify-center rounded-2xl border">
-              <div className="text-center">
-                <div className="mx-auto mb-4 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-                <p>Loading draft...</p>
-              </div>
-            </div>
-          ) : (
-            <EmailComposer
-              key={typedDraft?.id || undoEmailData?.to?.join(',') || 'composer'}
-              className="mb-12 rounded-2xl border"
-              onSendEmail={handleSendEmail}
-              initialMessage={
-                undoEmailData?.message || 
-                typedDraft?.content || 
-                initialBody
-              }
-              initialTo={
-                undoEmailData?.to ||
-                typedDraft?.to?.map((e: string) => e.replace(/[<>]/g, '')) ||
-                processInitialEmails(initialTo)
-              }
-              initialCc={
-                undoEmailData?.cc ||
-                typedDraft?.cc?.map((e: string) => e.replace(/[<>]/g, '')) ||
-                processInitialEmails(initialCc)
-              }
-              initialBcc={
-                undoEmailData?.bcc ||
-                typedDraft?.bcc?.map((e: string) => e.replace(/[<>]/g, '')) ||
-                processInitialEmails(initialBcc)
-              }
-              onClose={() => {
-                setThreadId(null);
-                setActiveReplyId(null);
-                setIsComposeOpen(null);
-                setDraftId(null);
-                clearUndoData();
-              }}
-              initialAttachments={undoEmailData?.attachments || files}
-              initialSubject={
-                undoEmailData?.subject || 
-                typedDraft?.subject || 
-                initialSubject
-              }
-              autofocus={false}
-              settingsLoading={settingsLoading}
-            />
-          )}
         </div>
-      </Dialog>
-    </>
+      ) : (
+        <EmailComposer
+          key={typedDraft?.id || undoEmailData?.to?.join(',') || 'composer'}
+          className="mb-12 w-full rounded-2xl border"
+          onSendEmail={handleSendEmail}
+          initialMessage={undoEmailData?.message || typedDraft?.content || initialBody}
+          initialTo={
+            undoEmailData?.to ||
+            typedDraft?.to?.map((e: string) => e.replace(/[<>]/g, '')) ||
+            processInitialEmails(initialTo)
+          }
+          initialCc={
+            undoEmailData?.cc ||
+            typedDraft?.cc?.map((e: string) => e.replace(/[<>]/g, '')) ||
+            processInitialEmails(initialCc)
+          }
+          initialBcc={
+            undoEmailData?.bcc ||
+            typedDraft?.bcc?.map((e: string) => e.replace(/[<>]/g, '')) ||
+            processInitialEmails(initialBcc)
+          }
+          onClose={() => {
+            setThreadId(null);
+            setActiveReplyId(null);
+            setIsComposeOpen(null);
+            setDraftId(null);
+            clearUndoData();
+          }}
+          initialAttachments={undoEmailData?.attachments || files}
+          initialSubject={undoEmailData?.subject || typedDraft?.subject || initialSubject}
+          autofocus={false}
+          settingsLoading={settingsLoading}
+        />
+      )}
+    </div>
   );
 }

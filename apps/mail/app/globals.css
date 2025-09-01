@@ -77,6 +77,7 @@
   --subtleBlack: #1F1F1F;
   --skyBlue: #0066FF;
   --shinyGray: #A1A1A1;
+  --sidebar: hsl(0 0% 98%);
 }
 
 .dark {
@@ -114,6 +115,7 @@
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
   --panel: hsl(240 3.7% 10.2%);
+  --sidebar: hsl(240 5.9% 10%);
 }
 
 @theme inline {
@@ -137,14 +139,14 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  
+
   /* Static colors */
   --color-darkBackground: var(--darkBackground);
   --color-lightBackground: var(--lightBackground);
@@ -160,7 +162,7 @@
   --color-subtleBlack: var(--subtleBlack);
   --color-skyBlue: var(--skyBlue);
   --color-shinyGray: var(--shinyGray);
-  
+
   /* sidebar colors */
   --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -170,7 +172,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
+
   /* Border radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -233,7 +235,6 @@
   --animate-shine-slow: shine-slow 8s linear infinite;
   --animate-blink: blink 0.8s ease-in-out infinite;
 }
-
 
 /* Add scrollbar styling */
 @utility style-scrollbar {
@@ -472,4 +473,15 @@
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+/*
+  ---break---
+*/
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

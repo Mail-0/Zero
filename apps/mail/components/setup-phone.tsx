@@ -105,7 +105,7 @@ export const SetupInboxDialog = () => {
           <OldPhone className="fill-iconLight dark:fill-iconDark h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent showOverlay>
+      <DialogContent>
         <DialogTitle>Set up your Inbox assistant</DialogTitle>
         <DialogDescription>
           <span className={showOtpInput ? 'hidden' : 'block'}>

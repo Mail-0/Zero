@@ -72,7 +72,7 @@ export function LabelSidebarContextMenu({ children, labelId, hide }: LabelSideba
       </ContextMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent showOverlay={true}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{m['common.labels.deleteLabelConfirm']()}</DialogTitle>
             <DialogDescription>

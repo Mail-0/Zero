@@ -17,7 +17,7 @@ catalog:
   superjson: ^2.2.2
   typescript: ^5.8.3
   wrangler: ^4.32.0
-  zod: ^3.25.42
+  zod: 3.25.67
 
 onlyBuiltDependencies:
   - '@sentry/cli'

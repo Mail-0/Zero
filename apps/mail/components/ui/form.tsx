@@ -1,12 +1,15 @@
+'use client';
+
 import {
   Controller,
+  FormProvider,
+  useFormContext,
   type ControllerProps,
   type FieldPath,
   type FieldValues,
-  FormProvider,
-  useFormContext,
 } from 'react-hook-form';
-import { Label as LabelPrimitive, Slot } from 'radix-ui';
+import * as LabelPrimitive from '@radix-ui/react-label';
+import { Slot } from '@radix-ui/react-slot';
 import * as React from 'react';
 
 import { Label } from '@/components/ui/label';
@@ -96,14 +99,13 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = 'FormLabel';
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot.Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot.Slot>
+  React.ElementRef<typeof Slot>,
+  React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
-    <Slot.Slot
-      className="bg-popover"
+    <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
@@ -136,7 +138,7 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message) : children;
+  const body = error ? String(error?.message ?? '') : children;
 
   if (!body) {
     return null;

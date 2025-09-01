@@ -1,8 +1,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
@@ -196,9 +194,6 @@ function ComposeButton() {
   };
   return (
     <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>
-      <DialogTitle></DialogTitle>
-      <DialogDescription></DialogDescription>
-
       <DialogTrigger asChild>
         <button type="button" className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black dark:border-none dark:text-white cursor-pointer hover:bg-[#0056CC] dark:hover:bg-[#0056CC] transition-colors">
           {state === 'collapsed' && !isMobile ? (
@@ -213,8 +208,8 @@ function ComposeButton() {
           )}
         </button>
       </DialogTrigger>
-
-      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
+      
+      <DialogContent className="bg-transparent border-none shadow-none p-0 max-w-none rounded-none gap-0" showCloseButton={false}>
         <CreateEmail />
       </DialogContent>
     </Dialog>

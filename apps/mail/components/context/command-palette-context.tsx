@@ -53,7 +53,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { format, subDays } from 'date-fns';
-import { VisuallyHidden } from 'radix-ui';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { m } from '@/paraglide/messages';
 import { Pencil2 } from '../icons/icons';
 import { Button } from '../ui/button';
@@ -65,7 +65,7 @@ type CommandPaletteContext = {
   clearAllFilters: () => void;
 };
 
-interface CommandItem {
+interface CommandItemType {
   title: string;
   icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
   url?: string;
@@ -644,13 +644,13 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const allCommands = useMemo(() => {
     type CommandGroup = {
       group: string;
-      items: CommandItem[];
+      items: CommandItemType[];
     };
 
-    const searchCommands: CommandItem[] = [];
-    const mailCommands: CommandItem[] = [];
-    const settingsCommands: CommandItem[] = [];
-    const otherCommands: Record<string, CommandItem[]> = {};
+      const searchCommands: CommandItemType[] = [];
+  const mailCommands: CommandItemType[] = [];
+  const settingsCommands: CommandItemType[] = [];
+  const otherCommands: Record<string, CommandItemType[]> = {};
 
     mailCommands.push({
       title: 'Compose Email',
@@ -713,7 +713,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       section?.sections.forEach((group) => {
         group.items.forEach((navItem) => {
           if (navItem.disabled) return;
-          const item: CommandItem = {
+          const item: CommandItemType = {
             title: navItem.title,
             icon: navItem.icon,
             url: navItem.url,
@@ -1885,10 +1885,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           setOpen(isOpen ? 'true' : null);
         }}
       >
-        <VisuallyHidden.VisuallyHidden>
+        <VisuallyHidden>
           <DialogTitle>{m['common.commandPalette.title']()}</DialogTitle>
           <DialogDescription>{m['common.commandPalette.description']()}</DialogDescription>
-        </VisuallyHidden.VisuallyHidden>
+        </VisuallyHidden>
         {renderView()}
       </CommandDialog>
       {children}

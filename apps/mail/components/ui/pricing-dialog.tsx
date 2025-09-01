@@ -44,10 +44,7 @@ export function PricingDialog() {
       <DialogTrigger asChild>
         <div className="hidden" />
       </DialogTrigger>
-      <DialogContent
-        className="flex w-auto items-center justify-center rounded-2xl border-none p-1"
-        showOverlay
-      >
+      <DialogContent className="flex w-auto items-center justify-center rounded-2xl border-none p-1">
         <DialogTitle className="text-center text-2xl"></DialogTitle>
 
         <div className="relative inline-flex h-[535px] w-96 flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-400 bg-zinc-900/50 p-5 outline outline-2 outline-offset-4 outline-gray-400 dark:border-[#2D2D2D] dark:outline-[#2D2D2D]">

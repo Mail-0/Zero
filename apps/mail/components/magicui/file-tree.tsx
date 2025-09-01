@@ -14,7 +14,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { FileIcon } from 'lucide-react';
-import { Accordion } from 'radix-ui';
+import * as Accordion from '@radix-ui/react-accordion';
 import { cn } from '@/lib/utils';
 
 type TreeViewElement = {
