@@ -113,6 +113,9 @@ export const userSettingsSchema = z.object({
   imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
   animations: z.boolean().default(false),
+  // Security settings
+  twoFactorAuth: z.boolean().default(false),
+  loginNotifications: z.boolean().default(true),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -133,4 +136,6 @@ export const defaultUserSettings: UserSettings = {
   undoSendEnabled: false,
   imageCompression: 'medium',
   animations: false,
+  twoFactorAuth: false,
+  loginNotifications: true,
 };
