@@ -132,7 +132,7 @@ export function PromptsDialog() {
           </TooltipTrigger>
           <TooltipContent>Prompts</TooltipContent>
         </Tooltip>
-        <DialogContent className="max-w-(--breakpoint-lg)">
+        <DialogContent className="max-w-[var(--breakpoint-lg)]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               ZeroAI System Prompts{' '}
