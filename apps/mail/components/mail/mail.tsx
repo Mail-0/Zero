@@ -11,6 +11,7 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
@@ -22,7 +23,6 @@ import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
-import { useEffect, useRef, useState } from 'react';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
 import AIToggleButton from '../ai-toggle-button';
@@ -392,6 +392,26 @@ export function MailLayout() {
   const defaultCategoryId = useDefaultCategoryId();
   const [category] = useQueryState('category', { defaultValue: defaultCategoryId });
 
+  const handleClearFilters = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      clearAllFilters();
+    },
+    [clearAllFilters],
+  );
+
+  const handleExitBulkSelection = useCallback(() => {
+    setMail({ ...mail, bulkSelected: [] });
+  }, [mail, setMail]);
+
+  const handleRefetchThreads = useCallback(() => {
+    refetchThreads();
+  }, [refetchThreads]);
+
+  const handleOpenCommandPalette = useCallback(() => {
+    setIsCommandPaletteOpen('true');
+  }, [setIsCommandPaletteOpen]);
+
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
@@ -413,113 +433,106 @@ export function MailLayout() {
             // onMouseLeave={handleMailListMouseLeave}
           >
             <div className="w-full md:h-[calc(100dvh-10px)]">
-              <div
-                className={cn(
-                  'z-15 sticky top-0 flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
-                )}
-              >
-                <div className="w-full">
-                  <div className="mt-1 grid grid-cols-12 gap-2">
-                    <SidebarToggle className="col-span-1 h-fit px-2" />
-                    {mail.bulkSelected.length === 0 ? (
-                      <div className="col-span-10 flex gap-2">
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
-                          )}
-                          onClick={() => setIsCommandPaletteOpen('true')}
-                        >
-                          <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
+              <div className="z-15 sticky top-0 p-4 pb-0">
+                <div className="flex items-center gap-2">
+                  <SidebarToggle className="h-10 w-10" />
 
-                          <span className="hidden truncate pr-20 lg:inline-block">
-                            {activeFilters.length > 0
-                              ? activeFilters.map((f) => f.display).join(', ')
-                              : 'Search'}
-                          </span>
-                          <span className="inline-block truncate pr-20 lg:hidden">
-                            {activeFilters.length > 0
-                              ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
-                              : 'Search'}
-                          </span>
+                  {mail.bulkSelected.length === 0 ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 focus-visible:ring-ring dark:border-border/20 dark:bg-background/40 relative flex h-10 flex-1 select-none items-center justify-start overflow-hidden rounded-lg border pl-3 text-left text-sm font-normal shadow-none ring-0 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-offset-2',
+                        )}
+                        onClick={handleOpenCommandPalette}
+                      >
+                        <Search className="fill-muted-foreground h-4 w-4" />
 
-                          <span className="absolute right-[0rem] flex items-center gap-1">
-                            {/* {activeFilters.length > 0 && (
+                        <span className="ml-3 hidden truncate pr-20 lg:inline-block">
+                          {activeFilters.length > 0
+                            ? activeFilters.map((f) => f.display).join(', ')
+                            : 'Search'}
+                        </span>
+                        <span className="ml-3 inline-block truncate pr-20 lg:hidden">
+                          {activeFilters.length > 0
+                            ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
+                            : 'Search'}
+                        </span>
+
+                        <div className="absolute right-2 flex items-center gap-2">
+                          {/* {activeFilters.length > 0 && (
                             <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                               {activeFilters.length}
                             </Badge>
                           )} */}
-                            {activeFilters.length > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="my-auto h-5 rounded-xl px-1.5 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  clearAllFilters();
-                                }}
-                              >
-                                Clear
-                              </Button>
-                            )}
-                            <kbd className="bg-muted text-md leading-[0]! pointer-events-none mr-0.5 hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
-                              <span
-                                className={cn(
-                                  'leading-[0.2]! h-min',
-                                  isMac ? 'mt-px text-lg' : 'text-sm',
-                                )}
-                              >
-                                {isMac ? '⌘' : 'Ctrl'}{' '}
-                              </span>
-                              <span className="leading-[0.2]! h-min text-sm"> K</span>
-                            </kbd>
-                          </span>
-                        </Button>
-                        {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-                          <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
-                        )}
-                      </div>
-                    ) : null}
-                    <Button
-                      onClick={() => {
-                        refetchThreads();
-                      }}
-                      variant="ghost"
-                      className="md:h-fit md:px-2 hover:bg-accent/50"
-                    >
-                      <RefreshCcw className="text-muted-foreground h-4 w-4" />
-                    </Button>
-                    {mail.bulkSelected.length > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => {
-                                setMail({ ...mail, bulkSelected: [] });
-                              }}
-                              className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
+                          {activeFilters.length > 0 && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-6 rounded-md px-2 text-xs"
+                              onClick={handleClearFilters}
                             >
-                              <X className="h-3 w-3 fill-[#A0A0A0]" />
-                              <span>esc</span>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {m['common.actions.exitSelectionModeEsc']()}
-                          </TooltipContent>
-                        </Tooltip>
+                              Clear
+                            </Button>
+                          )}
+                          <kbd className="bg-muted border-border/40 dark:bg-muted/40 pointer-events-none hidden h-6 select-none items-center gap-1 rounded border px-2 text-xs font-medium opacity-80 sm:flex">
+                            <span className={cn('text-xs', isMac ? 'text-sm' : 'text-xs')}>
+                              {isMac ? '⌘' : 'Ctrl'}
+                            </span>
+                            <span className="text-xs">K</span>
+                          </kbd>
+                        </div>
+                      </Button>
+
+                      {activeConnection?.providerId === 'google' && folder === 'inbox' && (
+                        <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-1 items-center justify-between">
+                      <div className="text-foreground text-sm font-medium">
+                        {mail.bulkSelected.length} selected
                       </div>
-                    ) : null}
-                  </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleExitBulkSelection}
+                            className="h-8 gap-2 rounded-lg"
+                          >
+                            <X className="h-3 w-3" />
+                            <span className="text-xs">ESC</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {m['common.actions.exitSelectionModeEsc']()}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleRefetchThreads}
+                    variant="ghost"
+                    size="icon"
+                    className="border-none bg-transparent hover:bg-accent/50 h-10 w-10 rounded-lg backdrop-blur-sm"
+                  >
+                    <RefreshCcw className="text-muted-foreground h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              <div
-                className={cn(
-                  `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                  'z-5 relative h-0.5 w-full transition-opacity',
-                  isFetching ? 'opacity-100' : 'opacity-0',
-                )}
-              />
+              <div className="px-4 pt-2">
+                <div
+                  className={cn(
+                    `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
+                    'h-0.5 w-full rounded-full transition-opacity',
+                    isFetching ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+              </div>
+
               <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
                 <MailList />
               </div>
@@ -561,6 +574,14 @@ export function MailLayout() {
       </div>
     </TooltipProvider>
   );
+}
+
+interface CategoryItem {
+  id: string;
+  name: string;
+  searchValue: string;
+  icon?: React.ReactNode;
+  colors?: string;
 }
 
 export const Categories = () => {
@@ -661,11 +682,11 @@ export const Categories = () => {
           ),
         };
       default:
-        return base as any;
+        return base;
     }
   });
 
-  return categories;
+  return categories as CategoryItem[];
 };
 interface CategoryDropdownProps {
   isMultiSelectMode?: boolean;
@@ -737,24 +758,27 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
         <Button
           variant="outline"
           className={cn(
-            'black:text-white text-muted-foreground flex h-8 min-w-fit items-center gap-1 rounded-md border-none px-2',
+            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
           )}
           aria-label="Filter by labels"
           aria-expanded={isOpen}
           aria-haspopup="menu"
         >
-          <span className="text-xs font-medium">
+          <span className="text-sm font-medium">
             {labels.length > 0
               ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
               : m['navigation.settings.categories']()}
           </span>
           <ChevronDown
-            className={`black:text-white text-muted-foreground h-2 w-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            className={cn(
+              'text-muted-foreground h-4 w-4 transition-transform duration-200',
+              isOpen ? 'rotate-180' : 'rotate-0',
+            )}
           />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="bg-muted w-48 font-medium dark:bg-[#2C2C2C]"
+        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
         align="start"
         role="menu"
         aria-label="Label filter options"
@@ -762,7 +786,7 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
         {categorySettings.map((category) => (
           <DropdownMenuItem
             key={category.id}
-            className="flex cursor-pointer items-center gap-2 hover:bg-white/10"
+            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -771,12 +795,14 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
             role="menuitemcheckbox"
             aria-checked={labels.includes(category.id)}
           >
-            <span className="text-muted-foreground capitalize">{category.name.toLowerCase()}</span>
+            <span className="text-foreground font-medium capitalize">
+              {category.name.toLowerCase()}
+            </span>
             {/* Special case: empty searchValue means "All Mail" - shows everything */}
             {(category.searchValue === ''
               ? labels.length === 0
               : category.searchValue.split(',').some((val) => labels.includes(val))) && (
-              <Check className="ml-auto h-3 w-3" />
+              <Check className="text-primary ml-auto h-4 w-4" />
             )}
           </DropdownMenuItem>
         ))}
