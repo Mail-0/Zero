@@ -15,6 +15,7 @@ import {
 
 import { TooltipContent, TooltipProvider, TooltipTrigger, Tooltip } from '../ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { UIExtension } from '../plugin/ui-extension';
 import { Button } from '../ui/button';
 
 import type { Editor } from '@tiptap/core';
@@ -234,6 +235,8 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                 <TooltipContent>Block Quote</TooltipContent>
               </Tooltip>
             </div>
+            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
+            <UIExtension location="composer-toolbar" />
           </div>
         </div>
       </TooltipProvider>

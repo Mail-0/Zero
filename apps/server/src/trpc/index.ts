@@ -16,6 +16,7 @@ import { mailRouter } from './routes/mail';
 import { bimiRouter } from './routes/bimi';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
+import { pluginsRouter } from './routes/plugins';
 import { router } from './trpc';
 
 export const appRouter = router({
@@ -34,6 +35,7 @@ export const appRouter = router({
   user: userRouter,
   templates: templatesRouter,
   meet: meetRouter,
+  plugins: pluginsRouter,
 });
 
 export type AppRouter = typeof appRouter;
