@@ -1,4 +1,3 @@
-import { pluginManager } from '@/lib/plugin-manager';
 // import EmailAnalyticsPlugin from '@/plugins/email-analytics';
 // import ResendPlugin from '@/plugins/resend-plugin';
 import { useEffect } from 'react';

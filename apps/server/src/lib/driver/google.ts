@@ -21,6 +21,7 @@ import { people } from '@googleapis/people';
 import { cleanSearchValue } from '../utils';
 import { env } from '../../env';
 import { Effect } from 'effect';
+import { withRetry } from '../gmail-rate-limit';
 import * as he from 'he';
 
 export class GoogleMailManager implements MailManager {
@@ -1368,7 +1369,12 @@ export class GoogleMailManager implements MailManager {
     context?: Record<string, unknown>,
   ): Promise<T> {
     try {
-      return await Promise.resolve(fn());
+      // Apply Gmail rate-limit retry policy to any async/sync operation executed here
+      return await Effect.runPromise(
+        withRetry(
+          Effect.tryPromise(() => Promise.resolve(fn())),
+        ),
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Normalize well-known Google API errors to stable codes/messages

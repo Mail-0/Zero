@@ -135,6 +135,48 @@ sequenceDiagram
   UI->>UI: onToolCall side effects (invalidate caches, billing)
 ```
 
+## Error Handling and Retries
+- __Abort from client__: The server tracks per-message abort controllers (`getAbortSignal`, `removeAbortController`, `cancelChatRequest`, `destroyAbortControllers` in `apps/server/src/routes/agent/index.ts`). When canceled, the stream is stopped and controllers are cleaned up.
+- __Disconnect/reconnect during stream__: On reconnect, the server sends initial state (`Mail_List`). Any in-flight stream is terminated server-side via abort controllers; the user can resend.
+- __Tool failures__: If a tool errors, the server surfaces the failure in the streamed body and `onError`/toasts capture the event on the client. Side effects in `onToolCall` should be guarded against partial results.
+- __Validation/malformed requests__: Requests missing required fields should be short-circuited server-side with an error frame; verify behavior in `onMessage` parsing.
+
+## Message Contracts (reference)
+- __Incoming WS__ `UseChatRequest` (from client to DO):
+  - Body carries `messages` and context `{ threadId, currentFolder, currentFilter }`.
+  - Server broadcasts `ChatMessages` (excluding sender), persists user messages, then streams a response.
+- __Outgoing WS__ `UseChatResponse` (from DO to clients):
+  - Streaming chunks `body` with `done: false`, followed by a final frame `{ done: true }`.
+- __Other WS frames__:
+  - `Mail_List` (initial inbox state on connect)
+  - `ChatMessages` (broadcast of user messages)
+
+## Config and Model Selection
+- __Tools__: Combined MCP tools + auth tools assembled in `getDataStreamResponse` before streaming.
+- __Model switch__ (server):
+  - If `env.USE_OPENAI === 'true'` → `groq('openai/gpt-oss-120b')`.
+  - Else → `anthropic(env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219')`.
+- __System prompt__: Built via `getPrompt(getPromptName(...), AiChatPrompt(), { currentThreadId, currentFolder, currentFilter })`.
+- __Max steps__: `streamText({ maxSteps: 10, ... })`.
+
+## Testing Checklist
+- __Happy path__: Submit a message; observe broadcast, persistence, and streamed assistant chunks; final `done: true`.
+- __Abort__: Start a long response and cancel; verify stream stops and controllers are cleared server-side.
+- __Tool calls__: Trigger `GetThread`, `GetUserLabels`, `ComposeEmail`; confirm UI render + side effects (analytics, cache invalidations, billing refresh).
+- __Reconnect__: Disconnect WS mid-stream; reconnect; ensure initial `Mail_List` arrives and UI remains consistent.
+- __Billing gate__: With `chatMessages.enabled` false, ensure upgrade prompt is shown and submit is blocked.
+
+## Troubleshooting
+- __No stream received__:
+  - Check agent connection init in `apps/mail/components/ui/ai-sidebar.tsx` (`useAgent` host/name).
+  - Confirm `onMessage` in DO receives `UseChatRequest` (server logs at entry).
+- __Model/tools not applied__:
+  - Inspect `getDataStreamResponse` logs for selected tools/model and prompt assembly.
+- __Stuck “thinking...”__:
+  - Ensure `UseChatResponse { done:true }` is emitted; verify `reply(...)` loop and `onFinish` callbacks.
+- __Caches not updating after tool calls__:
+  - Confirm `onToolCall` runs and invalidates the expected queries in `ai-sidebar.tsx`.
+
 ## Trace Logging Points (added)
 - __Client__ `AIChat.onSubmit`: log submit and input length
 - __Client__ `useAgent` init: log agent name/host
@@ -144,5 +186,4 @@ sequenceDiagram
 - __Server__ UseChatRequest: log `messages.length`, `{threadId, currentFolder, currentFilter}`
 - __Server__ before broadcast/persist
 - __Server__ before `onChatMessageWithContext`
-- __Server__ `getDataStreamResponse`: log tools/model selection
 - __Server__ `reply`: log start/end of streaming

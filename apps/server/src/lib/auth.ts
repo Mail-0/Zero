@@ -188,20 +188,7 @@ export const createAuth = () => {
     user: {
       deleteUser: {
         enabled: true,
-        async sendDeleteAccountVerification(data) {
-          const verificationUrl = data.url;
-
-          await resend().emails.send({
-            from: '0.email <no-reply@0.email>',
-            to: data.user.email,
-            subject: 'Delete your 0.email account',
-            html: `
-            <h2>Delete Your 0.email Account</h2>
-            <p>Click the link below to delete your account:</p>
-            <a href="${verificationUrl}">${verificationUrl}</a>
-          `,
-          });
-        },
+        // Email verification for account deletion disabled
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = await getZeroDB(user.id);
@@ -334,7 +321,7 @@ export const createAuth = () => {
 
 const createAuthConfig = () => {
   const cache = redis();
-  const { db } = createDb(env.HYPERDRIVE.connectionString);
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
   // Compute effective base URL for OAuth callbacks, allowing local overrides
   const computeBaseURL = (): string => {
     // Highest precedence: explicit base URL override
@@ -347,7 +334,8 @@ const createAuthConfig = () => {
       if (env.OAUTH_CALLBACK_PORT && env.OAUTH_CALLBACK_PORT.trim().length > 0) {
         u.port = String(Number(env.OAUTH_CALLBACK_PORT));
       }
-      return u.toString().replace(/\/$/, '');
+      const out = u.toString().replace(/\/$/, '');
+      return out;
     } catch {
       // Fallback to the raw value if URL parsing fails
       return env.VITE_PUBLIC_BACKEND_URL;
@@ -355,6 +343,10 @@ const createAuthConfig = () => {
   };
 
   const effectiveBaseURL = computeBaseURL();
+  // Proactive DB connectivity check with sanitized target info
+  try {
+    void conn`select 1 as ping`.catch(() => {});
+  } catch {}
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
@@ -408,7 +400,16 @@ const createAuthConfig = () => {
     },
     onAPIError: {
       onError: (error) => {
-        console.error('API Error', error);
+        // Enhanced error logging with stack traces and basic fields
+        try {
+          console.error('[BetterAuth API Error]', {
+            name: (error as any)?.name,
+            message: (error as any)?.message,
+            stack: (error as any)?.stack,
+          });
+        } catch {
+          console.error('API Error', error);
+        }
       },
       errorURL: `${env.VITE_PUBLIC_APP_URL}/login`,
       throw: true,

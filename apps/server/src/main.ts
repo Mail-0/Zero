@@ -614,6 +614,23 @@ const api = new Hono<HonoContext>()
   )
   .onError(async (err, c) => {
     if (err instanceof Response) return err;
+    // Detect DB connectivity errors and log concisely (no host/port/database)
+    try {
+      const msg = err instanceof Error ? err.message : String(err);
+      const code = (err as any)?.code;
+      const looksLikeDbConnErr =
+        /connection attempt failed|ECONNREFUSED|ECONNRESET|timeout/i.test(msg || '') ||
+        code === 'ECONNREFUSED' ||
+        code === 'ECONNRESET';
+      if (looksLikeDbConnErr) {
+        console.error('[DB] Connection FAILED in request handler', {
+          name: (err as any)?.name,
+          message: msg,
+          code,
+          hint: 'Is Postgres running? Is wrangler using the intended env (e.g., --env local)?',
+        });
+      }
+    } catch {}
     console.error('Error in Hono handler:', err);
     return c.json(
       {
@@ -718,6 +735,34 @@ const app = new Hono<HonoContext>()
     }),
   )
   .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
+  .get('/health/db', async (c) => {
+    try {
+      const { conn } = createDb(env.HYPERDRIVE.connectionString);
+      let target: { host?: string; port?: string; database?: string } = {};
+      try {
+        const u = new URL(env.HYPERDRIVE.connectionString);
+        target = { host: u.hostname, port: u.port || '5432', database: (u.pathname || '').replace(/^\//, '') };
+      } catch {}
+      await conn`select 1 as ping`;
+      return c.json({ ok: true, target });
+    } catch (e: any) {
+      return c.json(
+        {
+          ok: false,
+          error: { name: e?.name, message: e?.message, code: e?.code },
+          target: (() => {
+            try {
+              const u = new URL(env.HYPERDRIVE.connectionString);
+              return { host: u.hostname, port: u.port || '5432', database: (u.pathname || '').replace(/^\//, '') };
+            } catch {
+              return {};
+            }
+          })(),
+        },
+        500,
+      );
+    }
+  })
   .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
   .post('/monitoring/sentry', async (c) => {
     try {

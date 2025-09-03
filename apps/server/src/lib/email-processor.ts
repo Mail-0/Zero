@@ -14,12 +14,13 @@ interface ProcessEmailOptions {
 // Server-side: Heavy lifting, preference-independent processing
 export function preprocessEmailHtml(html: string): string {
   const sanitizeConfig: sanitizeHtml.IOptions = {
+    // Do NOT allow <style> tags to avoid sanitize-html XSS warnings and risks.
+    // We still allow safe 'style' attributes and inject our own theme <style> later.
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       'img',
       'title',
       'details',
       'summary',
-      'style',
     ]),
 
     allowedAttributes: {

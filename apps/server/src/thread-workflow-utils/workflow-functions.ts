@@ -18,16 +18,105 @@ import {
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
-import { getZeroAgent, getZeroSocketAgent, modifyThreadLabelsInDB } from '../lib/server-utils';
-import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
+import { getZeroAgent, getZeroSocketAgent } from '../lib/server-utils';
+import { getPromptName } from '../pipelines.ts';
+import { env } from '../env';
+import { Effect } from 'effect';
+
 import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
-import { getPromptName } from '../pipelines';
-import { env } from '../env';
-import { Effect } from 'effect';
+import { modifyThreadLabelsInDB } from '../lib/server-utils';
+import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
+
+// Helper function for thread summarization
+const summarizeThread = async (
+  connectionId: string,
+  messages: ParsedMessage[],
+  existingSummary?: string,
+): Promise<string | null> => {
+  console.log(`[WORKFLOW_FUNCTIONS][summarizeThread] Starting for connectionId: ${connectionId}`);
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    console.log('[WORKFLOW_FUNCTIONS][summarizeThread] No messages provided for summarization');
+    return null;
+  }
+
+  if (!connectionId || typeof connectionId !== 'string') {
+    console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Invalid connection ID provided');
+    return null;
+  }
+
+  try {
+    const prompt = await threadToXML(messages, existingSummary);
+    console.log(`[WORKFLOW_FUNCTIONS][summarizeThread] Built prompt for connectionId: ${connectionId}`);
+    if (!prompt) {
+      console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Failed to generate thread XML');
+      return null;
+    }
+
+    const credsPresent =
+      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+
+    let promptMessages;
+    if (existingSummary) {
+      const ReSummarizeThreadPrompt = await getPrompt(
+        getPromptName(connectionId, EPrompts.ReSummarizeThread),
+        ReSummarizeThread,
+      );
+      promptMessages = [
+        { role: 'system', content: ReSummarizeThreadPrompt },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ];
+      console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Using ReSummarizeThreadPrompt');
+    } else {
+      const SummarizeThreadPrompt = await getPrompt(
+        getPromptName(connectionId, EPrompts.SummarizeThread),
+        SummarizeThread,
+      );
+      promptMessages = [
+        { role: 'system', content: SummarizeThreadPrompt },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ];
+      console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Using SummarizeThreadPrompt');
+    }
+
+    if (!credsPresent) {
+      console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Skipping AI call (no creds)');
+      return null;
+    }
+
+    console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Calling AI for summarization...');
+    const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+      messages: promptMessages,
+    });
+    console.log('[WORKFLOW_FUNCTIONS][summarizeThread] AI call completed.');
+
+    const summary = (response as any).response;
+    if (typeof summary === 'string' && summary.length > 0) {
+        console.log(`[WORKFLOW_FUNCTIONS][summarizeThread] Received summary of length: ${summary.length}`);
+        return summary;
+    } else {
+        console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Received invalid or empty summary from AI.');
+        return null;
+    }
+  } catch (error) {
+    console.log('[WORKFLOW_FUNCTIONS][summarizeThread] Failed to summarize thread:', {
+      connectionId,
+      messageCount: messages?.length || 0,
+      hasExistingSummary: !!existingSummary,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+};
 
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
 
@@ -115,7 +204,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   createDraft: async (context) => {
-    const draftContentResult = context.results?.get('generate-draft-content');
+    const draftContentResult = context.results?.get('generate-draft-content') as { draftContent: string };
     if (!draftContentResult?.draftContent) {
       throw new Error('No draft content available');
     }
@@ -216,7 +305,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   vectorizeMessages: async (context) => {
-    const vectorizeResult = context.results?.get('find-messages-to-vectorize');
+    const vectorizeResult = context.results?.get('find-messages-to-vectorize') as { messagesToVectorize: ParsedMessage[] };
     if (!vectorizeResult?.messagesToVectorize) {
       console.log('[WORKFLOW_FUNCTIONS] No messages to vectorize, skipping');
       return { embeddings: [] };
@@ -321,7 +410,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   upsertEmbeddings: async (context) => {
-    const vectorizeResult = context.results?.get('vectorize-messages');
+    const vectorizeResult = context.results?.get('vectorize-messages') as { embeddings: any[] };
     if (!vectorizeResult?.embeddings || vectorizeResult.embeddings.length === 0) {
       console.log('[WORKFLOW_FUNCTIONS] No embeddings to upsert');
       return { upserted: 0 };
@@ -392,39 +481,33 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   generateThreadSummary: async (context) => {
-    const summaryResult = context.results?.get('check-existing-summary');
+    console.log(`[WORKFLOW_FUNCTIONS] Starting generateThreadSummary for threadId: ${context.threadId}`);
+    const summaryResult = context.results?.get('check-existing-summary') as { existingSummary: { summary: string; lastMsg: string } };
     const existingSummary = summaryResult?.existingSummary;
 
     const newestMessage = context.thread.messages[context.thread.messages.length - 1];
     if (existingSummary && existingSummary.lastMsg === newestMessage?.id) {
-      console.log(
-        '[WORKFLOW_FUNCTIONS] No new messages since last processing, skipping AI processing',
-      );
-      return { summary: existingSummary.summary };
+      console.log(`[WORKFLOW_FUNCTIONS] No new messages for thread ${context.threadId} since last processing, skipping AI processing`);
+      return { summary: existingSummary.summary, status: 'skipped' };
     }
 
-    console.log('[WORKFLOW_FUNCTIONS] Generating final thread summary');
-    if (existingSummary) {
-      console.log('[WORKFLOW_FUNCTIONS] Using existing summary as context');
-      const summary = await summarizeThread(
-        context.connectionId,
-        context.thread.messages,
-        existingSummary.summary,
-      );
-      return { summary };
-    } else {
-      console.log('[WORKFLOW_FUNCTIONS] Generating new summary without context');
-      const summary = await summarizeThread(
-        context.connectionId,
-        context.thread.messages,
-        undefined,
-      );
-      return { summary };
+    console.log(`[WORKFLOW_FUNCTIONS] Generating new summary for threadId: ${context.threadId}`);
+    const summary = await summarizeThread(
+      context.connectionId,
+      context.thread.messages,
+      existingSummary?.summary,
+    );
+    console.log(`[WORKFLOW_FUNCTIONS] Generated summary for threadId: ${context.threadId}:`, summary);
+
+    if (!summary) {
+      return { summary: null, status: 'failed', newestMessageId: newestMessage?.id };
     }
+
+    return { summary, status: 'generated', newestMessageId: newestMessage?.id };
   },
 
-  upsertThreadSummary: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
+upsertThreadSummary: async (context) => {
+    const summaryResult = context.results?.get('generate-thread-summary') as { summary: string, newestMessageId: string };
     if (!summaryResult?.summary) {
       console.log('[WORKFLOW_FUNCTIONS] No summary generated for thread');
       return { upserted: false };
@@ -437,9 +520,6 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     }
 
     console.log('[WORKFLOW_FUNCTIONS] Upserting thread vector');
-    const newestMessage = context.thread.messages[context.thread.messages.length - 1];
-    // Previously: unguarded upsert to CF Vectorize
-    // await env.VECTORIZE.upsert([...])
     if (
       env.USE_OPENAI !== 'true' &&
       !!env.CLOUDFLARE_API_TOKEN &&
@@ -452,7 +532,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
             connection: context.connectionId.toString(),
             thread: context.threadId.toString(),
             summary: summaryResult.summary,
-            lastMsg: newestMessage?.id,
+            lastMsg: summaryResult.newestMessageId,
           },
           values: embeddingVector,
         },
@@ -466,75 +546,73 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     return { upserted: true };
   },
 
-  getUserLabels: async (context) => {
-    try {
-      console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
-      const { stub: agent } = await getZeroAgent(context.connectionId);
-      const userAccountLabels = await agent.getUserLabels();
-      return { userAccountLabels };
-    } catch (error) {
-      console.error('[WORKFLOW_FUNCTIONS] Error in getUserLabels:', error);
-      return { userAccountLabels: [] };
-    }
-  },
+getUserLabels: async (context) => {
+try {
+  console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
+  const { stub: agent } = await getZeroAgent(context.connectionId);
+  const userAccountLabels = await agent.getUserLabels();
+  return { userAccountLabels };
+} catch (error) {
+  console.error('[WORKFLOW_FUNCTIONS] Error in getUserLabels:', error);
+  return { userAccountLabels: [] };
+}
+},
 
-  getUserTopics: async (context) => {
-    console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
-    try {
-      const { stub: agent } = await getZeroAgent(context.connectionId);
-      const userTopics = await agent.getUserTopics();
-      if (userTopics.length > 0) {
-        const formattedTopics = userTopics.map((topic: any) => ({
-          name: topic.topic,
-          usecase: topic.usecase,
-        }));
-        console.log('[WORKFLOW_FUNCTIONS] Using user topics:', formattedTopics);
-        return { userTopics: formattedTopics };
-      } else {
-        console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
-        return { userTopics: defaultLabels };
-      }
-    } catch (error) {
-      console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
-      return { userTopics: defaultLabels };
-    }
-  },
-
-  generateLabelSuggestions: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
-    const userLabelsResult = context.results?.get('get-user-labels');
-    const userTopicsResult = context.results?.get('get-user-topics');
-
-    if (!summaryResult?.summary) {
-      console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
-      return { suggestions: [], accountLabelsMap: {} };
-    }
-
-    const accountLabels = userLabelsResult?.userAccountLabels || [];
-    const userTopics = userTopicsResult?.userTopics || defaultLabels;
-    const currentThreadLabels = context.thread.labels?.map((l: { name: string }) => l.name) || [];
-
-    // Create normalized map for quick lookups
-    const accountLabelsMap: Record<string, any> = {};
-    accountLabels.forEach((label: any) => {
-      const key = label.name.toLowerCase().trim();
-      accountLabelsMap[key] = label;
-    });
-
-    console.log('[WORKFLOW_FUNCTIONS] Generating label suggestions for thread:', {
-      threadId: context.threadId,
-      accountLabelsCount: accountLabels.length,
-      userTopicsCount: userTopics.length,
-      currentLabelsCount: currentThreadLabels.length,
-    });
-
-    // Create a comprehensive prompt with all available options
-    const accountCandidates = accountLabels.map((l: { name: string; description?: string }) => ({
-      name: l.name,
-      usecase: l.description || 'General purpose label',
+getUserTopics: async (context) => {
+console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
+try {
+  const { stub: agent } = await getZeroAgent(context.connectionId);
+  const userTopics = await agent.getUserTopics();
+  if (userTopics.length > 0) {
+    const formattedTopics = userTopics.map((topic: any) => ({
+      name: topic.topic,
+      usecase: topic.usecase,
     }));
+    console.log('[WORKFLOW_FUNCTIONS] Using user topics:', formattedTopics);
+    return { userTopics: formattedTopics };
+  } else {
+    console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
+    return { userTopics: defaultLabels };
+  }
+} catch (error) {
+  console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
+  return { userTopics: defaultLabels };
+}
+},
 
-    const promptContent = `
+generateLabelSuggestions: async (context) => {
+const summaryResult = context.results?.get('generate-thread-summary') as { summary: string };
+
+if (!summaryResult?.summary) {
+  console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
+  return { suggestions: [], accountLabelsMap: {} };
+}
+
+const accountLabels = (context.results?.get('get-user-labels') as { userAccountLabels: any[] })?.userAccountLabels || [];
+const userTopics = (context.results?.get('get-user-topics') as { userTopics: any[] })?.userTopics || defaultLabels;
+const currentThreadLabels = context.thread.labels?.map((l: { name: string }) => l.name) || [];
+
+// Create normalized map for quick lookups
+const accountLabelsMap: Record<string, any> = {};
+accountLabels.forEach((label: any) => {
+  const key = label.name.toLowerCase().trim();
+  accountLabelsMap[key] = label;
+});
+
+console.log('[WORKFLOW_FUNCTIONS] Generating label suggestions for thread:', {
+  threadId: context.threadId,
+  accountLabelsCount: accountLabels.length,
+  userTopicsCount: userTopics.length,
+  currentLabelsCount: currentThreadLabels.length,
+});
+
+// Create a comprehensive prompt with all available options
+const accountCandidates = accountLabels.map((l: { name: string; description?: string }) => ({
+  name: l.name,
+  usecase: l.description || 'General purpose label',
+}));
+
+const promptContent = `
 EXISTING ACCOUNT LABELS:
 ${accountCandidates.map((l: { name: string; usecase: string }) => `- ${l.name}: ${l.usecase}`).join('\n')}
 
@@ -552,238 +630,154 @@ Instructions:
 
 Thread Summary: ${summaryResult.summary}`;
 
-    const credsPresent =
-      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
-    if (!credsPresent) {
-      console.log('[WORKFLOW_FUNCTIONS] Skipping CF AI label suggestion (no creds)');
-      return { suggestions: [], accountLabelsMap };
-    }
-    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are an AI that helps organize emails by suggesting appropriate labels. Always respond with valid JSON.',
-        },
-        { role: 'user', content: promptContent },
-      ],
-    });
+const credsPresent =
+  env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+if (!credsPresent) {
+  console.log('[WORKFLOW_FUNCTIONS] Skipping CF AI label suggestion (no creds)');
+  return { suggestions: [], accountLabelsMap };
+}
+const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+  messages: [
+    {
+      role: 'system',
+      content:
+        'You are an AI that helps organize emails by suggesting appropriate labels. Always respond with valid JSON.',
+    },
+    { role: 'user', content: promptContent },
+  ],
+});
 
-    // Robust parsing: response may be a string or an already-parsed object
-    let suggestions: { name: string; source: string }[] = [];
-    const raw = (labelsResponse as any).response;
-    try {
-      if (Array.isArray(raw)) {
-        suggestions = raw as { name: string; source: string }[];
-      } else if (typeof raw === 'string') {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) suggestions = parsed;
-      }
-    } catch (e) {
-      console.log('[WORKFLOW_FUNCTIONS] Failed to parse label suggestions JSON');
-      suggestions = [];
-    }
+// Robust parsing: response may be a string or an already-parsed object
+let suggestions: { name: string; source: string }[] = [];
+const raw = (labelsResponse as any).response;
+try {
+  if (Array.isArray(raw)) {
+    suggestions = raw as { name: string; source: string }[];
+  } else if (typeof raw === 'string') {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) suggestions = parsed;
+  }
+} catch {
+  console.log('[WORKFLOW_FUNCTIONS] Failed to parse label suggestions JSON');
+  suggestions = [];
+}
 
-    console.log('[WORKFLOW_FUNCTIONS] Generated label suggestions:', suggestions);
-    return { suggestions, accountLabelsMap };
-  },
+console.log('[WORKFLOW_FUNCTIONS] Generated label suggestions:', suggestions);
+return { suggestions, accountLabelsMap };
+},
 
-  syncLabels: async (context) => {
-    const suggestionsResult = (
-      context.results?.get('generate-label-suggestions') ?? { suggestions: [], accountLabelsMap: {} }
-    ) as {
-      suggestions: { name: string; source: string }[];
-      accountLabelsMap: Record<string, any>;
-    };
-    const userLabelsResult = context.results?.get('get-user-labels');
-
-    if (!suggestionsResult?.suggestions || suggestionsResult.suggestions.length === 0) {
-      console.log('[WORKFLOW_FUNCTIONS] No label suggestions to sync');
-      return { applied: false };
-    }
-
-    const { suggestions, accountLabelsMap } = suggestionsResult;
-    const userAccountLabels = userLabelsResult?.userAccountLabels || [];
-
-    console.log('[WORKFLOW_FUNCTIONS] Syncing thread labels:', {
-      threadId: context.threadId,
-      suggestions: suggestions.map((s: any) => `${s.name} (${s.source})`),
-    });
-
-    const { stub: agent } = await getZeroAgent(context.connectionId);
-    const finalLabelIds: string[] = [];
-    const createdLabels: any[] = [];
-
-    // Process each suggestion: create if needed, collect IDs
-    for (const suggestion of suggestions) {
-      const normalizedName = suggestion.name.toLowerCase().trim();
-
-      if (accountLabelsMap[normalizedName]) {
-        // Label already exists
-        finalLabelIds.push(accountLabelsMap[normalizedName].id);
-        console.log('[WORKFLOW_FUNCTIONS] Using existing label:', suggestion.name);
-      } else {
-        // Need to create label
-        try {
-          console.log('[WORKFLOW_FUNCTIONS] Creating new label:', suggestion.name);
-          const created = (await agent.createLabel({
-            name: suggestion.name,
-          })) as any; // Type assertion since agent interface may return void but implementation returns Label
-
-          if (created?.id) {
-            finalLabelIds.push(created.id);
-            createdLabels.push(created);
-            // Update accountLabelsMap for subsequent lookups
-            accountLabelsMap[normalizedName] = created;
-            console.log('[WORKFLOW_FUNCTIONS] Successfully created label:', created);
-          } else {
-            console.log(
-              '[WORKFLOW_FUNCTIONS] Failed to create label - no ID returned for:',
-              suggestion.name,
-            );
-          }
-        } catch (error) {
-          console.error('[WORKFLOW_FUNCTIONS] Error creating label:', {
-            name: suggestion.name,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-    }
-
-    if (finalLabelIds.length === 0) {
-      console.log('[WORKFLOW_FUNCTIONS] No valid label IDs to apply');
-      return { applied: false, created: createdLabels.length };
-    }
-
-    // Calculate which labels to add/remove
-    const currentLabelIds = context.thread.labels?.map((l: { id: string }) => l.id) || [];
-    const labelsToAdd = finalLabelIds.filter((id: string) => !currentLabelIds.includes(id));
-
-    // Determine AI-managed labels for removal logic
-    const userTopicsResult = context.results?.get('get-user-topics');
-    const userTopics = userTopicsResult?.userTopics || [];
-
-    const aiManagedLabelNames = new Set([
-      ...userTopics.map((topic: { name: string; usecase: string }) => topic.name.toLowerCase()),
-      ...defaultLabels.map((label: { name: string; usecase: string }) => label.name.toLowerCase()),
-    ]);
-
-    const aiManagedLabelIds = new Set(
-      userAccountLabels
-        .filter((label: { name: string }) => aiManagedLabelNames.has(label.name.toLowerCase()))
-        .map((label: { id: string }) => label.id),
-    );
-
-    const labelsToRemove = currentLabelIds.filter(
-      (id: string) => aiManagedLabelIds.has(id) && !finalLabelIds.includes(id),
-    );
-
-    // Apply changes if needed
-    if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
-      console.log('[WORKFLOW_FUNCTIONS] Applying label changes:', {
-        add: labelsToAdd,
-        remove: labelsToRemove,
-        created: createdLabels.length,
-      });
-
-      await modifyThreadLabelsInDB(
-        context.connectionId,
-        context.threadId.toString(),
-        labelsToAdd,
-        labelsToRemove,
-      );
-
-      console.log('[WORKFLOW_FUNCTIONS] Successfully synced thread labels');
-      return {
-        applied: true,
-        added: labelsToAdd.length,
-        removed: labelsToRemove.length,
-        created: createdLabels.length,
-      };
-    } else {
-      console.log('[WORKFLOW_FUNCTIONS] No label changes needed - labels already match');
-      return { applied: false, created: createdLabels.length };
-    }
-  },
+syncLabels: async (context) => {
+const suggestionsResult = (context.results?.get('generate-label-suggestions') ?? { suggestions: [], accountLabelsMap: {} }) as {
+  suggestions: { name: string; source: string }[];
+  accountLabelsMap: Record<string, any>;
 };
 
-// Helper function for thread summarization
-const summarizeThread = async (
-  connectionId: string,
-  messages: ParsedMessage[],
-  existingSummary?: string,
-): Promise<string | null> => {
-  try {
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      console.log('[SUMMARIZE_THREAD] No messages provided for summarization');
-      return null;
-    }
+if (!suggestionsResult?.suggestions || suggestionsResult.suggestions.length === 0) {
+  console.log('[WORKFLOW_FUNCTIONS] No label suggestions to sync');
+  return { applied: false };
+}
 
-    if (!connectionId || typeof connectionId !== 'string') {
-      console.log('[SUMMARIZE_THREAD] Invalid connection ID provided');
-      return null;
-    }
+const { suggestions, accountLabelsMap } = suggestionsResult;
+const userAccountLabels = (context.results?.get('get-user-labels') as { userAccountLabels: any[] })?.userAccountLabels || [];
 
-    const prompt = await threadToXML(messages, existingSummary);
-    if (!prompt) {
-      console.log('[SUMMARIZE_THREAD] Failed to generate thread XML');
-      return null;
-    }
+console.log('[WORKFLOW_FUNCTIONS] Syncing thread labels:', {
+  threadId: context.threadId,
+  suggestions: suggestions.map((s: any) => `${s.name} (${s.source})`),
+});
 
-    const credsPresent =
-      env.USE_OPENAI !== 'true' && !!env.CLOUDFLARE_API_TOKEN && !!env.CLOUDFLARE_ACCOUNT_ID;
+const { stub: agent } = await getZeroAgent(context.connectionId);
+const finalLabelIds: string[] = [];
+const createdLabels: any[] = [];
 
-    if (existingSummary) {
-      const ReSummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.ReSummarizeThread),
-        ReSummarizeThread,
-      );
-      const promptMessages = [
-        { role: 'system', content: ReSummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ];
-      if (!credsPresent) {
-        console.log('[SUMMARIZE_THREAD] Skipping CF AI re-summarize (no creds)');
-        return null;
+// Process each suggestion: create if needed, collect IDs
+for (const suggestion of suggestions) {
+  const normalizedName = suggestion.name.toLowerCase().trim();
+
+  if (accountLabelsMap[normalizedName]) {
+    // Label already exists
+    finalLabelIds.push(accountLabelsMap[normalizedName].id);
+    console.log('[WORKFLOW_FUNCTIONS] Using existing label:', suggestion.name);
+  } else {
+    // Need to create label
+    try {
+      console.log('[WORKFLOW_FUNCTIONS] Creating new label:', suggestion.name);
+      const created = (await agent.createLabel({
+        name: suggestion.name,
+      })) as any; // Type assertion since agent interface may return void but implementation returns Label
+
+      if (created?.id) {
+        finalLabelIds.push(created.id);
+        createdLabels.push(created);
+        // Update accountLabelsMap for subsequent lookups
+        accountLabelsMap[normalizedName] = created;
+        console.log('[WORKFLOW_FUNCTIONS] Successfully created label:', created);
+      } else {
+        console.log(
+          '[WORKFLOW_FUNCTIONS] Failed to create label - no ID returned for:',
+          suggestion.name,
+        );
       }
-      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-        messages: promptMessages,
+    } catch (error) {
+      console.error('[WORKFLOW_FUNCTIONS] Error creating label:', {
+        name: suggestion.name,
+        error: error instanceof Error ? error.message : String(error),
       });
-      const summary = response.response;
-      return typeof summary === 'string' ? summary : null;
-    } else {
-      const SummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.SummarizeThread),
-        SummarizeThread,
-      );
-      const promptMessages = [
-        { role: 'system', content: SummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ];
-      if (!credsPresent) {
-        console.log('[SUMMARIZE_THREAD] Skipping CF AI summarize (no creds)');
-        return null;
-      }
-      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-        messages: promptMessages,
-      });
-      const summary = response.response;
-      return typeof summary === 'string' ? summary : null;
     }
-  } catch (error) {
-    console.log('[SUMMARIZE_THREAD] Failed to summarize thread:', {
-      connectionId,
-      messageCount: messages?.length || 0,
-      hasExistingSummary: !!existingSummary,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
   }
+}
+
+if (finalLabelIds.length === 0) {
+  console.log('[WORKFLOW_FUNCTIONS] No valid label IDs to apply');
+  return { applied: false, created: createdLabels.length };
+}
+
+// Calculate which labels to add/remove
+const currentLabelIds = context.thread.labels?.map((l: { id: string }) => l.id) || [];
+const labelsToAdd = finalLabelIds.filter((id: string) => !currentLabelIds.includes(id));
+
+// Determine AI-managed labels for removal logic
+const userTopics = (context.results?.get('get-user-topics') as { userTopics: any[] })?.userTopics || [];
+
+const aiManagedLabelNames = new Set([
+  ...userTopics.map((topic: { name: string; usecase: string }) => topic.name.toLowerCase()),
+  ...defaultLabels.map((label: { name: string; usecase: string }) => label.name.toLowerCase()),
+]);
+
+const aiManagedLabelIds = new Set(
+  userAccountLabels
+    .filter((label: { name: string }) => aiManagedLabelNames.has(label.name.toLowerCase()))
+    .map((label: { id: string }) => label.id),
+);
+
+const labelsToRemove = currentLabelIds.filter(
+  (id: string) => aiManagedLabelIds.has(id) && !finalLabelIds.includes(id),
+);
+
+// Apply changes if needed
+if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
+  console.log('[WORKFLOW_FUNCTIONS] Applying label changes:', {
+    add: labelsToAdd,
+    remove: labelsToRemove,
+    created: createdLabels.length,
+  });
+
+  await modifyThreadLabelsInDB(
+    context.connectionId,
+    context.threadId.toString(),
+    labelsToAdd,
+    labelsToRemove,
+  );
+
+  console.log('[WORKFLOW_FUNCTIONS] Successfully synced thread labels');
+  return {
+    applied: true,
+    added: labelsToAdd.length,
+    removed: labelsToRemove.length,
+    created: createdLabels.length,
+  };
+} else {
+  console.log('[WORKFLOW_FUNCTIONS] No label changes needed - labels already match');
+  return { applied: false, created: createdLabels.length };
+}
+}
 };

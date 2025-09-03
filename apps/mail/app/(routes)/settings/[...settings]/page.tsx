@@ -7,7 +7,6 @@ import PluginsPage from '../plugins/page';
 import { m } from '@/paraglide/messages';
 import GeneralPage from '../general/page';
 import { useParams } from 'react-router';
-import { useEffect } from 'react';
 import LabelsPage from '../labels/page';
 
 const settingsPages: Record<string, React.ComponentType> = {

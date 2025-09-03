@@ -29,15 +29,20 @@ export async function action({ request, params }: { request: Request; params: { 
     return new Response('Method Not Allowed', { status: 405 });
   }
 
-  const res = await fetch(upstream, {
+  const fetchOptions: RequestInit = {
     method: request.method,
     headers: {
       'Content-Type': request.headers.get('content-type') ?? 'application/json',
       Accept: 'application/json',
       Cookie: request.headers.get('cookie') ?? '',
     },
-    body: request.method === 'PUT' ? await request.text() : undefined,
-  });
+  };
+
+  if (request.method === 'PUT') {
+    fetchOptions.body = await request.text();
+  }
+
+  const res = await fetch(upstream, fetchOptions);
 
   const body = await res.text();
   return new Response(body, {

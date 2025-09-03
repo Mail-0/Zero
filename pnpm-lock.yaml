@@ -266,6 +266,9 @@ importers:
       dompurify:
         specifier: ^3.2.5
         version: 3.2.6
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.43.1(@cloudflare/workers-types@4.20250628.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(better-sqlite3@11.10.0)(kysely@0.27.6)(postgres@3.4.5)
       email-addresses:
         specifier: 5.0.0
         version: 5.0.0
@@ -15501,6 +15504,15 @@ snapshots:
       esbuild-register: 3.6.0(esbuild@0.25.5)
     transitivePeerDependencies:
       - supports-color
+
+  drizzle-orm@0.43.1(@cloudflare/workers-types@4.20250628.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(better-sqlite3@11.10.0)(kysely@0.27.6)(postgres@3.4.5):
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20250628.0
+      '@opentelemetry/api': 1.9.0
+      '@types/pg': 8.6.1
+      better-sqlite3: 11.10.0
+      kysely: 0.27.6
+      postgres: 3.4.5
 
   drizzle-orm@0.43.1(@cloudflare/workers-types@4.20250628.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(better-sqlite3@11.10.0)(kysely@0.28.2)(postgres@3.4.5):
     optionalDependencies:
