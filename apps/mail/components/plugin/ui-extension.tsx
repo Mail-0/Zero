@@ -18,7 +18,7 @@ export const UIExtension = ({ location }: UIExtensionProps) => {
   return (
     <Fragment>
       {extensions.map((extension, index) => (
-        <Fragment key={index}>{extension.component}</Fragment>
+        <Fragment key={`${extension.pluginId}-${index}`}>{extension.component}</Fragment>
       ))}
     </Fragment>
   );

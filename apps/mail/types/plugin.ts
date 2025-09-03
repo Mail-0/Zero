@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export interface PluginMetadata {
   id: string;
@@ -13,6 +13,7 @@ export interface UIExtensionPoint {
   location: string;
   component: ReactNode;
   priority?: number;
+  pluginId?: string;
 }
 
 export interface EmailDriver {

@@ -13,7 +13,7 @@ export const HelloWorldPlugin: Plugin = {
   uiExtensions: [
     {
       location: 'composer-toolbar',
-      component: <Button variant="outline" onClick={() => alert('Hello from plugin!')}>Hello</Button>,
+      component: <Button variant="outline" onClick={() => console.log('Hello from plugin!')}>Hello</Button>,
     },
   ],
   onActivate: async () => {

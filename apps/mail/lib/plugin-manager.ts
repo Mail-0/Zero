@@ -250,7 +250,7 @@ class PluginManager {
     if (plugin.uiExtensions) {
       plugin.uiExtensions.forEach((extension) => {
         const existingExtensions = this.uiExtensions.get(extension.location) || [];
-        existingExtensions.push(extension);
+        existingExtensions.push({ ...extension, pluginId: plugin.metadata.id });
         existingExtensions.sort((a, b) => (b.priority || 0) - (a.priority || 0));
         this.uiExtensions.set(extension.location, existingExtensions);
       });
