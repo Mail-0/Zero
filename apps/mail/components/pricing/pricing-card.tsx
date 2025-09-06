@@ -21,6 +21,8 @@ const PRICING_CONSTANTS = {
     'Auto labeling',
     'One-click AI email writing & replies',
     'Instant thread AI-generated summaries',
+    'Priority customer support',
+    'Access to private Discord community'
   ],
   ENTERPRISE_FEATURES: [
     'Unlimited email connections',
@@ -168,7 +170,7 @@ export default function PricingCard() {
                 });
               }
             }}
-            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343]"
+            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] cursor-pointer"
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
@@ -216,6 +218,11 @@ export default function PricingCard() {
                   <div className="justify-center text-4xl font-semibold leading-10 text-white">
                     ${isAnnual ? annualPrice : monthlyPrice}
                   </div>
+                  {isAnnual && (
+                    <div className="justify-center text-base font-medium leading-tight text-white/40 line-through ml-2">
+                      ${monthlyPrice}
+                    </div>
+                  )}
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
                     <div className="justify-center text-sm font-medium leading-tight text-white/40">
                       {isAnnual ? '/MONTH (billed annually)' : '/MONTH'}
@@ -286,7 +293,7 @@ export default function PricingCard() {
             </div>
           </div>
           <button
-            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343]"
+            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] cursor-pointer"
             onClick={() => window.open('https://cal.com/team/0/chat', '_blank')}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
