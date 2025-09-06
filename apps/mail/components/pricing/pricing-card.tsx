@@ -218,6 +218,11 @@ export default function PricingCard() {
                   <div className="justify-center text-4xl font-semibold leading-10 text-white">
                     ${isAnnual ? annualPrice : monthlyPrice}
                   </div>
+                  {isAnnual && (
+                    <div className="justify-center text-base font-medium leading-tight text-white/40 line-through ml-2">
+                      ${monthlyPrice}
+                    </div>
+                  )}
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
                     <div className="justify-center text-sm font-medium leading-tight text-white/40">
                       {isAnnual ? '/MONTH (billed annually)' : '/MONTH'}
