@@ -649,7 +649,7 @@ export function NavUser() {
             {!isPro && (
               <button
                 onClick={() => setPricingDialog('true')}
-                className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
+                className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent cursor-pointer"
               >
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
                 <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
