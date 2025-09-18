@@ -5,7 +5,7 @@ export const useSummary = (threadId: string | null) => {
   const trpc = useTRPC();
   const summaryQuery = useQuery(
     trpc.brain.generateSummary.queryOptions(
-      { threadId: threadId! },
+      { threadId: threadId || '' },
       {
         enabled: !!threadId,
       },

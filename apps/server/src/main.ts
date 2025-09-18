@@ -890,6 +890,15 @@ const handler = {
 // };
 
 export default class Entry extends WorkerEntrypoint<ZeroEnv> {
+  async scheduled(controller: ScheduledController): Promise<void> {
+    if (this.env.DISABLE_WORKFLOWS === 'true') {
+      return;
+    }
+    const { SYNC_THREADS_COORDINATOR_WORKFLOW } = this.env;
+    const workflow = SYNC_THREADS_COORDINATOR_WORKFLOW.get('default');
+    await workflow.start();
+  }
+
   async fetch(request: Request): Promise<Response> {
     return handler.fetch(request, this.env, this.ctx);
   }

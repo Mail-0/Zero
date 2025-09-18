@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../../DocSendtoPDF"
+		},
+		{
+			"path": "../../zero-calendar"
 		}
 	],
 	"settings": {}

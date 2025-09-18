@@ -14,6 +14,10 @@ import {
   Plane2,
   LockIcon,
   Clock,
+  CalendarDays,
+  TaskList,
+  Automation,
+  Collection,
 } from '@/components/icons/icons';
 import { MessageSquareIcon } from 'lucide-react';
 import { m } from '@/paraglide/messages';
@@ -100,6 +104,38 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: m['navigation.sidebar.bin'](),
             url: '/mail/bin',
             icon: Bin,
+          },
+        ],
+      },
+      {
+        title: 'Productivity',
+        items: [
+          {
+            id: 'calendar',
+            title: 'Calendar',
+            url: '/mail/calendar',
+            icon: CalendarDays,
+            shortcut: 'g + c',
+          },
+          {
+            id: 'collections',
+            title: 'Collections',
+            url: '/mail/collections',
+            icon: Collection,
+            shortcut: 'g + o',
+          },
+          {
+            id: 'automations',
+            title: 'Automations',
+            url: '/mail/automations',
+            icon: Automation,
+            shortcut: 'g + u',
+          },
+          {
+            id: 'tasks',
+            title: 'Background Tasks',
+            url: '/mail/tasks',
+            icon: TaskList,
           },
         ],
       },

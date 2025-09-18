@@ -9,6 +9,8 @@
     "evals/**/*.ts"
   ],
   "compilerOptions": {
+    "types": ["@cloudflare/workers-types"],
+    "target": "ESNext",
     "plugins": [
       {
         "name": "@effect/language-service"

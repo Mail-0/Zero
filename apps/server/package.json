@@ -32,6 +32,7 @@
     "@barkleapp/css-sanitizer": "1.0.0",
     "@coinbase/cookie-manager": "1.1.8",
     "@dub/better-auth": "0.0.3",
+    "@googleapis/calendar": "12.0.0",
     "@googleapis/gmail": "12.0.0",
     "@googleapis/people": "3.0.9",
     "@hono/trpc-server": "^0.3.4",

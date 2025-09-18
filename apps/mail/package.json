@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev --port 3500",
+    "dev": "react-router dev --port 3500 --host 0.0.0.0",
     "build": "react-router build",
     "start": "wrangler dev --port 3500 --show-interactive-dev-session=false",
     "types": "wrangler types",
@@ -23,6 +23,10 @@
     "@elevenlabs/react": "0.1.5",
     "@fontsource-variable/geist": "5.2.6",
     "@fontsource-variable/geist-mono": "5.2.6",
+    "@fullcalendar/daygrid": "6.1.19",
+    "@fullcalendar/interaction": "6.1.19",
+    "@fullcalendar/react": "6.1.19",
+    "@fullcalendar/timegrid": "6.1.19",
     "@hookform/resolvers": "4.1.2",
     "@intercom/messenger-js-sdk": "0.0.14",
     "@react-email/components": "^0.0.36",
@@ -70,6 +74,7 @@
     "deepmerge": "4.3.1",
     "dexie": "4.0.11",
     "dompurify": "^3.2.5",
+    "drizzle-orm": "catalog:",
     "email-addresses": "5.0.0",
     "emblor": "^1.4.8",
     "eslint-plugin-react-hooks": "6.0.0-rc.1",
@@ -119,8 +124,7 @@
     "vite-plugin-babel": "1.3.1",
     "vite-plugin-oxlint": "1.4.0",
     "workers-og": "0.0.25",
-    "zod": "catalog:",
-    "drizzle-orm": "catalog:"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.3.1",

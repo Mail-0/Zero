@@ -17,12 +17,14 @@ import { bimiRouter } from './routes/bimi';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { pluginsRouter } from './routes/plugins';
+import { calendarRouter } from './routes/calendar';
 import { router } from './trpc';
 
 export const appRouter = router({
   ai: aiRouter,
   bimi: bimiRouter,
   brain: brainRouter,
+  calendar: calendarRouter,
   categories: categoriesRouter,
   connections: connectionsRouter,
   cookiePreferences: cookiePreferencesRouter,
