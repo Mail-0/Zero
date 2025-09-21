@@ -82,7 +82,6 @@ You can set up Zero in two ways:
    ```
 
 2. **Set Up Environment**
-
    - Run `pnpm nizzy env` to setup your environment variables
    - Run `pnpm nizzy sync` to sync your environment variables and types
    - Start the database with the provided docker compose setup: `pnpm docker:db:up`
@@ -122,7 +121,6 @@ You can set up Zero in two ways:
    ```
 
 2. **Set Up Environment**
-
    - Run `pnpm nizzy env` to setup your environment variables
    - Run `pnpm nizzy sync` to sync your environment variables and types
    - Start the database with the provided docker compose setup: `pnpm docker:db:up`
@@ -138,7 +136,6 @@ You can set up Zero in two ways:
 ### Environment Setup
 
 1. **Better Auth Setup**
-
    - Open the `.env` file and change the BETTER_AUTH_SECRET to a random string. (Use `openssl rand -hex 32` to generate a 32 character string)
 
      ```env
@@ -146,7 +143,6 @@ You can set up Zero in two ways:
      ```
 
 2. **Google OAuth Setup** (Required for Gmail integration)
-
    - Go to [Google Cloud Console](https://console.cloud.google.com)
    - Create a new project
    - Add the following APIs in your Google Cloud Project: [People API](https://console.cloud.google.com/apis/library/people.googleapis.com), [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com)
@@ -168,7 +164,6 @@ You can set up Zero in two ways:
      ```
 
    - Add yourself as a test user:
-
      - Go to [`Audience`](https://console.cloud.google.com/auth/audience)
      - Under 'Test users' click 'Add Users'
      - Add your email and click 'Save'
@@ -177,7 +172,6 @@ You can set up Zero in two ways:
 > The authorized redirect URIs in Google Cloud Console must match **exactly** what you configure in the `.env`, including the protocol (http/https), domain, and path - these are provided above.
 
 3. **Autumn Setup** (Required for some encryption)
-
    - Go to [Autumn](https://useautumn.com/)
    - For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
    - For production, select the production mode from upper left corner and generate and fill the other fields. After that, generate an Autumn Secret Key
@@ -189,11 +183,9 @@ You can set up Zero in two ways:
    ```
 
 4. **Twilio Setup** (Required for SMS Integration)
-
    - Go to the [Twilio](https://www.twilio.com/)
    - Create a Twilio account if you don’t already have one
    - From the dashboard, locate your:
-
      - Account SID
      - Auth Token
      - Phone Number
@@ -224,7 +216,6 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    ```
 
    This creates a database with:
-
    - Name: `zerodotemail`
    - Username: `postgres`
    - Password: `postgres`
@@ -241,7 +232,6 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    ```
 
 3. **Database Commands**
-
    - **Set up database tables**:
 
      ```bash

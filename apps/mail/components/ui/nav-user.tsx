@@ -335,7 +335,7 @@ export function NavUser() {
                   <DropdownMenuSeparator className="mt-1" />
                   <DropdownMenuItem onSelect={() => handleThemeToggle()} className="cursor-pointer">
                     <div className="flex w-full items-center gap-2">
-                    {resolvedTheme === 'dark' ? (
+                      {resolvedTheme === 'dark' ? (
                         <MoonIcon className="size-4 opacity-60" />
                       ) : (
                         <SunIcon className="size-4 opacity-60" />

@@ -32,9 +32,7 @@
       "indexes": {
         "labels_name_idx": {
           "name": "labels_name_idx",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": false
         }
       },
@@ -71,32 +69,22 @@
       "indexes": {
         "thread_labels_thread_id_idx": {
           "name": "thread_labels_thread_id_idx",
-          "columns": [
-            "thread_id"
-          ],
+          "columns": ["thread_id"],
           "isUnique": false
         },
         "thread_labels_label_id_idx": {
           "name": "thread_labels_label_id_idx",
-          "columns": [
-            "label_id"
-          ],
+          "columns": ["label_id"],
           "isUnique": false
         },
         "thread_labels_thread_label_idx": {
           "name": "thread_labels_thread_label_idx",
-          "columns": [
-            "thread_id",
-            "label_id"
-          ],
+          "columns": ["thread_id", "label_id"],
           "isUnique": false
         },
         "thread_labels_thread_id_label_id_unique": {
           "name": "thread_labels_thread_id_label_id_unique",
-          "columns": [
-            "thread_id",
-            "label_id"
-          ],
+          "columns": ["thread_id", "label_id"],
           "isUnique": true
         }
       },
@@ -105,12 +93,8 @@
           "name": "thread_labels_thread_id_threads_id_fk",
           "tableFrom": "thread_labels",
           "tableTo": "threads",
-          "columnsFrom": [
-            "thread_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["thread_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -118,12 +102,8 @@
           "name": "thread_labels_label_id_labels_id_fk",
           "tableFrom": "thread_labels",
           "tableTo": "labels",
-          "columnsFrom": [
-            "label_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["label_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -188,37 +168,27 @@
       "indexes": {
         "threads_thread_id_idx": {
           "name": "threads_thread_id_idx",
-          "columns": [
-            "thread_id"
-          ],
+          "columns": ["thread_id"],
           "isUnique": false
         },
         "threads_provider_id_idx": {
           "name": "threads_provider_id_idx",
-          "columns": [
-            "provider_id"
-          ],
+          "columns": ["provider_id"],
           "isUnique": false
         },
         "threads_latest_received_on_idx": {
           "name": "threads_latest_received_on_idx",
-          "columns": [
-            "latest_received_on"
-          ],
+          "columns": ["latest_received_on"],
           "isUnique": false
         },
         "threads_latest_subject_idx": {
           "name": "threads_latest_subject_idx",
-          "columns": [
-            "latest_subject"
-          ],
+          "columns": ["latest_subject"],
           "isUnique": false
         },
         "threads_latest_sender_idx": {
           "name": "threads_latest_sender_idx",
-          "columns": [
-            "latest_sender"
-          ],
+          "columns": ["latest_sender"],
           "isUnique": false
         }
       },

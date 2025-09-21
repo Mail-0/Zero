@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import type { UserSettings } from '@zero/server/schemas';
 import { useTRPC } from '@/providers/query-provider';
 import { isSendResult } from '@/lib/email-utils';
-import type { UserSettings } from '@zero/server/schemas';
 
 export type EmailData = {
   to: string[];
@@ -21,7 +21,7 @@ export type SerializedFile = {
   size: number;
   type: string;
   lastModified: number;
-  data: string; 
+  data: string;
 };
 
 type SerializableEmailData = Omit<EmailData, 'attachments'> & {
@@ -41,7 +41,7 @@ const serializeFiles = async (files: File[]): Promise<SerializedFile[]> => {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       }),
-    }))
+    })),
   );
 };
 
@@ -61,9 +61,9 @@ export const useUndoSend = () => {
   const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
 
   const handleUndoSend = (
-    result: unknown, 
+    result: unknown,
     settings: { settings: UserSettings } | undefined,
-    emailData?: EmailData
+    emailData?: EmailData,
   ) => {
     if (isSendResult(result) && settings?.settings?.undoSendEnabled) {
       const { messageId, sendAt } = result;
@@ -93,29 +93,29 @@ export const useUndoSend = () => {
             action: {
               label: 'Undo',
               onClick: async () => {
-              try {
-                await unsendEmail({ messageId });
-                
-                if (emailData) {
-                  const serializedAttachments = await serializeFiles(emailData.attachments);
-                  const serializableData: SerializableEmailData = {
-                    ...emailData,
-                    attachments: serializedAttachments,
-                  };
-                  localStorage.setItem('undoEmailData', JSON.stringify(serializableData));
+                try {
+                  await unsendEmail({ messageId });
+
+                  if (emailData) {
+                    const serializedAttachments = await serializeFiles(emailData.attachments);
+                    const serializableData: SerializableEmailData = {
+                      ...emailData,
+                      attachments: serializedAttachments,
+                    };
+                    localStorage.setItem('undoEmailData', JSON.stringify(serializableData));
+                  }
+
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('activeReplyId');
+                  url.searchParams.delete('mode');
+                  url.searchParams.delete('draftId');
+                  url.searchParams.set('isComposeOpen', 'true');
+                  window.history.replaceState({}, '', url.toString());
+
+                  toast.info('Send cancelled');
+                } catch {
+                  toast.error('Failed to cancel');
                 }
-                
-                const url = new URL(window.location.href);
-                url.searchParams.delete('activeReplyId');
-                url.searchParams.delete('mode');
-                url.searchParams.delete('draftId');
-                url.searchParams.set('isComposeOpen', 'true');
-                window.history.replaceState({}, '', url.toString());
-                
-                toast.info('Send cancelled');
-              } catch {
-                toast.error('Failed to cancel');
-              }
               },
             },
             duration: 15_000,

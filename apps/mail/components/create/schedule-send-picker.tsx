@@ -1,11 +1,11 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 import { format, startOfToday } from 'date-fns';
+import { Input } from '@/components/ui/input';
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
 
 const pad2 = (n: number) => n.toString().padStart(2, '0');
 const getLocalTimeFromDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -31,63 +31,85 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   const selectedDate = value ? new Date(value) : undefined;
   const time = value ? getLocalTimeFromDate(new Date(value)) : getNowTime();
 
-  const emitChange = useCallback((datePart: Date | undefined, timePart: string, validate: boolean = false) => {
-    if (!datePart) {
-      onChange(undefined);
+  const emitChange = useCallback(
+    (datePart: Date | undefined, timePart: string, validate: boolean = false) => {
+      if (!datePart) {
+        onChange(undefined);
+        if (validate) {
+          onValidityChange?.(true);
+        }
+        return;
+      }
+
+      const [hhStr, mmStr = '00'] = timePart.split(':');
+      const hours = Number(hhStr);
+      const minutes = Number(mmStr);
+
+      if (
+        Number.isNaN(hours) ||
+        Number.isNaN(minutes) ||
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59
+      ) {
+        if (validate) {
+          onValidityChange?.(false);
+        }
+        return;
+      }
+
+      const combinedDate = new Date(datePart);
+      combinedDate.setHours(hours, minutes, 0, 0);
+
+      if (validate && combinedDate.getTime() < Date.now()) {
+        toast.error('Scheduled time cannot be in the past');
+        onValidityChange?.(false);
+        return;
+      }
+
       if (validate) {
         onValidityChange?.(true);
       }
-      return;
-    }
+      onChange(combinedDate.toISOString());
+    },
+    [onChange, onValidityChange],
+  );
 
-    const [hhStr, mmStr = '00'] = timePart.split(':');
-    const hours = Number(hhStr);
-    const minutes = Number(mmStr);
+  const handleDateSelect = useCallback(
+    (d?: Date) => {
+      emitChange(d, time, false);
+    },
+    [emitChange, time],
+  );
 
-    if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      if (validate) {
-        onValidityChange?.(false);
+  const handleTimeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      emitChange(selectedDate, val, false);
+    },
+    [selectedDate, emitChange],
+  );
+
+  const handleDatePickerClose = useCallback(
+    (open: boolean) => {
+      setDatePickerOpen(open);
+      if (!open && selectedDate) {
+        emitChange(selectedDate, time, true);
       }
-      return;
-    }
+    },
+    [selectedDate, time, emitChange],
+  );
 
-    const combinedDate = new Date(datePart);
-    combinedDate.setHours(hours, minutes, 0, 0);
-
-    if (validate && combinedDate.getTime() < Date.now()) {
-      toast.error('Scheduled time cannot be in the past');
-      onValidityChange?.(false);
-      return;
-    }
-
-    if (validate) {
-      onValidityChange?.(true);
-    }
-    onChange(combinedDate.toISOString());
-  }, [onChange, onValidityChange]);
-
-  const handleDateSelect = useCallback((d?: Date) => {
-    emitChange(d, time, false);
-  }, [emitChange, time]);
-
-  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    emitChange(selectedDate, val, false);
-  }, [selectedDate, emitChange]);
-
-  const handleDatePickerClose = useCallback((open: boolean) => {
-    setDatePickerOpen(open);
-    if (!open && selectedDate) {
-      emitChange(selectedDate, time, true);
-    }
-  }, [selectedDate, time, emitChange]);
-
-  const handleTimePickerClose = useCallback((open: boolean) => {
-    setTimePickerOpen(open);
-    if (!open && selectedDate) {
-      emitChange(selectedDate, time, true);
-    }
-  }, [selectedDate, time, emitChange]);
+  const handleTimePickerClose = useCallback(
+    (open: boolean) => {
+      setTimePickerOpen(open);
+      if (!open && selectedDate) {
+        emitChange(selectedDate, time, true);
+      }
+    },
+    [selectedDate, time, emitChange],
+  );
 
   const handleToggleScheduling = useCallback(() => {
     if (isScheduling) {
@@ -128,14 +150,12 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
             <button
               type="button"
               className={cn(
-                'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+                'hover:bg-accent flex items-center gap-1 rounded-md border px-2 py-1 text-sm',
                 className,
               )}
             >
               <CalendarIcon className="h-4 w-4" />
-              <span>
-                {selectedDate ? format(selectedDate, 'dd MMM yyyy') : 'Select Date'}
-              </span>
+              <span>{selectedDate ? format(selectedDate, 'dd MMM yyyy') : 'Select Date'}</span>
             </button>
           </PopoverTrigger>
           <PopoverContent className="z-[100] w-auto p-4" align="start" side="top" sideOffset={8}>
@@ -157,7 +177,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
             <button
               type="button"
               className={cn(
-                'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+                'hover:bg-accent flex items-center gap-1 rounded-md border px-2 py-1 text-sm',
                 className,
               )}
             >
@@ -168,12 +188,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
           <PopoverContent className="z-[100] w-auto p-4" align="start" side="top" sideOffset={8}>
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Select Time</h3>
-              <Input
-                type="time"
-                value={time}
-                onChange={handleTimeChange}
-                className="w-full"
-              />
+              <Input type="time" value={time} onChange={handleTimeChange} className="w-full" />
             </div>
           </PopoverContent>
         </Popover>
@@ -182,7 +197,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
           type="button"
           onClick={handleToggleScheduling}
           className={cn(
-            'flex items-center gap-1 rounded-md border px-2 py-1 text-sm bg-background hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer',
+            'bg-background flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-[#404040]',
             className,
           )}
         >
@@ -197,7 +212,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
       type="button"
       onClick={handleToggleScheduling}
       className={cn(
-        'flex items-center gap-1 rounded-md border px-2 py-1 text-sm hover:bg-accent',
+        'hover:bg-accent flex items-center gap-1 rounded-md border px-2 py-1 text-sm',
         className,
       )}
     >

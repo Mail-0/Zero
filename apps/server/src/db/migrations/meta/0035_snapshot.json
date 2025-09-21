@@ -145,12 +145,8 @@
           "name": "mail0_account_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_account",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -290,12 +286,8 @@
           "name": "mail0_connection_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_connection",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -305,10 +297,7 @@
         "mail0_connection_user_id_email_unique": {
           "name": "mail0_connection_user_id_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "email"
-          ]
+          "columns": ["user_id", "email"]
         }
       },
       "policies": {},
@@ -381,9 +370,7 @@
         "mail0_early_access_email_unique": {
           "name": "mail0_early_access_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -580,12 +567,8 @@
           "name": "mail0_note_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_note",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -714,16 +697,12 @@
         "mail0_oauth_access_token_access_token_unique": {
           "name": "mail0_oauth_access_token_access_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "access_token"
-          ]
+          "columns": ["access_token"]
         },
         "mail0_oauth_access_token_refresh_token_unique": {
           "name": "mail0_oauth_access_token_refresh_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "refresh_token"
-          ]
+          "columns": ["refresh_token"]
         }
       },
       "policies": {},
@@ -845,9 +824,7 @@
         "mail0_oauth_application_client_id_unique": {
           "name": "mail0_oauth_application_client_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "client_id"
-          ]
+          "columns": ["client_id"]
         }
       },
       "policies": {},
@@ -1045,12 +1022,8 @@
           "name": "mail0_session_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_session",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1060,9 +1033,7 @@
         "mail0_session_token_unique": {
           "name": "mail0_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -1181,12 +1152,8 @@
           "name": "mail0_summary_connection_id_mail0_connection_id_fk",
           "tableFrom": "mail0_summary",
           "tableTo": "mail0_connection",
-          "columnsFrom": [
-            "connection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1275,16 +1242,12 @@
         "mail0_user_email_unique": {
           "name": "mail0_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "mail0_user_phone_number_unique": {
           "name": "mail0_user_phone_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "phone_number"
-          ]
+          "columns": ["phone_number"]
         }
       },
       "policies": {},
@@ -1342,12 +1305,8 @@
           "name": "mail0_user_hotkeys_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_user_hotkeys",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1416,12 +1375,8 @@
           "name": "mail0_user_settings_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_user_settings",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1431,9 +1386,7 @@
         "mail0_user_settings_user_id_unique": {
           "name": "mail0_user_settings_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -1572,12 +1525,8 @@
           "name": "mail0_writing_style_matrix_connectionId_mail0_connection_id_fk",
           "tableFrom": "mail0_writing_style_matrix",
           "tableTo": "mail0_connection",
-          "columnsFrom": [
-            "connectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connectionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1585,9 +1534,7 @@
       "compositePrimaryKeys": {
         "mail0_writing_style_matrix_connectionId_pk": {
           "name": "mail0_writing_style_matrix_connectionId_pk",
-          "columns": [
-            "connectionId"
-          ]
+          "columns": ["connectionId"]
         }
       },
       "uniqueConstraints": {},

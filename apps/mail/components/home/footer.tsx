@@ -26,7 +26,7 @@ export default function Footer() {
   const ref = useRef(null);
 
   return (
-    <div className="bg-panelDark mx-1 mb-3 md:mx-4 md:mb-3 flex-col items-center justify-center rounded-xl flex">
+    <div className="bg-panelDark mx-1 mb-3 flex flex-col items-center justify-center rounded-xl md:mx-4 md:mb-3">
       <div>
         {/* <div className="h-[527px] w-screen bg-linear-to-b from-violet-600 via-orange-400 to-slate-950 blur-2xl" /> */}
         <div>
@@ -49,7 +49,7 @@ export default function Footer() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="lg:to-panelDark inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:bg-linear-to-b lg:from-[#84878D] lg:via-[#84878D] lg:bg-clip-text lg:text-8xl lg:text-transparent"
+                  className="lg:to-panelDark lg:bg-linear-to-b inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:from-[#84878D] lg:via-[#84878D] lg:bg-clip-text lg:text-8xl lg:text-transparent"
                 >
                   <span>Experience the Future of </span> <br />
                   Email Today
@@ -73,16 +73,16 @@ export default function Footer() {
                 className="flex w-fit flex-col items-center justify-center md:pt-4"
               >
                 <a href="/login">
-                  <Button className="h-8 bg-white text-black cursor-pointer">Get Started</Button>
+                  <Button className="h-8 cursor-pointer bg-white text-black">Get Started</Button>
                 </a>
               </motion.div>
             </div>
           </div>
         </div>
       </div>
-      <div className="relative z-50 mx-auto mb-12 mt-10 md:mt-52 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4">
-        <div className="flex w-full flex-col md:flex-row items-start justify-between lg:w-[900px]">
-          <div className="inline-flex flex-col items-start justify-between gap-4 mb-10 md:mb-0 self-stretch">
+      <div className="relative z-50 mx-auto mb-12 mt-10 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4 md:mt-52">
+        <div className="flex w-full flex-col items-start justify-between md:flex-row lg:w-[900px]">
+          <div className="mb-10 inline-flex flex-col items-start justify-between gap-4 self-stretch md:mb-0">
             <div className="inline-flex w-8 items-center justify-start gap-3">
               <a href="/">
                 <img src="/white-icon.svg" alt="logo" width={100} height={100} />
@@ -120,7 +120,7 @@ export default function Footer() {
               </a>
             </div>
           </div>
-          <div className="flex flex-1 items-start justify-end gap-5 md:gap-10 ">
+          <div className="flex flex-1 items-start justify-end gap-5 md:gap-10">
             <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Resources
@@ -132,12 +132,12 @@ export default function Footer() {
                   href="https://trust.inc/zero"
                   className="w-full"
                 >
-                  <div className="justify-start self-stretch text-sm md:text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     SOC2
                   </div>
                 </a>
                 <a href="/privacy" className="w-full" target="_blank">
-                  <div className="justify-start self-stretch text-sm md:text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Privacy Policy
                   </div>
                 </a>
@@ -154,7 +154,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <div className="justify-start self-stretch text-sm md:text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Chat with Zero
                   </div>
                 </a>
@@ -164,7 +164,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <div className="justify-start self-stretch text-sm md:text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Zero AI
                   </div>
                 </a>
@@ -174,7 +174,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <div className="justify-start self-stretch text-sm md:text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Shortcuts
                   </div>
                 </a>
@@ -186,12 +186,12 @@ export default function Footer() {
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
                 <a target="_blank" href="/contributors" className="w-full">
-                  <div className="justify-start self-stretch text-sm md:text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Contributors
                   </div>
                 </a>
                 <a target="_blank" href="/about" className="w-full">
-                  <div className="justify-start self-stretch text-sm md:text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     About
                   </div>
                 </a>
@@ -201,7 +201,7 @@ export default function Footer() {
                   href="https://github.com/Mail-0/Zero"
                   className="w-full"
                 >
-                  <div className="justify-start self-stretch text-sm md:text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-sm font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100 md:text-base">
                     Github
                   </div>
                 </a>
@@ -211,7 +211,7 @@ export default function Footer() {
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />
         <div className="flex flex-col items-start justify-start gap-6 self-stretch">
-          <div className="inline-flex items-center justify-between self-stretch flex-col-reverse md:flex-row gap-3">
+          <div className="inline-flex flex-col-reverse items-center justify-between gap-3 self-stretch md:flex-row">
             <div className="justify-start text-xs font-medium leading-tight text-white opacity-80 sm:text-sm">
               © 2025 Zero Email Inc, All Rights Reserved
             </div>

@@ -1,11 +1,10 @@
-import { defaultLabels, EProviders, } from '../../types';
+import { defaultLabels, EProviders } from '../../types';
 
 import { connection } from '../../db/schema';
 
-
-import { env } from '../../env';
 import { createDb } from '../../db';
 import { eq } from 'drizzle-orm';
+import { env } from '../../env';
 
 export interface SubscriptionData {
   connectionId?: string;

@@ -1,4 +1,12 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
@@ -11,7 +19,12 @@ type SnoozeDialogProps = {
   onOpenChange?: (open: boolean) => void;
 };
 
-export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenChange }: SnoozeDialogProps) {
+export function SnoozeDialog({
+  trigger,
+  onConfirm,
+  open: controlledOpen,
+  onOpenChange,
+}: SnoozeDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
@@ -65,7 +78,9 @@ export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenC
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Snooze until…</DialogTitle>
-          <DialogDescription>Select date and time you'd like this email to return.</DialogDescription>
+          <DialogDescription>
+            Select date and time you'd like this email to return.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-2">
           <label className="text-sm font-medium">
@@ -78,12 +93,9 @@ export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenC
             />
           </label>
           <label className="text-sm font-medium">
-            Time <span className="text-xs font-normal text-muted-foreground">({timeZoneLabel})</span>
-            <Input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            />
+            Time{' '}
+            <span className="text-muted-foreground text-xs font-normal">({timeZoneLabel})</span>
+            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </label>
         </div>
         <DialogFooter className="flex justify-end gap-2">
@@ -95,4 +107,4 @@ export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenC
       </DialogContent>
     </Dialog>
   );
-} 
+}

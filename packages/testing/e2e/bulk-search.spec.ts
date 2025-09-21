@@ -27,7 +27,7 @@ test.describe('AI Chat Sidebar', () => {
     const editor = page.locator('.ProseMirror[contenteditable="true"]');
     await expect(editor).toBeVisible();
     console.log('AI chat editor is visible');
-    
+
     console.log('Typing first command into AI chat');
     await editor.click();
     await page.keyboard.type('Find all emails from the last week and summarize them');
@@ -37,7 +37,10 @@ test.describe('AI Chat Sidebar', () => {
     console.log('Waiting for first AI response...');
     await page.waitForFunction(() => {
       const assistantMessages = document.querySelectorAll('[data-message-role="assistant"]');
-      return assistantMessages.length > 0 && (assistantMessages[assistantMessages.length - 1].textContent?.trim().length || 0) > 0;
+      return (
+        assistantMessages.length > 0 &&
+        (assistantMessages[assistantMessages.length - 1].textContent?.trim().length || 0) > 0
+      );
     });
     await expect(page.getByText('zero is thinking...')).not.toBeVisible();
     console.log('First AI response completed');
@@ -52,7 +55,9 @@ test.describe('AI Chat Sidebar', () => {
     console.log('Waiting for second AI response...');
     await page.waitForFunction(() => {
       const assistantMessages = document.querySelectorAll('[data-message-role="assistant"]');
-      return assistantMessages.length >= 2 && (assistantMessages[1].textContent?.trim().length || 0) > 0;
+      return (
+        assistantMessages.length >= 2 && (assistantMessages[1].textContent?.trim().length || 0) > 0
+      );
     });
     await expect(page.getByText('zero is thinking...')).not.toBeVisible();
     console.log('Second AI response completed');

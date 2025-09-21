@@ -24,7 +24,6 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 ## Getting Started
 
 1. **Fork the Repository**
-
    - Click the 'Fork' button at the top right of this repository
    - Clone your fork locally: `git clone https://github.com/YOUR-USERNAME/Zero.git`
    - Next, add an `upstream` [remote](https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes) to sync this repository with your local fork.
@@ -68,21 +67,18 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    ```
 
 3. **Make Your Changes**
-
    - Write clean, maintainable code
    - Follow our coding standards
    - Add/update tests as needed
    - Update documentation if required
 
 4. **Test Your Changes**
-
    - Make sure the app runs without errors
    - Test your feature thoroughly
 
    - Please lint using `pnpm dlx oxlint@latest` or by downloading an IDE extension here: https://oxc.rs/docs/guide/usage/linter.html#vscode-extension
 
 5. **Commit Your Changes**
-
    - Use clear, descriptive commit messages
    - Reference issues and pull requests
 
@@ -153,7 +149,6 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
    ```
 
 4. **Troubleshooting**
-
    - **Connection Issues**: Make sure Docker is running
    - **Schema Errors**: Check your schema files for errors
 
@@ -194,14 +189,12 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 When implementing new features, follow these guidelines:
 
 1. **Add English Source Strings**
-
    - Place all user-facing text in `apps/mail/messages/en.json`
    - Organize strings according to the existing structure
    - Use descriptive, hierarchical keys that identify the feature and context
    - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`
 
 2. **Follow i18n Formatting Standards**
-
    - Variables: `{variableName}`
    - Pluralization: `{count, plural, =0 {items} one {item} other {items}}`
    - Avoid string concatenation to ensure proper translation

@@ -17,8 +17,8 @@
 import type { IGetThreadResponse } from '../lib/driver/types';
 import { workflowFunctions } from './workflow-functions';
 import { shouldGenerateDraft } from './index';
-import { connection } from '../db/schema';
 import { initTracing } from '../lib/tracing';
+import { connection } from '../db/schema';
 
 export type WorkflowContext = {
   connectionId: string;
@@ -72,8 +72,8 @@ export class WorkflowEngine {
       attributes: {
         'workflow.name': workflowName,
         'connection.id': context.connectionId,
-        'thread.id': context.threadId
-      }
+        'thread.id': context.threadId,
+      },
     });
 
     const results = new Map<string, unknown>(existingResults || []);
@@ -91,12 +91,14 @@ export class WorkflowEngine {
             'step.id': step.id,
             'step.name': step.name,
             'step.enabled': step.enabled,
-            'workflow.name': workflowName
-          }
+            'workflow.name': workflowName,
+          },
         });
 
         try {
-          const shouldExecute = step.condition ? await step.condition({ ...context, results }) : true;
+          const shouldExecute = step.condition
+            ? await step.condition({ ...context, results })
+            : true;
           if (!shouldExecute) {
             console.log(`[WORKFLOW_ENGINE] Condition not met for step: ${step.name}`);
             stepSpan.setAttributes({ 'step.condition_met': false });
@@ -113,7 +115,7 @@ export class WorkflowEngine {
         } catch (error) {
           const errorObj = error instanceof Error ? error : new Error(String(error));
           console.error(`[WORKFLOW_ENGINE] Error in step ${step.name}:`, errorObj);
-          
+
           stepSpan.recordException(errorObj);
           stepSpan.setStatus({ code: 2, message: errorObj.message });
 
@@ -128,9 +130,9 @@ export class WorkflowEngine {
         }
       }
 
-      workflowSpan.setAttributes({ 
+      workflowSpan.setAttributes({
         'workflow.steps_completed': results.size,
-        'workflow.errors_count': errors.size
+        'workflow.errors_count': errors.size,
       });
     } finally {
       workflowSpan.end();

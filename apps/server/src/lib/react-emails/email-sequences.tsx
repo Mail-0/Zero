@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Html,
   Head,
@@ -10,6 +9,7 @@ import {
   Preview,
   Heading,
 } from '@react-email/components';
+import React from 'react';
 
 // Common styles
 const main = {
@@ -78,23 +78,23 @@ export const WelcomeEmail = ({ name }: EmailProps) => {
           <Section style={section}>
             <Heading style={h1}>Welcome to Mail0 👋</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
+            <Text style={text}>I'm Nizzy, founder of Mail0 (aka Zero)</Text>
             <Text style={text}>
-              I'm Nizzy, founder of Mail0 (aka Zero)
-            </Text>
-            <Text style={text}>
-              If you've ever screamed into the void trying to find that one email thread from 6 months ago, 
-              or spent 10 minutes writing "sounds good," you're in the right place 😅
+              If you've ever screamed into the void trying to find that one email thread from 6
+              months ago, or spent 10 minutes writing "sounds good," you're in the right place 😅
             </Text>
             <Text style={text}>Mail0 is built different:</Text>
             <Text style={listItem}>• AI-native from day one</Text>
             <Text style={listItem}>• Open-source and self-hostable</Text>
-            <Text style={listItem}>• Summarizes long threads, drafts replies, and lets you search your inbox like a conversation</Text>
-            <Text style={listItem}>• Respects your privacy and your time</Text>
-            <Text style={text}>
-              It's still early. It's raw. But it's real. And it's yours 💪
+            <Text style={listItem}>
+              • Summarizes long threads, drafts replies, and lets you search your inbox like a
+              conversation
             </Text>
+            <Text style={listItem}>• Respects your privacy and your time</Text>
+            <Text style={text}>It's still early. It's raw. But it's real. And it's yours 💪</Text>
             <Text style={text}>
-              Mail0 is for people like us: curious, technical, and tired of bloated tools pretending to be minimal 🙃
+              Mail0 is for people like us: curious, technical, and tired of bloated tools pretending
+              to be minimal 🙃
             </Text>
             <Text style={text}>
               Want to chat about email and get a $20 gift card to anywhere you like?{' '}
@@ -102,9 +102,7 @@ export const WelcomeEmail = ({ name }: EmailProps) => {
                 Book some time with me here
               </Link>
             </Text>
-            <Text style={text}>
-              Thanks for being one of the first to join this journey 🚀
-            </Text>
+            <Text style={text}>Thanks for being one of the first to join this journey 🚀</Text>
             <Text style={signature}>Nizzy</Text>
           </Section>
         </Container>
@@ -124,25 +122,24 @@ export const Mail0ProEmail = ({ name }: EmailProps) => {
           <Section style={section}>
             <Heading style={h1}>Mail0 Pro is here 🚀💼</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
+            <Text style={text}>Your inbox deserves better.</Text>
             <Text style={text}>
-              Your inbox deserves better.
-            </Text>
-            <Text style={text}>
-              Mail0 Pro unlocks everything you need to fly through email like it's nothing. 
-              Built for professionals, founders, and power users who want to spend less time writing and more time doing.
+              Mail0 Pro unlocks everything you need to fly through email like it's nothing. Built
+              for professionals, founders, and power users who want to spend less time writing and
+              more time doing.
             </Text>
             <Text style={text}>Here's what you get:</Text>
             <Text style={listItem}>📨 Unlimited email connections</Text>
             <Text style={listItem}>🧠 Full AI chat with your inbox</Text>
             <Text style={listItem}>🏷️ Auto labeling that organizes things instantly</Text>
             <Text style={listItem}>✍️ One-click AI writing and smart replies</Text>
-            <Text style={listItem}>🪄 Instant thread summaries so you don't waste time scrolling</Text>
+            <Text style={listItem}>
+              🪄 Instant thread summaries so you don't waste time scrolling
+            </Text>
             <Text style={listItem}>🙋 Priority support</Text>
             <Text style={listItem}>💬 Private Discord community</Text>
             <Text style={listItem}>💸 $20/month — or save 50% when billed annually</Text>
-            <Text style={text}>
-              It's the full Mail0 experience, no limits.
-            </Text>
+            <Text style={text}>It's the full Mail0 experience, no limits.</Text>
             <Text style={text}>
               <Link href="https://0.email/pricing" style={link}>
                 Try it free for 7 days, no strings attached
@@ -154,9 +151,7 @@ export const Mail0ProEmail = ({ name }: EmailProps) => {
                 Book a quick call and I'll send you a $20 gift card of your choice
               </Link>
             </Text>
-            <Text style={text}>
-              Let's level up your inbox,
-            </Text>
+            <Text style={text}>Let's level up your inbox,</Text>
             <Text style={signature}>Nizzy</Text>
           </Section>
         </Container>
@@ -176,15 +171,15 @@ export const AutoLabelingEmail = ({ name }: EmailProps) => {
           <Section style={section}>
             <Heading style={h1}>New in Mail0: Auto-labeling is here 🎉📥</Heading>
             <Text style={text}>Hey {name ? name : 'there'} 👋</Text>
+            <Text style={text}>Your inbox just got a whole lot smarter.</Text>
             <Text style={text}>
-              Your inbox just got a whole lot smarter.
-            </Text>
-            <Text style={text}>
-              Mail0 now automatically labels your emails based on what they're about. 
-              No setup, no filters, no wasted time 🙌
+              Mail0 now automatically labels your emails based on what they're about. No setup, no
+              filters, no wasted time 🙌
             </Text>
             <Text style={text}>Here's what it does:</Text>
-            <Text style={listItem}>📌 Sorts things into helpful categories like Newsletters, Receipts, Invites, and more</Text>
+            <Text style={listItem}>
+              📌 Sorts things into helpful categories like Newsletters, Receipts, Invites, and more
+            </Text>
             <Text style={listItem}>🧠 Learns from your habits to get better over time</Text>
             <Text style={listItem}>🛠️ Lets you rename or tweak labels however you want</Text>
             <Text style={text}>
@@ -196,9 +191,7 @@ export const AutoLabelingEmail = ({ name }: EmailProps) => {
                 Book a quick chat and I'll send you a $20 gift card as a thank you
               </Link>
             </Text>
-            <Text style={text}>
-              Thanks for being here,
-            </Text>
+            <Text style={text}>Thanks for being here,</Text>
             <Text style={signature}>Nizzy</Text>
           </Section>
         </Container>
@@ -219,8 +212,8 @@ export const AIWritingAssistantEmail = ({ name }: EmailProps) => {
             <Heading style={h1}>Write faster with AI ✍️✨</Heading>
             <Text style={text}>Hey {name ? name : 'there'} 👋</Text>
             <Text style={text}>
-              Tired of writing the same replies over and over? Yeah, same. 
-              That's why we built AI Response Assist.
+              Tired of writing the same replies over and over? Yeah, same. That's why we built AI
+              Response Assist.
             </Text>
             <Text style={text}>Here's what it can do:</Text>
             <Text style={listItem}>🤖 Reads the email you got</Text>
@@ -241,9 +234,7 @@ export const AIWritingAssistantEmail = ({ name }: EmailProps) => {
                 I'll send you a $20 gift card just for booking a quick call
               </Link>
             </Text>
-            <Text style={text}>
-              Talk soon,
-            </Text>
+            <Text style={text}>Talk soon,</Text>
             <Text style={signature}>Adam</Text>
           </Section>
         </Container>
@@ -264,8 +255,8 @@ export const ShortcutsEmail = ({ name }: EmailProps) => {
             <Heading style={h1}>Fly through your inbox with shortcuts ⚡️</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
             <Text style={text}>
-              You don't need to click around to get things done in Mail0. 
-              We've got a full set of keyboard shortcuts built in. And yes, they're fully customizable.
+              You don't need to click around to get things done in Mail0. We've got a full set of
+              keyboard shortcuts built in. And yes, they're fully customizable.
             </Text>
             <Text style={text}>Here are a few worth memorizing:</Text>
             <Text style={listItem}>• C to start a new email</Text>
@@ -276,21 +267,17 @@ export const ShortcutsEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>• G + I to go to your inbox</Text>
             <Text style={listItem}>• Cmd + Z to undo the last thing you did (life saver)</Text>
             <Text style={text}>
-              Want to bulk delete, mark as important, or jump between categories? 
-              We've got shortcuts for those too. Just hit ? in the app to view and edit them all.
+              Want to bulk delete, mark as important, or jump between categories? We've got
+              shortcuts for those too. Just hit ? in the app to view and edit them all.
             </Text>
-            <Text style={text}>
-              Once you get into the flow, it's wild how fast you move.
-            </Text>
+            <Text style={text}>Once you get into the flow, it's wild how fast you move.</Text>
             <Text style={text}>
               Got feedback or shortcut ideas?{' '}
               <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Let's talk and I'll send you a $20 gift card for your time
               </Link>
             </Text>
-            <Text style={text}>
-              Let's make your inbox feel like second nature.
-            </Text>
+            <Text style={text}>Let's make your inbox feel like second nature.</Text>
             <Text style={signature}>Adam</Text>
           </Section>
         </Container>
@@ -311,8 +298,8 @@ export const CategoriesEmail = ({ name }: EmailProps) => {
             <Heading style={h1}>Inbox chaos? We cleaned it up for you 🧼📥</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
             <Text style={text}>
-              Nobody has time to dig through a messy inbox. 
-              That's why Mail0 now automatically sorts your emails into smart categories right at the top of your inbox.
+              Nobody has time to dig through a messy inbox. That's why Mail0 now automatically sorts
+              your emails into smart categories right at the top of your inbox.
             </Text>
             <Text style={text}>Here's what you'll see:</Text>
             <Text style={listItem}>⚡ Primary — real conversations, people who matter</Text>
@@ -321,8 +308,8 @@ export const CategoriesEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>🔔 Notifications — updates, confirmations, reminders</Text>
             <Text style={listItem}>📢 Promotions — marketing, newsletters, and the rest</Text>
             <Text style={text}>
-              Mail0 figures it out based on the content of each email. No setup required. 
-              Just open your inbox and enjoy the clarity.
+              Mail0 figures it out based on the content of each email. No setup required. Just open
+              your inbox and enjoy the clarity.
             </Text>
             <Text style={text}>
               You can rename, hide, or reorder the categories any way you like.
@@ -333,9 +320,7 @@ export const CategoriesEmail = ({ name }: EmailProps) => {
                 Book a quick chat with me and I'll send you a $20 gift card
               </Link>
             </Text>
-            <Text style={text}>
-              Talk soon,
-            </Text>
+            <Text style={text}>Talk soon,</Text>
             <Text style={signature}>Adam</Text>
           </Section>
         </Container>
@@ -355,12 +340,8 @@ export const SuperSearchEmail = ({ name }: EmailProps) => {
           <Section style={section}>
             <Heading style={h1}>Search your inbox like you talk 🧠🔍</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
-            <Text style={text}>
-              Tired of guessing the exact words you used in that one email?
-            </Text>
-            <Text style={text}>
-              With Mail0's Super Search, you don't have to.
-            </Text>
+            <Text style={text}>Tired of guessing the exact words you used in that one email?</Text>
+            <Text style={text}>With Mail0's Super Search, you don't have to.</Text>
             <Text style={text}>
               You can now search your inbox using plain language. Just type something like:
             </Text>
@@ -370,20 +351,17 @@ export const SuperSearchEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>➡️ emails about meeting</Text>
             <Text style={listItem}>➡️ emails from last month</Text>
             <Text style={text}>
-              No weird syntax or advanced filters. Just write what you're looking for and let the AI handle the rest.
+              No weird syntax or advanced filters. Just write what you're looking for and let the AI
+              handle the rest.
             </Text>
-            <Text style={text}>
-              It's fast, flexible, and honestly kind of magical.
-            </Text>
+            <Text style={text}>It's fast, flexible, and honestly kind of magical.</Text>
             <Text style={text}>
               Let's nerd out about how Super Search works.{' '}
               <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 I'll send you a $20 gift card just for booking a time
               </Link>
             </Text>
-            <Text style={text}>
-              See you in the future,
-            </Text>
+            <Text style={text}>See you in the future,</Text>
             <Text style={signature}>Adam</Text>
           </Section>
         </Container>
@@ -423,9 +401,7 @@ export const Mail0ProWelcomeEmail = ({ name }: EmailProps) => {
                 I'd love to chat and send you a $20 gift card for your time
               </Link>
             </Text>
-            <Text style={text}>
-              Let's make this the smartest inbox you've ever used.
-            </Text>
+            <Text style={text}>Let's make this the smartest inbox you've ever used.</Text>
             <Text style={signature}>Nizzy</Text>
             <Text style={text}>
               P.S. If anything feels off or confusing, just reply to this email. We're here.
@@ -449,8 +425,8 @@ export const Mail0CancellationEmail = ({ name }: EmailProps) => {
             <Heading style={h1}>You've canceled Mail0 Pro 💔</Heading>
             <Text style={text}>Hey {name ? name : 'there'},</Text>
             <Text style={text}>
-              I saw you canceled your Mail0 Pro subscription. Totally okay. 
-              Life changes, tools shift, and we get it.
+              I saw you canceled your Mail0 Pro subscription. Totally okay. Life changes, tools
+              shift, and we get it.
             </Text>
             <Text style={text}>
               I'd love to hear what could have been better.{' '}
@@ -463,11 +439,10 @@ export const Mail0CancellationEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>✅ Basic labeling</Text>
             <Text style={listItem}>✅ Limited AI chat and writing</Text>
             <Text style={text}>
-              No hard feelings. We're always rooting for you, even if your inbox journey continues somewhere else.
+              No hard feelings. We're always rooting for you, even if your inbox journey continues
+              somewhere else.
             </Text>
-            <Text style={text}>
-              Thanks for giving Mail0 a shot,
-            </Text>
+            <Text style={text}>Thanks for giving Mail0 a shot,</Text>
             <Text style={signature}>Nizzy</Text>
             <Text style={text}>
               P.S. If you ever want to come back, your setup will be waiting for you ⚡️
@@ -477,4 +452,4 @@ export const Mail0CancellationEmail = ({ name }: EmailProps) => {
       </Body>
     </Html>
   );
-}; 
+};

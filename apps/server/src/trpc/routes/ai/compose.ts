@@ -9,8 +9,8 @@ import { activeConnectionProcedure } from '../../trpc';
 import { getPrompt } from '../../../lib/brain';
 import { stripHtml } from 'string-strip-html';
 import { EPrompts } from '../../../types';
-import { env } from '../../../env';
 import { openai } from '@ai-sdk/openai';
+import { env } from '../../../env';
 import { generateText } from 'ai';
 import { z } from 'zod';
 

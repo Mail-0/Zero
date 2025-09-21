@@ -293,7 +293,11 @@ export function AIChat({
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
 
               return (
-                <div key={`${message.id}-${index}`} className="mb-2 flex flex-col" data-message-role={message.role}>
+                <div
+                  key={`${message.id}-${index}`}
+                  className="mb-2 flex flex-col"
+                  data-message-role={message.role}
+                >
                   {toolParts.map(
                     (part, index) =>
                       part.toolInvocation?.result && (

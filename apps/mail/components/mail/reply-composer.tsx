@@ -1,4 +1,3 @@
-import { useUndoSend } from '@/hooks/use-undo-send';
 import { constructReplyBody, constructForwardBody } from '@/lib/utils';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
@@ -6,6 +5,7 @@ import { EmailComposer } from '../create/email-composer';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
+import { useUndoSend } from '@/hooks/use-undo-send';
 import { useSettings } from '@/hooks/use-settings';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
@@ -210,7 +210,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // Reset states
       setMode(null);
       await refetch();
-      
+
       handleUndoSend(result, settings, {
         to: data.to,
         cc: data.cc,
@@ -255,10 +255,10 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   if (!mode || !emailData) return null;
 
   return (
-    <div className="w-full rounded-2xl overflow-visible border">
+    <div className="w-full overflow-visible rounded-2xl border">
       <EmailComposer
         editorClassName="min-h-[50px]"
-        className="w-full max-w-none! pb-1 overflow-visible"
+        className="max-w-none! w-full overflow-visible pb-1"
         onSendEmail={handleSendEmail}
         onClose={async () => {
           setMode(null);

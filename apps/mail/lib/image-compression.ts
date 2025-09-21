@@ -6,10 +6,7 @@ export interface ImageCompressionOptions {
   maxHeight?: number;
 }
 
-export async function compressImage(
-  file: File,
-  options: ImageCompressionOptions
-): Promise<File> {
+export async function compressImage(file: File, options: ImageCompressionOptions): Promise<File> {
   if (options.quality === 'original') {
     return file;
   }
@@ -17,32 +14,32 @@ export async function compressImage(
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) {
       reject(new Error('Failed to get canvas 2D context'));
       return;
     }
-    
+
     const img = new Image();
 
     img.onload = () => {
       URL.revokeObjectURL(img.src);
-      
+
       let { width, height } = img;
-      
+
       let scaleX = 1;
       let scaleY = 1;
-      
+
       if (options.maxWidth && width > options.maxWidth) {
         scaleX = options.maxWidth / width;
       }
-      
+
       if (options.maxHeight && height > options.maxHeight) {
         scaleY = options.maxHeight / height;
       }
 
       const scale = Math.min(scaleX, scaleY);
-      
+
       width = Math.round(width * scale);
       height = Math.round(height * scale);
 
@@ -65,7 +62,7 @@ export async function compressImage(
           }
         },
         file.type,
-        qualityValue
+        qualityValue,
       );
     };
 
@@ -73,17 +70,17 @@ export async function compressImage(
       URL.revokeObjectURL(img.src);
       reject(new Error('Failed to load image'));
     };
-    
+
     img.src = URL.createObjectURL(file);
   });
 }
 
 export async function compressImages(
   files: File[],
-  options: ImageCompressionOptions
+  options: ImageCompressionOptions,
 ): Promise<File[]> {
   const compressedFiles: File[] = [];
-  
+
   for (const file of files) {
     if (file.type.startsWith('image/')) {
       try {
@@ -97,17 +94,17 @@ export async function compressImages(
       compressedFiles.push(file);
     }
   }
-  
+
   return compressedFiles;
 }
 
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
