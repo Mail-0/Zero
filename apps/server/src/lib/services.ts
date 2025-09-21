@@ -1,6 +1,6 @@
-import { env } from '../env';
 import { Redis } from '@upstash/redis';
 import { Resend } from 'resend';
+import { env } from '../env';
 
 export const resend = () =>
   env.RESEND_API_KEY
@@ -19,7 +19,7 @@ export const twilio = () => {
   //     };
   //   }
 
-  if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_PHONE_NUMBER) {
+  if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
     throw new Error('Twilio is not configured correctly');
   }
 
@@ -34,7 +34,7 @@ export const twilio = () => {
         },
         body: new URLSearchParams({
           To: to,
-          From: env.TWILIO_PHONE_NUMBER,
+          // From: env.TWILIO_PHONE_NUMBER,
           Body: body,
         }),
       },

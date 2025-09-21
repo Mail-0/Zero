@@ -3,8 +3,8 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { reactRouter } from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import oxlintPlugin from 'vite-plugin-oxlint';
+import tailwindcss from '@tailwindcss/vite';
 import babel from 'vite-plugin-babel';
-import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from 'vite';
 import dedent from 'dedent';
 
