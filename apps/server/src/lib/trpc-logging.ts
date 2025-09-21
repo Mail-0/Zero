@@ -47,7 +47,7 @@ export const createLoggingMiddleware = () => {
       try {
         loggingService = new LoggingService(c.env);
         loggingService.initializeSession(sessionId, userId);
-      } catch (error) {}
+      } catch {}
     }
 
     let output: any;
