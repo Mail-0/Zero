@@ -16,6 +16,7 @@
     "deploy:backend": "pnpm run --filter=@zero/server deploy",
     "start": "turbo run start",
     "lint": "turbo run lint",
+    "prettier": "prettier --write . --log-level silent",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
     "check": "pnpm run check:format && pnpm run lint",
     "check:format": "prettier . --check",

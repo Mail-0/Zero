@@ -1,6 +1,6 @@
-import type { Label as LabelType } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { RecursiveFolder } from './recursive-folder';
+import type { Label as LabelType } from '@/types';
 import { useStats } from '@/hooks/use-stats';
 import { Tree } from '../magicui/file-tree';
 import { useCallback } from 'react';

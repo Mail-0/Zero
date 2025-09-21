@@ -12,7 +12,6 @@ export interface AttachmentFile {
   arrayBuffer: () => Promise<ArrayBuffer>;
 }
 
-
 export const toAttachmentFiles = (attachments: SerializedAttachment[] = []): AttachmentFile[] => {
   return attachments.map((data) => {
     const buffer = Buffer.from(data.base64, 'base64');
@@ -24,4 +23,4 @@ export const toAttachmentFiles = (attachments: SerializedAttachment[] = []): Att
       },
     };
   });
-}; 
+};

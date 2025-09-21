@@ -1,6 +1,5 @@
-
-import { useCallback, useEffect, useRef } from 'react';
 import { useOptimisticActions } from './use-optimistic-actions';
+import { useCallback, useEffect, useRef } from 'react';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { atom, useAtom } from 'jotai';

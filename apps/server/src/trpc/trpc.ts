@@ -1,9 +1,9 @@
 import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
+import { createLoggingMiddleware } from '../lib/trpc-logging';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { createLoggingMiddleware } from '../lib/trpc-logging';
 
 import { redis } from '../lib/services';
 import type { Context } from 'hono';
@@ -24,19 +24,29 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
 
   // Start auth validation span
-  const authSpan = addRequestSpan(ctx.c, 'trpc_auth_validation', {
-    hasSessionUser: !!ctx.sessionUser,
-    procedure: 'private',
-  }, {
-    'trpc.auth_required': 'true'
-  });
+  const authSpan = addRequestSpan(
+    ctx.c,
+    'trpc_auth_validation',
+    {
+      hasSessionUser: !!ctx.sessionUser,
+      procedure: 'private',
+    },
+    {
+      'trpc.auth_required': 'true',
+    },
+  );
 
   if (!ctx.sessionUser) {
     if (authSpan) {
-      completeRequestSpan(ctx.c, authSpan.id, {
-        success: false,
-        reason: 'no_session_user',
-      }, 'UNAUTHORIZED: No session user found');
+      completeRequestSpan(
+        ctx.c,
+        authSpan.id,
+        {
+          success: false,
+          reason: 'no_session_user',
+        },
+        'UNAUTHORIZED: No session user found',
+      );
     }
 
     throw new TRPCError({
@@ -58,11 +68,16 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
   const { addRequestSpan, completeRequestSpan } = await import('../lib/trace-context');
 
   // Start connection validation span
-  const connectionSpan = addRequestSpan(ctx.c, 'trpc_connection_validation', {
-    userId: ctx.sessionUser.id,
-  }, {
-    'trpc.connection_required': 'true'
-  });
+  const connectionSpan = addRequestSpan(
+    ctx.c,
+    'trpc_connection_validation',
+    {
+      userId: ctx.sessionUser.id,
+    },
+    {
+      'trpc.connection_required': 'true',
+    },
+  );
 
   try {
     const activeConnection = await getActiveConnection();
@@ -78,10 +93,15 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
     return next({ ctx: { ...ctx, activeConnection } });
   } catch (err) {
     if (connectionSpan) {
-      completeRequestSpan(ctx.c, connectionSpan.id, {
-        success: false,
-        reason: 'connection_not_found',
-      }, err instanceof Error ? err.message : 'Failed to get active connection');
+      completeRequestSpan(
+        ctx.c,
+        connectionSpan.id,
+        {
+          success: false,
+          reason: 'connection_not_found',
+        },
+        err instanceof Error ? err.message : 'Failed to get active connection',
+      );
     }
 
     await ctx.c.var.auth.api.signOut({ headers: ctx.c.req.raw.headers });

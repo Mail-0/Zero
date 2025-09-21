@@ -24,7 +24,7 @@ test.describe('AI Chat Email Summarization', () => {
     } catch {
       console.log('No onboarding modal found, proceeding...');
     }
-    
+
     await expect(page.getByText('Inbox')).toBeVisible();
     console.log('Mail inbox is now visible');
 
@@ -40,16 +40,16 @@ test.describe('AI Chat Email Summarization', () => {
     console.log('Sent summarization query by pressing Enter');
 
     console.log('Waiting for AI response...');
-    
+
     const assistantMessage = page.locator('[data-message-role="assistant"]').last();
     await expect(assistantMessage).toBeVisible({ timeout: 15000 });
-    
+
     const responseText = await assistantMessage.textContent();
 
     console.log('AI Response Text:', responseText);
     expect(responseText).toBeTruthy();
     expect(responseText!.length).toBeGreaterThan(15);
-    
+
     console.log('Test completed: AI summarization successful!');
   });
 });

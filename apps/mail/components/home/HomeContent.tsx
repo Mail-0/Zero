@@ -374,7 +374,7 @@ export default function HomeContent() {
       </div>
 
       <div className="relative mt-52 flex items-center justify-center">
-        <div className="mx-auto grid w-full! max-w-[1250px] grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+        <div className="w-full! mx-auto grid max-w-[1250px] grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -721,7 +721,7 @@ export default function HomeContent() {
                     </div>
                   </div>
 
-                  <div className="from-tokens-scroll-overlay-primary to-tokens-scroll-overlay-top/0 absolute left-0 top-[668.98px] h-12 w-[547.09px] bg-linear-to-l" />
+                  <div className="from-tokens-scroll-overlay-primary to-tokens-scroll-overlay-top/0 bg-linear-to-l absolute left-0 top-[668.98px] h-12 w-[547.09px]" />
                   <div className="bg-tokens-agent-surface/10 border-tokens-agent-stroke absolute left-[498.90px] top-[674.65px] h-8 w-8 rounded-full border-2 px-1 shadow-[0px_8.503936767578125px_17.00787353515625px_0px_rgba(0,0,0,0.15)] backdrop-blur-lg" />
                 </div>
                 <div className="absolute left-0 top-[121px] inline-flex w-[650px] flex-col items-start justify-start gap-4 overflow-hidden rounded-3xl border border-[#8B5CF6] bg-[#2A1D48] p-6 outline outline-[#3F325F]">
@@ -1179,7 +1179,7 @@ export default function HomeContent() {
                   </div>
                 </div>
               </div>
-              <div className="absolute top-0 inline-flex aspect-96/125 w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#252525] md:h-[500px] md:w-96">
+              <div className="aspect-96/125 absolute top-0 inline-flex w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#252525] md:h-[500px] md:w-96">
                 <div className="border-tokens-stroke-light/5 inline-flex items-center justify-start gap-2 self-stretch overflow-hidden border-b-[0.50px] py-3.5 pl-5 pr-3.5">
                   <div className="flex flex-1 items-center justify-start gap-3">
                     <div className="text-base-gray-950 flex flex-1 items-center justify-start text-sm leading-none">
@@ -1230,8 +1230,8 @@ export default function HomeContent() {
                           </div>
                         ))}
                       </div>
-                      <div className="absolute left-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800/0 to-neutral-800" />
-                      <div className="absolute right-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800 to-neutral-800/0" />
+                      <div className="bg-linear-to-l absolute left-0 top-0 h-7 w-12 from-neutral-800/0 to-neutral-800" />
+                      <div className="bg-linear-to-l absolute right-0 top-0 h-7 w-12 from-neutral-800 to-neutral-800/0" />
                     </div>
 
                     {/* Second row */}
@@ -1250,8 +1250,8 @@ export default function HomeContent() {
                           </div>
                         ))}
                       </div>
-                      <div className="absolute left-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800/0 to-neutral-800" />
-                      <div className="absolute right-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800 to-neutral-800/0" />
+                      <div className="bg-linear-to-l absolute left-0 top-0 h-7 w-12 from-neutral-800/0 to-neutral-800" />
+                      <div className="bg-linear-to-l absolute right-0 top-0 h-7 w-12 from-neutral-800 to-neutral-800/0" />
                     </div>
                   </div>
                   <div className="inline-flex w-full items-center justify-start gap-4 overflow-hidden p-0 md:w-96 md:p-4 md:pb-0">

@@ -200,7 +200,10 @@ function ComposeButton() {
       <DialogDescription></DialogDescription>
 
       <DialogTrigger asChild>
-        <button type="button" className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black dark:border-none dark:text-white cursor-pointer hover:bg-[#0056CC] dark:hover:bg-[#0056CC] transition-colors">
+        <button
+          type="button"
+          className="relative mb-1.5 inline-flex h-8 w-full cursor-pointer items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black transition-colors hover:bg-[#0056CC] dark:border-none dark:text-white dark:hover:bg-[#0056CC]"
+        >
           {state === 'collapsed' && !isMobile ? (
             <PencilCompose className="mt-0.5 fill-white text-black" />
           ) : (

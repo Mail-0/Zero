@@ -125,20 +125,17 @@ export const useThread = (threadId: string | null) => {
   // Extract image loading condition to avoid duplication
   const shouldLoadImages = useMemo(() => {
     if (!settings?.settings || !latestMessage?.sender?.email) return false;
-    
-    return settings.settings.externalImages ||
+
+    return (
+      settings.settings.externalImages ||
       settings.settings.trustedSenders?.includes(latestMessage.sender.email) ||
-      false;
+      false
+    );
   }, [settings?.settings, latestMessage?.sender?.email]);
 
   // Prefetch query - intentionally unused, just for caching
   useQuery({
-    queryKey: [
-      'email-content',
-      latestMessage?.id,
-      shouldLoadImages,
-      systemTheme,
-    ],
+    queryKey: ['email-content', latestMessage?.id, shouldLoadImages, systemTheme],
     queryFn: async () => {
       if (!latestMessage?.decodedBody || !settings?.settings) return null;
 

@@ -33,4 +33,4 @@ export const templatesRouter = router({
       await ctx.templatesManager.deleteTemplate(ctx.sessionUser.id, input.id);
       return { success: true };
     }),
-}); 
+});

@@ -33,7 +33,7 @@ const formSchema = z.object({
 
 function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const trpc = useTRPC();
   const { refetch } = useSession();
   const { mutateAsync: deleteAccount, isPending } = useMutation(trpc.user.delete.mutationOptions());

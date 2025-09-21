@@ -1110,7 +1110,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               }
             }}
           >
-            <ArrowLeft className="h-4 w-4"/>
+            <ArrowLeft className="h-4 w-4" />
           </button>
           <CommandInput
             autoFocus
@@ -1409,7 +1409,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           className="text-muted-foreground hover:text-foreground ml-2"
           onClick={() => setCurrentView('filter')}
         >
-          <ArrowLeft className="h-4 w-4"/>
+          <ArrowLeft className="h-4 w-4" />
         </button>
         <CommandInput
           autoFocus

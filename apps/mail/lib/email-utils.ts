@@ -245,6 +245,8 @@ export const isScheduledSendResult = (value: unknown): value is ScheduledSendEma
   return scheduledSendEmailResultSchema.safeParse(value).success;
 };
 
-export const isSendResult = (value: unknown): value is QueuedSendEmailResult | ScheduledSendEmailResult => {
+export const isSendResult = (
+  value: unknown,
+): value is QueuedSendEmailResult | ScheduledSendEmailResult => {
   return isQueuedSendResult(value) || isScheduledSendResult(value);
 };

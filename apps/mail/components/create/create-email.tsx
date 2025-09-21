@@ -5,13 +5,13 @@ import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { cleanEmailAddresses } from '@/lib/email-utils';
 
 import { useTRPC } from '@/providers/query-provider';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { EmailComposer } from './email-composer';
 import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useEffect, useMemo, useState } from 'react';
 
 import type { Attachment } from '@/types';
 import { useQueryState } from 'nuqs';
@@ -155,17 +155,17 @@ export function CreateEmail({
   const undoEmailData = useMemo((): EmailData | null => {
     if (isComposeOpen !== 'true') return null;
     if (typeof window === 'undefined') return null;
-    
+
     const storedData = localStorage.getItem('undoEmailData');
     if (!storedData) return null;
-    
+
     try {
       const parsedData = JSON.parse(storedData);
-      
+
       if (parsedData.attachments && Array.isArray(parsedData.attachments)) {
         parsedData.attachments = deserializeFiles(parsedData.attachments);
       }
-      
+
       return parsedData;
     } catch (error) {
       console.error('Failed to parse undo email data:', error);
@@ -209,7 +209,7 @@ export function CreateEmail({
         <div className="flex min-h-screen flex-col items-center justify-center gap-1">
           <div className="flex w-[750px] justify-start">
             <DialogClose asChild className="flex">
-              <button className="dark:bg-panelDark flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1 hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer">
+              <button className="dark:bg-panelDark flex cursor-pointer items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#404040]">
                 <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5 dark:fill-[#929292]" />
                 <span className="text-muted-foreground text-sm font-medium dark:text-white">
                   esc
@@ -229,11 +229,7 @@ export function CreateEmail({
               key={typedDraft?.id || undoEmailData?.to?.join(',') || 'composer'}
               className="mb-12 rounded-2xl border"
               onSendEmail={handleSendEmail}
-              initialMessage={
-                undoEmailData?.message || 
-                typedDraft?.content || 
-                initialBody
-              }
+              initialMessage={undoEmailData?.message || typedDraft?.content || initialBody}
               initialTo={
                 undoEmailData?.to ||
                 typedDraft?.to?.map((e: string) => e.replace(/[<>]/g, '')) ||
@@ -257,11 +253,7 @@ export function CreateEmail({
                 clearUndoData();
               }}
               initialAttachments={undoEmailData?.attachments || files}
-              initialSubject={
-                undoEmailData?.subject || 
-                typedDraft?.subject || 
-                initialSubject
-              }
+              initialSubject={undoEmailData?.subject || typedDraft?.subject || initialSubject}
               autofocus={false}
               settingsLoading={settingsLoading}
             />

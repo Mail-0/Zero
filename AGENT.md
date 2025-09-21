@@ -5,6 +5,7 @@ Zero is an open-source AI email solution built with a modern TypeScript/Next.js 
 ## Project Structure
 
 This is a pnpm workspace monorepo with the following structure:
+
 - `apps/mail/` - Next.js frontend email client
 - `apps/server/` - Backend server
 - `apps/ios-app/` - iOS mobile app
@@ -16,6 +17,7 @@ This is a pnpm workspace monorepo with the following structure:
 ## Frequently Used Commands
 
 ### Development
+
 - `pnpm go` - Quick start: starts database and dev servers
 - `pnpm dev` - Start all development servers (uses Turbo)
 - `pnpm docker:db:up` - Start PostgreSQL database in Docker
@@ -23,30 +25,35 @@ This is a pnpm workspace monorepo with the following structure:
 - `pnpm docker:db:clean` - Stop and remove database with volumes
 
 ### Build & Deploy
+
 - `pnpm build` - Build all packages (uses Turbo)
 - `pnpm build:frontend` - Build only the mail frontend
 - `pnpm deploy:frontend` - Deploy frontend
 - `pnpm deploy:backend` - Deploy backend
 
 ### Code Quality
+
 - `pnpm check` - Run format check and lint
 - `pnpm lint` - Run ESLint across all packages
 - `pnpm format` - Format code with Prettier
 - `pnpm check:format` - Check code formatting
 
 ### Database
+
 - `pnpm db:push` - Push schema changes to database
 - `pnpm db:generate` - Generate migration files
 - `pnpm db:migrate` - Apply database migrations
 - `pnpm db:studio` - Open Drizzle Studio
 
 ### Testing & Evaluation
+
 - `pnpm test:ai` - Run AI tests
 - `pnpm eval` - Run evaluation suite
 - `pnpm eval:dev` - Run evaluation in dev mode
 - `pnpm eval:ci` - Run evaluation in CI mode
 
 ### Utilities
+
 - `pnpm nizzy env` - Setup environment variables
 - `pnpm nizzy sync` - Sync environment variables and types
 - `pnpm scripts` - Run custom scripts
@@ -64,6 +71,7 @@ This is a pnpm workspace monorepo with the following structure:
 ## Code Style & Conventions
 
 ### Formatting
+
 - 2-space indentation
 - Single quotes
 - 100 character line width
@@ -71,11 +79,13 @@ This is a pnpm workspace monorepo with the following structure:
 - Uses Prettier with sort-imports and Tailwind plugins
 
 ### File Organization
+
 - TypeScript strict mode enabled
 - Workspace packages use catalog versioning for shared dependencies
 - Monorepo managed with pnpm workspaces
 
 ### Important Environment Variables
+
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET` - Gmail integration
 - `AUTUMN_SECRET_KEY` - Encryption service

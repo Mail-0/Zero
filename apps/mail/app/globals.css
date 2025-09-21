@@ -12,7 +12,7 @@
 @plugin "tailwindcss-animate";
 @plugin "tailwind-scrollbar" {
   nocompatible: true;
-  preferredStrategy: "pseudoelements";
+  preferredstrategy: 'pseudoelements';
 }
 
 /* Custom variant for dark mode */
@@ -20,8 +20,11 @@
 
 :root {
   /* Typography */
-  --font-geist-sans: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-geist-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-geist-sans:
+    'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-geist-mono:
+    'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas,
+    'Liberation Mono', Menlo, monospace;
 
   /* Theme colors (light mode: default) */
   --background: hsl(0 0% 100%);
@@ -64,19 +67,19 @@
 
   /* Static colors */
   --darkBackground: #141414;
-  --lightBackground: #FFFFFF;
-  --offsetDark: #0A0A0A;
-  --offsetLight: #F5F5F5;
-  --panelDark: #1A1A1A;
-  --panelLight: #FFFFFF;
+  --lightBackground: #ffffff;
+  --offsetDark: #0a0a0a;
+  --offsetLight: #f5f5f5;
+  --panelDark: #1a1a1a;
+  --panelLight: #ffffff;
   --iconDark: #898989;
-  --iconLight: #6D6D6D;
-  --logout: #D93036;
-  --mainBlue: #437DFB;
-  --subtleWhite: #EAEAEA;
-  --subtleBlack: #1F1F1F;
-  --skyBlue: #0066FF;
-  --shinyGray: #A1A1A1;
+  --iconLight: #6d6d6d;
+  --logout: #d93036;
+  --mainBlue: #437dfb;
+  --subtleWhite: #eaeaea;
+  --subtleBlack: #1f1f1f;
+  --skyBlue: #0066ff;
+  --shinyGray: #a1a1a1;
 }
 
 .dark {
@@ -137,14 +140,14 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  
+
   /* Static colors */
   --color-darkBackground: var(--darkBackground);
   --color-lightBackground: var(--lightBackground);
@@ -160,7 +163,7 @@
   --color-subtleBlack: var(--subtleBlack);
   --color-skyBlue: var(--skyBlue);
   --color-shinyGray: var(--shinyGray);
-  
+
   /* sidebar colors */
   --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -170,7 +173,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
+
   /* Border radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -182,44 +185,88 @@
 
   /* Animations */
   @keyframes fade-up {
-    0% { transform: translateY(10px); }
-    100% { transform: translateY(0); }
+    0% {
+      transform: translateY(10px);
+    }
+    100% {
+      transform: translateY(0);
+    }
   }
   @keyframes moveUp {
-    0% { transform: translateY(90px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+      transform: translateY(90px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
   @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
   @keyframes gauge_fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes gauge_fill {
-    from { stroke-dashoffset: 332; opacity: 0; }
-    to { opacity: 1; }
+    from {
+      stroke-dashoffset: 332;
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes shine {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
   }
   @keyframes shine-slow {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
   }
   @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
   --animate-fade-up: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -233,7 +280,6 @@
   --animate-shine-slow: shine-slow 8s linear infinite;
   --animate-blink: blink 0.8s ease-in-out infinite;
 }
-
 
 /* Add scrollbar styling */
 @utility style-scrollbar {
@@ -279,7 +325,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans overscroll-none style-scrollbar;
+    @apply bg-background text-foreground style-scrollbar overscroll-none font-sans;
   }
 }
 
@@ -289,7 +335,7 @@
   }
 
   *[class^='text-'] {
-    @apply text-transparent bg-foreground/20 animate-pulse select-none rounded-md;
+    @apply bg-foreground/20 animate-pulse select-none rounded-md text-transparent;
   }
 
   .skeleton-bg {
