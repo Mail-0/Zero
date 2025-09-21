@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.15.0",
   "scripts": {
     "go": "pnpm docker:db:up && pnpm run dev",
+    "setup": "pnpm install && pnpm nizzy sync && pnpm docker:db:up && pnpm db:push",
     "prepare": "husky",
     "nizzy": "tsx ./packages/cli/src/cli.ts",
     "postinstall": "pnpm nizzy sync",
