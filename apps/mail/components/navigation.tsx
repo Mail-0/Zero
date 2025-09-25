@@ -189,7 +189,7 @@ export function Navigation() {
               </div>
             </a>
             <Button
-              className="h-8 bg-white text-black hover:bg-white hover:text-black cursor-pointer"
+              className="h-8 bg-white text-black cursor-pointer"
               onClick={() => {
                 if (session) {
                   navigate('/mail/inbox');
