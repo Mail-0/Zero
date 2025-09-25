@@ -9,7 +9,7 @@ export function SidebarToggle({ className }: ComponentProps<typeof SidebarTrigge
   const { toggleSidebar } = useSidebar();
 
   return (
-    <Button onClick={toggleSidebar} variant="ghost" className={cn('md:h-fit md:px-2', className)}>
+    <Button onClick={toggleSidebar} variant="ghost" className={cn('h-10 w-10 md:px-2', className)}>
       <PanelLeftOpen className="dark:fill-iconDark fill-iconLight" />
     </Button>
   );
