@@ -11,7 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '../lib/schemas';
 
-export const createTable = pgTableCreator((name) => `mail0_${name}`);
+export const createTable = pgTableCreator((name) => name);
 
 export const user = createTable('user', {
   id: text('id').primaryKey(),

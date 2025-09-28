@@ -5,7 +5,7 @@ import * as schema from './schema';
 const createDrizzle = (conn: Sql) => drizzle(conn, { schema });
 
 export const createDb = (url: string) => {
-  const conn = postgres(url);
+  const conn = postgres(url, { prepare: false });
   const db = createDrizzle(conn);
   return { db, conn };
 };

@@ -36,7 +36,7 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
       { name: 'GOOGLE_CLIENT_SECRET', source: 'Google Cloud Console' },
     ],
     config: {
-      prompt: env.FORCE_GOOGLE_AUTH ? 'consent' : undefined,
+      prompt: 'consent',
       accessType: 'offline',
       scope: [
         'https://mail.google.com/',

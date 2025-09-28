@@ -18,11 +18,8 @@ This is a pnpm workspace monorepo with the following structure:
 
 ### Development
 
-- `pnpm go` - Quick start: starts database and dev servers
+- `pnpm go` - Quick start: starts dev servers
 - `pnpm dev` - Start all development servers (uses Turbo)
-- `pnpm docker:db:up` - Start PostgreSQL database in Docker
-- `pnpm docker:db:down` - Stop and remove database container
-- `pnpm docker:db:clean` - Stop and remove database with volumes
 
 ### Build & Deploy
 
@@ -97,7 +94,7 @@ This is a pnpm workspace monorepo with the following structure:
 1. Install dependencies: `pnpm install`
 2. Setup environment: `pnpm nizzy env`
 3. Sync environment: `pnpm nizzy sync`
-4. Start database: `pnpm docker:db:up`
+4. Configure database connection in environment variables
 5. Initialize database: `pnpm db:push`
 6. Start development: `pnpm dev`
 
