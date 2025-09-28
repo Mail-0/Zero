@@ -54,7 +54,6 @@ Watch this helpful video tutorial on how to set up Zero locally:
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
 - [pnpm](https://pnpm.io) (v10 or higher)
-- [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
 
@@ -76,15 +75,12 @@ You can set up Zero in two ways:
 
    # Install dependencies
    pnpm install
-
-   # Start database locally
-   pnpm docker:db:up
    ```
 
 2. **Set Up Environment**
    - Run `pnpm nizzy env` to setup your environment variables
    - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
+   - Configure your database connection in the environment variables
    - Initialize the database: `pnpm db:push`
 
 3. **Start the App**
@@ -117,13 +113,13 @@ You can set up Zero in two ways:
    pnpm install
 
    # Start the database locally
-   pnpm docker:db:up
+   # Configure your database connection in environment variables
    ```
 
 2. **Set Up Environment**
    - Run `pnpm nizzy env` to setup your environment variables
    - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
+   - Configure your database connection in the environment variables
    - Initialize the database: `pnpm db:push`
 
 3. **Start The App**
@@ -212,7 +208,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    Run this command to start a local PostgreSQL instance:
 
    ```bash
-   pnpm docker:db:up
+   # Configure your database connection in environment variables
    ```
 
    This creates a database with:

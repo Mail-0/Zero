@@ -38,7 +38,6 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 2. **Set Up Development Environment**
    - Install [pnpm](https://pnpm.io)
    - Clone the repository and install dependencies: `pnpm install`
-   - Start the database locally: `pnpm docker:db:up`
    - Run `pnpm nizzy env` to setup your environment variables
    - Run `pnpm nizzy sync` to sync your environment variables and types
    - Set up your Google OAuth credentials (see [README.md](../README.md))
@@ -49,8 +48,6 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 1. **Start the Development Environment**
 
    ```bash
-   # Start database locally
-   pnpm docker:db:up
 
    # Start the development server
    pnpm dev
@@ -149,7 +146,6 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
    ```
 
 4. **Troubleshooting**
-   - **Connection Issues**: Make sure Docker is running
    - **Schema Errors**: Check your schema files for errors
 
 ## Coding Guidelines
