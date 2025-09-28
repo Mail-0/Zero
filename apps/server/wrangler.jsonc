@@ -154,7 +154,6 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "vars": {
@@ -181,8 +180,6 @@
         "DD_API_KEY": "",
         "DD_APP_KEY": "",
         "DD_SITE": "datadoghq.com",
-        "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
-        "REDIS_TOKEN": "$REDIS_TOKEN",
       },
       "kv_namespaces": [
         {
@@ -384,7 +381,6 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "vars": {
@@ -483,7 +479,6 @@
         {
           "binding": "HYPERDRIVE",
           "id": "b1be316b45fb439a9e54b74ecc20aa21",
-          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "durable_objects": {
