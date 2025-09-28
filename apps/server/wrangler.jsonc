@@ -154,7 +154,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres.wxodpsxjpjyqpygpzngg:kCMHoYcN2RF0EeCD@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
+          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "vars": {
@@ -182,7 +182,7 @@
         "DD_APP_KEY": "",
         "DD_SITE": "datadoghq.com",
         "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
-        "REDIS_TOKEN": "ATcHAAIncDI5YjI0MDc1NmRhNzg0N2JlYTllM2ViNjUwNmZiMmM2OXAyMTQwODc",
+        "REDIS_TOKEN": "$REDIS_TOKEN",
       },
       "kv_namespaces": [
         {
@@ -384,7 +384,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgres://postgres.wxodpsxjpjyqpygpzngg:kCMHoYcN2RF0EeCD@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
+          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "vars": {
@@ -483,7 +483,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "b1be316b45fb439a9e54b74ecc20aa21",
-          "localConnectionString": "postgresql://postgres.wxodpsxjpjyqpygpzngg:kCMHoYcN2RF0EeCD@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
+          "localConnectionString": "$DATABASE_URL",
         },
       ],
       "durable_objects": {
