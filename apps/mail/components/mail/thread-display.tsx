@@ -33,6 +33,7 @@ import type { ParsedMessage, Attachment } from '@/types';
 import { useAnimations } from '@/hooks/use-animations';
 import { AnimatePresence, motion } from 'motion/react';
 import { MailDisplaySkeleton } from './mail-skeleton';
+import { useParams, useNavigate } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -43,7 +44,6 @@ import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
-import { useParams } from 'react-router';
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
@@ -153,11 +153,14 @@ function ThreadActionButton({
 const isFullscreen = false;
 export function ThreadDisplay() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { toggleOpen: toggleAISidebar } = useAISidebar();
-  const params = useParams<{ folder: string }>();
+  const params = useParams<{ folder: string; threadId?: string }>();
 
   const folder = params?.folder ?? 'inbox';
-  const [id, setThreadId] = useQueryState('threadId');
+  // Use route param if available, otherwise fall back to query param
+  const [queryThreadId, setThreadId] = useQueryState('threadId');
+  const id = params?.threadId ?? queryThreadId;
   const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
   const [, items] = useThreads();
   const [isStarred, setIsStarred] = useState(false);
@@ -191,17 +194,29 @@ export function ThreadDisplay() {
   const optimisticState = useOptimisticThreadState(id ?? '');
 
   const handleNext = useCallback(() => {
-    if (!id || !items.length || focusedIndex === null) return setThreadId(null);
+    if (!id || !items.length || focusedIndex === null) {
+      if (params?.threadId) {
+        navigate(`/mail/${folder}`);
+      } else {
+        setThreadId(null);
+      }
+      return;
+    }
     if (focusedIndex < items.length - 1) {
       const nextIndex = Math.max(1, focusedIndex + 1);
-      //   console.log('nextIndex', nextIndex);
-
       const nextThread = items[nextIndex];
       if (nextThread) {
         setMode(null);
         setActiveReplyId(null);
         setDraftId(null);
-        setThreadId(nextThread.id);
+
+        // Navigate to the next thread
+        if (params?.threadId) {
+          navigate(`/mail/${folder}/thread/${nextThread.id}`);
+        } else {
+          setThreadId(nextThread.id);
+        }
+
         setFocusedIndex(focusedIndex + 1);
         if (animationsEnabled) {
           setNavigationDirection('next');
@@ -212,6 +227,9 @@ export function ThreadDisplay() {
     items,
     id,
     focusedIndex,
+    params?.threadId,
+    navigate,
+    folder,
     setThreadId,
     setFocusedIndex,
     setMode,
@@ -232,11 +250,16 @@ export function ThreadDisplay() {
   const isInSpam = folder === FOLDERS.SPAM;
   const isInBin = folder === FOLDERS.BIN;
   const handleClose = useCallback(() => {
-    setThreadId(null);
+    // If we're on a dedicated thread route, navigate back to the folder
+    if (params?.threadId) {
+      navigate(`/mail/${folder}`);
+    } else {
+      setThreadId(null);
+    }
     setMode(null);
     setActiveReplyId(null);
     setDraftId(null);
-  }, [setThreadId, setMode, setActiveReplyId, setDraftId]);
+  }, [params?.threadId, navigate, folder, setThreadId, setMode, setActiveReplyId, setDraftId]);
 
   const { optimisticMoveThreadsTo } = useOptimisticActions();
 

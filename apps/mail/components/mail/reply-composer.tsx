@@ -12,6 +12,7 @@ import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { m } from '@/paraglide/messages';
+import { useParams } from 'react-router';
 import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useEffect } from 'react';
@@ -26,9 +27,12 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: aliases } = useEmailAliases();
+  const params = useParams<{ threadId?: string }>();
 
   const [draftId, setDraftId] = useQueryState('draftId');
-  const [threadId] = useQueryState('threadId');
+  const [queryThreadId] = useQueryState('threadId');
+  // Use route param if available, otherwise fall back to query param
+  const threadId = params?.threadId ?? queryThreadId;
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const { data: emailData, refetch, latestDraft } = useThread(threadId);
   const { data: draft } = useDraft(draftId ?? null);

@@ -29,6 +29,7 @@ import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
+import { useParams, useNavigate } from 'react-router';
 import { cn, FOLDERS, formatDate } from '@/lib/utils';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -42,7 +43,6 @@ import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { m } from '@/paraglide/messages';
-import { useParams } from 'react-router';
 import { Button } from '../ui/button';
 import { Avatar } from '../ui/avatar';
 import { useQueryState } from 'nuqs';
@@ -706,6 +706,7 @@ Draft.displayName = 'Draft';
 export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
+    const navigate = useNavigate();
     const { data: settingsData } = useSettings();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
@@ -784,7 +785,7 @@ export const MailList = memo(
       return 'single';
     }, [isKeyPressed]);
 
-    const [, setActiveReplyId] = useQueryState('activeReplyId');
+    const [, _setActiveReplyId] = useQueryState('activeReplyId');
     const [, setMail] = useMail();
 
     const handleSelectMail = useCallback(
@@ -870,9 +871,9 @@ export const MailList = memo(
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
         if (message.unread && autoRead) optimisticMarkAsRead([messageThreadId], true);
-        setThreadId(messageThreadId);
-        setDraftId(null);
-        // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening
+
+        // Navigate to thread page instead of using query params
+        navigate(`/mail/${folder}/thread/${messageThreadId}`);
       },
       [
         getSelectMode,
@@ -880,10 +881,9 @@ export const MailList = memo(
         handleMouseEnter,
         setFocusedIndex,
         optimisticMarkAsRead,
-        setThreadId,
-        setDraftId,
+        navigate,
+        folder,
         settingsData,
-        setActiveReplyId,
       ],
     );
 
