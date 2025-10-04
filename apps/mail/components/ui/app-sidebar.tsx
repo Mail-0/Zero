@@ -10,7 +10,7 @@ import { navigationConfig, bottomNavItems } from '@/config/navigation';
 // import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
-import { useBilling } from '@/hooks/use-billing';
+// import { useBilling } from '@/hooks/use-billing'; // Commented out - not currently used
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/lib/auth-client';
 // import { useMutation } from '@tanstack/react-query';
@@ -28,7 +28,7 @@ import { useQueryState } from 'nuqs';
 // import { toast } from 'sonner';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isPro, isLoading } = useBilling();
+  // const { isPro, isLoading } = useBilling(); // Commented out - not currently used
   const { isFullScreen } = useAIFullScreen();
   const { data: stats } = useStats();
   const location = useLocation();

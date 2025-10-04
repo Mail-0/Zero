@@ -709,7 +709,6 @@ export const MailList = memo(
     const navigate = useNavigate();
     const { data: settingsData } = useSettings();
     const [, setThreadId] = useQueryState('threadId');
-    const [, setDraftId] = useQueryState('draftId');
     const [searchValue, setSearchValue] = useSearchValue();
     const [anchorIndex, setAnchorIndex] = useState<number | null>(null);
 
@@ -785,7 +784,6 @@ export const MailList = memo(
       return 'single';
     }, [isKeyPressed]);
 
-    const [, _setActiveReplyId] = useQueryState('activeReplyId');
     const [, setMail] = useMail();
 
     const handleSelectMail = useCallback(
@@ -965,7 +963,7 @@ export const MailList = memo(
                 <div className="flex flex-col items-center justify-center gap-2 text-center">
                   <EmptyStateIcon width={200} height={200} />
                   <div className="mt-5">
-                    <p className="text-lg">It's empty here</p>
+                    <p className="text-lg">It&apos;s empty here</p>
                     <p className="text-md text-muted-foreground dark:text-white/50">
                       Search for another email or{' '}
                       <button
