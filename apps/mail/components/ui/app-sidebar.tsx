@@ -7,6 +7,10 @@ import {
 } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
+// import { toast } from 'sonner';
+import { CustomerCompanyPanel } from '../mail/customer-company-panel';
+import type { FakeEmail } from '@/lib/fake-organised-data';
+import { useLocation, useParams } from 'react-router';
 // import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
@@ -16,7 +20,6 @@ import { useSession } from '@/lib/auth-client';
 // import { useMutation } from '@tanstack/react-query';
 import { PencilCompose } from '../icons/icons';
 import { useAIFullScreen } from './ai-sidebar';
-import { useLocation } from 'react-router';
 import { m } from '@/paraglide/messages';
 import React, { useMemo } from 'react';
 // import { Video } from 'lucide-react';
@@ -24,13 +27,19 @@ import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
-// import { toast } from 'sonner';
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  organisedEmail?: FakeEmail | null;
+}
+
+export function AppSidebar({ organisedEmail, ...props }: AppSidebarProps) {
   // const { isPro, isLoading } = useBilling(); // Commented out - not currently used
   const { isFullScreen } = useAIFullScreen();
   const location = useLocation();
   const { data: session } = useSession();
+  const params = useParams<{ folder: string }>();
+  const isOrganisedView = params?.folder === 'organised';
+
   const { currentSection, navItems } = useMemo(() => {
     // Find which section we're in based on the pathname
     const section = Object.entries(navigationConfig).find(([, config]) =>
@@ -53,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [location.pathname]);
 
-  const showComposeButton = currentSection === 'mail';
+  const showComposeButton = currentSection === 'mail' && !isOrganisedView;
   const { state } = useSidebar();
 
   //   const handleCreateMeet = async () => {
@@ -99,15 +108,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             )}
           </SidebarHeader>
           <SidebarContent
-            className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
+            className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? (isOrganisedView ? 'mt-5' : 'mt-5 md:px-4') : 'px-2'}`}
           >
-            <div className="flex-1 py-0">
-              <NavMain items={navItems} />
-            </div>
+            {isOrganisedView && state !== 'collapsed' ? (
+              <div className="flex-1 px-4 py-0">
+                <CustomerCompanyPanel email={organisedEmail || null} />
+              </div>
+            ) : (
+              <div className="flex-1 py-0">
+                <NavMain items={navItems} />
+              </div>
+            )}
           </SidebarContent>
 
           <SidebarFooter className={`px-0 pb-0 ${state === 'collapsed' ? 'md:px-2' : 'md:px-4'}`}>
-            <NavMain items={bottomNavItems} />
+            {!isOrganisedView || state === 'collapsed' ? <NavMain items={bottomNavItems} /> : null}
           </SidebarFooter>
         </Sidebar>
       )}

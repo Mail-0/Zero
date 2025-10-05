@@ -11,7 +11,9 @@ import {
 } from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import { OrganisedMailList } from '@/components/mail/organised-mail-list';
 import { useNavigate, useParams, Link, useLocation } from 'react-router';
+import { selectedOrganisedEmailAtom } from '@/app/(routes)/mail/layout';
 import { useCommandPalette } from '../context/command-palette-context';
 import { RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
@@ -325,6 +327,9 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [selectedOrganisedEmail, setSelectedOrganisedEmail] = useAtom(selectedOrganisedEmailAtom);
+
+  const isOrganisedView = folder === 'organised';
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -495,13 +500,25 @@ export function MailLayout() {
               />
             </div>
 
-            <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-8rem)]">
-              <MailList />
+            <div
+              className={cn(
+                'z-1 relative overflow-hidden pt-0',
+                'h-[calc(100dvh-(2px+2px))] md:h-[calc(100dvh-8rem)]',
+              )}
+            >
+              {isOrganisedView ? (
+                <OrganisedMailList
+                  onEmailSelect={setSelectedOrganisedEmail}
+                  selectedEmailId={selectedOrganisedEmail?.id || null}
+                />
+              ) : (
+                <MailList />
+              )}
             </div>
           </div>
         </div>
 
-        {activeConnection?.id ? <AISidebar /> : null}
+        {!isOrganisedView && activeConnection?.id ? <AISidebar /> : null}
       </div>
     </TooltipProvider>
   );

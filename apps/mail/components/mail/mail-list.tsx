@@ -231,7 +231,7 @@ const Thread = memo(
             data-thread-id={idToUse}
             key={idToUse}
             className={cn(
-              'hover:bg-offsetLight dark:hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-2 text-left text-sm hover:opacity-100',
+              'hover:bg-offsetLight dark:hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-1.5 text-left text-sm hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50',
@@ -342,9 +342,9 @@ const Thread = memo(
             </div>
 
             <div
-              className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
+              className={`relative flex w-full items-center gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
-              <div>
+              <div className="flex shrink-0 items-center">
                 {isMailBulkSelected ? (
                   <Avatar
                     className={cn(
@@ -381,139 +381,101 @@ const Thread = memo(
                     email={latestMessage.sender.email}
                     name={cleanName || latestMessage.sender.email}
                     className={cn(
-                      'h-8 w-8 rounded-full',
+                      'h-6 w-6 rounded-full',
                       displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
                     )}
                   />
                 )}
-                {/* {displayUnread && !isMailSelected && !isFolderSent ? (
-                  <>
-                    <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
-                    <span className="absolute left-[11px] top-4 size-1 rounded bg-[#006FFE]" />
-                  </>
-                ) : null} */}
               </div>
 
-              <div className="flex w-full justify-between">
-                <div className="w-full">
-                  <div className="flex w-full flex-row items-center justify-between">
-                    <div className="flex flex-row items-center gap-[4px]">
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  {/* Sender name */}
+                  <span
+                    className={cn(
+                      displayUnread && !isMailSelected ? 'font-semibold' : 'font-normal',
+                      'text-foreground flex shrink-0 items-center gap-1 text-sm',
+                    )}
+                  >
+                    {isFolderSent ? (
+                      <span className="truncate">
+                        {latestMessage.to.map((e) => e.email).join(', ')}
+                      </span>
+                    ) : (
+                      <span className="max-w-[12ch] truncate md:max-w-[20ch]">
+                        {cleanNameDisplay(latestMessage.sender.name) || latestMessage.sender.email}
+                      </span>
+                    )}
+                    {displayUnread && !isMailSelected && !isFolderSent && (
+                      <span className="ml-0.5 size-2 shrink-0 rounded-full bg-[#006FFE]" />
+                    )}
+                  </span>
+
+                  {/* Subject - only show dash and subject if there's a subject */}
+                  {latestMessage.subject && (
+                    <>
+                      <span className="text-muted-foreground shrink-0 text-sm">-</span>
                       <span
                         className={cn(
-                          displayUnread && !isMailSelected ? 'font-bold' : 'font-medium',
-                          'text-md flex items-baseline gap-1 group-hover:opacity-100',
-                        )}
-                      >
-                        {isFolderSent ? (
-                          <span
-                            className={cn(
-                              'overflow-hidden truncate text-sm md:max-w-[15ch] xl:max-w-[25ch]',
-                            )}
-                          >
-                            {highlightText(latestMessage.subject, searchValue.highlight)}
-                          </span>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <span className={cn('line-clamp-1 overflow-hidden text-sm')}>
-                              {highlightText(
-                                cleanNameDisplay(latestMessage.sender.name) || '',
-                                searchValue.highlight,
-                              )}
-                            </span>
-                            {displayUnread && !isMailSelected && !isFolderSent ? (
-                              <>
-                                <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
-                              </>
-                            ) : null}
-                          </div>
-                        )}{' '}
-                        {/* {!isFolderSent ? (
-                          <span className="hidden items-center space-x-2 md:flex">
-                            <RenderLabels labels={threadLabels} />
-                          </span>
-                        ) : null} */}
-                      </span>
-                      {getThreadData.totalReplies > 1 ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="rounded-md text-xs opacity-70">
-                              [{getThreadData.totalReplies}]
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-1 text-xs">
-                            {m['common.mail.replies']({ count: getThreadData.totalReplies })}
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : null}
-                      {hasDraft ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center">
-                              <PencilCompose className="h-3 w-3 fill-blue-500 dark:fill-blue-400" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
-                        </Tooltip>
-                      ) : null}
-                      {/* {hasNotes ? (
-                        <span className="inline-flex items-center">
-                          <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
-                        </span>
-                      ) : null} */}
-                      <MailLabels labels={optimisticLabels} />
-                    </div>
-                    {latestMessage.receivedOn ? (
-                      <p
-                        className={cn(
-                          'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
-                          isMailSelected && 'opacity-100',
-                        )}
-                      >
-                        {formatDate(latestMessage.receivedOn.split('.')[0] || '')}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="flex justify-between">
-                    {isFolderSent ? (
-                      <p
-                        className={cn(
-                          'mt-1 line-clamp-1 max-w-[50ch] overflow-hidden text-sm text-[#8C8C8C] md:max-w-[25ch]',
-                        )}
-                      >
-                        {latestMessage.to.map((e) => e.email).join(', ')}
-                      </p>
-                    ) : (
-                      <p
-                        className={cn(
-                          'mt-1 line-clamp-1 w-[95%] min-w-0 overflow-hidden text-sm text-[#8C8C8C]',
+                          displayUnread && !isMailSelected ? 'font-medium' : 'font-normal',
+                          'text-foreground truncate text-sm',
                         )}
                       >
                         {highlightText(latestMessage.subject, searchValue.highlight)}
-                      </p>
-                    )}
-                    {/* <div className="hidden md:flex">
-                      {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
-                    </div> */}
-                    {threadLabels && (
-                      <div className="mr-0 flex w-fit items-center justify-end gap-1">
-                        {!isFolderSent ? <RenderLabels labels={threadLabels} /> : null}
-                        {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
-                      </div>
-                    )}
-                  </div>
-                  {emailContent && (
-                    <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
-                      {highlightText(emailContent, searchValue.highlight)}
-                    </div>
-                  )}
-                  {/* {mainSearchTerm && (
-                    <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
-                      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
-                        {mainSearchTerm}
                       </span>
-                    </div>
-                  )} */}
+                    </>
+                  )}
+
+                  {/* Body preview */}
+                  {emailContent && (
+                    <>
+                      <span className="text-muted-foreground shrink-0 text-sm">-</span>
+                      <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
+                        {highlightText(emailContent, searchValue.highlight)}
+                      </span>
+                    </>
+                  )}
+
+                  {/* Badges and indicators */}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {getThreadData.totalReplies > 1 && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-muted-foreground rounded-md text-xs">
+                            [{getThreadData.totalReplies}]
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="p-1 text-xs">
+                          {m['common.mail.replies']({ count: getThreadData.totalReplies })}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {hasDraft && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center">
+                            <PencilCompose className="h-3 w-3 fill-blue-500 dark:fill-blue-400" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
+                      </Tooltip>
+                    )}
+                    <MailLabels labels={optimisticLabels} />
+                    {threadLabels && !isFolderSent && <RenderLabels labels={threadLabels} />}
+                  </div>
                 </div>
+
+                {/* Date */}
+                {latestMessage.receivedOn && (
+                  <p
+                    className={cn(
+                      'text-muted-foreground shrink-0 text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                      isMailSelected && 'opacity-100',
+                    )}
+                  >
+                    {formatDate(latestMessage.receivedOn.split('.')[0] || '')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
