@@ -1,0 +1,64 @@
+{
+  "variableColors": {
+    "default": {
+      "background": "bg-primary/20",
+      "text": "text-primary",
+      "description": "Default color for regular template variables like {first_name}, {company}, etc."
+    },
+    "@calendar": {
+      "background": "bg-blue-100 dark:bg-blue-900/30",
+      "text": "text-blue-700 dark:text-blue-300",
+      "description": "Calendar-related variables for scheduling and time-based content"
+    },
+    "@knowledge base": {
+      "background": "bg-emerald-100 dark:bg-emerald-900/30",
+      "text": "text-emerald-700 dark:text-emerald-300",
+      "description": "Knowledge base queries for retrieving contextual information"
+    },
+    "@email": {
+      "background": "bg-purple-100 dark:bg-purple-900/30",
+      "text": "text-purple-700 dark:text-purple-300",
+      "description": "Email-related variables and context"
+    },
+    "@contact": {
+      "background": "bg-orange-100 dark:bg-orange-900/30",
+      "text": "text-orange-700 dark:text-orange-300",
+      "description": "Contact and person-related information"
+    },
+    "@company": {
+      "background": "bg-indigo-100 dark:bg-indigo-900/30",
+      "text": "text-indigo-700 dark:text-indigo-300",
+      "description": "Company and organization-related information"
+    },
+    "@slack": {
+      "background": "bg-pink-100 dark:bg-pink-900/30",
+      "text": "text-pink-700 dark:text-pink-300",
+      "description": "Slack channel integrations"
+    },
+    "@notion": {
+      "background": "bg-gray-100 dark:bg-gray-800/30",
+      "text": "text-gray-700 dark:text-gray-300",
+      "description": "Notion database integrations"
+    },
+    "@linear": {
+      "background": "bg-violet-100 dark:bg-violet-900/30",
+      "text": "text-violet-700 dark:text-violet-300",
+      "description": "Linear task and issue tracking"
+    },
+    "@spam": {
+      "background": "bg-red-100 dark:bg-red-900/30",
+      "text": "text-red-700 dark:text-red-300",
+      "description": "Move to spam folder"
+    },
+    "@archive": {
+      "background": "bg-amber-100 dark:bg-amber-900/30",
+      "text": "text-amber-700 dark:text-amber-300",
+      "description": "Archive email"
+    },
+    "@template": {
+      "background": "bg-cyan-100 dark:bg-cyan-900/30",
+      "text": "text-cyan-700 dark:text-cyan-300",
+      "description": "Template references"
+    }
+  }
+}

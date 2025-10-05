@@ -10557,7 +10557,7 @@ snapshots:
   '@datadog/datadog-api-client@1.40.0':
     dependencies:
       '@types/buffer-from': 1.1.3
-      '@types/node': 22.15.29
+      '@types/node': 22.13.8
       '@types/pako': 1.0.7
       buffer-from: 1.1.2
       cross-fetch: 3.2.0
@@ -13960,7 +13960,7 @@ snapshots:
 
   '@types/buffer-from@1.1.3':
     dependencies:
-      '@types/node': 22.15.29
+      '@types/node': 22.13.8
 
   '@types/canvas-confetti@1.9.0': {}
 
@@ -17641,7 +17641,7 @@ snapshots:
       '@tiptap/react': 2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tiptap/starter-kit': 2.23.0
       '@tiptap/suggestion': 2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0)
-      '@types/node': 22.15.29
+      '@types/node': 22.13.8
       cmdk: 1.1.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       jotai: 2.12.1(@types/react@19.0.10)(react@19.1.0)
       katex: 0.16.22
