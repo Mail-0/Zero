@@ -11,24 +11,25 @@ import {
 } from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import { useNavigate, useParams, Link, useLocation } from 'react-router';
 import { useCommandPalette } from '../context/command-palette-context';
+import { RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
 import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { MailList } from '@/components/mail/mail-list';
-import { useCallback, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { navigationConfig } from '@/config/navigation';
 import { useMail } from '@/components/mail/use-mail';
-import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
-import AIToggleButton from '../ai-toggle-button';
 import { Button } from '@/components/ui/button';
+import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
-import { RefreshCcw } from 'lucide-react';
+import { useStats } from '@/hooks/use-stats';
 import { m } from '@/paraglide/messages';
 import { isMac } from '@/lib/platform';
 import { useQueryState } from 'nuqs';
@@ -402,12 +403,10 @@ export function MailLayout() {
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
-        <div className="bg-panelLight dark:bg-panelDark mb-1 w-full shadow-sm md:mr-[3px] md:rounded-2xl lg:h-[calc(100dvh-8px)] lg:shadow-sm">
-          <div className="w-full md:h-[calc(100dvh-10px)]">
+        <div className="bg-panelLight dark:bg-panelDark mb-1 w-full max-w-full shadow-sm md:mr-[3px] md:rounded-2xl lg:h-[calc(100dvh-8px)] lg:shadow-sm">
+          <div className="w-full max-w-full md:h-[calc(100dvh-10px)]">
             <div className="z-15 sticky top-0 p-4 pb-0">
               <div className="flex items-center gap-2">
-                <SidebarToggle className="h-10 w-10" />
-
                 {mail.bulkSelected.length === 0 ? (
                   <>
                     <Button
@@ -484,9 +483,7 @@ export function MailLayout() {
             </div>
 
             {/* Horizontal Categories Row */}
-            {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-              <HorizontalCategories />
-            )}
+            {activeConnection && <HorizontalCategories />}
 
             <div className="px-4 pt-2">
               <div
@@ -505,7 +502,6 @@ export function MailLayout() {
         </div>
 
         {activeConnection?.id ? <AISidebar /> : null}
-        {activeConnection?.id ? <AIToggleButton /> : null}
       </div>
     </TooltipProvider>
   );
@@ -522,9 +518,84 @@ interface CategoryItem {
 function HorizontalCategories() {
   const categorySettings = useCategorySettings();
   const { setLabels, labels } = useSearchLabels();
-  const params = useParams<{ folder: string }>();
-  const folder = params?.folder ?? 'inbox';
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
+  const { userLabels } = useLabels();
+  const { data: activeConnection } = useActiveConnection();
+  const location = useLocation();
+  const { data: stats } = useStats();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Get navigation items from config
+  const navigationItems = navigationConfig.mail.sections.flatMap((section) => section.items);
+
+  // Function to check scroll state
+  const checkScrollState = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  }, []);
+
+  // Handle horizontal scrolling with mouse wheel
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (scrollContainerRef.current) {
+      e.preventDefault();
+      const scrollAmount = e.deltaY > 0 ? 300 : -300;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Check scroll state on mount and when content changes
+  useEffect(() => {
+    checkScrollState();
+    const handleResize = () => checkScrollState();
+    window.addEventListener('resize', handleResize);
+
+    // Add wheel event listener for horizontal scrolling
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [checkScrollState, userLabels, handleWheel]);
+
+  // Scroll functions
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
+
+  // Get badge count for navigation items
+  const getBadgeCount = (itemId: string) => {
+    if (!stats) return 0;
+    const folderMap: Record<string, string> = {
+      inbox: 'inbox',
+      sent: 'sent',
+      drafts: 'draft',
+      archive: 'archive',
+      spam: 'spam',
+      trash: 'bin',
+      snoozed: 'snoozed',
+    };
+    const folderName = folderMap[itemId];
+    return stats.find((stat) => stat.label?.toLowerCase() === folderName)?.count ?? 0;
+  };
 
   useHotkeys(
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
@@ -581,11 +652,49 @@ function HorizontalCategories() {
     setIsComposeOpen('true');
   };
 
-  if (folder !== 'inbox') return null;
+  const handleLabelClick = (labelName: string) => {
+    const isCurrentlyActive = labels.includes(`label:${labelName}`);
+
+    if (isCurrentlyActive) {
+      setLabels(labels.filter((label) => label !== `label:${labelName}`));
+    } else {
+      setLabels([...labels, `label:${labelName}`]);
+    }
+  };
 
   return (
-    <div className="scrollbar-none overflow-x-auto px-4 pt-2">
-      <div className="flex gap-2">
+    <div className="relative my-2 w-full px-4">
+      {/* Left scroll arrow */}
+      {canScrollLeft && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-background/80 absolute left-2 top-1/2 z-10 h-8 w-8 -translate-y-1/2 rounded-full p-0 shadow-sm backdrop-blur-sm"
+          onClick={scrollLeft}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Right scroll arrow */}
+      {canScrollRight && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-background/80 absolute right-2 top-1/2 z-10 h-8 w-8 -translate-y-1/2 rounded-full p-0 shadow-sm backdrop-blur-sm"
+          onClick={scrollRight}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Scrollable content */}
+      <div
+        ref={scrollContainerRef}
+        className="scrollbar-none flex w-full gap-2 overflow-x-auto"
+        onScroll={checkScrollState}
+        style={{ maxWidth: '100%', minWidth: 0 }}
+      >
         <button
           onClick={handleComposeClick}
           className="flex h-8 shrink-0 items-center gap-2 rounded-lg bg-[#006FFE] px-4 text-sm font-medium text-white transition-all hover:bg-[#0056CC]"
@@ -593,6 +702,32 @@ function HorizontalCategories() {
           <PencilCompose className="h-3.5 w-3.5 fill-white" />
           <span className="whitespace-nowrap">New Email</span>
         </button>
+
+        {/* Navigation buttons */}
+        {navigationItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          const badgeCount = getBadgeCount(item.id || '');
+          const IconComponent = item.icon;
+
+          return (
+            <Link
+              key={item.url}
+              to={item.url}
+              className={cn(
+                'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
+                isActive && 'bg-primary text-primary-foreground border-primary',
+              )}
+            >
+              <IconComponent className={cn('h-3.5 w-3.5', isActive && 'fill-primary-foreground')} />
+              <span className="whitespace-nowrap">{item.title}</span>
+              {badgeCount > 0 && (
+                <span className="bg-primary text-primary-foreground ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium">
+                  {badgeCount}
+                </span>
+              )}
+            </Link>
+          );
+        })}
         {categorySettings.map((category) => {
           const isActive =
             category.searchValue === ''
@@ -605,13 +740,45 @@ function HorizontalCategories() {
               onClick={() => handleLabelChange(category.searchValue)}
               className={cn(
                 'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
-                isActive && 'bg-accent/50 dark:bg-accent/50',
+                isActive && 'bg-primary text-primary-foreground border-primary',
               )}
             >
               <span className="whitespace-nowrap">{category.name}</span>
             </button>
           );
         })}
+
+        {/* User Labels */}
+        {activeConnection && userLabels && userLabels.length > 0 && (
+          <>
+            <div className="border-border/40 bg-border/40 mx-2 h-6 w-px" />
+            {userLabels.slice(0, 10).map((label) => {
+              const isActive = labels.includes(`label:${label.name}`);
+
+              return (
+                <button
+                  key={label.id}
+                  onClick={() => handleLabelClick(label.name)}
+                  className={cn(
+                    'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
+                    isActive &&
+                      !label.color?.backgroundColor &&
+                      'bg-primary text-primary-foreground border-primary',
+                  )}
+                  style={{
+                    backgroundColor:
+                      isActive && label.color?.backgroundColor
+                        ? label.color.backgroundColor
+                        : undefined,
+                    color: isActive && label.color?.textColor ? label.color.textColor : undefined,
+                  }}
+                >
+                  <span className="whitespace-nowrap">{label.name}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
       </div>
     </div>
   );

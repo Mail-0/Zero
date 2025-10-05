@@ -1,27 +1,19 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useCommandPalette } from '../context/command-palette-context.jsx';
-import { LabelDialog } from '@/components/labels/label-dialog';
-import { useActiveConnection } from '@/hooks/use-connections';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
+import { useCallback, useRef, useMemo } from 'react';
 import { type NavItem } from '@/config/navigation';
-import type { Label as LabelType } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'react-router';
 import { m } from '../../paraglide/messages.js';
-import { Button } from '@/components/ui/button';
-import { useLabels } from '@/hooks/use-labels';
 import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
-import SidebarLabels from './sidebar-labels';
-import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
-import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 import * as React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -53,7 +45,7 @@ type IconRefType = SVGSVGElement & {
 export function NavMain({ items }: NavMainProps) {
   const location = useLocation();
   const pathname = location.pathname;
-  const searchParams = new URLSearchParams();
+  const searchParams = useMemo(() => new URLSearchParams(), []);
 
   const trpc = useTRPC();
   const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
@@ -66,10 +58,6 @@ export function NavMain({ items }: NavMainProps) {
       });
     }
   }, [intercomToken]);
-
-  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
-
-  const { userLabels, refetch } = useLabels();
 
   const { state } = useSidebar();
 
@@ -138,8 +126,6 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, searchParams, isValidInternalUrl],
   );
 
-  const { data: activeAccount } = useActiveConnection();
-
   const isUrlActive = useCallback(
     (url: string) => {
       const urlObj = new URL(
@@ -161,25 +147,6 @@ export function NavMain({ items }: NavMainProps) {
     },
     [pathname, searchParams],
   );
-
-  const onSubmit = async (data: LabelType) => {
-    try {
-      const promise = createLabel(data).then(async (result) => {
-        await refetch();
-        return result;
-      });
-
-      toast.promise(promise, {
-        loading: 'Creating label...',
-        success: 'Label created successfully',
-        error: 'Failed to create label',
-      });
-
-      await promise;
-    } catch (error) {
-      console.error('Failed to create label:', error);
-    }
-  };
 
   return (
     <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0 md:px-0`}>
@@ -236,33 +203,6 @@ export function NavMain({ items }: NavMainProps) {
             </SidebarMenuItem>
           </Collapsible>
         ))}
-        {!pathname.includes('/settings') && !isBottomNav && state !== 'collapsed' && (
-          <Collapsible defaultOpen={true} className="group/collapsible flex-col">
-            <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
-              <div className="mx-2 mb-4 flex items-center justify-between">
-                <span className="text-muted-foreground text-[13px] dark:text-[#898989]">
-                  {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
-                </span>
-                {activeAccount?.providerId === 'google' ? (
-                  <LabelDialog
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
-                      >
-                        <Plus className="text-muted-foreground h-3 w-3 dark:text-[#898989]" />
-                      </Button>
-                    }
-                    onSubmit={onSubmit}
-                  />
-                ) : activeAccount?.providerId === 'microsoft' ? null : null}
-              </div>
-
-              {activeAccount ? <SidebarLabels data={userLabels ?? []} /> : null}
-            </SidebarMenuItem>
-          </Collapsible>
-        )}
       </SidebarMenu>
     </SidebarGroup>
   );

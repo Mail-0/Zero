@@ -16,21 +16,19 @@ import { useSession } from '@/lib/auth-client';
 // import { useMutation } from '@tanstack/react-query';
 import { PencilCompose } from '../icons/icons';
 import { useAIFullScreen } from './ai-sidebar';
-import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
-import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
 import React, { useMemo } from 'react';
 // import { Video } from 'lucide-react';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
+import { cn } from '@/lib/utils';
 // import { toast } from 'sonner';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // const { isPro, isLoading } = useBilling(); // Commented out - not currently used
   const { isFullScreen } = useAIFullScreen();
-  const { data: stats } = useStats();
   const location = useLocation();
   const { data: session } = useSession();
   const { currentSection, navItems } = useMemo(() => {
@@ -43,25 +41,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (navigationConfig[currentSection]) {
       const items = [...navigationConfig[currentSection].sections];
 
-      if (currentSection === 'mail' && stats && stats.length) {
-        if (items[0]?.items[0]) {
-          items[0].items[0].badge =
-            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
-        }
-        if (items[0]?.items[3]) {
-          items[0].items[3].badge =
-            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
-        }
-      }
+      // For mail section, remove navigation items since they're now in the horizontal row
+      const filteredItems = currentSection === 'mail' ? [] : items;
 
-      return { currentSection, navItems: items };
+      return { currentSection, navItems: filteredItems };
     } else {
       return {
         currentSection: '',
         navItems: [],
       };
     }
-  }, [location.pathname, stats]);
+  }, [location.pathname]);
 
   const showComposeButton = currentSection === 'mail';
   const { state } = useSidebar();
