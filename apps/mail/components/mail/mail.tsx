@@ -1,34 +1,37 @@
 import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+  Bell,
+  Lightning,
+  Mail,
+  ScanEye,
+  Tag,
+  User,
+  X,
+  Search,
+  PencilCompose,
+} from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { OrganisedMailList } from '@/components/mail/organised-mail-list';
+import { useNavigate, useParams, Link, useLocation } from 'react-router';
+import { selectedOrganisedEmailAtom } from '@/app/(routes)/mail/layout';
 import { useCommandPalette } from '../context/command-palette-context';
+import { RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
-import { ThreadDisplay } from '@/components/mail/thread-display';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
-import { useMediaQuery } from '../../hooks/use-media-query';
 import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { MailList } from '@/components/mail/mail-list';
-import { useNavigate, useParams } from 'react-router';
+import { navigationConfig } from '@/config/navigation';
 import { useMail } from '@/components/mail/use-mail';
-import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
-import AIToggleButton from '../ai-toggle-button';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
+import { useStats } from '@/hooks/use-stats';
 import { m } from '@/paraglide/messages';
 import { isMac } from '@/lib/platform';
 import { useQueryState } from 'nuqs';
@@ -317,7 +320,6 @@ export function MailLayout() {
   const folder = params?.folder ?? 'inbox';
   const [mail, setMail] = useMail();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
   const prevFolderRef = useRef(folder);
@@ -325,6 +327,9 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [selectedOrganisedEmail, setSelectedOrganisedEmail] = useAtom(selectedOrganisedEmailAtom);
+
+  const isOrganisedView = folder === 'organised';
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -337,30 +342,17 @@ export function MailLayout() {
     if (!session?.user && !isPending) {
       navigate('/login');
     }
-  }, [session?.user, isPending]);
+  }, [session?.user, isPending, navigate]);
 
   const [{ isFetching, refetch: refetchThreads }] = useThreads();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
 
-  const [threadId] = useQueryState('threadId');
-
+  // Enable mail-list scope since threads are now on their own page
   useEffect(() => {
-    if (threadId) {
-      console.log('Enabling thread-display scope, disabling mail-list');
-      enableScope('thread-display');
-      disableScope('mail-list');
-    } else {
-      console.log('Enabling mail-list scope, disabling thread-display');
-      enableScope('mail-list');
-      disableScope('thread-display');
-    }
-
+    enableScope('mail-list');
     return () => {
-      console.log('Cleaning up mail/thread scopes');
-      disableScope('thread-display');
       disableScope('mail-list');
     };
-  }, [threadId, enableScope, disableScope]);
+  }, [enableScope, disableScope]);
 
   //   const handleMailListMouseEnter = useCallback(() => {
   //     enableScope('mail-list');
@@ -416,161 +408,117 @@ export function MailLayout() {
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
-        <ResizablePanelGroup
-          direction="horizontal"
-          autoSaveId="mail-panel-layout"
-          className="rounded-inherit overflow-hidden"
-        >
-          <ResizablePanel
-            defaultSize={35}
-            minSize={35}
-            maxSize={35}
-            className={cn(
-              `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
-              isDesktop && threadId && 'hidden lg:block',
-            )}
-            // onMouseEnter={handleMailListMouseEnter}
-            // onMouseLeave={handleMailListMouseLeave}
-          >
-            <div className="w-full md:h-[calc(100dvh-10px)]">
-              <div className="z-15 sticky top-0 p-4 pb-0">
-                <div className="flex items-center gap-2">
-                  <SidebarToggle className="h-10 w-10" />
-
-                  {mail.bulkSelected.length === 0 ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 focus-visible:ring-ring dark:border-border/20 dark:bg-background/40 relative flex h-10 flex-1 select-none items-center justify-start overflow-hidden rounded-lg border pl-3 text-left text-sm font-normal shadow-none ring-0 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-offset-2',
-                        )}
-                        onClick={handleOpenCommandPalette}
-                      >
-                        <Search className="fill-muted-foreground h-4 w-4" />
-
-                        <span className="ml-3 hidden truncate pr-20 lg:inline-block">
-                          {activeFilters.length > 0
-                            ? activeFilters.map((f) => f.display).join(', ')
-                            : 'Search'}
-                        </span>
-                        <span className="ml-3 inline-block truncate pr-20 lg:hidden">
-                          {activeFilters.length > 0
-                            ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
-                            : 'Search'}
-                        </span>
-
-                        <div className="absolute right-2 flex items-center gap-2">
-                          {/* {activeFilters.length > 0 && (
-                            <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
-                              {activeFilters.length}
-                            </Badge>
-                          )} */}
-                          {activeFilters.length > 0 && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-6 rounded-md px-2 text-xs"
-                              onClick={handleClearFilters}
-                            >
-                              Clear
-                            </Button>
-                          )}
-                          <kbd className="bg-muted border-border/40 dark:bg-muted/40 pointer-events-none hidden h-6 select-none items-center gap-1 rounded border px-2 text-xs font-medium opacity-80 sm:flex">
-                            <span className={cn('text-xs', isMac ? 'text-sm' : 'text-xs')}>
-                              {isMac ? '⌘' : 'Ctrl'}
-                            </span>
-                            <span className="text-xs">K</span>
-                          </kbd>
-                        </div>
-                      </Button>
-
-                      {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-                        <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+        <div className="bg-panelLight dark:bg-panelDark mb-1 w-full max-w-full shadow-sm md:mr-[3px] md:rounded-2xl lg:h-[calc(100dvh-8px)] lg:shadow-sm">
+          <div className="w-full max-w-full md:h-[calc(100dvh-10px)]">
+            <div className="z-15 sticky top-0 p-4 pb-0">
+              <div className="flex items-center gap-2">
+                {mail.bulkSelected.length === 0 ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 focus-visible:ring-ring dark:border-border/20 dark:bg-background/40 relative flex h-10 flex-1 select-none items-center justify-start overflow-hidden rounded-lg border pl-3 text-left text-sm font-normal shadow-none ring-0 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-offset-2',
                       )}
-                    </>
-                  ) : (
-                    <div className="flex flex-1 items-center justify-between">
-                      <div className="text-foreground text-sm font-medium">
-                        {mail.bulkSelected.length} selected
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      onClick={handleOpenCommandPalette}
+                    >
+                      <Search className="fill-muted-foreground h-4 w-4" />
+
+                      <span className="ml-3 hidden truncate pr-20 lg:inline-block">
+                        {activeFilters.length > 0
+                          ? activeFilters.map((f) => f.display).join(', ')
+                          : 'Search'}
+                      </span>
+                      <span className="ml-3 inline-block truncate pr-20 lg:hidden">
+                        {activeFilters.length > 0
+                          ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
+                          : 'Search'}
+                      </span>
+
+                      <div className="absolute right-2 flex items-center gap-2">
+                        {activeFilters.length > 0 && (
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={handleExitBulkSelection}
-                            className="h-8 gap-2 rounded-lg"
+                            className="h-6 rounded-md px-2 text-xs"
+                            onClick={handleClearFilters}
                           >
-                            <X className="h-3 w-3" />
-                            <span className="text-xs">ESC</span>
+                            Clear
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {m['common.actions.exitSelectionModeEsc']()}
-                        </TooltipContent>
-                      </Tooltip>
+                        )}
+                        <kbd className="bg-muted border-border/40 dark:bg-muted/40 pointer-events-none hidden h-6 select-none items-center gap-1 rounded border px-2 text-xs font-medium opacity-80 sm:flex">
+                          <span className={cn('text-xs', isMac ? 'text-sm' : 'text-xs')}>
+                            {isMac ? '⌘' : 'Ctrl'}
+                          </span>
+                          <span className="text-xs">K</span>
+                        </kbd>
+                      </div>
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex flex-1 items-center justify-between">
+                    <div className="text-foreground text-sm font-medium">
+                      {mail.bulkSelected.length} selected
                     </div>
-                  )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleExitBulkSelection}
+                          className="h-8 gap-2 rounded-lg"
+                        >
+                          <X className="h-3 w-3" />
+                          <span className="text-xs">ESC</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{m['common.actions.exitSelectionModeEsc']()}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
 
-                  <Button
-                    onClick={handleRefetchThreads}
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-accent/50 h-10 w-10 rounded-lg border-none bg-transparent backdrop-blur-sm"
-                  >
-                    <RefreshCcw className="text-muted-foreground h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="px-4 pt-2">
-                <div
-                  className={cn(
-                    `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                    'h-0.5 w-full rounded-full transition-opacity',
-                    isFetching ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
-              </div>
-
-              <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
-                <MailList />
+                <Button
+                  onClick={handleRefetchThreads}
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-accent/50 h-10 w-10 rounded-lg border-none bg-transparent backdrop-blur-sm"
+                >
+                  <RefreshCcw className="text-muted-foreground h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </ResizablePanel>
 
-          {/* <ResizableHandle className="mr-0.5 hidden opacity-0 md:block" /> */}
+            {/* Horizontal Categories Row */}
+            {activeConnection && <HorizontalCategories />}
 
-          {isDesktop && (
-            <ResizablePanel
+            <div className="px-4 pt-2">
+              <div
+                className={cn(
+                  `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
+                  'h-0.5 w-full rounded-full transition-opacity',
+                  isFetching ? 'opacity-100' : 'opacity-0',
+                )}
+              />
+            </div>
+
+            <div
               className={cn(
-                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-[calc(100dvh-8px)]',
-                // Only show on md screens and larger when there is a threadId
-                !threadId && 'hidden lg:block',
+                'z-1 relative overflow-hidden pt-0',
+                'h-[calc(100dvh-(2px+2px))] md:h-[calc(100dvh-8rem)]',
               )}
-              defaultSize={30}
-              minSize={30}
             >
-              <div className="relative flex-1">
-                <ThreadDisplay />
-              </div>
-            </ResizablePanel>
-          )}
-
-          {/* Mobile Thread View */}
-          {isMobile && threadId && (
-            <div className="bg-panelLight dark:bg-panelDark fixed inset-0 z-50">
-              <div className="flex h-full flex-col">
-                <div className="h-full overflow-y-auto outline-none">
-                  <ThreadDisplay />
-                </div>
-              </div>
+              {isOrganisedView ? (
+                <OrganisedMailList
+                  onEmailSelect={setSelectedOrganisedEmail}
+                  selectedEmailId={selectedOrganisedEmail?.id || null}
+                />
+              ) : (
+                <MailList />
+              )}
             </div>
-          )}
+          </div>
+        </div>
 
-          {activeConnection?.id ? <AISidebar /> : null}
-          {activeConnection?.id ? <AIToggleButton /> : null}
-        </ResizablePanelGroup>
+        {!isOrganisedView && activeConnection?.id ? <AISidebar /> : null}
       </div>
     </TooltipProvider>
   );
@@ -582,6 +530,275 @@ interface CategoryItem {
   searchValue: string;
   icon?: React.ReactNode;
   colors?: string;
+}
+
+function HorizontalCategories() {
+  const categorySettings = useCategorySettings();
+  const { setLabels, labels } = useSearchLabels();
+  const [, setIsComposeOpen] = useQueryState('isComposeOpen');
+  const { userLabels } = useLabels();
+  const { data: activeConnection } = useActiveConnection();
+  const location = useLocation();
+  const { data: stats } = useStats();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Get navigation items from config
+  const navigationItems = navigationConfig.mail.sections.flatMap((section) => section.items);
+
+  // Function to check scroll state
+  const checkScrollState = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  }, []);
+
+  // Handle horizontal scrolling with mouse wheel
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (scrollContainerRef.current) {
+      e.preventDefault();
+      const scrollAmount = e.deltaY > 0 ? 300 : -300;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Check scroll state on mount and when content changes
+  useEffect(() => {
+    checkScrollState();
+    const handleResize = () => checkScrollState();
+    window.addEventListener('resize', handleResize);
+
+    // Add wheel event listener for horizontal scrolling
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [checkScrollState, userLabels, handleWheel]);
+
+  // Scroll functions
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
+
+  // Get badge count for navigation items
+  const getBadgeCount = (itemId: string) => {
+    if (!stats) return 0;
+    const folderMap: Record<string, string> = {
+      inbox: 'inbox',
+      sent: 'sent',
+      drafts: 'draft',
+      archive: 'archive',
+      spam: 'spam',
+      trash: 'bin',
+      snoozed: 'snoozed',
+    };
+    const folderName = folderMap[itemId];
+    return stats.find((stat) => stat.label?.toLowerCase() === folderName)?.count ?? 0;
+  };
+
+  useHotkeys(
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    (key) => {
+      const category = categorySettings[Number(key.key) - 1];
+      if (!category) return;
+      const isCurrentlyActive = labels.includes(category.searchValue);
+
+      if (isCurrentlyActive) {
+        setLabels(labels.filter((label) => label !== category.searchValue));
+      } else {
+        setLabels([...labels, category.searchValue]);
+      }
+    },
+    {
+      scopes: ['mail-list'],
+      preventDefault: true,
+      enableOnFormTags: false,
+    },
+  );
+
+  const handleLabelChange = (searchValue: string) => {
+    const trimmed = searchValue.trim();
+    if (!trimmed) {
+      setLabels([]);
+      return;
+    }
+
+    const parsedLabels = trimmed
+      .split(',')
+      .map((label) => label.trim())
+      .filter((label) => label.length > 0);
+
+    if (parsedLabels.length === 0) {
+      setLabels([]);
+      return;
+    }
+
+    const currentLabelsSet = new Set(labels);
+    const parsedLabelsSet = new Set(parsedLabels);
+
+    const allLabelsSelected = parsedLabels.every((label) => currentLabelsSet.has(label));
+
+    if (allLabelsSelected) {
+      const updatedLabels = labels.filter((label) => !parsedLabelsSet.has(label));
+      setLabels(updatedLabels);
+    } else {
+      const newLabelsSet = new Set([...labels, ...parsedLabels]);
+      setLabels(Array.from(newLabelsSet));
+    }
+  };
+
+  const handleComposeClick = () => {
+    setIsComposeOpen('true');
+  };
+
+  const handleLabelClick = (labelName: string) => {
+    const isCurrentlyActive = labels.includes(`label:${labelName}`);
+
+    if (isCurrentlyActive) {
+      setLabels(labels.filter((label) => label !== `label:${labelName}`));
+    } else {
+      setLabels([...labels, `label:${labelName}`]);
+    }
+  };
+
+  return (
+    <div className="relative my-2 w-full px-4">
+      {/* Left scroll arrow */}
+      {canScrollLeft && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-background/80 absolute left-2 top-1/2 z-10 h-8 w-8 -translate-y-1/2 rounded-full p-0 shadow-sm backdrop-blur-sm"
+          onClick={scrollLeft}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Right scroll arrow */}
+      {canScrollRight && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-background/80 absolute right-2 top-1/2 z-10 h-8 w-8 -translate-y-1/2 rounded-full p-0 shadow-sm backdrop-blur-sm"
+          onClick={scrollRight}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Scrollable content */}
+      <div
+        ref={scrollContainerRef}
+        className="scrollbar-none flex w-full gap-2 overflow-x-auto"
+        onScroll={checkScrollState}
+        style={{ maxWidth: '100%', minWidth: 0 }}
+      >
+        <button
+          onClick={handleComposeClick}
+          className="flex h-8 shrink-0 items-center gap-2 rounded-lg bg-[#006FFE] px-4 text-sm font-medium text-white transition-all hover:bg-[#0056CC]"
+        >
+          <PencilCompose className="h-3.5 w-3.5 fill-white" />
+          <span className="whitespace-nowrap">New Email</span>
+        </button>
+
+        {/* Navigation buttons */}
+        {navigationItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          const badgeCount = getBadgeCount(item.id || '');
+          const IconComponent = item.icon;
+
+          return (
+            <Link
+              key={item.url}
+              to={item.url}
+              className={cn(
+                'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
+                isActive && 'bg-primary text-primary-foreground border-primary',
+              )}
+            >
+              <IconComponent className={cn('h-3.5 w-3.5', isActive && 'fill-primary-foreground')} />
+              <span className="whitespace-nowrap">{item.title}</span>
+              {badgeCount > 0 && (
+                <span className="bg-primary text-primary-foreground ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium">
+                  {badgeCount}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+        {categorySettings.map((category) => {
+          const isActive =
+            category.searchValue === ''
+              ? labels.length === 0
+              : category.searchValue.split(',').some((val) => labels.includes(val));
+
+          return (
+            <button
+              key={category.id}
+              onClick={() => handleLabelChange(category.searchValue)}
+              className={cn(
+                'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
+                isActive && 'bg-primary text-primary-foreground border-primary',
+              )}
+            >
+              <span className="whitespace-nowrap">{category.name}</span>
+            </button>
+          );
+        })}
+
+        {/* User Labels */}
+        {activeConnection && userLabels && userLabels.length > 0 && (
+          <>
+            <div className="border-border/40 bg-border/40 mx-2 h-6 w-px" />
+            {userLabels.slice(0, 10).map((label) => {
+              const isActive = labels.includes(`label:${label.name}`);
+
+              return (
+                <button
+                  key={label.id}
+                  onClick={() => handleLabelClick(label.name)}
+                  className={cn(
+                    'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium backdrop-blur-sm transition-all',
+                    isActive &&
+                      !label.color?.backgroundColor &&
+                      'bg-primary text-primary-foreground border-primary',
+                  )}
+                  style={{
+                    backgroundColor:
+                      isActive && label.color?.backgroundColor
+                        ? label.color.backgroundColor
+                        : undefined,
+                    color: isActive && label.color?.textColor ? label.color.textColor : undefined,
+                  }}
+                >
+                  <span className="whitespace-nowrap">{label.name}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export const Categories = () => {
@@ -688,125 +905,3 @@ export const Categories = () => {
 
   return categories as CategoryItem[];
 };
-interface CategoryDropdownProps {
-  isMultiSelectMode?: boolean;
-}
-
-function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
-  const categorySettings = useCategorySettings();
-  const { setLabels, labels } = useSearchLabels();
-  const params = useParams<{ folder: string }>();
-  const folder = params?.folder ?? 'inbox';
-  const [isOpen, setIsOpen] = useState(false);
-
-  useHotkeys(
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    (key) => {
-      const category = categorySettings[Number(key.key) - 1];
-      if (!category) return;
-      const isCurrentlyActive = labels.includes(category.searchValue);
-
-      if (isCurrentlyActive) {
-        setLabels(labels.filter((label) => label !== category.searchValue));
-      } else {
-        setLabels([...labels, category.searchValue]);
-      }
-    },
-    {
-      scopes: ['mail-list'],
-      preventDefault: true,
-      enableOnFormTags: false,
-    },
-  );
-
-  const handleLabelChange = (searchValue: string) => {
-    const trimmed = searchValue.trim();
-    if (!trimmed) {
-      setLabels([]);
-      return;
-    }
-
-    const parsedLabels = trimmed
-      .split(',')
-      .map((label) => label.trim())
-      .filter((label) => label.length > 0);
-
-    if (parsedLabels.length === 0) {
-      setLabels([]);
-      return;
-    }
-
-    const currentLabelsSet = new Set(labels);
-    const parsedLabelsSet = new Set(parsedLabels);
-
-    const allLabelsSelected = parsedLabels.every((label) => currentLabelsSet.has(label));
-
-    if (allLabelsSelected) {
-      const updatedLabels = labels.filter((label) => !parsedLabelsSet.has(label));
-      setLabels(updatedLabels);
-    } else {
-      const newLabelsSet = new Set([...labels, ...parsedLabels]);
-      setLabels(Array.from(newLabelsSet));
-    }
-  };
-
-  if (folder !== 'inbox' || isMultiSelectMode) return null;
-
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
-          )}
-          aria-label="Filter by labels"
-          aria-expanded={isOpen}
-          aria-haspopup="menu"
-        >
-          <span className="text-sm font-medium">
-            {labels.length > 0
-              ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
-              : m['navigation.settings.categories']()}
-          </span>
-          <ChevronDown
-            className={cn(
-              'text-muted-foreground h-4 w-4 transition-transform duration-200',
-              isOpen ? 'rotate-180' : 'rotate-0',
-            )}
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
-        align="start"
-        role="menu"
-        aria-label="Label filter options"
-      >
-        {categorySettings.map((category) => (
-          <DropdownMenuItem
-            key={category.id}
-            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLabelChange(category.searchValue);
-            }}
-            role="menuitemcheckbox"
-            aria-checked={labels.includes(category.id)}
-          >
-            <span className="text-foreground font-medium capitalize">
-              {category.name.toLowerCase()}
-            </span>
-            {/* Special case: empty searchValue means "All Mail" - shows everything */}
-            {(category.searchValue === ''
-              ? labels.length === 0
-              : category.searchValue.split(',').some((val) => labels.includes(val))) && (
-              <Check className="text-primary ml-auto h-4 w-4" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}

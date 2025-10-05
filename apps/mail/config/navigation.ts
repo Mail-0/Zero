@@ -50,6 +50,13 @@ export const navigationConfig: Record<string, NavConfig> = {
         title: 'Core',
         items: [
           {
+            id: 'organised',
+            title: 'Organised',
+            url: '/mail/organised',
+            icon: Tabs,
+            shortcut: 'g + o',
+          },
+          {
             id: 'inbox',
             title: m['navigation.sidebar.inbox'](),
             url: '/mail/inbox',
@@ -69,6 +76,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/sent',
             icon: Plane2,
             shortcut: 'g + t',
+          },
+          {
+            id: 'crm',
+            title: 'CRM',
+            url: '/mail/crm',
+            icon: Users,
+            shortcut: 'g + c',
           },
         ],
       },

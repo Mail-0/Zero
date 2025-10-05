@@ -7,42 +7,39 @@ import {
 } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
+// import { toast } from 'sonner';
+import { CustomerCompanyPanel } from '../mail/customer-company-panel';
+import type { FakeEmail } from '@/lib/fake-organised-data';
+import { useLocation, useParams } from 'react-router';
 // import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
-// import { useMutation } from '@tanstack/react-query';
-import { PencilCompose, X } from '../icons/icons';
-import { useBilling } from '@/hooks/use-billing';
+// import { useBilling } from '@/hooks/use-billing'; // Commented out - not currently used
 import { useIsMobile } from '@/hooks/use-mobile';
-import React, { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
+// import { useMutation } from '@tanstack/react-query';
+import { PencilCompose } from '../icons/icons';
 import { useAIFullScreen } from './ai-sidebar';
-import { useStats } from '@/hooks/use-stats';
-import { useLocation } from 'react-router';
-import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
+import React, { useMemo } from 'react';
 // import { Video } from 'lucide-react';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
-// import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isPro, isLoading } = useBilling();
-  //   const trpc = useTRPC();
-  //   const { mutateAsync: createMeet } = useMutation(trpc.meet.create.mutationOptions());
-  const [showUpgrade, setShowUpgrade] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('hideUpgradeCard') !== 'true';
-    }
-    return true;
-  });
-  const [, setPricingDialog] = useQueryState('pricingDialog');
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  organisedEmail?: FakeEmail | null;
+}
+
+export function AppSidebar({ organisedEmail, ...props }: AppSidebarProps) {
+  // const { isPro, isLoading } = useBilling(); // Commented out - not currently used
   const { isFullScreen } = useAIFullScreen();
-  const { data: stats } = useStats();
   const location = useLocation();
   const { data: session } = useSession();
+  const params = useParams<{ folder: string }>();
+  const isOrganisedView = params?.folder === 'organised';
+
   const { currentSection, navItems } = useMemo(() => {
     // Find which section we're in based on the pathname
     const section = Object.entries(navigationConfig).find(([, config]) =>
@@ -53,27 +50,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (navigationConfig[currentSection]) {
       const items = [...navigationConfig[currentSection].sections];
 
-      if (currentSection === 'mail' && stats && stats.length) {
-        if (items[0]?.items[0]) {
-          items[0].items[0].badge =
-            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
-        }
-        if (items[0]?.items[3]) {
-          items[0].items[3].badge =
-            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
-        }
-      }
+      // For mail section, remove navigation items since they're now in the horizontal row
+      const filteredItems = currentSection === 'mail' ? [] : items;
 
-      return { currentSection, navItems: items };
+      return { currentSection, navItems: filteredItems };
     } else {
       return {
         currentSection: '',
         navItems: [],
       };
     }
-  }, [location.pathname, stats]);
+  }, [location.pathname]);
 
-  const showComposeButton = currentSection === 'mail';
+  const showComposeButton = currentSection === 'mail' && !isOrganisedView;
   const { state } = useSidebar();
 
   //   const handleCreateMeet = async () => {
@@ -119,53 +108,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             )}
           </SidebarHeader>
           <SidebarContent
-            className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
+            className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? (isOrganisedView ? 'mt-5' : 'mt-5 md:px-4') : 'px-2'}`}
           >
-            <div className="flex-1 py-0">
-              <NavMain items={navItems} />
-            </div>
+            {isOrganisedView && state !== 'collapsed' ? (
+              <div className="flex-1 px-4 py-0">
+                <CustomerCompanyPanel email={organisedEmail || null} />
+              </div>
+            ) : (
+              <div className="flex-1 py-0">
+                <NavMain items={navItems} />
+              </div>
+            )}
           </SidebarContent>
 
-          {!isLoading && !isPro && showUpgrade && state !== 'collapsed' && (
-            <div className="relative top-3 mx-3 mb-4 rounded-lg border bg-white px-4 py-4 backdrop-blur-sm dark:bg-[#1C1C1C]">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2 h-6 w-6 rounded-full hover:bg-white/10 [&>svg]:h-2.5 [&>svg]:w-2.5"
-                onClick={() => {
-                  setShowUpgrade(false);
-                  localStorage.setItem('hideUpgradeCard', 'true');
-                }}
-              >
-                <X className="h-2.5 w-2.5 fill-black dark:fill-white/50" />
-              </Button>
-              <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-black dark:text-white/90">
-                      Get Zero Pro
-                    </h3>
-                  </div>
-                  <p className="text-[13px] leading-snug text-black dark:text-white/50">
-                    Get unlimited AI chats, auto-labeling, writing assistant, and more.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setPricingDialog('true')}
-                className="mt-3 inline-flex h-7 w-full items-center justify-center gap-0.5 overflow-hidden rounded-lg bg-[#8B5CF6] px-2"
-              >
-                <div className="flex items-center justify-center gap-2.5 px-0.5">
-                  <div className="justify-start whitespace-nowrap text-xs leading-none text-white md:text-sm">
-                    Start 7 day free trial
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
           <SidebarFooter className={`px-0 pb-0 ${state === 'collapsed' ? 'md:px-2' : 'md:px-4'}`}>
-            <NavMain items={bottomNavItems} />
+            {!isOrganisedView || state === 'collapsed' ? <NavMain items={bottomNavItems} /> : null}
           </SidebarFooter>
         </Sidebar>
       )}

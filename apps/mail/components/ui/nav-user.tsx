@@ -646,15 +646,6 @@ export function NavUser() {
             <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
               {activeAccount?.email || session.user.email}
             </div>
-            {!isPro && (
-              <button
-                onClick={() => setPricingDialog('true')}
-                className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
-              >
-                <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
-                <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
-              </button>
-            )}
           </div>
         </div>
       )}
