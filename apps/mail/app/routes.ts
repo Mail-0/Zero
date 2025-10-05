@@ -31,6 +31,7 @@ export default [
         route('/compose', '(routes)/mail/compose/page.tsx'),
         route('/crm', '(routes)/mail/crm/page.tsx'),
         route('/under-construction/:path', '(routes)/mail/under-construction/[path]/page.tsx'),
+        route('/:folder/thread/:threadId', '(routes)/mail/[folder]/thread/[threadId]/page.tsx'),
         route('/:folder', '(routes)/mail/[folder]/page.tsx'),
       ]),
     ),
