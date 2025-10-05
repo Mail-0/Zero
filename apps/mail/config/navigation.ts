@@ -70,6 +70,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: Plane2,
             shortcut: 'g + t',
           },
+          {
+            id: 'crm',
+            title: 'CRM',
+            url: '/mail/crm',
+            icon: Users,
+            shortcut: 'g + c',
+          },
         ],
       },
       {
