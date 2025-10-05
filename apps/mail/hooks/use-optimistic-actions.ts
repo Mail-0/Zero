@@ -98,20 +98,11 @@ export function useOptimisticActions() {
   }) {
     const pendingActionId = generatePendingActionId();
     optimisticActionsManager.lastActionId = pendingActionId;
-    console.log('here Generated pending action ID:', pendingActionId);
 
     if (!optimisticActionsManager.pendingActionsByType.has(type)) {
-      console.log('here Creating new Set for action type:', type);
       optimisticActionsManager.pendingActionsByType.set(type, new Set());
     }
     optimisticActionsManager.pendingActionsByType.get(type)?.add(pendingActionId);
-    console.log(
-      'here',
-      'Added pending action to type:',
-      type,
-      'Current size:',
-      optimisticActionsManager.pendingActionsByType.get(type)?.size,
-    );
 
     const pendingAction = {
       id: pendingActionId,
@@ -132,11 +123,6 @@ export function useOptimisticActions() {
       try {
         await execute();
         const typeActions = optimisticActionsManager.pendingActionsByType.get(type);
-        console.log('here', {
-          pendingActionsByTypeRef: optimisticActionsManager.pendingActionsByType.get(type)?.size,
-          pendingActionsRef: optimisticActionsManager.pendingActions.size,
-          typeActions: typeActions?.size,
-        });
 
         const eventName = actionEventNames[type]?.(params);
         if (eventName) {
