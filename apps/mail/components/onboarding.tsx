@@ -5,6 +5,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { CRMTablePreview } from '@/components/crm/crm-table-preview';
 import { renderTemplateContent } from '@/lib/template-utils';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import templateColors from '@/config/template-colors.json';
@@ -569,7 +570,7 @@ Best,
   },
 ];
 
-type StepType = 'intro' | 'knowledgeBase' | 'agentProcedure' | 'templates' | 'readyToGo';
+type StepType = 'intro' | 'knowledgeBase' | 'crm' | 'agentProcedure' | 'templates' | 'readyToGo';
 
 interface Step {
   type: StepType;
@@ -579,6 +580,7 @@ interface Step {
 const steps: Step[] = [
   { type: 'intro', title: 'Introduction' },
   { type: 'knowledgeBase', title: 'Knowledge Base' },
+  { type: 'crm', title: 'CRM' },
   { type: 'templates', title: 'Templates' },
   { type: 'agentProcedure', title: 'Agent Operating Procedure' },
   { type: 'readyToGo', title: 'Ready to Go!' },
@@ -985,6 +987,188 @@ For example:
               </div>
             </>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CRMStep() {
+  const [connectionStatus, setConnectionStatus] = useState<
+    Record<string, 'disconnected' | 'connecting' | 'connected'>
+  >({
+    hubspot: 'disconnected',
+    salesforce: 'disconnected',
+  });
+
+  const handleConnect = async (integration: string) => {
+    setConnectionStatus((prev) => ({ ...prev, [integration]: 'connecting' }));
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    setConnectionStatus((prev) => ({ ...prev, [integration]: 'connected' }));
+  };
+
+  const integrations = [
+    {
+      id: 'hubspot',
+      name: 'HubSpot',
+      description: 'Sync contacts, deals, and pipeline data with your HubSpot CRM',
+      icon: (
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M18.164 7.931V4.5a4.5 4.5 0 0 0-9 0v3.431a3.5 3.5 0 1 0 0 6.138V17.5a4.5 4.5 0 0 0 9 0v-3.431a3.5 3.5 0 1 0 0-6.138zM12 2.25a2.25 2.25 0 0 1 2.25 2.25v1.181a3.496 3.496 0 0 0-4.5 0V4.5A2.25 2.25 0 0 1 12 2.25zM5.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm7 7.25a2.25 2.25 0 0 1-2.25-2.25v-1.181a3.496 3.496 0 0 0 4.5 0V17.5a2.25 2.25 0 0 1-2.25 2.25zM18.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+            fill="#ff7a59"
+          />
+        </svg>
+      ),
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+      borderColor: 'border-orange-200 dark:border-orange-800',
+    },
+    {
+      id: 'salesforce',
+      name: 'Salesforce',
+      description:
+        'Connect with Salesforce to access leads, opportunities, and account information',
+      icon: (
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12.017 8.928c-.304-.176-.685-.176-.989 0L8.3 10.312c-.304.176-.494.501-.494.854v2.768c0 .353.19.678.494.854l2.728 1.384c.304.176.685.176.989 0l2.728-1.384c.304-.176.494-.501.494-.854v-2.768c0-.353-.19-.678-.494-.854l-2.728-1.384z"
+            fill="#00a1e0"
+          />
+          <path
+            d="M17.5 6.5c-1.933 0-3.5 1.567-3.5 3.5 0 .827.287 1.587.768 2.184L12.017 13.5 9.268 12.184C9.713 11.587 10 10.827 10 10c0-1.933-1.567-3.5-3.5-3.5S3 8.067 3 10s1.567 3.5 3.5 3.5c.827 0 1.587-.287 2.184-.768L12.017 14l3.232-1.268c-.481.597-.768 1.357-.768 2.184 0 1.933 1.567 3.5 3.5 3.5s3.5-1.567 3.5-3.5-1.567-3.5-3.5-3.5z"
+            fill="#00a1e0"
+          />
+        </svg>
+      ),
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+      borderColor: 'border-blue-200 dark:border-blue-800',
+    },
+  ];
+
+  return (
+    <div className="flex h-full flex-col p-6">
+      <div className="mb-6">
+        <h2 className="mb-2 text-3xl font-semibold">CRM Integration</h2>
+        <p className="text-muted-foreground text-sm">
+          Connect your CRM to sync customer data and enhance email categorization with deal context
+        </p>
+      </div>
+
+      <div className="flex-1 space-y-6">
+        {/* Integration Cards */}
+        <div className="grid gap-3 md:grid-cols-2">
+          {integrations.map((integration) => {
+            const status = connectionStatus[integration.id];
+            const isConnected = status === 'connected';
+            const isConnecting = status === 'connecting';
+
+            return (
+              <div
+                key={integration.id}
+                className={`${integration.bgColor} ${integration.borderColor} rounded-lg border p-4 transition-all hover:shadow-md`}
+              >
+                {/* Header with icon, name, and connect button */}
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`${integration.color} flex-shrink-0`}>{integration.icon}</div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold">{integration.name}</h3>
+                      {isConnected && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-xs font-medium">Connected</span>
+                        </div>
+                      )}
+                      {isConnecting && (
+                        <div className="flex items-center gap-1 text-blue-600">
+                          <svg
+                            className="h-3 w-3 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path d="M9 12l2 2 4-4" />
+                          </svg>
+                          <span className="text-xs font-medium">Connecting...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    onClick={() => handleConnect(integration.id)}
+                    disabled={isConnecting || isConnected}
+                    variant={isConnected ? 'outline' : 'default'}
+                    className={`flex-shrink-0 ${isConnected ? 'cursor-default' : ''}`}
+                  >
+                    {isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Connect'}
+                  </Button>
+                </div>
+
+                {/* Description */}
+                <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
+                  {integration.description}
+                </p>
+
+                {/* Compact features list */}
+                <div className="space-y-1">
+                  {integration.id === 'hubspot' ? (
+                    <>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <div className="h-1 w-1 rounded-full bg-current"></div>
+                        <span>Sync contacts & deals</span>
+                      </div>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <div className="h-1 w-1 rounded-full bg-current"></div>
+                        <span>Track email engagement</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <div className="h-1 w-1 rounded-full bg-current"></div>
+                        <span>Access leads & opportunities</span>
+                      </div>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <div className="h-1 w-1 rounded-full bg-current"></div>
+                        <span>Auto-sync activity history</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CRM Data Preview */}
+        <div className="bg-muted/30 rounded-lg border p-6">
+          <h3 className="mb-4 text-lg font-semibold">CRM Data Preview</h3>
+          <p className="text-muted-foreground mb-4 text-sm">
+            Here&apos;s how your CRM data will appear in Cedar&apos;s contact management:
+          </p>
+          <CRMTablePreview />
+          <p className="text-muted-foreground mt-4 text-xs">
+            This data helps Cedar provide more accurate email categorization and personalized
+            response suggestions based on deal status, contact history, and next steps.
+          </p>
+        </div>
+
+        {/* Skip option */}
+        <div className="text-center">
+          <p className="text-muted-foreground text-sm">
+            You can always connect your CRM later from the settings page
+          </p>
         </div>
       </div>
     </div>
@@ -2120,6 +2304,8 @@ export function OnboardingDialog({
         return <IntroductionStep />;
       case 'knowledgeBase':
         return <KnowledgeBaseStep />;
+      case 'crm':
+        return <CRMStep />;
       case 'agentProcedure':
         return <AgentProcedureStep />;
       case 'templates':
