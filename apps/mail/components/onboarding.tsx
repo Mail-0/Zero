@@ -1155,7 +1155,7 @@ function EditableTemplateTextarea({
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm max-w-none focus:outline-none min-h-full p-6 font-mono text-sm whitespace-pre-wrap',
+          'prose prose-sm max-w-none focus:outline-none min-h-full p-6 font-mono text-sm whitespace-pre-wrap overflow-hidden',
       },
     },
     onUpdate: ({ editor }) => {
@@ -1176,11 +1176,21 @@ function EditableTemplateTextarea({
   }, [value, editor]);
 
   return (
-    <div className={className}>
+    <div className={`flex min-h-0 flex-col ${className}`}>
       <style>{`
+        .aop-editor .tiptap {
+          outline: none;
+          width: 100%;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: pre-wrap;
+        }
+        
         .aop-editor .tiptap p {
           margin: 0.5rem 0;
           line-height: 1.5;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .aop-editor .tiptap p:first-child {
           margin-top: 0;
@@ -1193,6 +1203,8 @@ function EditableTemplateTextarea({
         .aop-editor .tiptap li {
           margin: 0.35rem 0;
           line-height: 1.5;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .aop-editor .tiptap li p {
           margin: 0.2rem 0;
@@ -1211,6 +1223,7 @@ function EditableTemplateTextarea({
           color: hsl(var(--primary));
           border-radius: 0.25rem;
           padding: 0 0.25rem;
+          word-break: break-all;
         }
         
         /* Base mention styling */
@@ -1218,6 +1231,7 @@ function EditableTemplateTextarea({
           border-radius: 0.25rem;
           padding: 0 0.25rem;
           font-weight: 500;
+          word-break: break-all;
         }
         
         /* Mention type colors - light mode */
@@ -1244,7 +1258,7 @@ function EditableTemplateTextarea({
       `}</style>
       <EditorContent
         editor={editor}
-        className={`bg-background focus-within:ring-primary aop-editor overflow-y-auto rounded border focus-within:ring-2 ${className}`}
+        className="bg-background focus-within:ring-primary aop-editor min-h-0 flex-1 overflow-y-auto rounded border focus-within:ring-2"
       />
     </div>
   );
@@ -1514,7 +1528,7 @@ Get a demo call scheduled.
         </div>
 
         {/* Right column - Separate containers for Sorting Instructions and Operating Procedures */}
-        <div className="flex flex-col space-y-4 overflow-hidden">
+        <div className="flex min-w-0 flex-col space-y-4 overflow-hidden">
           {/* Sorting Instructions Container */}
           <div className="bg-muted/30 flex flex-col space-y-2 rounded-lg border p-3">
             <div className="flex-1">
@@ -1527,7 +1541,7 @@ Get a demo call scheduled.
                 value={detectionRules[selectedCategory] || ''}
                 onChange={(value) => handleDetectionRuleChange(selectedCategory, value)}
                 placeholder="Define the detection rules for this category..."
-                className="min-h-[100px]"
+                className="min-h-[100px] min-w-0 overflow-hidden"
               />
             </div>
             <div>
@@ -1539,13 +1553,13 @@ Get a demo call scheduled.
           </div>
 
           {/* Agent Operating Procedure Container */}
-          <div className="bg-muted/30 flex flex-1 flex-col rounded-lg border p-4">
+          <div className="bg-muted/30 flex min-h-0 flex-1 flex-col rounded-lg border p-4">
             <h3 className="mb-3 font-semibold">Agent Operating Procedure</h3>
             <EditableTemplateTextarea
               value={procedures[selectedCategory] || ''}
               onChange={(value) => handleProcedureChange(selectedCategory, value)}
               placeholder="Define the operating procedure for this category..."
-              className="flex-1"
+              className="min-h-0 min-w-0 flex-1 overflow-hidden"
             />
           </div>
         </div>
