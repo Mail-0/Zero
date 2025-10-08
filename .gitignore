@@ -35,6 +35,10 @@ bun-debug.log*
 .env
 .dev.vars
 
+# wrangler config with secrets
+*wrangler.jsonc*
+
+
 # vercel
 .vercel
 

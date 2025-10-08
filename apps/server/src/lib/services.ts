@@ -10,17 +10,16 @@ export const resend = () =>
 export const redis = () => new Redis({ url: env.REDIS_URL, token: env.REDIS_TOKEN });
 
 export const twilio = () => {
-  //   if (env.NODE_ENV === 'development' && !forceUseRealService) {
-  //     return {
-  //       messages: {
-  //         send: async (to: string, body: string) =>
-  //           console.log(`[TWILIO:MOCK] Sending message to ${to}: ${body}`),
-  //       },
-  //     };
-  //   }
-
+  // Return mock service if Twilio is not configured
   if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
-    throw new Error('Twilio is not configured correctly');
+    return {
+      messages: {
+        send: async (to: string, body: string) => {
+          console.log(`[TWILIO:MOCK] Would send SMS to ${to}: ${body}`);
+          return { sid: 'mock_sid', status: 'delivered' };
+        },
+      },
+    };
   }
 
   const send = async (to: string, body: string) => {

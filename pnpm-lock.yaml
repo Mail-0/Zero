@@ -522,9 +522,6 @@ importers:
       '@coinbase/cookie-manager':
         specifier: 1.1.8
         version: 1.1.8
-      '@datadog/datadog-api-client':
-        specifier: 1.40.0
-        version: 1.40.0
       '@dub/better-auth':
         specifier: 0.0.3
         version: 0.0.3
@@ -1253,10 +1250,6 @@ packages:
   '@csstools/css-tokenizer@3.0.4':
     resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
-
-  '@datadog/datadog-api-client@1.40.0':
-    resolution: {integrity: sha512-b8XxPEy0pnsmKed/4aejWMXkzV2IXolUreK7K7KYGJW/bYPpQLJpwBgv2W+GJTaHWX1YfH1veQnm3CW3Qvs04Q==}
-    engines: {node: '>=12.0.0'}
 
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
@@ -4692,9 +4685,6 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
-  '@types/buffer-from@1.1.3':
-    resolution: {integrity: sha512-2lq4YC9uLUMGHkl2IDtX4tCXSo2+hwMpOJcY1qiIk1kybc31rIlPyM1HCVJhkPFIo75a/pOVxqyvwuf5TpCG/w==}
-
   '@types/canvas-confetti@1.9.0':
     resolution: {integrity: sha512-aBGj/dULrimR1XDZLtG9JwxX1b4HPRF6CX9Yfwh3NvstZEm1ZL7RBnel4keCPSqs1ANRu1u2Aoz9R+VmtjYuTg==}
 
@@ -4814,9 +4804,6 @@ packages:
 
   '@types/node@24.3.0':
     resolution: {integrity: sha512-aPTXCrfwnDLj4VvXrm+UUCQjNEvJgNA8s5F1cvwQU+3KNltTOkBm1j30uNLyqqPNe7gE3KFzImYoZEfLhp4Yow==}
-
-  '@types/pako@1.0.7':
-    resolution: {integrity: sha512-YBtzT2ztNF6R/9+UXj2wTGFnC9NklAnASt3sC0h2m1bbH7G6FyBIkt4AN8ThZpNfxUo1b2iMVO0UawiJymEt8A==}
 
   '@types/pg-pool@2.0.6':
     resolution: {integrity: sha512-TaAUE5rq2VQYxab5Ts7WZhKNmuN78Q6PiFonTDdpbx8a1H0M1vhy3rhiMjl+e2iHmogyMw7jZF4FrE6eJUy5HQ==}
@@ -5591,9 +5578,6 @@ packages:
     resolution: {integrity: sha512-nH0a49E/kSVk6BeFgKZy4uUsy6D2A16p120h5bYD9ILBhQu7o2sJFH+WI4R731TSBQ0dB1Ik7inB/dRAB4C8QQ==}
     engines: {node: '>=18'}
 
-  cross-fetch@3.2.0:
-    resolution: {integrity: sha512-Q+xVJLoGOeIMXZmbUK4HYk+69cQH6LudR0Vu/pRm2YlU/hDV9CiS0gKUMaWY5f2NeUH9C1nV3bsTlCo0FsTV1Q==}
-
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -6107,9 +6091,6 @@ packages:
   es-to-primitive@1.3.0:
     resolution: {integrity: sha512-w+5mJ3GuFL+NjVtJlvydShqE1eN3h3PbI7/5LAsYJP/2qtuMXjfL2LpHSRqo4b4eSF5K/DH1JXKUAHSB2UW50g==}
     engines: {node: '>= 0.4'}
-
-  es6-promise@4.2.8:
-    resolution: {integrity: sha512-HJDGx5daxeIvxdBxvG2cb9g4tEvwIk3i8+nhX0yGrYmZUzbkdg8QbDevheDB8gd0//uPj4c1EQua8Q+MViT0/w==}
 
   esbuild-register@3.6.0:
     resolution: {integrity: sha512-H2/S7Pm8a9CL1uhp9OvjwrBh5Pvx0H8qVOxNu8Wed9Y7qv56MPtq+GGM8RJpq6glYJn9Wspr8uw7l55uyinNeg==}
@@ -7971,9 +7952,6 @@ packages:
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
-
-  pako@2.1.0:
-    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -10553,20 +10531,6 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
 
   '@csstools/css-tokenizer@3.0.4': {}
-
-  '@datadog/datadog-api-client@1.40.0':
-    dependencies:
-      '@types/buffer-from': 1.1.3
-      '@types/node': 22.13.8
-      '@types/pako': 1.0.7
-      buffer-from: 1.1.2
-      cross-fetch: 3.2.0
-      es6-promise: 4.2.8
-      form-data: 4.0.3
-      loglevel: 1.9.2
-      pako: 2.1.0
-    transitivePeerDependencies:
-      - encoding
 
   '@date-fns/tz@1.4.1': {}
 
@@ -13958,10 +13922,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.2
 
-  '@types/buffer-from@1.1.3':
-    dependencies:
-      '@types/node': 22.13.8
-
   '@types/canvas-confetti@1.9.0': {}
 
   '@types/chai@5.2.2':
@@ -14080,8 +14040,6 @@ snapshots:
   '@types/node@24.3.0':
     dependencies:
       undici-types: 7.10.0
-
-  '@types/pako@1.0.7': {}
 
   '@types/pg-pool@2.0.6':
     dependencies:
@@ -15045,12 +15003,6 @@ snapshots:
 
   cron-schedule@5.0.4: {}
 
-  cross-fetch@3.2.0:
-    dependencies:
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
-
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -15549,8 +15501,6 @@ snapshots:
       is-callable: 1.2.7
       is-date-object: 1.1.0
       is-symbol: 1.1.1
-
-  es6-promise@4.2.8: {}
 
   esbuild-register@3.6.0(esbuild@0.25.5):
     dependencies:
@@ -17834,8 +17784,6 @@ snapshots:
   pako@0.2.9: {}
 
   pako@1.0.11: {}
-
-  pako@2.1.0: {}
 
   parent-module@1.0.1:
     dependencies:
