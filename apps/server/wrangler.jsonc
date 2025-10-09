@@ -1,0 +1,736 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cedar-api",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/main.ts",
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.sql"],
+      "fallthrough": true,
+    },
+  ],
+  "env": {
+    "local": {
+      "name": "cedar-api-local",
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
+      "ai": {
+        "binding": "AI",
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "threads-vector-staging",
+        },
+        {
+          "binding": "VECTORIZE_MESSAGE",
+          "index_name": "messages-vector-staging",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads-staging",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ZERO_AGENT",
+            "class_name": "ZeroAgent",
+          },
+          {
+            "name": "ZERO_MCP",
+            "class_name": "ZeroMCP",
+          },
+          {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
+
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
+        ],
+      },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow",
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue",
+            "binding": "subscribe_queue",
+          },
+          {
+            "queue": "send-email-queue",
+            "binding": "send_email_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue",
+          },
+          {
+            "queue": "thread-queue",
+          },
+          {
+            "queue": "send-email-queue",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v2",
+          "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
+        },
+        {
+          "tag": "v4",
+          "deleted_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v5",
+          "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
+      ],
+
+      "observability": {
+        "enabled": true,
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "da7c4ef871e34914aaf31f6109f69074",
+        },
+      ],
+      "vars": {
+        "NODE_ENV": "local",
+        "COOKIE_DOMAIN": "localhost",
+        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
+        "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+        "JWT_SECRET": "secret",
+        "ELEVENLABS_API_KEY": "1234567890",
+        "DISABLE_CALLS": "true",
+        "VOICE_SECRET": "1234567890",
+        "GOOGLE_S_ACCOUNT": "{}",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "60",
+        "THREAD_SYNC_LOOP": "false",
+        "DISABLE_WORKFLOWS": "true",
+        "AUTORAG_ID": "",
+        "USE_OPENAI": "true",
+        "CLOUDFLARE_ACCOUNT_ID": "",
+        "CLOUDFLARE_API_TOKEN": "",
+        "MEET_AUTH_HEADER": "",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-local",
+        "DD_SITE": "datadoghq.com",
+      },
+      "kv_namespaces": [
+        {
+          "binding": "gmail_history_id",
+          "id": "44bb1d3dd828498cb0db5a6541abdcac",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "42c1285cb3a24f2f812d115671cd9012",
+        },
+        {
+          "binding": "subscribed_accounts",
+          "id": "b0b808d846cc4383ba4262cf945a3fb8",
+        },
+        {
+          "binding": "connection_labels",
+          "id": "afeff658c03746028d1b682c4c3b2577",
+        },
+        {
+          "binding": "prompts_storage",
+          "id": "593f843d385740c3b7dff52b7a9045e9",
+        },
+        {
+          "binding": "gmail_sub_age",
+          "id": "906f70f356c3491bac56dd58a67d39e3",
+        },
+        {
+          "binding": "pending_emails_status",
+          "id": "e4ebf2d7d47f458288b5a39ffbff7b0b",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "138ecb043d984940b504331ef96cde02",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "1332a07b40ea4a728dc5b637c6d03329",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "b93657bd6cec4760a407385e6dc2ee37",
+        },
+      ],
+    },
+    "staging": {
+      "name": "cedar-api-staging",
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
+      "triggers": {
+        "crons": ["0 0 * * *", "0 * * * *"],
+      },
+      "ai": {
+        "binding": "AI",
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "threads-vector-staging",
+        },
+        {
+          "binding": "VECTORIZE_MESSAGE",
+          "index_name": "messages-vector-staging",
+        },
+      ],
+      "limits": {
+        "cpu_ms": 300000,
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ZERO_AGENT",
+            "class_name": "ZeroAgent",
+          },
+          {
+            "name": "ZERO_MCP",
+            "class_name": "ZeroMCP",
+          },
+          {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
+        ],
+      },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-staging",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-staging",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads-staging",
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue-staging",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue-staging",
+            "binding": "subscribe_queue",
+          },
+          {
+            "queue": "send-email-queue-staging",
+            "binding": "send_email_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue-staging",
+          },
+          {
+            "queue": "thread-queue-staging",
+          },
+          {
+            "queue": "send-email-queue-staging",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": [
+            "ZeroMCP",
+            "ZeroDB",
+            "ZeroDriver",
+            "ThinkingMCP",
+            "WorkflowRunner",
+            "ThreadSyncWorker",
+            "ShardRegistry",
+          ],
+        },
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "AUTUMN_SECRET_KEY",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "AUTUMN_SECRET_KEY",
+        },
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "BETTER_AUTH_SECRET",
+        },
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "DATABASE_URL",
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "GOOGLE_CLIENT_SECRET",
+        },
+        {
+          "binding": "REDIS_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "REDIS_TOKEN",
+        },
+        {
+          "binding": "TWILIO_AUTH_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "TWILIO_AUTH_TOKEN",
+        },
+      ],
+      "observability": {
+        "enabled": true,
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "da7c4ef871e34914aaf31f6109f69074",
+        },
+      ],
+      "vars": {
+        "NODE_ENV": "production",
+        "COOKIE_DOMAIN": "isabelle-a06.workers.dev",
+        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_APP_URL": "https://cedar-app-staging.isabelle-a06.workers.dev",
+        "BETTER_AUTH_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
+        "GOOGLE_CLIENT_ID": "58667415742-oajfeq57sqoii47oc3opbtig6n50m4bs.apps.googleusercontent.com",
+        "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
+        "TWILIO_ACCOUNT_SID": "VAe8a73482245e7b7908c7e53a63819770",
+        "TWILIO_PHONE_NUMBER": "+14452854652",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "60",
+        "THREAD_SYNC_LOOP": "true",
+        "DISABLE_WORKFLOWS": "false",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-staging",
+      },
+      "kv_namespaces": [
+        {
+          "binding": "gmail_history_id",
+          "id": "44bb1d3dd828498cb0db5a6541abdcac",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "42c1285cb3a24f2f812d115671cd9012",
+        },
+        {
+          "binding": "subscribed_accounts",
+          "id": "b0b808d846cc4383ba4262cf945a3fb8",
+        },
+        {
+          "binding": "connection_labels",
+          "id": "afeff658c03746028d1b682c4c3b2577",
+        },
+        {
+          "binding": "prompts_storage",
+          "id": "593f843d385740c3b7dff52b7a9045e9",
+        },
+        {
+          "binding": "gmail_sub_age",
+          "id": "906f70f356c3491bac56dd58a67d39e3",
+        },
+        {
+          "binding": "pending_emails_status",
+          "id": "e4ebf2d7d47f458288b5a39ffbff7b0b",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "138ecb043d984940b504331ef96cde02",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "1332a07b40ea4a728dc5b637c6d03329",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "b93657bd6cec4760a407385e6dc2ee37",
+        },
+      ],
+    },
+    "production": {
+      "name": "cedar-api",
+      "secrets_store_secrets": [
+        {
+          "binding": "AUTUMN_SECRET_KEY",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "AUTUMN_SECRET_KEY",
+        },
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "BETTER_AUTH_SECRET",
+        },
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "DATABASE_URL",
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "GOOGLE_CLIENT_SECRET",
+        },
+        {
+          "binding": "REDIS_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "REDIS_TOKEN",
+        },
+        {
+          "binding": "TWILIO_AUTH_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "TWILIO_AUTH_TOKEN",
+        },
+      ],
+      "vars": {
+        "NODE_ENV": "production",
+        "COOKIE_DOMAIN": "isabelle-a06.workers.dev",
+        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_APP_URL": "https://cedar-app.isabelle-a06.workers.dev",
+        "BETTER_AUTH_URL": "https://cedar-api.isabelle-a06.workers.dev",
+        "GOOGLE_CLIENT_ID": "58667415742-oajfeq57sqoii47oc3opbtig6n50m4bs.apps.googleusercontent.com",
+        "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
+        "TWILIO_ACCOUNT_SID": "VAe8a73482245e7b7908c7e53a63819770",
+        "TWILIO_PHONE_NUMBER": "+14452854652",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "60",
+        "THREAD_SYNC_LOOP": "true",
+        "DISABLE_WORKFLOWS": "false",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
+        "OTEL_SERVICE_NAME": "zero-email-server-production",
+        "DD_SITE": "datadoghq.com",
+      },
+      "rules": [
+        {
+          "type": "Text",
+          "globs": ["**/*.sql"],
+          "fallthrough": true,
+        },
+      ],
+      "triggers": {
+        "crons": ["0 0 * * *", "0 * * * *"],
+      },
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads",
+        },
+      ],
+      "ai": {
+        "binding": "AI",
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "threads-vector",
+        },
+        {
+          "binding": "VECTORIZE_MESSAGE",
+          "index_name": "messages-vector",
+        },
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "AUTUMN_SECRET_KEY",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "AUTUMN_SECRET_KEY",
+        },
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "BETTER_AUTH_SECRET",
+        },
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "DATABASE_URL",
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "GOOGLE_CLIENT_SECRET",
+        },
+        {
+          "binding": "REDIS_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "REDIS_TOKEN",
+        },
+        {
+          "binding": "TWILIO_AUTH_TOKEN",
+          "store_id": "7e96a046961d49a2a82b6201e5881937",
+          "secret_name": "TWILIO_AUTH_TOKEN",
+        },
+      ],
+      "observability": {
+        "enabled": true,
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "da7c4ef871e34914aaf31f6109f69074",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ZERO_AGENT",
+            "class_name": "ZeroAgent",
+          },
+          {
+            "name": "ZERO_MCP",
+            "class_name": "ZeroMCP",
+          },
+          {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
+          {
+            "name": "SHARD_REGISTRY",
+            "class_name": "ShardRegistry",
+          },
+        ],
+      },
+      "workflows": [
+        {
+          "binding": "SYNC_THREADS_WORKFLOW",
+          "class_name": "SyncThreadsWorkflow",
+          "name": "sync-threads-workflow-prod",
+        },
+        {
+          "binding": "SYNC_THREADS_COORDINATOR_WORKFLOW",
+          "class_name": "SyncThreadsCoordinatorWorkflow",
+          "name": "sync-threads-coordinator-workflow-prod",
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue-prod",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue-prod",
+            "binding": "subscribe_queue",
+          },
+          {
+            "queue": "send-email-queue-prod",
+            "binding": "send_email_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue-prod",
+          },
+          {
+            "queue": "thread-queue-prod",
+          },
+          {
+            "queue": "send-email-queue-prod",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v2",
+          "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
+        },
+        {
+          "tag": "v4",
+          "deleted_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v5",
+          "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["WorkflowRunner"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["ThreadSyncWorker"],
+        },
+        {
+          "tag": "v9",
+          "new_sqlite_classes": ["ShardRegistry"],
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "gmail_history_id",
+          "id": "44bb1d3dd828498cb0db5a6541abdcac",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "42c1285cb3a24f2f812d115671cd9012",
+        },
+        {
+          "binding": "subscribed_accounts",
+          "id": "b0b808d846cc4383ba4262cf945a3fb8",
+        },
+        {
+          "binding": "connection_labels",
+          "id": "afeff658c03746028d1b682c4c3b2577",
+        },
+        {
+          "binding": "prompts_storage",
+          "id": "593f843d385740c3b7dff52b7a9045e9",
+        },
+        {
+          "binding": "gmail_sub_age",
+          "id": "906f70f356c3491bac56dd58a67d39e3",
+        },
+        {
+          "binding": "pending_emails_status",
+          "id": "e4ebf2d7d47f458288b5a39ffbff7b0b",
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "138ecb043d984940b504331ef96cde02",
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "1332a07b40ea4a728dc5b637c6d03329",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "b93657bd6cec4760a407385e6dc2ee37",
+        },
+      ],
+    },
+  },
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cedar-app",
+  "compatibility_date": "2025-06-27",
+  "observability": {
+    "enabled": true,
+  },
+  "assets": {
+    "directory": "./build/client/",
+    "not_found_handling": "single-page-application",
+    "html_handling": "force-trailing-slash",
+  },
+  "env": {
+    "local": {
+      "name": "cedar-app-local",
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
+        "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+      },
+    },
+    "staging": {
+      "name": "cedar-app-staging",
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_APP_URL": "https://cedar-app-staging.isabelle-a06.workers.dev",
+      },
+    },
+    "production": {
+      "name": "cedar-app",
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_APP_URL": "https://cedar-app.isabelle-a06.workers.dev",
+      },
+    },
+  },
+}

@@ -1,15 +1,10 @@
 import type { TRPCCallLog, LoggingState, SessionStats } from '../types/logging';
-import type { ZeroEnv } from '../env';
 
 // In-memory session storage for stats
 // In a production environment, you might want to use a distributed cache like Redis
 const sessionStats = new Map<string, LoggingState>();
 
 export class LoggingService {
-  constructor(env: ZeroEnv) {
-    // DataDog removed for performance optimization
-  }
-
   async logCall(callData: Omit<TRPCCallLog, 'id' | 'timestamp'>): Promise<void> {
     const log: TRPCCallLog = {
       ...callData,

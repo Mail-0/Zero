@@ -361,8 +361,9 @@ const createAuthConfig = () => {
       'https://staging.0.email',
       'https://0.email',
       'http://localhost:3000',
-      'https://cedar-api-staging.isabelle-a06.workers.dev',
+      'https://cedar-app-staging.isabelle-a06.workers.dev',
       'https://cedar-app.isabelle-a06.workers.dev',
+      'https://cedar-api-staging.isabelle-a06.workers.dev',
       'https://cedar-api.isabelle-a06.workers.dev',
     ],
     session: {
