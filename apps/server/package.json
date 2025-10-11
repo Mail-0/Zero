@@ -31,7 +31,6 @@
     "@arcadeai/arcadejs": "1.8.1",
     "@barkleapp/css-sanitizer": "1.0.0",
     "@coinbase/cookie-manager": "1.1.8",
-    "@datadog/datadog-api-client": "1.40.0",
     "@dub/better-auth": "0.0.3",
     "@elevenlabs/elevenlabs-js": "2.12.2",
     "@googleapis/gmail": "12.0.0",

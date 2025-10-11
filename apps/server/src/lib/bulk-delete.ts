@@ -3,9 +3,9 @@ import Cloudflare from 'cloudflare';
 
 // KV namespace IDs for different environments
 const KV_NAMESPACE_IDS = {
-  local: 'b7db3a98a80f4e16a8b6edc5fa8c7b76',
-  staging: 'b7db3a98a80f4e16a8b6edc5fa8c7b76',
-  production: '3348ff0976284269a8d8a5e6e4c04c56',
+  local: '42c1285cb3a24f2f812d115671cd9012',
+  staging: '42c1285cb3a24f2f812d115671cd9012',
+  production: '42c1285cb3a24f2f812d115671cd9012',
 } as const;
 
 export type Environment = 'local' | 'staging' | 'production';

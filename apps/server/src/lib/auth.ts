@@ -356,11 +356,12 @@ const createAuthConfig = () => {
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
     trustedOrigins: [
-      'https://app.0.email',
-      'https://sapi.0.email',
-      'https://staging.0.email',
-      'https://0.email',
+      'https://mail.cedarcopilot.com',
+      'https://api.mail.cedarcopilot.com',
+      'https://mail-staging.cedarcopilot.com',
+      'https://api.mail-staging.cedarcopilot.com',
       'http://localhost:3000',
+      'http://localhost:8787',
     ],
     session: {
       cookieCache: {
