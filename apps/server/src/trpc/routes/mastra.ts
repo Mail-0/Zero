@@ -1,5 +1,5 @@
-import { checkMastraHealth } from '../../lib/mastra';
 import { publicProcedure, router } from '../trpc';
+import { checkMastraHealth } from '../../mastra';
 
 export const mastraRouter = router({
   // Health check

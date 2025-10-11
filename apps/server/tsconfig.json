@@ -9,6 +9,8 @@
     "evals/**/*.ts"
   ],
   "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "bundler",
     "plugins": [
       {
         "name": "@effect/language-service"
