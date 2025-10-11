@@ -20,16 +20,28 @@
     },
     "staging": {
       "name": "cedar-app-staging",
+      "routes": [
+        {
+          "pattern": "mail-staging.cedarcopilot.com",
+          "custom_domain": true,
+        },
+      ],
       "vars": {
-        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
-        "VITE_PUBLIC_APP_URL": "https://cedar-app-staging.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.mail-staging.cedarcopilot.com",
+        "VITE_PUBLIC_APP_URL": "https://mail-staging.cedarcopilot.com",
       },
     },
     "production": {
       "name": "cedar-app",
+      "routes": [
+        {
+          "pattern": "mail.cedarcopilot.com",
+          "custom_domain": true,
+        },
+      ],
       "vars": {
-        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api.isabelle-a06.workers.dev",
-        "VITE_PUBLIC_APP_URL": "https://cedar-app.isabelle-a06.workers.dev",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.mail.cedarcopilot.com",
+        "VITE_PUBLIC_APP_URL": "https://mail.cedarcopilot.com",
       },
     },
   },

@@ -24,6 +24,21 @@
       "ai": {
         "binding": "AI",
       },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": [
+            "ZeroAgent",
+            "ZeroMCP",
+            "ZeroDriver",
+            "ThinkingMCP",
+            "WorkflowRunner",
+            "ThreadSyncWorker",
+            "ShardRegistry",
+            "ZeroDB",
+          ],
+        },
+      ],
       "vectorize": [
         {
           "binding": "VECTORIZE",
@@ -116,44 +131,6 @@
           },
         ],
       },
-      "migrations": [
-        {
-          "tag": "v1",
-          "new_classes": ["DurableMailbox"],
-        },
-        {
-          "tag": "v2",
-          "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
-        },
-        {
-          "tag": "v3",
-          "new_classes": ["ZeroDB"],
-        },
-        {
-          "tag": "v4",
-          "deleted_classes": ["DurableMailbox"],
-        },
-        {
-          "tag": "v5",
-          "new_sqlite_classes": ["ZeroDriver"],
-        },
-        {
-          "tag": "v6",
-          "new_sqlite_classes": ["ThinkingMCP"],
-        },
-        {
-          "tag": "v7",
-          "new_sqlite_classes": ["WorkflowRunner"],
-        },
-        {
-          "tag": "v8",
-          "new_sqlite_classes": ["ThreadSyncWorker"],
-        },
-        {
-          "tag": "v9",
-          "new_sqlite_classes": ["ShardRegistry"],
-        },
-      ],
 
       "observability": {
         "enabled": true,
@@ -177,11 +154,10 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
-        "CLOUDFLARE_ACCOUNT_ID": "",
-        "CLOUDFLARE_API_TOKEN": "",
+        "CLOUDFLARE_ACCOUNT_ID": "a06049fe5e3044fa7bae5280318fee7a",
         "MEET_AUTH_HEADER": "",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-local",
@@ -232,6 +208,12 @@
     },
     "staging": {
       "name": "cedar-api-staging",
+      "routes": [
+        {
+          "pattern": "api.mail-staging.cedarcopilot.com",
+          "custom_domain": true,
+        },
+      ],
       "rules": [
         {
           "type": "Text",
@@ -258,6 +240,21 @@
       "limits": {
         "cpu_ms": 300000,
       },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": [
+            "ZeroAgent",
+            "ZeroMCP",
+            "ZeroDriver",
+            "ThinkingMCP",
+            "WorkflowRunner",
+            "ThreadSyncWorker",
+            "ShardRegistry",
+            "ZeroDB",
+          ],
+        },
+      ],
       "durable_objects": {
         "bindings": [
           {
@@ -339,52 +336,6 @@
           },
         ],
       },
-      "migrations": [
-        {
-          "tag": "v1",
-          "new_sqlite_classes": [
-            "ZeroMCP",
-            "ZeroDB",
-            "ZeroDriver",
-            "ThinkingMCP",
-            "WorkflowRunner",
-            "ThreadSyncWorker",
-            "ShardRegistry",
-          ],
-        },
-      ],
-      "secrets_store_secrets": [
-        {
-          "binding": "AUTUMN_SECRET_KEY",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "AUTUMN_SECRET_KEY",
-        },
-        {
-          "binding": "BETTER_AUTH_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "BETTER_AUTH_SECRET",
-        },
-        {
-          "binding": "DATABASE_URL",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "DATABASE_URL",
-        },
-        {
-          "binding": "GOOGLE_CLIENT_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "GOOGLE_CLIENT_SECRET",
-        },
-        {
-          "binding": "REDIS_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "REDIS_TOKEN",
-        },
-        {
-          "binding": "TWILIO_AUTH_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "TWILIO_AUTH_TOKEN",
-        },
-      ],
       "observability": {
         "enabled": true,
       },
@@ -396,20 +347,16 @@
       ],
       "vars": {
         "NODE_ENV": "production",
-        "COOKIE_DOMAIN": "isabelle-a06.workers.dev",
-        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
-        "VITE_PUBLIC_APP_URL": "https://cedar-app-staging.isabelle-a06.workers.dev",
-        "BETTER_AUTH_URL": "https://cedar-api-staging.isabelle-a06.workers.dev",
-        "GOOGLE_CLIENT_ID": "58667415742-oajfeq57sqoii47oc3opbtig6n50m4bs.apps.googleusercontent.com",
-        "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
-        "TWILIO_ACCOUNT_SID": "VAe8a73482245e7b7908c7e53a63819770",
-        "TWILIO_PHONE_NUMBER": "+14452854652",
+        "COOKIE_DOMAIN": "mail-staging.cedarcopilot.com",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.mail-staging.cedarcopilot.com",
+        "VITE_PUBLIC_APP_URL": "https://mail-staging.cedarcopilot.com",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-staging",
+        "CLOUDFLARE_ACCOUNT_ID": "a06049fe5e3044fa7bae5280318fee7a",
       },
       "kv_namespaces": [
         {
@@ -456,48 +403,17 @@
     },
     "production": {
       "name": "cedar-api",
-      "secrets_store_secrets": [
+      "routes": [
         {
-          "binding": "AUTUMN_SECRET_KEY",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "AUTUMN_SECRET_KEY",
-        },
-        {
-          "binding": "BETTER_AUTH_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "BETTER_AUTH_SECRET",
-        },
-        {
-          "binding": "DATABASE_URL",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "DATABASE_URL",
-        },
-        {
-          "binding": "GOOGLE_CLIENT_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "GOOGLE_CLIENT_SECRET",
-        },
-        {
-          "binding": "REDIS_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "REDIS_TOKEN",
-        },
-        {
-          "binding": "TWILIO_AUTH_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "TWILIO_AUTH_TOKEN",
+          "pattern": "api.mail.cedarcopilot.com",
+          "custom_domain": true,
         },
       ],
       "vars": {
         "NODE_ENV": "production",
-        "COOKIE_DOMAIN": "isabelle-a06.workers.dev",
-        "VITE_PUBLIC_BACKEND_URL": "https://cedar-api.isabelle-a06.workers.dev",
-        "VITE_PUBLIC_APP_URL": "https://cedar-app.isabelle-a06.workers.dev",
-        "BETTER_AUTH_URL": "https://cedar-api.isabelle-a06.workers.dev",
-        "GOOGLE_CLIENT_ID": "58667415742-oajfeq57sqoii47oc3opbtig6n50m4bs.apps.googleusercontent.com",
-        "REDIS_URL": "https://sweeping-oarfish-14087.upstash.io",
-        "TWILIO_ACCOUNT_SID": "VAe8a73482245e7b7908c7e53a63819770",
-        "TWILIO_PHONE_NUMBER": "+14452854652",
+        "COOKIE_DOMAIN": "mail.cedarcopilot.com",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.mail.cedarcopilot.com",
+        "VITE_PUBLIC_APP_URL": "https://mail.cedarcopilot.com",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
@@ -505,6 +421,7 @@
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-production",
         "DD_SITE": "datadoghq.com",
+        "CLOUDFLARE_ACCOUNT_ID": "a06049fe5e3044fa7bae5280318fee7a",
       },
       "rules": [
         {
@@ -535,38 +452,6 @@
           "index_name": "messages-vector",
         },
       ],
-      "secrets_store_secrets": [
-        {
-          "binding": "AUTUMN_SECRET_KEY",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "AUTUMN_SECRET_KEY",
-        },
-        {
-          "binding": "BETTER_AUTH_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "BETTER_AUTH_SECRET",
-        },
-        {
-          "binding": "DATABASE_URL",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "DATABASE_URL",
-        },
-        {
-          "binding": "GOOGLE_CLIENT_SECRET",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "GOOGLE_CLIENT_SECRET",
-        },
-        {
-          "binding": "REDIS_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "REDIS_TOKEN",
-        },
-        {
-          "binding": "TWILIO_AUTH_TOKEN",
-          "store_id": "7e96a046961d49a2a82b6201e5881937",
-          "secret_name": "TWILIO_AUTH_TOKEN",
-        },
-      ],
       "observability": {
         "enabled": true,
       },
@@ -574,6 +459,21 @@
         {
           "binding": "HYPERDRIVE",
           "id": "da7c4ef871e34914aaf31f6109f69074",
+        },
+      ],
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": [
+            "ZeroAgent",
+            "ZeroMCP",
+            "ZeroDriver",
+            "ThinkingMCP",
+            "WorkflowRunner",
+            "ThreadSyncWorker",
+            "ShardRegistry",
+            "ZeroDB",
+          ],
         },
       ],
       "durable_objects": {
@@ -651,44 +551,6 @@
           },
         ],
       },
-      "migrations": [
-        {
-          "tag": "v1",
-          "new_classes": ["DurableMailbox"],
-        },
-        {
-          "tag": "v2",
-          "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
-        },
-        {
-          "tag": "v3",
-          "new_classes": ["ZeroDB"],
-        },
-        {
-          "tag": "v4",
-          "deleted_classes": ["DurableMailbox"],
-        },
-        {
-          "tag": "v5",
-          "new_sqlite_classes": ["ZeroDriver"],
-        },
-        {
-          "tag": "v6",
-          "new_sqlite_classes": ["ThinkingMCP"],
-        },
-        {
-          "tag": "v7",
-          "new_sqlite_classes": ["WorkflowRunner"],
-        },
-        {
-          "tag": "v8",
-          "new_sqlite_classes": ["ThreadSyncWorker"],
-        },
-        {
-          "tag": "v9",
-          "new_sqlite_classes": ["ShardRegistry"],
-        },
-      ],
       "kv_namespaces": [
         {
           "binding": "gmail_history_id",
