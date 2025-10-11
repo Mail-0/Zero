@@ -7,6 +7,7 @@ import { shortcutRouter } from './routes/shortcut';
 import { settingsRouter } from './routes/settings';
 import { getContext } from 'hono/context-storage';
 import { loggingRouter } from './routes/logging';
+import { mastraRouter } from './routes/mastra';
 import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { notesRouter } from './routes/notes';
@@ -29,6 +30,7 @@ export const appRouter = router({
   drafts: draftsRouter,
   labels: labelsRouter,
   mail: mailRouter,
+  mastra: mastraRouter,
   notes: notesRouter,
   shortcut: shortcutRouter,
   settings: settingsRouter,
