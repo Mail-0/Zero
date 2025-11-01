@@ -73,7 +73,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
       - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     volumes:
-      - valkey-data:/bitnamilegacy/valkey/data
+      - valkey-data:/bitnami/valkey/data
     healthcheck:
       test: ['CMD', 'redis-cli', '-h', 'localhost', '-p', '6379', 'ping']
       interval: 10s
