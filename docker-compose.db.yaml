@@ -22,7 +22,7 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - valkey-data:/bitnamilegacy/valkey/data
+      - valkey-data:/bitnami/valkey/data
 
   upstash-proxy:
     container_name: zerodotemail-upstash-proxy
