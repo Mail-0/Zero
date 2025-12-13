@@ -39,7 +39,7 @@ Zero MCP provides the following capabilities:
 
 ## How to use?
 
-You can connecto ZeroMCP using two methods:
+You can connect to ZeroMCP using two methods:
 
 1. Better Auth session token
 2. OAuth (Coming soon)
