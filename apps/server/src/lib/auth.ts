@@ -22,11 +22,17 @@ import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { type EProviders } from '../types';
+import type { HonoContext } from '../ctx';
 import { createDriver } from './driver';
 import { createDb } from '../db';
 import { Effect } from 'effect';
 import { env } from '../env';
-// import { Dub } from 'dub'; // Disabled - uses 'cache' in fetch which CF Workers doesn't support
+import { Dub } from 'dub';
+
+const scheduleCampaign = (userInfo: { address: string; name: string }) =>
+  Effect.gen(function* () {
+    const name = userInfo.name || 'there';
+    const resendService = resend();
 
 // Disabled: React email components use @react-email/render which uses 'cache' in fetch
 // CF Workers doesn't support 'cache' field. Re-enable when emails are pre-rendered.
@@ -256,16 +262,21 @@ export const createAuth = () => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = await getZeroDB(user.id);
           const connections = await db.findManyConnections();
-          // Delete user subscription if exists
-          try {
-            await Effect.runPromise(
-              db.deleteSubscription(user.id).pipe(
-                Effect.catchAll(() => Effect.succeed(undefined))
-              )
-            );
-          } catch (error) {
-            console.error('Failed to delete user subscription:', error);
-            // Continue with deletion process despite subscription deletion failure
+          const context = getContext<HonoContext>();
+          const customer = await context.var.autumn.customers.get(user.id);
+          if (customer.data) {
+            try {
+              await Promise.all(
+                customer.data.products.map(async (product) =>
+                  context.var.autumn.cancel({
+                    customer_id: user.id,
+                    product_id: product.id,
+                  }),
+                ),
+              );
+            } catch (error) {
+              console.error('Failed to delete Autumn customer:', error);
+            }
           }
 
           const revokedAccounts = (
