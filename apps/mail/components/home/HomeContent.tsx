@@ -1032,7 +1032,7 @@ export default function HomeContent() {
               <h1 className="mb-2 text-lg font-medium leading-loose text-white">Smart Search</h1>
               <p className="max-w-sm text-sm font-light text-[#979797]">
                 Your inbox, your rules. Create personalized email processing flows that match
-                exactly how you organize,write, reply, and work.
+                exactly how you organize, write, reply, and work.
               </p>
             </div>
           </motion.div>
