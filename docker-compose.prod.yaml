@@ -68,14 +68,12 @@ services:
       retries: 5
 
   valkey:
-    image: docker.io/bitnami/valkey:8.0
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    image: valkey/valkey:8.0-alpine
+    restart: unless-stopped
     volumes:
-      - valkey-data:/bitnami/valkey/data
+      - valkey-data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-h', 'localhost', '-p', '6379', 'ping']
+      test: ['CMD', 'valkey-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
