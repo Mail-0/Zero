@@ -148,7 +148,7 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
               if (await checkMechanism(includeMech, includeDomain)) return true;
             }
           }
-        } catch (e) {
+        } catch {
           // Include domain lookup failed
         }
       }
@@ -161,7 +161,7 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
     }
     
     return false;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -216,7 +216,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     const pemKey = `-----BEGIN PUBLIC KEY-----\n${pubKey}\n-----END PUBLIC KEY-----`;
     return verifier.verify(pemKey, signature, 'base64');
     
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -235,7 +235,7 @@ async function validateDMARC(domain: string): Promise<boolean> {
     // Require strict policy (quarantine or reject)
     return policy === 'quarantine' || policy === 'reject';
     
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -432,7 +432,7 @@ async function getBIMILogo(domain: string): Promise<string | undefined> {
     
     return undefined;
     
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -454,18 +454,10 @@ export async function verify(rawEmail: string): Promise<{isVerified: boolean; lo
     
     // Run validations in parallel
     const [spfValid, dkimValid, dmarcValid, bimiValid] = await Promise.all([
-      senderIP ? validateSPF(domain, senderIP).catch(error => {
-        return false;
-      }) : Promise.resolve(false),
-      validateDKIM(rawEmail).catch(error => {
-        return false;
-      }),
-      validateDMARC(domain).catch(error => {
-        return false;
-      }),
-      validateBIMI(domain).catch(error => {
-        return false;
-      }),
+      senderIP ? validateSPF(domain, senderIP).catch(() => false) : Promise.resolve(false),
+      validateDKIM(rawEmail).catch(() => false),
+      validateDMARC(domain).catch(() => false),
+      validateBIMI(domain).catch(() => false),
     ]);
 
     const authValid = dkimValid || spfValid || dmarcValid;
