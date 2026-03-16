@@ -28,9 +28,8 @@ import {
 import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components/home/pixelated-bg';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { signIn, useSession } from '@/lib/auth-client';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Balancer } from 'react-wrap-balancer';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
 import { motion } from 'motion/react';
@@ -84,9 +83,9 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-center text-4xl font-medium md:text-6xl"
         >
-          <Balancer className="mb-3 max-w-[1130px]">
+          <span className="mb-3 block max-w-[1130px] text-balance">
             AI Powered Email, Built to Save You Time
-          </Balancer>
+          </span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -103,7 +102,13 @@ export default function HomeContent() {
           transition={{ duration: 0.5 }}
           className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1"
         >
-          <Link to="https://yc.vc" target="_blank" className="flex items-center gap-2 text-sm">
+          {/* Fixed: replaced <Link> with <a> for external URL */}
+          <a
+            href="https://yc.vc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm"
+          >
             Backed by
             <span>
               <img
@@ -115,7 +120,7 @@ export default function HomeContent() {
               />
             </span>
             Combinator
-          </Link>
+          </a>
         </motion.div>
 
         {/* Get Started button only visible for mobile screens */}
@@ -1279,50 +1284,6 @@ export default function HomeContent() {
           />
         </div>
       </div>
-
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative hidden lg:block"
-      >
-        <div className="mx-auto max-w-[920px] text-center text-4xl font-normal leading-[48px] text-white">
-          <span className="text-[#B7B7B7]">Work smarter, not harder.</span>{' '}
-          <span className="pr-12 text-white">Automate repetitive</span>{' '}
-          <span className="text-[#B7B7B7]">email</span>
-          <span className="text-[#B7B7B7]"> tasks with</span>{' '}
-          <span className="pr-14 text-white">smart templates, </span>{' '}
-          <span className="text-white">scheduled sends</span>
-          <span className="text-[#B7B7B7]">
-            , follow-up reminders, and batch processing capabilities that
-          </span>{' '}
-          <br />
-          <span className="text-white underline">save hours every week.</span>
-        </div>
-        <div className="flex items-center justify-center">
-          <img
-            className="relative bottom-12 right-[162px]"
-            src="/verified-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-          <img
-            className="relative bottom-[145px] right-[47px]"
-            src="/snooze-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-          <img
-            className="relative bottom-[195px] left-[210px]"
-            src="/star-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-        </div>
-      </motion.div> */}
 
       <div className="relative mt-52 flex items-center justify-center">
         <Footer />
