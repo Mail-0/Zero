@@ -361,6 +361,7 @@ const createAuthConfig = () => {
       'https://staging.0.email',
       'https://0.email',
       'http://localhost:3000',
+      'http://localhost:8787', // backend port for local development
     ],
     session: {
       cookieCache: {
