@@ -24,13 +24,13 @@ import {
   Docx,
   ImageFile,
   Expand,
+
 } from '../icons/icons';
 import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components/home/pixelated-bg';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { signIn, useSession } from '@/lib/auth-client';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Balancer } from 'react-wrap-balancer';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
 import { motion } from 'motion/react';
@@ -84,9 +84,9 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-center text-4xl font-medium md:text-6xl"
         >
-          <Balancer className="mb-3 max-w-[1130px]">
+          <span className="mb-3 block max-w-[1130px] text-balance">
             AI Powered Email, Built to Save You Time
-          </Balancer>
+          </span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -103,7 +103,13 @@ export default function HomeContent() {
           transition={{ duration: 0.5 }}
           className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1"
         >
-          <Link to="https://yc.vc" target="_blank" className="flex items-center gap-2 text-sm">
+          {/* Fixed: replaced <Link> with <a> for external URL */}
+          <a
+            href="https://yc.vc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm"
+          >
             Backed by
             <span>
               <img
@@ -115,7 +121,7 @@ export default function HomeContent() {
               />
             </span>
             Combinator
-          </Link>
+          </a>
         </motion.div>
 
         {/* Get Started button only visible for mobile screens */}
@@ -323,7 +329,6 @@ export default function HomeContent() {
                 <div className="hidden items-start justify-start gap-3 md:flex">
                   <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-[#373737] px-1.5">
                     <Cube className="relative h-3 w-3 overflow-hidden fill-[#9A9A9A]" />
-
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
                       <div className="text-base-gray-950 justify-start text-sm leading-none">
                         Neutral
@@ -332,7 +337,6 @@ export default function HomeContent() {
                   </div>
                   <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-[#373737] px-1.5">
                     <MediumStack className="relative mx-1 h-2.5 w-2.5 overflow-hidden fill-[#9A9A9A]" />
-
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
                       <div className="text-base-gray-950 justify-start text-sm leading-none">
                         Medium-length
@@ -720,7 +724,6 @@ export default function HomeContent() {
                       </div>
                     </div>
                   </div>
-
                   <div className="from-tokens-scroll-overlay-primary to-tokens-scroll-overlay-top/0 absolute left-0 top-[668.98px] h-12 w-[547.09px] bg-linear-to-l" />
                   <div className="bg-tokens-agent-surface/10 border-tokens-agent-stroke absolute left-[498.90px] top-[674.65px] h-8 w-8 rounded-full border-2 px-1 shadow-[0px_8.503936767578125px_17.00787353515625px_0px_rgba(0,0,0,0.15)] backdrop-blur-lg" />
                 </div>
@@ -1214,7 +1217,6 @@ export default function HomeContent() {
                     </div>
                   </div>
                   <div className="relative inline-flex w-96 flex-col items-start justify-center gap-2">
-                    {/* First row */}
                     <div className="no-scrollbar relative flex w-full justify-center">
                       <div className="flex items-center justify-start gap-2 whitespace-nowrap">
                         {firstRowQueries.map((query) => (
@@ -1233,8 +1235,6 @@ export default function HomeContent() {
                       <div className="absolute left-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800/0 to-neutral-800" />
                       <div className="absolute right-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800 to-neutral-800/0" />
                     </div>
-
-                    {/* Second row */}
                     <div className="no-scrollbar relative flex w-full justify-center">
                       <div className="flex items-center justify-start gap-2 whitespace-nowrap">
                         {secondRowQueries.map((query) => (
@@ -1279,50 +1279,6 @@ export default function HomeContent() {
           />
         </div>
       </div>
-
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative hidden lg:block"
-      >
-        <div className="mx-auto max-w-[920px] text-center text-4xl font-normal leading-[48px] text-white">
-          <span className="text-[#B7B7B7]">Work smarter, not harder.</span>{' '}
-          <span className="pr-12 text-white">Automate repetitive</span>{' '}
-          <span className="text-[#B7B7B7]">email</span>
-          <span className="text-[#B7B7B7]"> tasks with</span>{' '}
-          <span className="pr-14 text-white">smart templates, </span>{' '}
-          <span className="text-white">scheduled sends</span>
-          <span className="text-[#B7B7B7]">
-            , follow-up reminders, and batch processing capabilities that
-          </span>{' '}
-          <br />
-          <span className="text-white underline">save hours every week.</span>
-        </div>
-        <div className="flex items-center justify-center">
-          <img
-            className="relative bottom-12 right-[162px]"
-            src="/verified-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-          <img
-            className="relative bottom-[145px] right-[47px]"
-            src="/snooze-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-          <img
-            className="relative bottom-[195px] left-[210px]"
-            src="/star-home.png"
-            alt="tasks"
-            width={50}
-            height={50}
-          />
-        </div>
-      </motion.div> */}
 
       <div className="relative mt-52 flex items-center justify-center">
         <Footer />
