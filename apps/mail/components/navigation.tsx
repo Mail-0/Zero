@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -188,26 +189,32 @@ export function Navigation() {
                 <AnimatedNumber value={stars} className="font-medium text-white" />
               </div>
             </a>
-            <Button
-              className="h-8 bg-white text-black hover:bg-white hover:text-black cursor-pointer"
-              onClick={() => {
-                if (session) {
-                  navigate('/mail/inbox');
-                } else {
-                  toast.promise(
-                    signIn.social({
-                      provider: 'google',
-                      callbackURL: `${window.location.origin}/mail`,
-                    }),
-                    {
-                      error: 'Login redirect failed',
-                    },
-                  );
-                }
-              }}
+            <motion.div
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             >
-              Get Started
-            </Button>
+              <Button
+                className="h-8 cursor-pointer bg-white text-black hover:bg-white hover:text-black"
+                onClick={() => {
+                  if (session) {
+                    navigate('/mail/inbox');
+                  } else {
+                    toast.promise(
+                      signIn.social({
+                        provider: 'google',
+                        callbackURL: `${window.location.origin}/mail`,
+                      }),
+                      {
+                        error: 'Login redirect failed',
+                      },
+                    );
+                  }
+                }}
+              >
+                Get Started
+              </Button>
+            </motion.div>
           </div>
         </nav>
       </header>
