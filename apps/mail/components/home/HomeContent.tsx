@@ -21,7 +21,7 @@ import {
   ChevronRight,
   Calendar,
   Figma,
-  Docx,
+  Docx, 
   ImageFile,
   Expand,
 
@@ -606,27 +606,29 @@ export default function HomeContent() {
                         <div className="bg-tokens-stroke-light/5 relative h-2 w-[0.71px] rounded-full" />
                         <div className="flex items-center justify-start gap-[2.83px]">
                           <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1 overflow-hidden rounded-full py-[2.83px] pl-[2.83px] pr-2 outline outline-[0.35px] outline-offset-[-0.35px]">
-                            <img
-                              className="h-3.5 w-3.5 rounded-full px-[2.66px] py-1"
-                              src="https://placehold.co/14x14"
-                            />
+                          <img
+                            className="h-3.5 w-3.5 rounded-full px-[2.66px] py-1"
+                            src="https://placehold.co/14x14"
+                            alt="User avatar"
+                          />
                             <div className="text-base-gray-950 justify-start text-[9.92px] leading-[9.92px]">
                               Ali
                             </div>
                           </div>
                           <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1 overflow-hidden rounded-full py-[2.83px] pl-[2.83px] pr-2 outline outline-[0.35px] outline-offset-[-0.35px]">
-                            <div className="inline-flex h-3.5 w-3.5 flex-col items-center justify-center gap-2 overflow-hidden rounded-full">
-                              <img className="h-4 w-4" src="https://placehold.co/17x17" />
-                            </div>
+                          <div className="inline-flex h-3.5 w-3.5 flex-col items-center justify-center gap-2 overflow-hidden rounded-full">
+                            <img className="h-4 w-4" src="https://placehold.co/17x17" alt="User avatar" />
+                          </div>
                             <div className="text-base-gray-950 justify-start text-[9.92px] leading-[9.92px]">
                               Nick
                             </div>
                           </div>
                           <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1 overflow-hidden rounded-full py-[2.83px] pl-[2.83px] pr-2 outline outline-[0.35px] outline-offset-[-0.35px]">
-                            <img
-                              className="h-3.5 w-3.5 rounded-full"
-                              src="https://placehold.co/14x14"
-                            />
+                          <img
+                            className="h-3.5 w-3.5 rounded-full"
+                            src="https://placehold.co/14x14"
+                            alt="User avatar"
+                          />
                             <div className="text-base-gray-950 justify-start text-[9.92px] leading-[9.92px]">
                               Sarah
                             </div>
