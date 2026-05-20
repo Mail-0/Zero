@@ -14,7 +14,7 @@
     "prefer-array-find": "error",
     "prefer-set-has": "error",
     "exhaustive-deps": "off",
-    "@typescript-eslint/no-this-alias": "off",
-    "no-unused-vars": "off"
+    "@typescript-eslint/no-this-alias": "warn",
+    "no-unused-vars": "warn"
   }
 }
