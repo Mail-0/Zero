@@ -1,1 +1,0 @@
-ALTER TABLE "mail0_user" ALTER COLUMN "default_connection_id" DROP DEFAULT;

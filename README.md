@@ -188,24 +188,6 @@ You can set up Zero in two ways:
    AUTUMN_SECRET_KEY=your_autumn_secret
    ```
 
-4. **Twilio Setup** (Required for SMS Integration)
-
-   - Go to the [Twilio](https://www.twilio.com/)
-   - Create a Twilio account if you don’t already have one
-   - From the dashboard, locate your:
-
-     - Account SID
-     - Auth Token
-     - Phone Number
-
-   - Add to your `.env` file:
-
-   ```env
-   TWILIO_ACCOUNT_SID=your_account_sid
-   TWILIO_AUTH_TOKEN=your_auth_token
-   TWILIO_PHONE_NUMBER=your_twilio_phone_number
-   ```
-
 ### Environment Variables
 
 Run `pnpm nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.

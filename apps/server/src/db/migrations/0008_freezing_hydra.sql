@@ -1,2 +1,0 @@
-ALTER TABLE "mail0_user" ADD COLUMN "default_connection_id" text;--> statement-breakpoint
-ALTER TABLE "mail0_user" ADD CONSTRAINT "mail0_user_default_connection_id_mail0_connection_id_fk" FOREIGN KEY ("default_connection_id") REFERENCES "public"."mail0_connection"("id") ON DELETE no action ON UPDATE no action;
