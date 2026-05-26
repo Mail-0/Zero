@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error -- @barkleapp/css-sanitizer does not ship TypeScript declarations.
 import { CssSanitizer } from '@barkleapp/css-sanitizer';
 import sanitizeHtml from 'sanitize-html';
 import * as cheerio from 'cheerio';
@@ -21,6 +21,8 @@ export function preprocessEmailHtml(html: string): string {
       'summary',
       'style',
     ]),
+    // Email style contents are passed through CssSanitizer below before rendering.
+    allowVulnerableTags: true,
 
     allowedAttributes: {
       '*': [
@@ -154,7 +156,14 @@ export function applyEmailPreferences(
       // Allow CID images (inline attachments)
       if (src && !src.startsWith('cid:')) {
         hasBlockedImages = true;
-        $img.replaceWith(`<span style="display:none;"><!-- blocked image: ${src} --></span>`);
+
+        // Never interpolate the original src into replacement HTML. Cheerio decodes
+        // attribute entities, so strings like "-->" can break out of comments and
+        // reintroduce executable markup after the initial sanitization pass.
+        const $placeholder = $('<span></span>');
+        $placeholder.attr('data-blocked-image', 'true');
+        $placeholder.attr('style', 'display:none;');
+        $img.replaceWith($placeholder);
       }
     });
   }
