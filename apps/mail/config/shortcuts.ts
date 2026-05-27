@@ -193,13 +193,6 @@ const globalShortcuts: Shortcut[] = [
     preventDefault: true,
   },
   {
-    keys: ['v'],
-    action: 'openVoice',
-    type: 'single',
-    description: 'Open voice',
-    scope: 'global',
-  },
-  {
     keys: ['c'],
     action: 'newEmail',
     type: 'single',

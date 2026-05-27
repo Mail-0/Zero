@@ -32,8 +32,6 @@ export type ZeroEnv = {
   prompts_storage: KVNamespace;
   NODE_ENV: 'local' | 'development' | 'production';
   JWT_SECRET: 'secret';
-  ELEVENLABS_API_KEY: '1234567890';
-  DISABLE_CALLS: 'true' | '';
   DROP_AGENT_TABLES: 'false';
   THREAD_SYNC_MAX_COUNT: '5' | '20' | '10';
   THREAD_SYNC_LOOP: 'false' | 'true';
@@ -73,14 +71,9 @@ export type ZeroEnv = {
   AUTUMN_SECRET_KEY: string;
   AI_SYSTEM_PROMPT: string;
   PERPLEXITY_API_KEY: string;
-  TWILIO_ACCOUNT_SID: string;
-  TWILIO_AUTH_TOKEN: string;
-  TWILIO_PHONE_NUMBER: string;
-  VITE_PUBLIC_ELEVENLABS_AGENT_ID: string;
   REACT_SCAN: string;
   MICROSOFT_CLIENT_ID: string;
   MICROSOFT_CLIENT_SECRET: string;
-  VOICE_SECRET: string;
   ARCADE_API_KEY: string;
   OPENAI_MODEL: string;
   OPENAI_MINI_MODEL: string;

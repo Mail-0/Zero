@@ -1,2 +1,0 @@
-ALTER TABLE "mail0_user_settings" ALTER COLUMN "settings" SET DEFAULT '{"language":"en","timezone":"UTC","dynamicContent":false,"externalImages":true,"customPrompt":"","trustedSenders":[],"isOnboarded":false}'::jsonb;--> statement-breakpoint
-ALTER TABLE "mail0_early_access" ADD COLUMN "has_used_ticket" boolean DEFAULT false NOT NULL;

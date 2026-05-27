@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
-import { VoiceProvider } from '@/providers/voice-provider';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { useRef, useCallback, useEffect } from 'react';
 import type { useAgentChat } from 'agents/ai-react';
@@ -11,7 +10,6 @@ import { useThread } from '@/hooks/use-threads';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
 import type { Message as AiMessage } from 'ai';
-import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { CurvedArrow } from '../icons/icons';
 import { Tools } from '../../types/tools';
@@ -387,9 +385,6 @@ export function AIChat({
             </div>
             <div className="grid">
               <div className="flex justify-end gap-1">
-                <VoiceProvider>
-                  <VoiceButton />
-                </VoiceProvider>
                 <button
                   form="ai-chat-form"
                   type="submit"

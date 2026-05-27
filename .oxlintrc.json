@@ -1,7 +1,7 @@
 {
   "plugins": ["react", "unicorn", "typescript", "oxc"],
   "rules": {
-    "no-alert": "error",
+    "no-alert": "warn",
     "oxc/approx-constant": "warn",
     "no-plusplus": "off",
     "no-useless-call": "error",
@@ -14,6 +14,7 @@
     "prefer-array-find": "error",
     "prefer-set-has": "error",
     "exhaustive-deps": "off",
-    "@typescript-eslint/no-this-alias": "off"
+    "@typescript-eslint/no-this-alias": "warn",
+    "no-unused-vars": "warn"
   }
 }
