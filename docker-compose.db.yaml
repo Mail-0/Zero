@@ -15,7 +15,7 @@ services:
 
   valkey:
     container_name: zerodotemail-redis
-    image: docker.io/bitnami/valkey:8.0
+    image: valkey/valkey:8.0
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
       - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
