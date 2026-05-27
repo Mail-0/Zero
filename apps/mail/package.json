@@ -20,6 +20,7 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "@dub/analytics": "0.0.29",
+    "@elevenlabs/react": "0.5.1",
     "@fontsource-variable/geist": "5.2.6",
     "@fontsource-variable/geist-mono": "5.2.6",
     "@hookform/resolvers": "4.1.2",

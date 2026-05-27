@@ -7,18 +7,12 @@ import babel from 'vite-plugin-babel';
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from 'vite';
 import dedent from 'dedent';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-/** Monorepo root — Vite defaults to `apps/mail/`, which ignores `../../.env`. */
-const envDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const ReactCompilerConfig = {
   /* ... */
 };
 
 export default defineConfig({
-  envDir,
   plugins: [
     oxlintPlugin(),
     reactRouter(),

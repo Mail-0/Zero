@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_user" ALTER COLUMN "default_connection_id" SET DEFAULT 'Yeah';

@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_session" RENAME COLUMN "connectionId" TO "connection_id";

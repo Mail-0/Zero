@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_user" DROP COLUMN "default_connection_id";

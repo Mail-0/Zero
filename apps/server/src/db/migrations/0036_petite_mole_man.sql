@@ -1,0 +1,2 @@
+CREATE INDEX "idx_mail0_email_template_user_id" ON "mail0_email_template" USING btree ("user_id");--> statement-breakpoint
+ALTER TABLE "mail0_email_template" ADD CONSTRAINT "mail0_email_template_user_id_name_unique" UNIQUE("user_id","name");

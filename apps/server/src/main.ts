@@ -47,6 +47,7 @@ import { env, type ZeroEnv } from './env';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
+import { aiRouter } from './routes/ai';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
@@ -702,6 +703,7 @@ const api = new Hono<HonoContext>()
     c.set('sessionUser', undefined);
     c.set('auth', undefined as any);
   })
+  .route('/ai', aiRouter)
   .route('/autumn', autumnApi)
   .route('/public', publicRouter)
   .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {

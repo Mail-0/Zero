@@ -25,4 +25,4 @@ jobs:
         run: pnpm install
 
       - name: Lint JS
-        run: pnpm dlx oxlint@latest
+        run: pnpm dlx oxlint@latest --deny-warnings

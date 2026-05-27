@@ -271,6 +271,7 @@ export const ShortcutsEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>• C to start a new email</Text>
             <Text style={listItem}>• R to reply</Text>
             <Text style={listItem}>• E to archive a thread</Text>
+            <Text style={listItem}>• V to open the voice assistant</Text>
             <Text style={listItem}>• Cmd + K to launch the command palette</Text>
             <Text style={listItem}>• G + I to go to your inbox</Text>
             <Text style={listItem}>• Cmd + Z to undo the last thing you did (life saver)</Text>

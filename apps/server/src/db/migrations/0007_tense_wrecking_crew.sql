@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_session" DROP COLUMN "connection_id";

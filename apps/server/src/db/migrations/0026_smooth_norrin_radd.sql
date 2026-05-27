@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_connection" ALTER COLUMN "access_token" DROP NOT NULL;

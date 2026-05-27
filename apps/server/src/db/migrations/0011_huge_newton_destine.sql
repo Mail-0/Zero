@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_user" ADD COLUMN "default_connection_id" text;

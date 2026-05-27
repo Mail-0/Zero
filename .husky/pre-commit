@@ -1,1 +1,1 @@
-pnpm dlx oxlint@1.9.0
+pnpm dlx oxlint@1.9.0 --deny-warnings
