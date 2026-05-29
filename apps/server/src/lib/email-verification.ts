@@ -149,6 +149,7 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
             }
           }
         } catch (e) {
+          e;
           // Include domain lookup failed
         }
       }
@@ -162,6 +163,7 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
     
     return false;
   } catch (error) {
+    error;
     return false;
   }
 }
@@ -217,6 +219,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     return verifier.verify(pemKey, signature, 'base64');
     
   } catch (error) {
+    error;
     return false;
   }
 }
@@ -236,6 +239,7 @@ async function validateDMARC(domain: string): Promise<boolean> {
     return policy === 'quarantine' || policy === 'reject';
     
   } catch (error) {
+    error;
     return false;
   }
 }
@@ -433,6 +437,7 @@ async function getBIMILogo(domain: string): Promise<string | undefined> {
     return undefined;
     
   } catch (error) {
+    error;
     return undefined;
   }
 }
@@ -455,15 +460,19 @@ export async function verify(rawEmail: string): Promise<{isVerified: boolean; lo
     // Run validations in parallel
     const [spfValid, dkimValid, dmarcValid, bimiValid] = await Promise.all([
       senderIP ? validateSPF(domain, senderIP).catch(error => {
+        error;
         return false;
       }) : Promise.resolve(false),
       validateDKIM(rawEmail).catch(error => {
+        error;
         return false;
       }),
       validateDMARC(domain).catch(error => {
+        error;
         return false;
       }),
       validateBIMI(domain).catch(error => {
+        error;
         return false;
       }),
     ]);
