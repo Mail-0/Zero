@@ -160,9 +160,9 @@
       ],
       "vars": {
         "NODE_ENV": "local",
-        "COOKIE_DOMAIN": "localhost",
-        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
-        "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+        "COOKIE_DOMAIN": "waterfall-doorman.xyz",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.waterfall-doorman.xyz",
+        "VITE_PUBLIC_APP_URL": "https://mail.waterfall-doorman.xyz",
         "JWT_SECRET": "secret",
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
