@@ -1,8 +1,10 @@
 import { type RouteConfig, index, layout, prefix, route } from '@react-router/dev/routes';
 
 export default [
-  // index('page.tsx'),
   // route('/home', 'home/page.tsx'),
+
+  index('(auth)/login/page.tsx'),
+  // route('/home', '(auth)/login/page.tsx'),
 
   route('/api/mailto-handler', 'mailto-handler.ts'),
 
@@ -14,8 +16,6 @@ export default [
     route('/contributors', '(full-width)/contributors.tsx'),
     route('/hr', '(full-width)/hr.tsx'),
   ]),
-
-  route('/login', '(auth)/login/page.tsx'),
 
   // Enable this when we have a zero signup page
   // route('/zero/signup', '(auth)/zero/signup/page.tsx'),
