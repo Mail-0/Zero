@@ -281,6 +281,13 @@
       "when": 1779889947648,
       "tag": "0038_tranquil_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1780227890901,
+      "tag": "0039_fearless_alex_power",
+      "breakpoints": true
     }
   ]
 }

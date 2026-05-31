@@ -31,6 +31,16 @@ const senderSchema = z.object({
   email: z.string(),
 });
 
+const disposeRpc = (target: unknown) => {
+  const disposable = target as {
+    [Symbol.dispose]?: () => void;
+    dispose?: () => void;
+  };
+
+  disposable[Symbol.dispose]?.();
+  disposable.dispose?.();
+};
+
 // const getFolderLabelId = (folder: string) => {
 //   // Handle special cases first
 //   if (folder === 'bin') return 'TRASH';
@@ -851,7 +861,13 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const { stub: agent } = await getZeroAgent(activeConnection.id);
-      return agent.getRawEmail(input.id);
+      try {
+        return await agent.getRawEmail(input.id);
+      } finally {
+        disposeRpc(agent);
+      }
+    
+      //return agent.getRawEmail(input.id);
     }),
   verifyEmail: activeDriverProcedure
     .input(
@@ -860,20 +876,24 @@ export const mailRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      try {
         const { activeConnection } = ctx;
         const { stub: agent } = await getZeroAgent(activeConnection.id);
+	      
+	try {
+      	  console.log(`[VERIFY_EMAIL] Getting raw email for message ID: ${input.id}`);
+      	  const rawEmail = await agent.getRawEmail(input.id);
 
-        console.log(`[VERIFY_EMAIL] Getting raw email for message ID: ${input.id}`);
-        const rawEmail = await agent.getRawEmail(input.id);
-
-        const { verify } = await import('../../lib/email-verification');
-        const result = await verify(rawEmail);
-        console.log(`[VERIFY_EMAIL] Verification result for message ID ${input.id}:`, result);
-        return result;
-      } catch (error) {
-        console.error('Email verification error:', error);
-        return { isVerified: false };
-      }
+      	  const { verify } = await import('../../lib/email-verification');
+      	  const result = await verify(rawEmail);
+      	  console.log(`[VERIFY_EMAIL] Verification result for message ID ${input.id}:`, result);
+      	  return result;
+    	} catch (error) {
+      	  console.error('Email verification error:', error);
+      	  return { isVerified: false };
+    	} finally {
+      	  disposeRpc(agent);
+    	}
+  	
+     
     }),
 });
