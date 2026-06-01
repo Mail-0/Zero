@@ -36,7 +36,23 @@ export const brainRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { threadId } = input;
-      const response = await env.VECTORIZE.getByIds([threadId]);
+      //doorman
+      if (!env.VECTORIZE?.getByIds) {
+        console.warn('[BRAIN] VECTORIZE binding unavailable, skipping summary lookup');
+        return null;
+      }
+
+      let response;
+      try {
+        response = await env.VECTORIZE.getByIds([threadId]);
+      } catch (error) {
+        console.warn('[BRAIN] Failed to load summary from VECTORIZE', {
+        threadId,
+        error,
+        });
+        return null;
+      }
+      //
       if (response.length && response?.[0]?.metadata?.['summary']) {
         const result = response[0].metadata as { summary: string; connection: string };
         if (result.connection !== ctx.activeConnection.id) return null;

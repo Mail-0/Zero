@@ -1,4 +1,8 @@
 import {
+  //doorman
+  pgTable,
+  doublePrecision,
+  //original
   pgTableCreator,
   text,
   timestamp,
@@ -320,5 +324,390 @@ export const emailTemplate = createTable(
   (t) => [
     index('idx_mail0_email_template_user_id').on(t.userId),
     unique('mail0_email_template_user_id_name_unique').on(t.userId, t.name),
+  ],
+);
+
+//doorman
+export const userProfile = pgTable(
+  'user_profile',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    name: text('name').notNull().default(''),
+
+    userType: text('user_type').notNull().default(''),
+
+    occupation: text('occupation').notNull().default(''),
+
+    affiliation: jsonb('affiliation').$type<string[]>().notNull().default([]),
+
+    interest: jsonb('interest').$type<string[]>().notNull().default([]),
+
+    importantContacts: jsonb('important_contacts')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+
+    categories: jsonb('categories').$type<string[]>().notNull().default([]),
+
+    actions: jsonb('actions').$type<string[]>().notNull().default([]),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('user_profile_user_id_idx').on(t.userId),
+  ],
+);
+
+export const category = pgTable(
+  'category',
+  {
+    categoryId: text('category_id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    categoryName: text('category_name').notNull(),
+
+    promptHint: text('prompt_hint').notNull().default(''),
+
+    enabled: boolean('enabled').notNull().default(true),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('category_user_id_idx').on(t.userId),
+    index('category_enabled_idx').on(t.enabled),
+  ],
+);
+
+export const actionItem = pgTable(
+  'action_item',
+  {
+    actionItemId: text('action_item_id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    name: text('name').notNull(),
+
+    enabled: boolean('enabled').notNull().default(true),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('action_item_user_id_idx').on(t.userId),
+    index('action_item_enabled_idx').on(t.enabled),
+  ],
+);
+
+export const mailbox = pgTable(
+  'mailbox',
+  {
+    mailboxId: text('mailbox_id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    mailboxName: text('mailbox_name').notNull(),
+  },
+  (t) => [
+    index('mailbox_user_id_idx').on(t.userId),
+  ],
+);
+
+export const email = pgTable(
+  'email',
+  {
+    emailId: text('email_id').primaryKey(),
+
+    date: timestamp('date'),
+
+    from: text('from'),
+
+    sender: text('sender'),
+
+    receiver: text('receiver'),
+
+    replyTo: text('reply_to'),
+
+    to: text('to'),
+
+    cc: text('cc'),
+
+    bcc: text('bcc'),
+
+    subject: text('subject'),
+
+    body: text('body'),
+
+    messageId: text('message_id'),
+
+    inReplyTo: text('in_reply_to'),
+
+    mailboxId: text('mailbox_id')
+      .notNull()
+      .references(() => mailbox.mailboxId, { onDelete: 'cascade' }),
+
+    categoryId: text('category_id').references(() => category.categoryId, {
+      onDelete: 'set null',
+    }),
+
+    priorityScore: doublePrecision('priority_score'),
+
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+  },
+  (t) => [
+    index('email_mailbox_id_idx').on(t.mailboxId),
+    index('email_message_id_idx').on(t.messageId),
+    index('email_category_id_idx').on(t.categoryId),
+  ],
+);
+
+export const mimeContent = pgTable(
+  'mime_content',
+  {
+    id: text('id').primaryKey(),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    contentType: text('content_type'),
+
+    charset: text('charset'),
+
+    transferEncoding: text('transfer_encoding'),
+
+    disposition: text('disposition'),
+
+    filename: text('filename'),
+
+    contentId: text('content_id'),
+
+    rawPayload: text('raw_payload'),
+
+    decodedText: text('decoded_text'),
+  },
+  (t) => [
+    index('mime_content_email_id_idx').on(t.emailId),
+    index('mime_content_content_id_idx').on(t.contentId),
+    index('mime_content_filename_idx').on(t.filename),
+  ],
+);
+
+export const analysisResult = pgTable(
+  'analysis_result',
+  {
+    id: text('id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    categoryId: text('category_id').references(() => category.categoryId, {
+      onDelete: 'set null',
+    }),
+
+    category: text('category'),
+
+    priorityScore: doublePrecision('priority_score'),
+
+    suggestedActions: text('suggested_actions'),
+
+    reason: text('reason'),
+
+    source: text('source').notNull().default('llm'),
+
+    rawResult: jsonb('raw_result').$type<Record<string, unknown>>(),
+
+    hallucinationChecked: boolean('hallucination_checked')
+      .notNull()
+      .default(false),
+
+    analyzedAt: timestamp('analyzed_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('analysis_result_user_id_idx').on(t.userId),
+    index('analysis_result_email_id_idx').on(t.emailId),
+    index('analysis_result_category_id_idx').on(t.categoryId),
+    index('analysis_result_source_idx').on(t.source),
+  ],
+);
+
+export const feedbackData = pgTable(
+  'feedback_data',
+  {
+    id: text('id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    analysisId: text('analysis_id').references(() => analysisResult.id, {
+      onDelete: 'cascade',
+    }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    targetType: text('target_type').notNull(),
+
+    rating: text('rating'),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('feedback_data_user_id_idx').on(t.userId),
+    index('feedback_data_analysis_id_idx').on(t.analysisId),
+    index('feedback_data_email_id_idx').on(t.emailId),
+    index('feedback_data_target_type_idx').on(t.targetType),
+  ],
+);
+
+export const promptContext = pgTable(
+  'prompt_context',
+  {
+    promptId: text('prompt_id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    promptData: text('prompt_data').notNull(),
+
+    isActive: boolean('is_active').notNull().default(true),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('prompt_context_user_id_idx').on(t.userId),
+    index('prompt_context_active_idx').on(t.isActive),
+  ],
+);
+
+export const priorityScore = pgTable(
+  'priority_score',
+  {
+    id: text('id').primaryKey(),
+
+    analysisId: text('analysis_id')
+      .notNull()
+      .references(() => analysisResult.id, { onDelete: 'cascade' }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    score: doublePrecision('score').notNull(),
+  },
+  (t) => [
+    index('priority_score_analysis_id_idx').on(t.analysisId),
+    index('priority_score_email_id_idx').on(t.emailId),
+  ],
+);
+
+export const actionSuggestion = pgTable(
+  'action_suggestion',
+  {
+    id: text('id').primaryKey(),
+
+    analysisId: text('analysis_id')
+      .notNull()
+      .references(() => analysisResult.id, { onDelete: 'cascade' }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    actionItemId: text('action_item_id').references(() => actionItem.actionItemId, {
+      onDelete: 'set null',
+    }),
+
+    actionLabel: text('action_label').notNull(),
+
+    reason: text('reason'),
+  },
+  (t) => [
+    index('action_suggestion_analysis_id_idx').on(t.analysisId),
+    index('action_suggestion_email_id_idx').on(t.emailId),
+    index('action_suggestion_action_item_id_idx').on(t.actionItemId),
+  ],
+);
+
+export const correctionRecord = pgTable(
+  'correction_record',
+  {
+    correctionId: text('correction_id').primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    correctedCategoryId: text('corrected_category_id').references(
+      () => category.categoryId,
+      { onDelete: 'set null' },
+    ),
+
+    correctedCategory: text('corrected_category').notNull(),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('correction_record_user_id_idx').on(t.userId),
+    index('correction_record_email_id_idx').on(t.emailId),
+    index('correction_record_corrected_category_id_idx').on(t.correctedCategoryId),
+  ],
+);
+
+export const hallucinationMitigationLog = pgTable(
+  'hallucination_mitigation_log',
+  {
+    taskId: text('task_id').primaryKey(),
+
+    analysisId: text('analysis_id').references(() => analysisResult.id, {
+      onDelete: 'cascade',
+    }),
+
+    emailId: text('email_id')
+      .notNull()
+      .references(() => email.emailId, { onDelete: 'cascade' }),
+
+    rawOutput: jsonb('raw_output').$type<Record<string, unknown>>(),
+
+    status: text('status').notNull(),
+
+    correctedOutput: jsonb('corrected_output').$type<Record<string, unknown>>(),
+
+    reprocessCount: integer('reprocess_count').notNull().default(0),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('hallucination_mitigation_log_analysis_id_idx').on(t.analysisId),
+    index('hallucination_mitigation_log_email_id_idx').on(t.emailId),
+    index('hallucination_mitigation_log_status_idx').on(t.status),
   ],
 );

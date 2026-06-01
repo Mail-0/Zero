@@ -16,6 +16,24 @@ const mbToBytes = (mb: number) => mb * 1024 * 1024;
 // 8GB
 const MAX_SHARD_SIZE = mbToBytes(8192);
 
+//doorman
+export const disposeRpcStub = (stub: unknown) => {
+  const disposable = stub as { dispose?: () => void; [key: symbol]: unknown } | null | undefined;
+  const disposeSymbol = (Symbol as unknown as { dispose?: symbol }).dispose;
+  const dispose =
+    disposeSymbol && typeof disposable?.[disposeSymbol] === 'function'
+      ? (disposable[disposeSymbol] as () => void)
+      : disposable?.dispose;
+
+  if (typeof dispose !== 'function') return;
+
+  try {
+    dispose.call(disposable);
+  } catch (error) {
+    console.warn('[RPC] Failed to dispose stub', error);
+  }
+};
+
 export const getZeroDB = async (userId: string) => {
   const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
   const rpcTarget = await stub.setMetaData(userId);
@@ -499,8 +517,9 @@ const getCounts = async (connectionId: string): Promise<CountResult[]> => {
  * @returns
  */
 export const sendDoState = async (connectionId: string) => {
+  let agent: Awaited<ReturnType<typeof getZeroSocketAgent>> | undefined;
   try {
-    const agent = await getZeroSocketAgent(connectionId);
+    agent = await getZeroSocketAgent(connectionId);
 
     const cached = await agent.getCachedDoState();
     if (cached) {
@@ -513,6 +532,7 @@ export const sendDoState = async (connectionId: string) => {
         counts: cached.counts,
         shards: cached.shards,
       });
+      return;
     }
 
     console.log(`[sendDoState] Cache miss, collecting fresh data for connection ${connectionId}`);
@@ -525,7 +545,8 @@ export const sendDoState = async (connectionId: string) => {
 
     await agent.setCachedDoState(size, counts, shards.length);
 
-    return agent.broadcastChatMessage({
+    //doorman
+    await agent.broadcastChatMessage({
       type: OutgoingMessageType.Do_State,
       isSyncing: false,
       syncingFolders: ['inbox'],
@@ -535,6 +556,8 @@ export const sendDoState = async (connectionId: string) => {
     });
   } catch (error) {
     console.error(`[sendDoState] Failed to send do state for connection ${connectionId}:`, error);
+  } finally {
+    disposeRpcStub(agent);
   }
 };
 

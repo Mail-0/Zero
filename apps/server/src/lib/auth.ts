@@ -356,16 +356,13 @@ const createAuthConfig = () => {
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
     trustedOrigins: [
+      env.VITE_PUBLIC_APP_URL,
+      env.VITE_PUBLIC_BACKEND_URL,
       'https://app.0.email',
       'https://sapi.0.email',
       'https://staging.0.email',
       'https://0.email',
       'http://localhost:3000',
-
-      env.VITE_PUBLIC_APP_URL,
-      `${env.VITE_PUBLIC_APP_URL}/mail`,
-      `${env.VITE_PUBLIC_APP_URL}/**`,
-      env.VITE_PUBLIC_BACKEND_URL,
     ],
     session: {
       cookieCache: {
