@@ -18,7 +18,7 @@ export default [
   ]),
 
   // Enable this when we have a zero signup page
-  // route('/zero/signup', '(auth)/zero/signup/page.tsx'),
+  route('/zero/signup', '(auth)/zero/signup/page.tsx'),
   // route('/zero/login', '(auth)/zero/login/page.tsx'),
 
   layout('(routes)/layout.tsx', [
