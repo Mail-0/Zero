@@ -259,8 +259,8 @@ export const createAuth = () => {
       },
     },
     emailAndPassword: {
-      enabled: false,
-      requireEmailVerification: true,
+      enabled: true,
+      requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
         await resend().emails.send({
           from: '0.email <onboarding@0.email>',
