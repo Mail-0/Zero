@@ -259,7 +259,7 @@ export const createAuth = () => {
       },
     },
     emailAndPassword: {
-      enabled: true,
+      enabled: false,
       requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
         await resend().emails.send({

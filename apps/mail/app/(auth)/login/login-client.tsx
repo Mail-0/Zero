@@ -114,7 +114,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
       toast.promise(
         signIn.social({
           provider: provider.id as any,
-          callbackURL: `${window.location.origin}/mail`,
+          callbackURL: `${window.location.origin}/auth/callback`,
         }),
         {
           error: 'Login redirect failed',
