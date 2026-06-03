@@ -22,6 +22,30 @@ const threadSelect = {
   latestSubject: threads.latestSubject,
 } as const;
 
+function classifyThread(thread: InsertThread): string[] {
+  const text = `${thread.latestSubject ?? ''} ${thread.latestSender ?? ''}`.toLowerCase();
+
+  const categories: string[] = [];
+
+  if (/seminar|workshop|forum|webinar|startup/.test(text)) {
+    categories.push('Seminar Notification');
+  }
+
+  if (/research|journal|conference|paper|manuscript|acm|ieee/.test(text)) {
+    categories.push('Research Subscription');
+  }
+
+  if (/deadline|required|submit|register|action|urgent/.test(text)) {
+    categories.push('Action Required');
+  }
+
+  if (/graduation|thesis|defense|졸업|학위논문/.test(text)) {
+    categories.push('Graduation');
+  }
+
+  return categories;
+}
+
 async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {
   if (labelIds.length === 0) return;
 
@@ -45,6 +69,8 @@ async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {
 }
 
 export async function create(db: DB, thread: InsertThread, labelIds?: string[]): Promise<Thread> {
+  const autoCategoryIds = classifyThread(thread);
+  const finalLabelIds = Array.from(new Set([...(labelIds ?? []), ...autoCategoryIds]));
   return await db.transaction(async (tx) => {
     // Create the thread first
     const [res] = await tx
@@ -56,12 +82,15 @@ export async function create(db: DB, thread: InsertThread, labelIds?: string[]):
       })
       .returning();
 
-    if (labelIds && labelIds.length > 0) {
+    // if (labelIds && labelIds.length > 0) {
+    if (finalLabelIds.length > 0) {
       // Ensure all labels exist (create missing ones)
-      await createMissingLabels(tx, labelIds);
+      // await createMissingLabels(tx, labelIds);
+      await createMissingLabels(tx, finalLabelIds);
 
       // Create thread-label relationships
-      const threadLabelInserts: InsertThreadLabel[] = labelIds.map((labelId) => ({
+      // const threadLabelInserts: InsertThreadLabel[] = labelIds.map((labelId) => ({
+      const threadLabelInserts: InsertThreadLabel[] = finalLabelIds.map((labelId) => ({
         threadId: thread.id,
         labelId,
       }));
