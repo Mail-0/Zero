@@ -23,25 +23,28 @@ const threadSelect = {
 } as const;
 
 function classifyThread(thread: InsertThread): string[] {
-  const text = `${thread.latestSubject ?? ''} ${thread.latestSender ?? ''}`.toLowerCase();
+  const text =
+    `${thread.latestSubject ?? ''} ${thread.latestSender ?? ''}`.toLowerCase();
 
   const categories: string[] = [];
 
-  if (/seminar|workshop|forum|webinar|startup/.test(text)) {
-    categories.push('Seminar Notification');
-  }
+  if (/linkedin|job|career|recruit|internship/.test(text))
+    categories.push('Career');
 
-  if (/research|journal|conference|paper|manuscript|acm|ieee/.test(text)) {
-    categories.push('Research Subscription');
-  }
+  if (/kaist|seminar|workshop|forum|lecture|course|education/.test(text))
+    categories.push('Education');
 
-  if (/deadline|required|submit|register|action|urgent/.test(text)) {
+  if (/github|aws|azure|docker|software|developer|programming/.test(text))
+    categories.push('Software');
+
+  if (/football|soccer|nba|sport|fifa|premier league/.test(text))
+    categories.push('Sport');
+
+  if (/deadline|required|submit|register|urgent|action/.test(text))
     categories.push('Action Required');
-  }
 
-  if (/graduation|thesis|defense|졸업|학위논문/.test(text)) {
-    categories.push('Graduation');
-  }
+  if (/facebook|instagram|twitter|social|friend/.test(text))
+    categories.push('Social');
 
   return categories;
 }
