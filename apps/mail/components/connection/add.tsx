@@ -27,7 +27,11 @@ export const AddConnectionDialog = ({
   className?: string;
   onOpenChange?: (open: boolean) => void;
 }) => {
-  const { connections, attach } = useBilling();
+  // const { connections, attach } = useBilling();
+  const connections = [];
+  const isPro = true;
+  const isLoading = false;
+  const openBillingPortal = () => {};
 
   const canCreateConnection = useMemo(() => {
     if (!connections?.remaining && !connections?.unlimited) return false;

@@ -99,7 +99,10 @@ export function NavUser() {
     trpc.connections.setDefault.mutationOptions(),
   );
   const { mutateAsync: handleForceSync } = useMutation(trpc.mail.forceSync.mutationOptions());
-  const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
+  // const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
+  const openBillingPortal = () => {};
+  const billingCustomer = null;
+  const isPro = true;
   const pathname = useLocation().pathname;
   const queryClient = useQueryClient();
   const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
