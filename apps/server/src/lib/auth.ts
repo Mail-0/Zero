@@ -25,6 +25,7 @@ import { createDb } from '../db';
 import { Effect } from 'effect';
 import { env } from '../env';
 import { Dub } from 'dub';
+import { forceReSync } from './server-utils';
 
 const scheduleCampaign = (userInfo: { address: string; name: string }) =>
   Effect.gen(function* () {
@@ -142,6 +143,12 @@ const connectionHandlerHook = async (account: Account) => {
     userInfo.address,
     updatingInfo,
   );
+
+  if (result?.id) {
+    console.log('[auth] Starting forceReSync for connection:', result.id);
+    await forceReSync(result.id);
+    console.log('[auth] Finished forceReSync');
+  }
 
   if (env.NODE_ENV === 'production') {
     await Effect.runPromise(
