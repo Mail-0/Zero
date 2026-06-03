@@ -29,22 +29,22 @@ function classifyThread(thread: InsertThread): string[] {
   const categories: string[] = [];
 
   if (/linkedin|job|career|recruit|internship/.test(text))
-    categories.push('Career');
+    categories.push('auto_category_career');
 
   if (/kaist|seminar|workshop|forum|lecture|course|education/.test(text))
-    categories.push('Education');
+    categories.push('auto_category_education');
 
   if (/github|aws|azure|docker|software|developer|programming/.test(text))
-    categories.push('Software');
+    categories.push('auto_category_software');
 
   if (/football|soccer|nba|sport|fifa|premier league/.test(text))
-    categories.push('Sport');
+    categories.push('auto_category_sport');
 
   if (/deadline|required|submit|register|urgent|action/.test(text))
-    categories.push('Action Required');
+    categories.push('auto_category_action_required');
 
   if (/facebook|instagram|twitter|social|friend/.test(text))
-    categories.push('Social');
+    categories.push('auto_category_social');
 
   return categories;
 }
