@@ -28,22 +28,22 @@ function classifyThread(thread: InsertThread): string[] {
 
   const categories: string[] = [];
 
-  if (/linkedin|job|career|recruit|internship/.test(text))
+  if (/linkedin|job|career|recruit|internship|hiring|application|resume/.test(text))
     categories.push('auto_category_career');
-
-  if (/kaist|seminar|workshop|forum|lecture|course|education/.test(text))
+  
+  if (/kaist|seminar|workshop|forum|lecture|course|education|university|school|class|thesis/.test(text))
     categories.push('auto_category_education');
-
-  if (/github|aws|azure|docker|software|developer|programming/.test(text))
+  
+  if (/github|aws|azure|docker|software|developer|programming|code|api|cloud|vercel|figma|canva/.test(text))
     categories.push('auto_category_software');
-
-  if (/football|soccer|nba|sport|fifa|premier league/.test(text))
+  
+  if (/football|soccer|nba|sport|fifa|premier league|match|game|team/.test(text))
     categories.push('auto_category_sport');
-
-  if (/deadline|required|submit|register|urgent|action/.test(text))
+  
+  if (/deadline|required|submit|register|urgent|action|verify|confirm|payment|receipt|invoice/.test(text))
     categories.push('auto_category_action_required');
-
-  if (/facebook|instagram|twitter|social|friend/.test(text))
+  
+  if (/facebook|instagram|twitter|x\.com|social|friend|linkedin/.test(text))
     categories.push('auto_category_social');
 
   return categories;
