@@ -12,16 +12,14 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-//import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
-import { type Connection, type WSMessage } from 'agents';
+import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-//import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
+import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
 import type { CreateDraftData } from '../lib/schemas';
-//import { FOLDERS, parseHeaders } from '../lib/utils';
-import { FOLDERS } from '../lib/utils';
+import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
@@ -33,24 +31,24 @@ import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
-//import { groq } from '@ai-sdk/groq';
+import { groq } from '@ai-sdk/groq';
 import { createDb } from '../db';
 import { z } from 'zod';
 
 const decoder = new TextDecoder();
 
-// interface ThreadRow {
-//   id: string;
-//   thread_id: string;
-//   provider_id: string;
-//   messages: string;
-//   latest_sender: string;
-//   latest_received_on: string;
-//   latest_subject: string;
-//   latest_label_ids: string;
-//   created_at: string;
-//   updated_at: string;
-// }
+interface ThreadRow {
+  id: string;
+  thread_id: string;
+  provider_id: string;
+  messages: string;
+  latest_sender: string;
+  latest_received_on: string;
+  latest_subject: string;
+  latest_label_ids: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -347,7 +345,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       abortSignal: AbortSignal | undefined;
     },
   ) {
-    options;
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         const connectionId = this.name;
@@ -447,7 +444,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       try {
         data = JSON.parse(message) as IncomingMessage;
       } catch (error) {
-        error;
         // silently ignore invalid messages for now
         // TODO: log errors with log levels
         return;
@@ -924,7 +920,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       let pageToken: string | null = null;
       let hasMore = true;
       let pageCount = 0;
-      pageCount;
+
       while (hasMore) {
         pageCount++;
 
@@ -965,7 +961,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     cursor?: string;
   }) {
     const { labelIds = [], folder, q, max = 50, cursor } = params;
-    q;
+
     try {
       // Build WHERE conditions
       const whereConditions: string[] = [];
@@ -1516,7 +1512,6 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
-          e;
           return {
             content: [
               {
@@ -1549,7 +1544,6 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
-          e;
           return {
             content: [
               {
@@ -1582,7 +1576,6 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
-          e;
           return {
             content: [
               {
