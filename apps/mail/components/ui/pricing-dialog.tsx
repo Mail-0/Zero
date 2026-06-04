@@ -15,7 +15,7 @@ import { Badge } from './badge';
 import { toast } from 'sonner';
 
 export function PricingDialog() {
-  const { attach } = useBilling();
+  // const { attach } = useBilling();
   const [isLoading, setIsLoading] = useState(false);
   const [isAnnual, setIsAnnual] = useState(false);
   const [open, setOpen] = useQueryState('pricingDialog');

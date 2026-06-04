@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { signUp } from '@/lib/auth-client';
+import { useNavigate } from 'react-router';
 
 const formSchema = z.object({
   name: z.string().min(1, { message: 'Name must be at least 1 character' }),
@@ -13,6 +15,7 @@ const formSchema = z.object({
 });
 
 export default function SignupZero() {
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -21,16 +24,24 @@ export default function SignupZero() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Append the @0.email suffix to the username
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const fullEmail = `${values.email}@0.email`;
-
-    // Use the correct sonner toast API
-    toast.success(`Trying to signup with ${fullEmail}`, {
-      description: 'Signup attempt',
+  
+    const result = await signUp.email({
+      name: values.name,
+      email: fullEmail,
+      password: values.password,
+      callbackURL: `${window.location.origin}/mail`,
     });
-
-    // Here you would typically handle authentication with the full email
+  
+    if (result.error) {
+      toast.error(result.error.message || 'Signup failed');
+      return;
+    }
+  
+    toast.success('Account created successfully');
+  
+    navigate('/mail');
   }
 
   return (

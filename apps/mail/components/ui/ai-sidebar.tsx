@@ -46,7 +46,7 @@ function ChatHeader({
   onNewChat,
 }: ChatHeaderProps) {
   const [, setPricingDialog] = useQueryState('pricingDialog');
-  const { chatMessages } = useBilling();
+  // const { chatMessages } = useBilling();
   return (
     <div className="relative flex items-center justify-between px-2.5 pb-[10px] pt-[13px]">
       <TooltipProvider delayDuration={0}>
@@ -337,7 +337,10 @@ export function useAISidebar() {
 function AISidebar({ className }: AISidebarProps) {
   const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
     useAISidebar();
-  const { isPro, track, refetch: refetchBilling } = useBilling();
+  // const { isPro, track, refetch: refetchBilling } = useBilling();
+  const isPro = true;
+  const isLoading = false;
+  const openBillingPortal = () => {};
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const [threadId] = useQueryState('threadId');

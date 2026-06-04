@@ -3,20 +3,24 @@ import type { TRPCCallLog } from '../types/logging';
 import type { ZeroEnv } from '../env';
 
 export class DatadogService {
-    private apiInstance: v2.LogsApi;
+    private apiInstance?: v2.LogsApi;
     private apiKey: string;
     private appKey: string;
     private site: string;
 
     constructor(env?: ZeroEnv) {
         // Runtime validation for required Datadog credentials
-        if (!env?.DD_API_KEY || env.DD_API_KEY.trim() === '') {
-            throw new Error('DD_API_KEY environment variable is required and cannot be empty for Datadog service');
-        }
+        // if (!env?.DD_API_KEY || env.DD_API_KEY.trim() === '') {
+        //     throw new Error('DD_API_KEY environment variable is required and cannot be empty for Datadog service');
+        // }
 
-        if (!env?.DD_APP_KEY || env.DD_APP_KEY.trim() === '') {
-            throw new Error('DD_APP_KEY environment variable is required and cannot be empty for Datadog service');
-        }
+        // if (!env?.DD_APP_KEY || env.DD_APP_KEY.trim() === '') {
+        //     throw new Error('DD_APP_KEY environment variable is required and cannot be empty for Datadog service');
+        // }
+        if (!env?.DD_API_KEY) {
+            console.warn('[Datadog] DD_API_KEY missing, skipping Datadog logging');
+            return;
+          }
 
         const configuration = client.createConfiguration({
             authMethods: {
@@ -52,6 +56,11 @@ export class DatadogService {
 
     async logSingleCall(sessionId: string, userId: string, log: TRPCCallLog): Promise<void> {
         // Skip logging-related procedures to avoid recursive logging
+        if (!this.apiInstance) {
+            console.warn('[Datadog] apiInstance missing, skipping log');
+            return;
+          }
+
         if (this.isLoggingProcedure(log.procedure)) {
             return;
         }
@@ -196,7 +205,8 @@ export class DatadogService {
                     trace: log.trace,
                 }
             };
-
+            
+            if (!VARIABLE_NAME) return;
             await this.apiInstance.submitLog({ body: [logEntry] });
 
         } catch (error) {
