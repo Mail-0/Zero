@@ -187,6 +187,12 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
     return { processed: 0, skipped: 0 };
   }
 
+  console.log('[DOORMAN_JOB] LLM enabled', {
+    provider: 'openai',
+    model: env.OPENAI_MODEL || 'gpt-4o-mini',
+    batchSize: opts.batchSize ?? 25,
+  });
+
   const { db, conn } = createDb(env.DATABASE_URL);
   const batchSize = opts.batchSize ?? 25;
   let processed = 0;
@@ -273,6 +279,11 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
       let analysis: NormalizedResult;
 
       try {
+        console.log('[DOORMAN_JOB] LLM analysis start', {
+          emailId: row.emailId,
+          userId: row.userId,
+          model: env.OPENAI_MODEL || 'gpt-4o-mini',
+        });
         const { object } = await generateObject({
           model: openai(env.OPENAI_MODEL || 'gpt-4o-mini'),
           schema: resultSchema,
@@ -308,6 +319,12 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
           'llm',
           object as Record<string, unknown>,
         );
+        console.log('[DOORMAN_JOB] LLM analysis complete', {
+          emailId: row.emailId,
+          userId: row.userId,
+          category: analysis.category,
+          priorityScore: analysis.priorityScore,
+        });
       } catch (error) {
         console.warn('[DOORMAN_JOB] LLM analysis failed. Falling back.', error);
         const fallback = ruleBasedAnalysis(
