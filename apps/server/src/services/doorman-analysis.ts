@@ -351,6 +351,14 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
         analyzedAt: new Date(),
       });
 
+      console.log('[DOORMAN_JOB] Inserted analysis_result', {
+        emailId: row.emailId,
+        userId: row.userId,
+        category: analysis.category,
+        priorityScore: analysis.priorityScore,
+        source: analysis.source,
+      });
+
       processed += 1;
     }
 
