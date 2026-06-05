@@ -20,6 +20,7 @@ import { connection } from '../db/schema';
 import type { ZeroEnv } from '../env';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
+import { handleDoormanReceivedThread } from '../lib/doorman/realtime-receiver';
 
 export interface SyncThreadsParams {
   connectionId: string;
@@ -163,6 +164,17 @@ export class SyncThreadsWorkflow extends WorkflowEntrypoint<ZeroEnv, SyncThreads
 
               pageProcessingResult.processedCount++;
               pageProcessingResult.successCount++;
+
+	      await handleDoormanReceivedThread({
+	   	connectionId,
+	   	userId: foundConnection.userId,
+		providerId: foundConnection.providerId,
+	     	threadId: thread.id,
+  		historyId: thread.historyId,
+  		source: 'manual-sync',
+  		receivedAt: new Date().toISOString(),
+	      });
+
               console.log(`[SyncThreadsWorkflow] Successfully synced thread ${thread.id}`);
             } else {
               console.info(

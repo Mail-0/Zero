@@ -28,6 +28,7 @@ import { initTracing } from './lib/tracing';
 import { EPrompts } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
+import { handleDoormanReceivedThread } from './lib/doorman/realtime-receiver';
 
 // Configure pretty logger to stderr
 export const loggerLayer = Logger.add(Logger.prettyLogger({ stderr: true }));
@@ -383,6 +384,17 @@ export class WorkflowRunner extends DurableObject<ZeroEnv> {
               Effect.tryPromise({
                 try: async () => {
                   const result = await agent.syncThread({ threadId });
+
+		  await handleDoormanReceivedThread({
+  		    connectionId,
+  		    userId: foundConnection.userId,
+		    providerId: foundConnection.providerId,
+  		    threadId,
+		    historyId,
+		    source: 'gmail-watch',
+		    receivedAt: new Date().toISOString(),
+		  });
+
                   console.log(`[ZERO_WORKFLOW] Successfully synced thread ${threadId}`);
                   return { threadId, result };
                 },
