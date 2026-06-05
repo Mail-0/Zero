@@ -1,20 +1,23 @@
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { createDb } from '../db';
 import {
   actionItem,
+  actionSuggestion,
   analysisResult,
   category,
   email,
   mailbox,
+  priorityScore as priorityScoreTable,
   userProfile,
 } from '../db/schema';
 import type { ZeroEnv } from '../env';
 
 type JobOptions = {
   batchSize?: number;
+  emailIds?: string[];
 };
 
 const DEFAULT_CATEGORIES = [
@@ -40,6 +43,8 @@ const DEFAULT_ACTIONS = [
   'ignore',
   'No action needed',
 ];
+
+const getDatabaseUrl = (env: ZeroEnv) => env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
 
 const resultSchema = z.object({
   category: z.string(),
@@ -89,9 +94,11 @@ const normalizeResult = (
 ): NormalizedResult => {
   const categoryRaw = String(result.category ?? 'uncategorized').trim();
   const actionRaw = String(result.action ?? 'No action needed').trim();
+  const categoryByLower = new Map(allowedCategories.map((name) => [name.toLowerCase(), name]));
+  const actionByLower = new Map(allowedActions.map((name) => [name.toLowerCase(), name]));
 
-  const category = allowedCategories.includes(categoryRaw) ? categoryRaw : 'uncategorized';
-  const action = allowedActions.includes(actionRaw) ? actionRaw : 'No action needed';
+  const category = categoryByLower.get(categoryRaw.toLowerCase()) ?? 'uncategorized';
+  const action = actionByLower.get(actionRaw.toLowerCase()) ?? 'No action needed';
 
   const priorityScoreRaw = Number(result.priority_score ?? 0);
   const priorityScore = Number.isFinite(priorityScoreRaw)
@@ -120,37 +127,47 @@ const ruleBasedAnalysis = (
   const categoriesLower = profile.categories.map((c) => c.toLowerCase());
 
   let category = 'uncategorized';
-  let priority = 30;
+  let senderScore = 10;
+  let contentScore = 10;
+  let deadlineScore = 10;
   let action = 'No action needed';
 
   if (importantContacts.has(emailText.sender)) {
-    priority += 35;
+    senderScore = 30;
   }
 
-  if (containsAny(text, ['deadline', 'due', 'urgent', 'asap', 'important'])) {
-    priority += 30;
+  if (containsAny(text, ['deadline', 'due tomorrow', 'urgent', 'asap', 'within 24 hours'])) {
+    deadlineScore = 30;
+    action = 'revise later';
+  } else if (containsAny(text, ['due', 'deadline', 'this week', 'within 3 days'])) {
+    deadlineScore = 20;
     action = 'revise later';
   }
 
   if (containsAny(text, ['exam', 'assignment', 'lecture', 'class', 'grade'])) {
     category = 'academic';
-    priority += 20;
+    contentScore = 40;
   } else if (containsAny(text, ['seminar', 'workshop', 'conference'])) {
     category = 'seminar';
+    contentScore = 20;
     action = 'mark at calendar';
   } else if (containsAny(text, ['event', 'festival', 'orientation'])) {
     category = 'event';
+    contentScore = 20;
     action = 'mark at calendar';
   } else if (containsAny(text, ['survey', 'questionnaire', 'feedback'])) {
     category = 'survey';
+    contentScore = 20;
     action = 'replying';
   } else if (containsAny(text, ['sale', 'discount', 'promotion', 'unsubscribe'])) {
     category = 'advertisement';
-    priority -= 20;
+    contentScore = 10;
     action = 'ignore';
   } else if (containsAny(text, ['spam', 'winner', 'free money'])) {
     category = 'spam';
-    priority = 5;
+    senderScore = 0;
+    contentScore = 5;
+    deadlineScore = 0;
     action = 'ignore';
   }
 
@@ -158,12 +175,14 @@ const ruleBasedAnalysis = (
     if (!interest) continue;
     const lowerInterest = interest.toLowerCase();
     if (text.includes(lowerInterest)) {
-      priority += 10;
+      contentScore = Math.max(contentScore, 20);
       if (categoriesLower.includes(lowerInterest)) {
         category = lowerInterest;
       }
     }
   }
+
+  const priority = senderScore + contentScore + deadlineScore;
 
   return {
     category,
@@ -177,8 +196,10 @@ const containsAny = (text: string, keywords: string[]) =>
   keywords.some((keyword) => text.includes(keyword));
 
 export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {}) => {
-  if (!env.DATABASE_URL) {
-    console.warn('[DOORMAN_JOB] DATABASE_URL not configured. Skipping analysis job.');
+  const databaseUrl = getDatabaseUrl(env);
+
+  if (!databaseUrl) {
+    console.warn('[DOORMAN_JOB] Database connection not configured. Skipping analysis job.');
     return { processed: 0, skipped: 0 };
   }
 
@@ -193,12 +214,17 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
     batchSize: opts.batchSize ?? 25,
   });
 
-  const { db, conn } = createDb(env.DATABASE_URL);
+  const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
+  const { db, conn } = createDb(databaseUrl);
   const batchSize = opts.batchSize ?? 25;
   let processed = 0;
   let skipped = 0;
 
   try {
+    const candidateFilter = opts.emailIds?.length
+      ? and(isNull(analysisResult.id), inArray(email.emailId, opts.emailIds))
+      : isNull(analysisResult.id);
+
     const candidates = await db
       .select({
         emailId: email.emailId,
@@ -214,7 +240,7 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
       .from(email)
       .innerJoin(mailbox, eq(email.mailboxId, mailbox.mailboxId))
       .leftJoin(analysisResult, eq(analysisResult.emailId, email.emailId))
-      .where(isNull(analysisResult.id))
+      .where(candidateFilter)
       .orderBy(desc(email.date))
       .limit(batchSize);
 
@@ -254,10 +280,12 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
 
     for (const row of candidates) {
       const profile = profileByUserId.get(row.userId);
-      if (!profile) {
-        skipped += 1;
-        continue;
-      }
+      const profileForAnalysis = {
+        userType: profile?.userType ?? '',
+        interest: profile?.interest ?? [],
+        affiliation: profile?.affiliation ?? [],
+        importantContacts: profile?.importantContacts ?? [],
+      };
 
       const profileCategories = categoriesByUserId.get(row.userId) ?? [];
       const profileActions = actionsByUserId.get(row.userId) ?? [];
@@ -290,7 +318,9 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
           output: 'object',
           system:
             'Analyze the email and return a JSON object with category, priority_score, action, and reason. ' +
-            'Use only the provided categories and actions. Do not invent facts beyond the email content.',
+            'Use only the provided categories and actions. Do not invent facts beyond the email content. ' +
+            'Priority score must be an integer from 0 to 100 using this rubric: sender importance up to 30, ' +
+            'content importance up to 40, and deadline urgency up to 30.',
           prompt: JSON.stringify({
             email: {
               subject: cleanedEmail.subject,
@@ -300,10 +330,10 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
               metadata: row.metadata ?? {},
             },
             user_profile: {
-              user_type: profile.userType,
-              interests: profile.interest ?? [],
-              affiliations: profile.affiliation ?? [],
-              important_contacts: profile.importantContacts ?? [],
+              user_type: profileForAnalysis.userType,
+              interests: profileForAnalysis.interest,
+              affiliations: profileForAnalysis.affiliation,
+              important_contacts: profileForAnalysis.importantContacts,
             },
             allowed: {
               categories: allowedCategories,
@@ -334,8 +364,8 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
             sender: cleanedEmail.sender,
           },
           {
-            importantContacts: profile.importantContacts ?? [],
-            interests: profile.interest ?? [],
+            importantContacts: profileForAnalysis.importantContacts,
+            interests: profileForAnalysis.interest,
             categories: allowedCategories,
           },
         );
@@ -352,9 +382,25 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
       const categoryMatch = profileCategories.find(
         (c) => c.categoryName.toLowerCase() === analysis.category.toLowerCase(),
       );
+      const actionMatch = profileActions.find(
+        (a) => a.name.toLowerCase() === analysis.action.toLowerCase(),
+      );
+
+      const existingAnalysis = await db
+        .select({ id: analysisResult.id })
+        .from(analysisResult)
+        .where(eq(analysisResult.emailId, row.emailId))
+        .limit(1);
+
+      if (existingAnalysis.length) {
+        skipped += 1;
+        continue;
+      }
+
+      const analysisId = crypto.randomUUID();
 
       await db.insert(analysisResult).values({
-        id: crypto.randomUUID(),
+        id: analysisId,
         userId: row.userId,
         emailId: row.emailId,
         categoryId: categoryMatch?.categoryId ?? null,
@@ -366,6 +412,30 @@ export const runDoormanAnalysisJob = async (env: ZeroEnv, opts: JobOptions = {})
         rawResult: analysis.rawResult ?? {},
         hallucinationChecked: analysis.hallucinationChecked,
         analyzedAt: new Date(),
+      });
+
+      await db
+        .update(email)
+        .set({
+          categoryId: categoryMatch?.categoryId ?? null,
+          priorityScore: analysis.priorityScore,
+        })
+        .where(eq(email.emailId, row.emailId));
+
+      await db.insert(priorityScoreTable).values({
+        id: crypto.randomUUID(),
+        analysisId,
+        emailId: row.emailId,
+        score: analysis.priorityScore,
+      });
+
+      await db.insert(actionSuggestion).values({
+        id: crypto.randomUUID(),
+        analysisId,
+        emailId: row.emailId,
+        actionItemId: actionMatch?.actionItemId ?? null,
+        actionLabel: analysis.action,
+        reason: analysis.reason,
       });
 
       console.log('[DOORMAN_JOB] Inserted analysis_result', {

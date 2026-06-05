@@ -1,4 +1,6 @@
 import type { EProviders, ParsedMessage } from '../../types';
+import { env } from '../../env';
+import { runDoormanAnalysisJob } from '../../services/doorman-analysis';
 import { preprocessEmailHtml } from '../email-processor';
 import { getThread } from '../server-utils';
 import { saveDoormanReceivedEmail } from './save-received-email';
@@ -115,6 +117,24 @@ export async function handleDoormanReceivedThread(event: DoormanReceivedThreadEv
 
   const payload = buildDoormanReceivedEmailPayload(event, thread.result, latest);
   const result = await saveDoormanReceivedEmail(payload);
+
+  try {
+    const analysis = await runDoormanAnalysisJob(env, {
+      emailIds: [result.emailId],
+      batchSize: 1,
+    });
+
+    console.log('[DOORMAN_ANALYSIS_AFTER_SAVE]', {
+      emailId: result.emailId,
+      processed: analysis.processed,
+      skipped: analysis.skipped,
+    });
+  } catch (error) {
+    console.error('[DOORMAN_ANALYSIS_AFTER_SAVE] Failed to analyze received email', {
+      emailId: result.emailId,
+      error,
+    });
+  }
 
   console.log('[DOORMAN_DB_SAVE]', {
     emailId: result.emailId,
