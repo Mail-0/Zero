@@ -191,8 +191,6 @@ export function NavMain({ items }: NavMainProps) {
               tooltip={state === 'collapsed' ? m['common.commandPalette.groups.help']() : undefined}
               className="hover:bg-subtleWhite flex cursor-pointer items-center dark:hover:bg-[#202020]"
             >
-              <OldPhone className="relative mr-2.5 h-2 w-2 fill-[#8F8F8F]" />
-              <p className="relative bottom-0.5 mt-0.5 truncate text-[13px]">Live Support</p>
             </SidebarMenuButton>
             <NavItem
               key={'feedback'}

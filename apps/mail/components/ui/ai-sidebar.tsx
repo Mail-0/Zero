@@ -524,7 +524,7 @@ function AISidebar({ className }: AISidebarProps) {
           >
             <div
               className={cn(
-                'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-[#E7E7E7] shadow-lg dark:border-[#252525]',
+                'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-border shadow-lg dark:border-border',
                 'md:hidden',
                 isPopup && !isFullScreen && 'w-[600px] max-w-[90vw] sm:w-[400px] md:block',
                 isFullScreen && 'block! max-w-none! rounded-none! border-none!',

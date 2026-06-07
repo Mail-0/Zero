@@ -19,7 +19,7 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
+    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-background">
       <Navigation />
       <div className="relative z-10 flex grow flex-col">
         {/* Back Button */}

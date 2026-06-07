@@ -265,7 +265,7 @@ const Thread = memo(
                 </TooltipTrigger>
                 <TooltipContent
                   side={index === 0 ? 'bottom' : 'top'}
-                  className="mb-1 bg-white dark:bg-[#1A1A1A]"
+                  className="mb-1 bg-card"
                 >
                   {displayStarred
                     ? m['common.threadDisplay.unstar']()

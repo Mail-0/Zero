@@ -614,13 +614,13 @@ export function EmailComposer({
   return (
     <div
       className={cn(
-        'flex max-h-[500px] w-full max-w-[750px] flex-col overflow-hidden rounded-2xl bg-[#FAFAFA] shadow-sm dark:bg-[#202020]',
+        'flex max-h-[500px] w-full max-w-[750px] flex-col overflow-hidden rounded-2xl bg-card shadow-sm dark:bg-[#202020]',
         className,
       )}
     >
       <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl">
         {/* To, Cc, Bcc */}
-        <div className="shrink-0 overflow-visible border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
+        <div className="shrink-0 overflow-visible border-b border-border pb-2 dark:border-border">
           <div className="flex justify-between px-3 pt-3">
             <div className="flex w-full items-center gap-2">
               <p className="text-sm font-medium text-[#8C8C8C]">To:</p>
@@ -751,7 +751,7 @@ export function EmailComposer({
         ) : null}
 
         {/* Message Content */}
-        <div className="flex-1 overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+        <div className="flex-1 overflow-y-auto border-t bg-card px-3 py-3 outline-white/5 dark:bg-[#202020]">
           <div
             onClick={() => {
               editor.commands.focus();
@@ -768,7 +768,7 @@ export function EmailComposer({
       </div>
 
       {/* Bottom Actions */}
-      <div className="inline-flex w-full shrink-0 items-end justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+      <div className="inline-flex w-full shrink-0 items-end justify-between self-stretch rounded-b-2xl bg-card px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex flex-col items-start justify-start gap-2">
           {toggleToolbar && <Toolbar editor={editor} />}
           <div className="flex items-center justify-start gap-2">
@@ -820,7 +820,7 @@ export function EmailComposer({
               <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <button
-                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B] cursor-pointer"
+                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-border bg-foreground/5 px-2 py-1 text-sm hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-border cursor-pointer"
                     aria-label={`View ${attachments.length} attached ${pluralize('file', attachments.length)}`}
                   >
                     <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
@@ -833,7 +833,7 @@ export function EmailComposer({
                   sideOffset={6}
                 >
                   <div className="flex flex-col">
-                    <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
+                    <div className="border-b border-border p-3 dark:border-border">
                       <h4 className="text-sm font-semibold text-black dark:text-white/90">
                         Attachments
                       </h4>
@@ -842,7 +842,7 @@ export function EmailComposer({
                       </p>
                     </div>
 
-                    <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
+                    <div className="border-b border-border p-3 dark:border-border">
                       <ImageCompressionSettings
                         quality={imageQuality}
                         onQualityChange={handleQualityChange}
@@ -863,7 +863,7 @@ export function EmailComposer({
                         return (
                           <div
                             key={file.name + index}
-                            className="group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5 hover:bg-black/5 dark:hover:bg-white/10"
+                            className="group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5 hover:bg-black/5 dark:hover:bg-foreground/10"
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[#F0F0F0] dark:bg-[#2C2C2C]">

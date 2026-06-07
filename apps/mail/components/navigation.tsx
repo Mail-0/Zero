@@ -111,10 +111,10 @@ export function Navigation() {
     <>
       {/* Desktop Navigation - Hidden on mobile */}
       <header className="fixed left-[50%] z-50 hidden w-full max-w-4xl translate-x-[-50%] items-center justify-center px-4 pt-6 lg:flex">
-        <nav className="border-input/50 flex w-full max-w-4xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-3 px-6">
+        <nav className="border-border/60 bg-card/90 flex w-full max-w-4xl items-center justify-between gap-2 rounded-xl border backdrop-blur-md p-3 px-6 shadow-sm">
           <div className="flex items-center gap-6">
             <Link to="/" className="relative bottom-1 cursor-pointer">
-              <img src="white-icon.svg" alt="Zero Email" width={22} height={22} />
+              <img src="/black-icon.svg" alt="Doorman" width={22} height={22} />
               <span className="text-muted-foreground absolute -right-[-0.5px] text-[10px]">
                 beta
               </span>
@@ -122,7 +122,7 @@ export function Navigation() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
+                  <NavigationMenuTrigger className="bg-transparent text-foreground cursor-pointer">
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -136,7 +136,7 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white cursor-pointer">
+                  <NavigationMenuTrigger className="bg-transparent text-foreground cursor-pointer">
                     Resources
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -154,12 +154,12 @@ export function Navigation() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white">
+                <NavigationMenuItem className="bg-transparent text-foreground">
                   <Button asChild variant="ghost" className="h-9 bg-transparent cursor-pointer">
                     <a href="/pricing">Pricing</a>
                   </Button>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white cursor-pointer">
+                <NavigationMenuItem className="bg-transparent text-foreground cursor-pointer">
                   <a href="/privacy">
                     <Button variant="ghost" className="ml-1 h-9 bg-transparent">
                       Privacy
@@ -175,21 +175,21 @@ export function Navigation() {
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                'group inline-flex h-8 items-center gap-2 rounded-lg bg-black px-2 text-sm text-white transition-colors hover:bg-black/90',
+                'group inline-flex h-8 items-center gap-2 rounded-lg bg-foreground px-2 text-sm text-background transition-colors hover:bg-foreground/90',
               )}
             >
-              <div className="flex items-center text-white">
-                <GitHub className="mr-1 size-4 fill-white" />
+              <div className="flex items-center text-background">
+                <GitHub className="mr-1 size-4 fill-background" />
                 <span className="ml-1 lg:hidden">Star</span>
                 <span className="ml-1 hidden lg:inline">GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <Star className="relative top-px size-4 fill-gray-400 duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
-                <AnimatedNumber value={stars} className="font-medium text-white" />
+                <Star className="relative top-px size-4 fill-muted-foreground duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <AnimatedNumber value={stars} className="font-medium text-background" />
               </div>
             </a>
             <Button
-              className="h-8 bg-white text-black hover:bg-white hover:text-black cursor-pointer"
+              className="h-8 cursor-pointer"
               onClick={() => {
                 if (session) {
                   navigate('/mail/inbox');
@@ -220,7 +220,7 @@ export function Navigation() {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] sm:w-[400px] dark:bg-[#111111]">
+          <SheetContent side="left" className="bg-background w-[300px] sm:w-[400px]">
             <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
                 <Link to="/" onClick={() => setOpen(false)}>

@@ -1500,7 +1500,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                            <DropdownMenuContent align="end" className="bg-card">
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.preventDefault();

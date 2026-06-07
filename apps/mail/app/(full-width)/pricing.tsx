@@ -8,7 +8,7 @@ import Footer from '@/components/home/footer';
 
 export default function PricingPage() {
   return (
-    <main className="relative flex min-h-screen flex-1 flex-col overflow-x-hidden bg-[#0F0F0F]">
+    <main className="relative flex min-h-screen flex-1 flex-col overflow-x-hidden bg-background">
       <PixelatedBackground
         className="z-1 absolute left-1/2 top-[-40px] h-auto w-screen min-w-[1920px] -translate-x-1/2 object-cover"
         style={{
