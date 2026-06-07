@@ -17,9 +17,15 @@ import {
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useIsFetching, type UseQueryResult } from '@tanstack/react-query';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import type { IGetThreadResponse, ParsedDraft } from '../../../server/src/lib/driver/types';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
-import type { ParsedDraft } from '../../../server/src/lib/driver/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMail, type Config } from '@/components/mail/use-mail';
@@ -37,7 +43,7 @@ import { BimiAvatar } from '../ui/bimi-avatar';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
 import { useDraft } from '@/hooks/use-drafts';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -45,6 +51,69 @@ import { Button } from '../ui/button';
 import { Avatar } from '../ui/avatar';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
+
+export type MailSortOption = 'receivedDate' | 'priorityScore';
+
+const MAIL_SORT_OPTIONS: { value: MailSortOption; label: string }[] = [
+  { value: 'receivedDate', label: 'Sort by Received Date' },
+  { value: 'priorityScore', label: 'Sort by Priority score' },
+];
+
+export function MailSortDropdown() {
+  // TODO_doorman:implement_mail_list_sorting
+  const [sortBy, setSortBy] = useQueryState('sortBy', { defaultValue: 'receivedDate' });
+  const [isOpen, setIsOpen] = useState(false);
+
+  const currentLabel =
+    MAIL_SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? 'Received Date';
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
+          )}
+          aria-label="Sort mail list"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+        >
+          <span className="text-sm font-medium">{currentLabel}</span>
+          <ChevronDown
+            className={cn(
+              'text-muted-foreground h-4 w-4 transition-transform duration-200',
+              isOpen ? 'rotate-180' : 'rotate-0',
+            )}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
+        align="start"
+        role="menu"
+        aria-label="Sort options"
+      >
+        {MAIL_SORT_OPTIONS.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
+            onClick={(event: React.MouseEvent) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void setSortBy(option.value);
+            }}
+            role="menuitemradio"
+            aria-checked={sortBy === option.value}
+          >
+            <span className="text-foreground font-medium">{option.label}</span>
+            {sortBy === option.value && <Check className="text-primary ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 const Thread = memo(
   function Thread({
@@ -731,6 +800,8 @@ export const MailList = memo(
     const [{ refetch, isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
     const trpc = useTRPC();
+    const queryClient = useQueryClient();
+    const [sortBy] = useQueryState('sortBy', { defaultValue: 'receivedDate' });
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
     const itemsRef = useRef(items);
     const parentRef = useRef<HTMLDivElement>(null);
@@ -908,7 +979,23 @@ export const MailList = memo(
       });
     };
 
-    const filteredItems = useMemo(() => items.filter((item) => item.id), [items]);
+    const filteredItems = useMemo(() => {
+      const base = items.filter((item) => item.id);
+      if (sortBy !== 'priorityScore') return base;
+
+      // TODO_doorman:implement_mail_list_sorting
+      return [...base].sort((a, b) => {
+        const getPriorityScore = (threadId: string) => {
+          const data = queryClient.getQueryData(
+            trpc.mail.get.queryKey({ id: threadId }),
+          ) as IGetThreadResponse | undefined;
+          const score = data?.latest?.priorityScore;
+          return typeof score === 'number' && Number.isFinite(score) ? score : -1;
+        };
+
+        return getPriorityScore(b.id) - getPriorityScore(a.id);
+      });
+    }, [items, sortBy, queryClient, trpc]);
 
     const Comp = useMemo(() => (folder === FOLDERS.DRAFT ? Draft : Thread), [folder]);
 

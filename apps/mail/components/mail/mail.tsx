@@ -17,7 +17,7 @@ import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
-import { MailList } from '@/components/mail/mail-list';
+import { MailList, MailSortDropdown } from '@/components/mail/mail-list';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -485,7 +485,10 @@ export function MailLayout() {
                       </Button>
 
                       {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-                        <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+                        <>
+                          <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+                          <MailSortDropdown />
+                        </>
                       )}
                     </>
                   ) : (
