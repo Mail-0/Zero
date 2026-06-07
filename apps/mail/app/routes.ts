@@ -42,7 +42,7 @@ export default [
         route('/appearance', '(routes)/settings/appearance/page.tsx'),
         route('/connections', '(routes)/settings/connections/page.tsx'),
         route('/danger-zone', '(routes)/settings/danger-zone/page.tsx'),
-        route('/general', '(routes)/settings/general/page.tsx'),
+        route('/user-information', '(routes)/settings/user-information/page.tsx'),
         route('/labels', '(routes)/settings/labels/page.tsx'),
         route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),

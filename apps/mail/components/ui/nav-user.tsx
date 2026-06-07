@@ -115,7 +115,7 @@ export function NavUser() {
     const currentPath = category
       ? `${pathname}?category=${encodeURIComponent(category)}`
       : pathname;
-    return `/settings/general?from=${encodeURIComponent(currentPath)}`;
+    return `/settings/user-information?from=${encodeURIComponent(currentPath)}`;
   }, [pathname, category]);
 
   const handleClearCache = useCallback(async () => {

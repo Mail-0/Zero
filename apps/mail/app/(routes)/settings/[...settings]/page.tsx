@@ -3,12 +3,15 @@ import ConnectionsPage from '../connections/page';
 import AppearancePage from '../appearance/page';
 import ShortcutsPage from '../shortcuts/page';
 import SecurityPage from '../security/page';
+import CategoriesPage from '../categories/page';
 import { m } from '@/paraglide/messages';
 import GeneralPage from '../general/page';
 import { useParams } from 'react-router';
 import LabelsPage from '../labels/page';
+import UserInformationPage from '../user-information/page';
 
 const settingsPages: Record<string, React.ComponentType> = {
+  'user-information': UserInformationPage,
   general: GeneralPage,
   connections: ConnectionsPage,
   security: SecurityPage,
@@ -16,11 +19,12 @@ const settingsPages: Record<string, React.ComponentType> = {
   shortcuts: ShortcutsPage,
   notifications: NotificationsPage,
   labels: LabelsPage,
+  categories: CategoriesPage,
 };
 
 export default function SettingsPage() {
   const params = useParams();
-  const section = params.settings?.[0] || 'general';
+  const section = params.settings?.[0] || 'user-information';
 
 
   const SettingsComponent = settingsPages[section];

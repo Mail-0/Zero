@@ -344,7 +344,7 @@ export default function CategoriesSettingsPage() {
   return (
     <SettingsCard
       title={m['navigation.settings.categories']()}
-      description="Customise how Zero shows the category tabs in your inbox. Drag and drop to reorder."
+      description={m['pages.settings.categories.description']()}
       footer={
         <div className="flex justify-between">
           <Button type="button" variant="outline" onClick={handleResetToDefaults}>
