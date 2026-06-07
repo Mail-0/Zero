@@ -104,7 +104,6 @@ export function AppSidebar({
           <SidebarHeader
             className={`relative top-2.5 shrink-0 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}
           >
-            {session && <NavUser />}
 
             {showComposeButton && (
               <div className="flex gap-1">
