@@ -23,6 +23,7 @@ import {
   HardDriveDownload,
   Loader2,
   CopyIcon,
+  CircleAlert,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -47,6 +48,7 @@ import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { BimiAvatar } from '../ui/bimi-avatar';
+import { PriorityScoreCircle } from './priority-score-circle';
 import { RenderLabels } from './render-labels';
 import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
@@ -1161,6 +1163,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   };
 
+  // TODO_doorman : Implement priorityscorefeedback
+  const handlePriorityScoreFeedback = (_rating: 'low' | 'high') => {
+    alert('feedback is not implemented yet');
+  };
+
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1318,11 +1325,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           <div className="flex cursor-pointer flex-col pb-2 duration-200" onClick={toggleCollapse}>
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
-                <BimiAvatar
-                  email={emailData?.sender?.email}
-                  name={emailData?.sender?.name}
-                  className="mt-3 h-8 w-8"
-                />
+                <div className="mt-3 flex flex-col items-center gap-1">
+                  <BimiAvatar
+                    email={emailData?.sender?.email}
+                    name={emailData?.sender?.name}
+                    className="h-8 w-8"
+                  />
+                  <PriorityScoreCircle score={emailData?.priorityScore} />
+                </div>
 
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">
@@ -1510,6 +1520,26 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               >
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                                 {m['common.mailDisplay.print']()}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handlePriorityScoreFeedback('low');
+                                }}
+                              >
+                                <CircleAlert className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Priority score is low
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handlePriorityScoreFeedback('high');
+                                }}
+                              >
+                                <CircleAlert className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Priority score is high
                               </DropdownMenuItem>
                               {(messageAttachments?.length ?? 0) > 0 && (
                                 <DropdownMenuItem

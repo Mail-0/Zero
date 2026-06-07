@@ -36,6 +36,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
+import { PriorityScoreCircle } from './priority-score-circle';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
@@ -344,7 +345,7 @@ const Thread = memo(
             <div
               className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
-              <div>
+              <div className="flex flex-col items-center gap-1">
                 {isMailBulkSelected ? (
                   <Avatar
                     className={cn(
@@ -386,6 +387,7 @@ const Thread = memo(
                     )}
                   />
                 )}
+                <PriorityScoreCircle score={latestMessage.priorityScore} />
                 {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
                     <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
