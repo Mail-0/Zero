@@ -26,7 +26,6 @@ import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
-import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
@@ -427,11 +426,11 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
+      <div className="rounded-inherit z-5 relative flex h-full p-0 md:mr-0.5">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout-v2"
-          className="rounded-inherit overflow-hidden"
+          className="rounded-inherit h-full overflow-hidden"
         >
           <ResizablePanel
             id="mail-list"
@@ -439,14 +438,14 @@ export function MailLayout() {
             minSize={threadId ? 35 : 50}
             maxSize={threadId ? 35 : 100}
             className={cn(
-              `bg-panelLight dark:bg-panelDark mb-1 shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
+              `bg-panelLight dark:bg-panelDark mb-1 shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-full lg:shadow-sm`,
               threadId ? 'w-fit' : 'w-full flex-1',
               isDesktop && threadId && 'hidden lg:block',
             )}
             // onMouseEnter={handleMailListMouseEnter}
             // onMouseLeave={handleMailListMouseLeave}
           >
-            <div className="w-full md:h-[calc(100dvh-10px)]">
+            <div className="flex h-full w-full flex-col">
               <div className="z-15 sticky top-0 p-4 pb-0">
                 <div className="flex items-center gap-2">
                   <SidebarToggle className="h-10 w-10" />
@@ -550,7 +549,7 @@ export function MailLayout() {
                 />
               </div>
 
-              <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
+              <div className="z-1 relative min-h-0 flex-1 overflow-hidden pt-0">
                 <MailList />
               </div>
             </div>
@@ -567,7 +566,7 @@ export function MailLayout() {
               defaultSize={threadId ? 30 : 0}
               minSize={30}
               className={cn(
-                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-[calc(100dvh-8px)]',
+                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-full',
                 !threadId && 'overflow-hidden',
               )}
             >
@@ -591,7 +590,6 @@ export function MailLayout() {
           )}
 
           {activeConnection?.id ? <AISidebar /> : null}
-          {activeConnection?.id ? <AIToggleButton /> : null}
         </ResizablePanelGroup>
       </div>
     </TooltipProvider>

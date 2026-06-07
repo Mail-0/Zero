@@ -486,7 +486,7 @@ function AISidebar({ className }: AISidebarProps) {
                 defaultSize={24}
                 minSize={24}
                 maxSize={24}
-                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-[calc(100dvh-8px)] shadow-sm md:block md:rounded-2xl md:shadow-sm"
+                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-full shadow-sm md:block md:rounded-2xl md:shadow-sm"
               >
                 <div className={cn('h-[calc(98vh)]', 'flex flex-col', '', className)}>
                   <div className="flex h-full flex-col">
