@@ -50,10 +50,22 @@ export default function CategoriesSettingsPage() {
     setIsDialogOpen(true);
   };
 
+  const handleGenerateCategories = () => {
+    // TODO_doorman: need to implement
+    alert('Generate categories is not implemented yet');
+  };
+
   return (
     <SettingsCard
       title={m['navigation.settings.categories']()}
       description={m['pages.settings.categories.description']()}
+      footer={
+        <div className="flex justify-end">
+          <Button type="button" onClick={handleGenerateCategories}>
+            Generate categories
+          </Button>
+        </div>
+      }
       action={
         <LabelDialog
           trigger={
