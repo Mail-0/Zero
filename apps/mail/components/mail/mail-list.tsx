@@ -12,7 +12,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  type ComponentProps,
   useState,
 } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
@@ -31,16 +30,14 @@ import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
 import { cn, FOLDERS, formatDate } from '@/lib/utils';
 import { useTRPC } from '@/providers/query-provider';
-import { useThreadLabels } from '@/hooks/use-labels';
 import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { PriorityScoreCircle } from './priority-score-circle';
-import { RenderLabels } from './render-labels';
-import { Badge } from '@/components/ui/badge';
+import { RemovableTextLabels } from './removable-text-labels';
 import { useDraft } from '@/hooks/use-drafts';
-import { Check, Star } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -137,7 +134,7 @@ const Thread = memo(
         optimisticState.optimisticLabels,
       ]);
 
-    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
+    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo, optimisticToggleLabel } =
       useOptimisticActions();
 
     const handleToggleStar = useCallback(
@@ -186,8 +183,12 @@ const Thread = memo(
       [idToUse, folder, optimisticMoveThreadsTo, handleNext],
     );
 
-    const { labels: threadLabels } = useThreadLabels(
-      optimisticLabels ? optimisticLabels.map((l) => l.id) : [],
+    const handleRemoveLabel = useCallback(
+      (label: { id: string; name: string }) => {
+        if (!idToUse) return;
+        optimisticToggleLabel([idToUse], label.id, false);
+      },
+      [idToUse, optimisticToggleLabel],
     );
 
     const [mailState, setMail] = useMail();
@@ -462,7 +463,6 @@ const Thread = memo(
                           <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
                         </span>
                       ) : null} */}
-                      <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
@@ -496,18 +496,19 @@ const Thread = memo(
                     {/* <div className="hidden md:flex">
                       {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
                     </div> */}
-                    {threadLabels && (
-                      <div className="mr-0 flex w-fit items-center justify-end gap-1">
-                        {!isFolderSent ? <RenderLabels labels={threadLabels} /> : null}
-                        {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
-                      </div>
-                    )}
                   </div>
                   {emailContent && (
                     <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
                       {highlightText(emailContent, searchValue.highlight)}
                     </div>
                   )}
+                  {!isFolderSent && latestMessage.tags?.length ? (
+                    <RemovableTextLabels
+                      labels={latestMessage.tags}
+                      onRemove={handleRemoveLabel}
+                      className="mt-2"
+                    />
+                  ) : null}
                   {/* {mainSearchTerm && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
                       <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
@@ -536,8 +537,7 @@ const Thread = memo(
       displayUnread,
       isMailSelected,
       isMailBulkSelected,
-      threadLabels,
-      optimisticLabels,
+      handleRemoveLabel,
       emailContent,
     ]);
 
@@ -1023,85 +1023,12 @@ export const MailList = memo(
 
 export const MailLabels = memo(
   function MailListLabels({ labels }: { labels: { id: string; name: string }[] }) {
-    if (!labels?.length) return null;
-
-    const visibleLabels = labels.filter(
-      (label) => !['unread', 'inbox'].includes(label.name.toLowerCase()),
-    );
-
-    if (!visibleLabels.length) return null;
-
-    return (
-      <div className={cn('flex select-none items-center')}>
-        {visibleLabels.map((label) => {
-          const style = getDefaultBadgeStyle(label.name);
-          if (label.name.toLowerCase() === 'notes') {
-            return (
-              <Tooltip key={label.id}>
-                <TooltipTrigger asChild>
-                  <Badge className="rounded-md bg-amber-100 p-1 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400">
-                    {getLabelIcon(label.name)}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent className="hidden px-1 py-0 text-xs">
-                  {m['common.notes.title']()}
-                </TooltipContent>
-              </Tooltip>
-            );
-          }
-
-          // Skip rendering if style is "secondary" (default case)
-          if (style === 'secondary') return null;
-          const content = getLabelIcon(label.name);
-
-          return content ? (
-            <Badge key={label.id} className="rounded-md p-1" variant={style}>
-              {content}
-            </Badge>
-          ) : null;
-        })}
-      </div>
-    );
+    return <RemovableTextLabels labels={labels} />;
   },
   (prev, next) => {
     return JSON.stringify(prev.labels) === JSON.stringify(next.labels);
   },
 );
-
-function getLabelIcon(label: string) {
-  const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-  switch (normalizedLabel) {
-    case 'starred':
-      return <Star className="h-[12px] w-[12px] fill-yellow-400 stroke-yellow-400" />;
-    default:
-      return null;
-  }
-}
-
-function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>['variant'] {
-  const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-  switch (normalizedLabel) {
-    case 'starred':
-    case 'important':
-      return 'important';
-    case 'promotions':
-      return 'promotions';
-    case 'personal':
-      return 'personal';
-    case 'updates':
-      return 'updates';
-    case 'work':
-      return 'default';
-    case 'forums':
-      return 'forums';
-    case 'notes':
-      return 'secondary';
-    default:
-      return 'secondary';
-  }
-}
 
 // Helper function to clean name display
 const cleanNameDisplay = (name?: string) => {

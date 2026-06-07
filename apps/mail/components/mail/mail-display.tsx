@@ -1,24 +1,16 @@
 import {
-  Bell,
   Docx,
   Figma,
   Forward,
   ImageFile,
-  Lightning,
   PDF,
   Reply,
   ReplyAll,
   ThreeDots,
-  Tag,
-  User,
   ChevronDown,
   Printer,
 } from '../icons/icons';
 import {
-  Briefcase,
-  Star,
-  StickyNote,
-  Users,
   Lock,
   HardDriveDownload,
   Loader2,
@@ -41,22 +33,21 @@ import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useAttachments } from '@/hooks/use-attachments';
 import { useTRPC } from '@/providers/query-provider';
-import { useThreadLabels } from '@/hooks/use-labels';
 import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { PriorityScoreCircle } from './priority-score-circle';
-import { RenderLabels } from './render-labels';
+import { RemovableTextLabels } from './removable-text-labels';
 import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
 import { useQueryState } from 'nuqs';
-import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -159,87 +150,6 @@ type Props = {
   onReplyAll?: () => void;
   onForward?: () => void;
   threadAttachments?: Attachment[];
-};
-
-const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const visibleLabels = labels.filter(
-    (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
-  );
-
-  if (!visibleLabels.length) return null;
-
-  return (
-    <div className="flex">
-      {visibleLabels.map((label, index) => {
-        const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-        let icon = null;
-        let bgColor = '';
-        let labelText = '';
-
-        switch (normalizedLabel) {
-          case 'important':
-            icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#F59E0D]';
-            labelText = m['common.mailCategories.important']();
-            break;
-          case 'promotions':
-            icon = <Tag className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#F43F5E]';
-            labelText = m['common.mailCategories.promotions']();
-            break;
-          case 'personal':
-            icon = <User className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#39AE4A]';
-            labelText = m['common.mailCategories.personal']();
-            break;
-          case 'updates':
-            icon = <Bell className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#8B5CF6]';
-            labelText = m['common.mailCategories.updates']();
-            break;
-          case 'work':
-            icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
-            bgColor = '';
-            labelText = m['common.mailCategories.work']();
-            break;
-          case 'forums':
-            icon = <Users className="h-3.5 w-3.5 text-white" />;
-            bgColor = 'bg-blue-600';
-            labelText = m['common.mailCategories.forums']();
-            break;
-          case 'notes':
-            icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
-            bgColor = 'bg-amber-500';
-            labelText = m['common.mailCategories.notes']();
-            break;
-          case 'starred':
-            icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
-            bgColor = 'bg-yellow-500';
-            labelText = m['common.mailCategories.starred']();
-            break;
-          default:
-            return null;
-        }
-
-        return (
-          <Tooltip key={`${label}-${index}`}>
-            <TooltipTrigger>
-              <Badge
-                key={`${label}-${index}`}
-                className={`rounded-md p-1 ${bgColor} dark:border-panelDark -ml-1.5 border-2 border-white transition-transform first:ml-0`}
-              >
-                {icon}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">{labelText}</p>
-            </TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </div>
-  );
 };
 
 // Helper function to clean email display
@@ -675,9 +585,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
-  const { labels: threadLabels } = useThreadLabels(
-    emailData.tags ? emailData.tags.map((l) => l.id) : [],
-  );
+  const { optimisticToggleLabel } = useOptimisticActions();
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
@@ -1168,6 +1076,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     alert('feedback is not implemented yet');
   };
 
+  const handleRemoveLabel = useCallback(
+    (label: { id: string; name: string }) => {
+      if (!emailData.threadId) return;
+      optimisticToggleLabel([emailData.threadId], label.id, false);
+    },
+    [emailData.threadId, optimisticToggleLabel],
+  );
+
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1268,17 +1184,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </span>
 
-                <div className="mt-2 flex items-center gap-2">
-                  {emailData?.tags?.length ? (
-                    <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
-                  ) : null}
-                  {emailData?.tags?.length ? (
-                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                  ) : null}
-                  <RenderLabels labels={threadLabels} />
-                  {threadLabels.length ? (
-                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                  ) : null}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <RemovableTextLabels
+                    labels={emailData.tags ?? []}
+                    onRemove={handleRemoveLabel}
+                  />
                   <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
                     {(() => {
                       if (people.length <= 2) {
