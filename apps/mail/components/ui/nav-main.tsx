@@ -194,11 +194,10 @@ export function NavMain({ items }: NavMainProps) {
             </SidebarMenuButton>
             <NavItem
               key={'feedback'}
-              isActive={isUrlActive('https://feedback.0.email')}
-              href={'https://feedback.0.email'}
-              url={'https://feedback.0.email'}
+              isActive={isUrlActive('/mail/feedback')}
+              href={'/mail/feedback'}
+              url={'/mail/feedback'}
               icon={MessageSquare}
-              target={'_blank'}
               title={m['navigation.sidebar.feedback']()}
             />
           </>

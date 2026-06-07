@@ -1,7 +1,12 @@
+import { Link } from 'react-router';
+
 export function DoormanTopBar() {
   return (
     <header className="bg-sidebar border-border flex h-12 shrink-0 items-center border-b px-4">
-      <div className="flex items-center gap-2.5">
+      <Link
+        to="/mail"
+        className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80"
+      >
         <img
           src="/icons-pwa/icon-180.png"
           alt="Doorman"
@@ -10,7 +15,7 @@ export function DoormanTopBar() {
           className="rounded-md"
         />
         <span className="text-foreground text-lg font-semibold tracking-tight">Doorman</span>
-      </div>
+      </Link>
     </header>
   );
 }
