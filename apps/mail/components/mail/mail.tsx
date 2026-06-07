@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -343,6 +344,17 @@ export function MailLayout() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const [threadId] = useQueryState('threadId');
+  const threadPanelRef = useRef<ImperativePanelHandle>(null);
+
+  useEffect(() => {
+    if (!isDesktop || !threadPanelRef.current) return;
+
+    if (threadId) {
+      threadPanelRef.current.expand();
+    } else {
+      threadPanelRef.current.collapse();
+    }
+  }, [threadId, isDesktop]);
 
   useEffect(() => {
     if (threadId) {
@@ -418,15 +430,17 @@ export function MailLayout() {
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
-          autoSaveId="mail-panel-layout"
+          autoSaveId="mail-panel-layout-v2"
           className="rounded-inherit overflow-hidden"
         >
           <ResizablePanel
-            defaultSize={35}
-            minSize={35}
-            maxSize={35}
+            id="mail-list"
+            defaultSize={threadId ? 35 : 76}
+            minSize={threadId ? 35 : 50}
+            maxSize={threadId ? 35 : 100}
             className={cn(
-              `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
+              `bg-panelLight dark:bg-panelDark mb-1 shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
+              threadId ? 'w-fit' : 'w-full flex-1',
               isDesktop && threadId && 'hidden lg:block',
             )}
             // onMouseEnter={handleMailListMouseEnter}
@@ -546,17 +560,22 @@ export function MailLayout() {
 
           {isDesktop && (
             <ResizablePanel
+              ref={threadPanelRef}
+              id="thread-display"
+              collapsible
+              collapsedSize={0}
+              defaultSize={threadId ? 30 : 0}
+              minSize={30}
               className={cn(
                 'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-[calc(100dvh-8px)]',
-                // Only show on md screens and larger when there is a threadId
-                !threadId && 'hidden lg:block',
+                !threadId && 'overflow-hidden',
               )}
-              defaultSize={30}
-              minSize={30}
             >
-              <div className="relative flex-1">
-                <ThreadDisplay />
-              </div>
+              {threadId ? (
+                <div className="relative flex-1">
+                  <ThreadDisplay />
+                </div>
+              ) : null}
             </ResizablePanel>
           )}
 
