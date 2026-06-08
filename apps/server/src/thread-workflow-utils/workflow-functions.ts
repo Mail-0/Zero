@@ -122,7 +122,10 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   createDraft: async (context) => {
     const draftContentResult = context.results?.get('generate-draft-content');
     if (!draftContentResult?.draftContent) {
-      throw new Error('No draft content available');
+      console.log('[WORKFLOW_FUNCTIONS] Skipping draft creation because no draft content is available', {
+        threadId: context.threadId,
+      });
+      return { draftId: null, skipped: true, reason: 'missing-draft-content' };
     }
 
     const latestMessage = context.thread.messages[context.thread.messages.length - 1];

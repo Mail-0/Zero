@@ -155,7 +155,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "vars": {
@@ -385,7 +385,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "vars": {
@@ -484,7 +484,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "b1be316b45fb439a9e54b74ecc20aa21",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "durable_objects": {
