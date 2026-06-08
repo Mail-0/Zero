@@ -1,34 +1,15 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useState, useCallback, type KeyboardEvent } from 'react';
+import { useState, useCallback, useEffect, type KeyboardEvent } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTRPC } from '@/providers/query-provider';
 import { X } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 import { toast } from 'sonner';
-
-const OCCUPATION_OPTIONS = [
-  'Example Occupation1',
-  'Example Occupation2',
-  'Example Occupation3',
-] as const;
-
-const INITIAL_AFFILIATIONS = [
-  'Example_Affiliation1',
-  'Example_Affiliation2',
-  'Example_Affiliation3',
-];
-
-const INITIAL_INTERESTS = ['Example_Interest1', 'Example_Interest2', 'Example_Interest3'];
 
 interface StringListFieldProps {
   id: string;
@@ -36,9 +17,17 @@ interface StringListFieldProps {
   placeholder: string;
   items: string[];
   onItemsChange: (items: string[]) => void;
+  disabled?: boolean;
 }
 
-function StringListField({ id, label, placeholder, items, onItemsChange }: StringListFieldProps) {
+function StringListField({
+  id,
+  label,
+  placeholder,
+  items,
+  onItemsChange,
+  disabled = false,
+}: StringListFieldProps) {
   const [inputValue, setInputValue] = useState('');
 
   const addItem = useCallback(() => {
@@ -76,6 +65,7 @@ function StringListField({ id, label, placeholder, items, onItemsChange }: Strin
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className="max-w-xl"
+        disabled={disabled}
       />
       {items.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -91,6 +81,7 @@ function StringListField({ id, label, placeholder, items, onItemsChange }: Strin
                 onClick={() => removeItem(item)}
                 className="hover:bg-accent rounded-full p-0.5"
                 aria-label={`Remove ${item}`}
+                disabled={disabled}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -104,16 +95,37 @@ function StringListField({ id, label, placeholder, items, onItemsChange }: Strin
 
 export default function UserInformationPage() {
   const { data: session } = useSession();
-  const [occupation, setOccupation] = useState<string>(OCCUPATION_OPTIONS[0]);
-  const [affiliations, setAffiliations] = useState<string[]>(INITIAL_AFFILIATIONS);
-  const [interests, setInterests] = useState<string[]>(INITIAL_INTERESTS);
+  const trpc = useTRPC();
+  const [occupation, setOccupation] = useState('');
+  const [affiliations, setAffiliations] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  const profileQuery = useQuery(
+    trpc.user.getProfile.queryOptions(undefined, {
+      enabled: !!session?.user?.id,
+    }),
+  );
+
+  const { mutateAsync: saveProfile } = useMutation(trpc.user.saveProfile.mutationOptions());
+
+  useEffect(() => {
+    if (!profileQuery.data) return;
+
+    setOccupation(profileQuery.data.occupation);
+    setAffiliations(profileQuery.data.affiliation);
+    setInterests(profileQuery.data.interest);
+  }, [profileQuery.data]);
+
   const handleSave = async () => {
-    // TODO_Doorman : Should connect save changes
     setIsSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await saveProfile({
+        occupation,
+        affiliation: affiliations,
+        interest: interests,
+      });
+      await profileQuery.refetch();
       toast.success(m['common.settings.saved']());
     } catch {
       toast.error(m['common.settings.failedToSave']());
@@ -122,13 +134,16 @@ export default function UserInformationPage() {
     }
   };
 
+  const isLoading = profileQuery.isLoading;
+  const isDisabled = isLoading || isSaving;
+
   return (
     <SettingsCard
       title={m['navigation.settings.userInformation']()}
       description={m['pages.settings.userInformation.description']()}
       footer={
         <div className="flex justify-end">
-          <Button type="button" onClick={handleSave} disabled={isSaving}>
+          <Button type="button" onClick={handleSave} disabled={isDisabled}>
             {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
           </Button>
         </div>
@@ -142,23 +157,21 @@ export default function UserInformationPage() {
 
         <div className="space-y-2">
           <p className="text-sm font-medium">{m['pages.settings.userInformation.name']()}</p>
-          <p className="text-muted-foreground text-sm">{session?.user?.name ?? '—'}</p>
+          <p className="text-muted-foreground text-sm">
+            {profileQuery.data?.name || session?.user?.name || '—'}
+          </p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="occupation">Occupation</Label>
-          <Select value={occupation} onValueChange={setOccupation}>
-            <SelectTrigger id="occupation" className="max-w-xl">
-              <SelectValue placeholder="Select occupation" />
-            </SelectTrigger>
-            <SelectContent>
-              {OCCUPATION_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="occupation"
+            value={occupation}
+            onChange={(event) => setOccupation(event.target.value)}
+            placeholder="Enter your occupation"
+            className="max-w-xl"
+            disabled={isDisabled}
+          />
         </div>
 
         <StringListField
@@ -167,6 +180,7 @@ export default function UserInformationPage() {
           placeholder="Search to add affiliation"
           items={affiliations}
           onItemsChange={setAffiliations}
+          disabled={isDisabled}
         />
 
         <StringListField
@@ -175,6 +189,7 @@ export default function UserInformationPage() {
           placeholder="Search to add Interest"
           items={interests}
           onItemsChange={setInterests}
+          disabled={isDisabled}
         />
       </div>
     </SettingsCard>
