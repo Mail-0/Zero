@@ -1,22 +1,15 @@
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { useCommandPalette } from '../context/command-palette-context';
-import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
+import { useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
-import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { MailList, MailSortDropdown } from '@/components/mail/mail-list';
 import { useNavigate, useParams } from 'react-router';
@@ -498,10 +491,7 @@ export function MailLayout() {
                       </Button>
 
                       {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-                        <>
-                          <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
-                          <MailSortDropdown />
-                        </>
+                        <MailSortDropdown />
                       )}
                     </>
                   ) : (
@@ -708,125 +698,3 @@ export const Categories = () => {
 
   return categories as CategoryItem[];
 };
-interface CategoryDropdownProps {
-  isMultiSelectMode?: boolean;
-}
-
-function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
-  const categorySettings = useCategorySettings();
-  const { setLabels, labels } = useSearchLabels();
-  const params = useParams<{ folder: string }>();
-  const folder = params?.folder ?? 'inbox';
-  const [isOpen, setIsOpen] = useState(false);
-
-  useHotkeys(
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    (key) => {
-      const category = categorySettings[Number(key.key) - 1];
-      if (!category) return;
-      const isCurrentlyActive = labels.includes(category.searchValue);
-
-      if (isCurrentlyActive) {
-        setLabels(labels.filter((label) => label !== category.searchValue));
-      } else {
-        setLabels([...labels, category.searchValue]);
-      }
-    },
-    {
-      scopes: ['mail-list'],
-      preventDefault: true,
-      enableOnFormTags: false,
-    },
-  );
-
-  const handleLabelChange = (searchValue: string) => {
-    const trimmed = searchValue.trim();
-    if (!trimmed) {
-      setLabels([]);
-      return;
-    }
-
-    const parsedLabels = trimmed
-      .split(',')
-      .map((label) => label.trim())
-      .filter((label) => label.length > 0);
-
-    if (parsedLabels.length === 0) {
-      setLabels([]);
-      return;
-    }
-
-    const currentLabelsSet = new Set(labels);
-    const parsedLabelsSet = new Set(parsedLabels);
-
-    const allLabelsSelected = parsedLabels.every((label) => currentLabelsSet.has(label));
-
-    if (allLabelsSelected) {
-      const updatedLabels = labels.filter((label) => !parsedLabelsSet.has(label));
-      setLabels(updatedLabels);
-    } else {
-      const newLabelsSet = new Set([...labels, ...parsedLabels]);
-      setLabels(Array.from(newLabelsSet));
-    }
-  };
-
-  if (folder !== 'inbox' || isMultiSelectMode) return null;
-
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
-          )}
-          aria-label="Filter by labels"
-          aria-expanded={isOpen}
-          aria-haspopup="menu"
-        >
-          <span className="text-sm font-medium">
-            {labels.length > 0
-              ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
-              : m['navigation.settings.categories']()}
-          </span>
-          <ChevronDown
-            className={cn(
-              'text-muted-foreground h-4 w-4 transition-transform duration-200',
-              isOpen ? 'rotate-180' : 'rotate-0',
-            )}
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
-        align="start"
-        role="menu"
-        aria-label="Label filter options"
-      >
-        {categorySettings.map((category) => (
-          <DropdownMenuItem
-            key={category.id}
-            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLabelChange(category.searchValue);
-            }}
-            role="menuitemcheckbox"
-            aria-checked={labels.includes(category.id)}
-          >
-            <span className="text-foreground font-medium capitalize">
-              {category.name.toLowerCase()}
-            </span>
-            {/* Special case: empty searchValue means "All Mail" - shows everything */}
-            {(category.searchValue === ''
-              ? labels.length === 0
-              : category.searchValue.split(',').some((val) => labels.includes(val))) && (
-              <Check className="text-primary ml-auto h-4 w-4" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
