@@ -124,7 +124,7 @@ const ruleBasedAnalysis = (
 ) => {
   const text = `${emailText.subject} ${emailText.body}`.toLowerCase();
   const importantContacts = new Set(profile.importantContacts.map((c) => c.toLowerCase()));
-  const categoriesLower = profile.categories.map((c) => c.toLowerCase());
+  const categoriesLower = new Set(profile.categories.map((c) => c.toLowerCase()));
 
   let category = 'uncategorized';
   let senderScore = 10;
@@ -176,7 +176,7 @@ const ruleBasedAnalysis = (
     const lowerInterest = interest.toLowerCase();
     if (text.includes(lowerInterest)) {
       contentScore = Math.max(contentScore, 20);
-      if (categoriesLower.includes(lowerInterest)) {
+      if (categoriesLower.has(lowerInterest)) {
         category = lowerInterest;
       }
     }

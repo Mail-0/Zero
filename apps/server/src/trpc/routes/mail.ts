@@ -16,6 +16,7 @@ import {
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
+import { enrichThreadWithPriorityScores } from '../../lib/doorman/enrich-priority-scores';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { toAttachmentFiles } from '../../lib/attachments';
@@ -79,7 +80,7 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const result = await getThread(activeConnection.id, input.id);
-      return result.result;
+      return enrichThreadWithPriorityScores(activeConnection.id, result.result);
     }),
   listThreads: activeDriverProcedure
     .input(
