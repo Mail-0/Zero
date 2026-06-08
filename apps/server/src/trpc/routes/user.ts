@@ -1,7 +1,94 @@
+import {
+  getOrCreateUserProfile,
+  hasUserProfile,
+  updateUserProfile,
+} from '../../services/user-profile-service';
 import { privateProcedure, router } from '../trpc';
+import { TRPCError } from '@trpc/server';
 import jwt from '@tsndr/cloudflare-worker-jwt';
+import { z } from 'zod';
+
+const userProfileSchema = z.object({
+  userId: z.string(),
+  name: z.string(),
+  occupation: z.string(),
+  affiliation: z.array(z.string()),
+  interest: z.array(z.string()),
+});
 
 export const userRouter = router({
+  hasProfile: privateProcedure
+    .output(z.object({ exists: z.boolean() }))
+    .query(async ({ ctx }) => {
+      try {
+        const exists = await hasUserProfile(ctx.c.env, ctx.sessionUser.id);
+        return { exists };
+      } catch (error) {
+        console.error('[USER_PROFILE] Failed to check profile existence', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to check user profile',
+        });
+      }
+    }),
+  getProfile: privateProcedure.output(userProfileSchema).query(async ({ ctx }) => {
+    try {
+      const profile = await getOrCreateUserProfile(
+        ctx.c.env,
+        ctx.sessionUser.id,
+        ctx.sessionUser.name,
+      );
+
+      return {
+        userId: profile.userId,
+        name: profile.name,
+        occupation: profile.occupation,
+        affiliation: profile.affiliation,
+        interest: profile.interest,
+      };
+    } catch (error) {
+      console.error('[USER_PROFILE] Failed to load profile', error);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to load user profile',
+      });
+    }
+  }),
+  saveProfile: privateProcedure
+    .input(
+      z.object({
+        occupation: z.string(),
+        affiliation: z.array(z.string()),
+        interest: z.array(z.string()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const profile = await updateUserProfile(
+          ctx.c.env,
+          ctx.sessionUser.id,
+          input,
+          ctx.sessionUser.name,
+        );
+
+        return {
+          success: true,
+          profile: {
+            userId: profile.userId,
+            name: profile.name,
+            occupation: profile.occupation,
+            affiliation: profile.affiliation,
+            interest: profile.interest,
+          },
+        };
+      } catch (error) {
+        console.error('[USER_PROFILE] Failed to save profile', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save user profile',
+        });
+      }
+    }),
   delete: privateProcedure.mutation(async ({ ctx }) => {
     const { success, message } = await ctx.c.var.auth.api.deleteUser({
       body: {

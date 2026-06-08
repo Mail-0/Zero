@@ -25,6 +25,7 @@ import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 // import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { disposeRpcStub, getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
+import { runDoormanAnalysisJob } from './services/doorman-analysis';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { ThreadSyncWorker } from './routes/agent/sync-worker';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
@@ -1160,6 +1161,8 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     await this.processScheduledEmails();
 
     await this.processExpiredSubscriptions();
+
+    await runDoormanAnalysisJob(this.env);
   }
 
   private async processScheduledEmails() {

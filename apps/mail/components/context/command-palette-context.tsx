@@ -723,16 +723,16 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           };
 
           if (sectionKey === 'mail') {
-            mailCommands.push(item);
+            //mailCommands.push(item);
           } else if (sectionKey === 'settings') {
             if (!item.isBackButton || pathname.startsWith('/settings')) {
-              settingsCommands.push(item);
+              //settingsCommands.push(item);
             }
           } else {
             if (!otherCommands[sectionKey]) {
               otherCommands[sectionKey] = [];
             }
-            otherCommands[sectionKey].push(item);
+            //otherCommands[sectionKey].push(item);
           }
         });
       });
@@ -904,13 +904,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           </Fragment>
         ))}
 
-        <CommandGroup heading="Help">
-          <CommandItem onSelect={() => setCurrentView('help')}>
-            <Info className="h-4 w-4 opacity-60" />
-            <span className="ml-2">Filter Syntax Help</span>
-            {/* <CommandShortcut>?</CommandShortcut> */}
-          </CommandItem>
-        </CommandGroup>
       </CommandList>
     </>
   );

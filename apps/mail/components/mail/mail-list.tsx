@@ -40,6 +40,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
+import { CategoryBadge } from './category-badge';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
 import { useDraft } from '@/hooks/use-drafts';
@@ -203,7 +204,7 @@ const Thread = memo(
         optimisticState.optimisticLabels,
       ]);
 
-    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo, optimisticToggleLabel } =
+    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
       useOptimisticActions();
 
     const handleToggleStar = useCallback(
@@ -250,14 +251,6 @@ const Thread = memo(
         optimisticMoveThreadsTo([idToUse], folder ?? '', destination);
       },
       [idToUse, folder, optimisticMoveThreadsTo, handleNext],
-    );
-
-    const handleRemoveLabel = useCallback(
-      (label: { id: string; name: string }) => {
-        if (!idToUse) return;
-        optimisticToggleLabel([idToUse], label.id, false);
-      },
-      [idToUse, optimisticToggleLabel],
     );
 
     const [mailState, setMail] = useMail();
@@ -571,12 +564,21 @@ const Thread = memo(
                       {highlightText(emailContent, searchValue.highlight)}
                     </div>
                   )}
-                  {!isFolderSent && latestMessage.tags?.length ? (
-                    <RemovableTextLabels
-                      labels={latestMessage.tags}
-                      onRemove={handleRemoveLabel}
-                      className="mt-2"
-                    />
+                  {!isFolderSent &&
+                  (latestMessage.category || latestMessage.tags?.length) ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {latestMessage.category ? (
+                        <CategoryBadge category={latestMessage.category} />
+                      ) : null}
+                      {latestMessage.tags?.length ? (
+                        <RemovableTextLabels labels={latestMessage.tags} />
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {latestMessage.suggestedAction ? (
+                    <div className="border-border bg-muted mt-2 w-fit max-w-full rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
+                      Suggested Action : {latestMessage.suggestedAction}
+                    </div>
                   ) : null}
                   {/* {mainSearchTerm && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
@@ -606,7 +608,6 @@ const Thread = memo(
       displayUnread,
       isMailSelected,
       isMailBulkSelected,
-      handleRemoveLabel,
       emailContent,
     ]);
 
@@ -1070,7 +1071,7 @@ export const MailList = memo(
                   ref={vListRef}
                   count={filteredItems.length}
                   overscan={5}
-                  itemSize={100}
+                  itemSize={120}
                   className="scrollbar-none flex-1 overflow-x-hidden"
                   onScroll={() => {
                     if (!vListRef.current) return;

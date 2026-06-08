@@ -7,7 +7,6 @@ import {
   SettingsGear,
   Tabs,
   ArrowLeft,
-  Sheet,
   Plane2,
   Clock,
 } from '@/components/icons/icons';
@@ -146,11 +145,6 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/settings/user-information',
             icon: SettingsGear,
             shortcut: 'g + s',
-          },
-          {
-            title: m['navigation.settings.labels'](),
-            url: '/settings/labels',
-            icon: Sheet,
           },
           {
             title: m['navigation.settings.categories'](),

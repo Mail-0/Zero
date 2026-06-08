@@ -1,0 +1,184 @@
+import { createDb } from '../../db';
+import { email, mailbox, mimeContent } from '../../db/schema';
+import { env } from '../../env';
+import type { EProviders, ParsedMessage } from '../../types';
+import { preprocessEmailHtml } from '../email-processor';
+import { getThread } from '../server-utils';
+
+export type DoormanReceiveSource = 'gmail-watch' | 'manual-sync';
+
+export interface DoormanReceivedThreadEvent {
+  connectionId: string;
+  userId: string;
+  providerId: EProviders | string;
+  threadId: string;
+  historyId?: string | null;
+  source: DoormanReceiveSource;
+  receivedAt: string;
+}
+
+const formatAddress = (address?: { name?: string; email: string } | null) => {
+  if (!address) return null;
+  return address.name ? `${address.name} <${address.email}>` : address.email;
+};
+
+const formatAddressList = (addresses?: { name?: string; email: string }[] | null) => {
+  if (!addresses?.length) return null;
+  return addresses.map(formatAddress).filter(Boolean).join(', ');
+};
+
+const safeDate = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const pickLatestMessage = (messages: ParsedMessage[], latest?: ParsedMessage) => {
+  return latest ?? messages[messages.length - 1] ?? null;
+};
+
+export async function handleDoormanReceivedThread(event: DoormanReceivedThreadEvent) {
+  console.log('[DOORMAN_RECEIVE]', JSON.stringify(event));
+
+  const thread = await getThread(event.connectionId, event.threadId);
+  const latest = pickLatestMessage(thread.result.messages, thread.result.latest);
+
+  if (!latest) {
+    console.warn('[DOORMAN_RECEIVE] No latest message found', event);
+    return {
+      success: false,
+      reason: 'No latest message found',
+      event,
+    };
+  }
+
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+
+  const mailboxId = `inbox:${event.connectionId}`;
+  const emailId = latest.id;
+  const rawBody = latest.body || latest.processedHtml || latest.decodedBody || '';
+  const processedBody = preprocessEmailHtml(rawBody);
+
+  try {
+    await db
+      .insert(mailbox)
+      .values({
+        mailboxId,
+        userId: event.userId,
+        mailboxName: 'Inbox',
+      })
+      .onConflictDoUpdate({
+        target: [mailbox.mailboxId],
+        set: {
+          userId: event.userId,
+          mailboxName: 'Inbox',
+        },
+      });
+
+    await db
+      .insert(email)
+      .values({
+        emailId,
+        date: safeDate(latest.receivedOn),
+        from: formatAddress(latest.sender),
+        sender: latest.sender.email,
+        receiver: formatAddressList(latest.to),
+        replyTo: latest.replyTo ?? null,
+        to: formatAddressList(latest.to),
+        cc: formatAddressList(latest.cc),
+        bcc: formatAddressList(latest.bcc),
+        subject: latest.subject,
+        body: processedBody,
+        messageId: latest.messageId ?? latest.id,
+        inReplyTo: latest.inReplyTo ?? null,
+        mailboxId,
+        categoryId: null,
+        priorityScore: null,
+        metadata: {
+          connectionId: event.connectionId,
+          providerId: event.providerId,
+          threadId: event.threadId,
+          historyId: event.historyId ?? null,
+          source: event.source,
+          receivedAt: event.receivedAt,
+          syncedAt: new Date().toISOString(),
+          unread: latest.unread,
+          tls: latest.tls,
+          labels: thread.result.labels,
+          totalReplies: thread.result.totalReplies,
+          hasUnread: thread.result.hasUnread,
+        },
+      })
+      .onConflictDoUpdate({
+        target: [email.emailId],
+        set: {
+          date: safeDate(latest.receivedOn),
+          from: formatAddress(latest.sender),
+          sender: latest.sender.email,
+          receiver: formatAddressList(latest.to),
+          replyTo: latest.replyTo ?? null,
+          to: formatAddressList(latest.to),
+          cc: formatAddressList(latest.cc),
+          bcc: formatAddressList(latest.bcc),
+          subject: latest.subject,
+          body: processedBody,
+          messageId: latest.messageId ?? latest.id,
+          inReplyTo: latest.inReplyTo ?? null,
+          mailboxId,
+          metadata: {
+            connectionId: event.connectionId,
+            providerId: event.providerId,
+            threadId: event.threadId,
+            historyId: event.historyId ?? null,
+            source: event.source,
+            receivedAt: event.receivedAt,
+            syncedAt: new Date().toISOString(),
+            unread: latest.unread,
+            tls: latest.tls,
+            labels: thread.result.labels,
+            totalReplies: thread.result.totalReplies,
+            hasUnread: thread.result.hasUnread,
+          },
+        },
+      });
+
+    await db
+      .insert(mimeContent)
+      .values({
+        id: `${emailId}:body`,
+        emailId,
+        contentType: 'text/html',
+        charset: 'utf-8',
+        transferEncoding: null,
+        disposition: 'inline',
+        filename: null,
+        contentId: null,
+        rawPayload: rawBody,
+        decodedText: latest.decodedBody ?? processedBody,
+      })
+      .onConflictDoUpdate({
+        target: [mimeContent.id],
+        set: {
+          contentType: 'text/html',
+          charset: 'utf-8',
+          rawPayload: rawBody,
+          decodedText: latest.decodedBody ?? processedBody,
+        },
+      });
+
+    console.log('[DOORMAN_DB_SAVE]', {
+      emailId,
+      mailboxId,
+      subject: latest.subject,
+      sender: latest.sender.email,
+    });
+
+    return {
+      success: true,
+      emailId,
+      mailboxId,
+    };
+  } finally {
+    await conn.end();
+  }
+}

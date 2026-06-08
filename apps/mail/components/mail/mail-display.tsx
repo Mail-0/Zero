@@ -38,7 +38,6 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
-import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
@@ -585,7 +584,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
-  const { optimisticToggleLabel } = useOptimisticActions();
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
@@ -1076,14 +1074,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     alert('feedback is not implemented yet');
   };
 
-  const handleRemoveLabel = useCallback(
-    (label: { id: string; name: string }) => {
-      if (!emailData.threadId) return;
-      optimisticToggleLabel([emailData.threadId], label.id, false);
-    },
-    [emailData.threadId, optimisticToggleLabel],
-  );
-
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1184,45 +1174,51 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </span>
 
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <RemovableTextLabels
-                    labels={emailData.tags ?? []}
-                    onRemove={handleRemoveLabel}
-                  />
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
-                    {(() => {
-                      if (people.length <= 2) {
-                        return people.map(renderPerson);
-                      }
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <RemovableTextLabels labels={emailData.tags ?? []} />
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {threadData?.latest?.suggestedAction ? (
+                      <div className="border-border bg-muted max-w-[240px] truncate rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
+                        Suggested Action : {threadData.latest.suggestedAction}
+                      </div>
+                    ) : null}
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
+                      {(() => {
+                        if (people.length <= 2) {
+                          return people.map(renderPerson);
+                        }
 
-                      // Only show first two people plus count if we have at least two people
-                      const firstPerson = people[0];
-                      const secondPerson = people[1];
+                        // Only show first two people plus count if we have at least two people
+                        const firstPerson = people[0];
+                        const secondPerson = people[1];
 
-                      if (firstPerson && secondPerson) {
-                        return (
-                          <>
-                            {renderPerson(firstPerson)}
-                            {renderPerson(secondPerson)}
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-sm">
-                                  +{people.length - 2}{' '}
-                                  {people.length - 2 === 1 ? 'other' : 'others'}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent className="flex flex-col gap-1">
-                                {people.slice(2).map((person) => (
-                                  <div key={person.email}>{renderPerson(person)}</div>
-                                ))}
-                              </TooltipContent>
-                            </Tooltip>
-                          </>
-                        );
-                      }
+                        if (firstPerson && secondPerson) {
+                          return (
+                            <>
+                              {renderPerson(firstPerson)}
+                              {renderPerson(secondPerson)}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="text-sm">
+                                    +{people.length - 2}{' '}
+                                    {people.length - 2 === 1 ? 'other' : 'others'}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="flex flex-col gap-1">
+                                  {people.slice(2).map((person) => (
+                                    <div key={person.email}>{renderPerson(person)}</div>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </>
+                          );
+                        }
 
-                      return null;
-                    })()}
+                        return null;
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <AiSummary />
