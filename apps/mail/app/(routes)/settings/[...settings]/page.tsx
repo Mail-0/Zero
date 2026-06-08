@@ -7,7 +7,6 @@ import CategoriesPage from '../categories/page';
 import { m } from '@/paraglide/messages';
 import GeneralPage from '../general/page';
 import { useParams } from 'react-router';
-import LabelsPage from '../labels/page';
 import UserInformationPage from '../user-information/page';
 
 const settingsPages: Record<string, React.ComponentType> = {
@@ -18,7 +17,6 @@ const settingsPages: Record<string, React.ComponentType> = {
   appearance: AppearancePage,
   shortcuts: ShortcutsPage,
   notifications: NotificationsPage,
-  labels: LabelsPage,
   categories: CategoriesPage,
 };
 
