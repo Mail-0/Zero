@@ -28,7 +28,10 @@ import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
 // import { toast } from 'sonner';
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  topBarOffset,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { topBarOffset?: boolean }) {
   // const { isPro, isLoading } = useBilling();
   //   const trpc = useTRPC();
   //   const { mutateAsync: createMeet } = useMutation(trpc.meet.create.mutationOptions());
@@ -90,17 +93,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   //   };
 
   return (
-    <div>
+    <div className="h-full">
       {!isFullScreen && (
         <Sidebar
           collapsible="icon"
+          topBarOffset={topBarOffset}
           {...props}
-          className={`bg-sidebar dark:bg-sidebar flex h-screen select-none flex-col items-center ${state === 'collapsed' ? '' : ''} pb-2`}
+          className={`bg-sidebar dark:bg-sidebar flex h-full select-none flex-col items-center ${state === 'collapsed' ? '' : ''}`}
         >
           <SidebarHeader
-            className={`relative top-2.5 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}
+            className={`relative top-2.5 shrink-0 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}
           >
-            {session && <NavUser />}
 
             {showComposeButton && (
               <div className="flex gap-1">
@@ -164,7 +167,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           )} */}
 
-          <SidebarFooter className={`px-0 pb-0 ${state === 'collapsed' ? 'md:px-2' : 'md:px-4'}`}>
+          <SidebarFooter className={`shrink-0 px-0 pb-2 ${state === 'collapsed' ? 'md:px-2' : 'md:px-4'}`}>
             <NavMain items={bottomNavItems} />
           </SidebarFooter>
         </Sidebar>

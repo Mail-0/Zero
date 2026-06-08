@@ -65,7 +65,7 @@ export const BimiAvatar = ({
     <Avatar className={className}>
       {bimiData?.logo?.svgContent && !isLoading ? (
         <div
-          className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white dark:bg-[#373737]"
+          className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-card"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bimiData.logo.svgContent) }}
         />
       ) : fallbackImageSrc && !useDefaultFallback ? (

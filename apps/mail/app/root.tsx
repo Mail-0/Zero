@@ -59,8 +59,8 @@ export function Layout({ children }: PropsWithChildren) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#3D1F2A" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#FFF0F5" media="(prefers-color-scheme: light)" />
         <link rel="manifest" href="/manifest.json" />
         <Meta />
         {import.meta.env.REACT_SCAN && (
@@ -148,7 +148,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }, [error, message, details, stack]);
 
   return (
-    <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
+    <div className="dark:bg-background flex w-full items-center justify-center bg-background text-center">
       <div className="flex-col items-center justify-center md:flex dark:text-gray-100">
         {/* Message */}
         <div className="space-y-2">
@@ -185,7 +185,7 @@ function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
+    <div className="dark:bg-background flex w-full items-center justify-center bg-background text-center">
       <div className="flex-col items-center justify-center md:flex dark:text-gray-100">
         <div className="relative">
           <h1 className="text-muted-foreground/20 select-none text-[150px] font-bold">404</h1>

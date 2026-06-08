@@ -1,10 +1,8 @@
 import { type RouteConfig, index, layout, prefix, route } from '@react-router/dev/routes';
 
 export default [
-  // route('/home', 'home/page.tsx'),
-
-  index('(auth)/login/page.tsx'),
-  // route('/home', '(auth)/login/page.tsx'),
+  index('page.tsx'),
+  route('/login', '(auth)/login/page.tsx'),
   route('/auth/callback', '(auth)/callback/page.tsx'),
   route('/zero/signup', '(auth)/zero/signup/page.tsx'),
 
@@ -31,6 +29,7 @@ export default [
         index('(routes)/mail/page.tsx'),
         route('/create', '(routes)/mail/create/page.tsx'),
         route('/compose', '(routes)/mail/compose/page.tsx'),
+        route('/feedback', '(routes)/mail/feedback/page.tsx'),
         route('/under-construction/:path', '(routes)/mail/under-construction/[path]/page.tsx'),
         route('/:folder', '(routes)/mail/[folder]/page.tsx'),
       ]),
@@ -42,7 +41,7 @@ export default [
         route('/appearance', '(routes)/settings/appearance/page.tsx'),
         route('/connections', '(routes)/settings/connections/page.tsx'),
         route('/danger-zone', '(routes)/settings/danger-zone/page.tsx'),
-        route('/general', '(routes)/settings/general/page.tsx'),
+        route('/user-information', '(routes)/settings/user-information/page.tsx'),
         route('/labels', '(routes)/settings/labels/page.tsx'),
         route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),

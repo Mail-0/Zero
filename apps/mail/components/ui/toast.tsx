@@ -35,7 +35,7 @@ const Toaster = () => {
           icon: 'pl-3 icon mr-2',
           content: 'flex-1 p-1.5 pl-2',
           default:
-            'w-full p-1.5 bg-white dark:bg-[#2C2C2C] rounded-xl flex items-center gap-2 overflow-visible border dark:border-none',
+            'w-full p-1.5 bg-card rounded-xl flex items-center gap-2 overflow-visible border dark:border-none',
         },
       }}
     />

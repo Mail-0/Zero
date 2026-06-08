@@ -1,6 +1,5 @@
 import {
   HelpCircle,
-  LogOut,
   MoonIcon,
   Settings,
   Plus,
@@ -24,7 +23,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDoState } from '@/components/mail/use-do-state';
 import { useLoading } from '../context/loading-context';
-import { signOut, useSession } from '@/lib/auth-client';
+import { useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
 import { CircleCheck, ThreeDots } from '../icons/icons';
 import { useTRPC } from '@/providers/query-provider';
@@ -115,7 +114,7 @@ export function NavUser() {
     const currentPath = category
       ? `${pathname}?category=${encodeURIComponent(category)}`
       : pathname;
-    return `/settings/general?from=${encodeURIComponent(currentPath)}`;
+    return `/settings/user-information?from=${encodeURIComponent(currentPath)}`;
   }, [pathname, category]);
 
   const handleClearCache = useCallback(async () => {
@@ -150,18 +149,6 @@ export function NavUser() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    toast.promise(signOut(), {
-      loading: 'Signing out...',
-      success: () => 'Signed out successfully!',
-      error: 'Error signing out',
-      async finally() {
-        // await handleClearCache();
-        window.location.href = '/login';
-      },
-    });
   };
 
   const otherConnections = useMemo(() => {
@@ -305,78 +292,7 @@ export function NavUser() {
                   </>
                 </div>
                 <>
-                  <DropdownMenuSeparator className="mt-1" />
-                  <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">Debug</p>
-                  <DropdownMenuItem onClick={handleCopyConnectionId}>
-                    <div className="flex items-center gap-2">
-                      <CopyCheckIcon size={16} className="opacity-60" />
-                      <p className="text-[13px] opacity-60">Copy Connection ID</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleClearCache}>
-                    <div className="flex items-center gap-2">
-                      <Trash2 size={16} className="opacity-60" />
-                      <p className="text-[13px] opacity-60">Clear Local Cache</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleForceSync()}>
-                    <div className="flex items-center gap-2">
-                      <RefreshCcw size={16} className="opacity-60" />
-                      <p className="text-[13px] opacity-60">Force re-sync</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <SyncingStatusIndicator
-                    isSyncing={isSyncing}
-                    storageSize={storageSize}
-                    syncingFolders={syncingFolders}
-                  />
-                  <DropdownMenuItem>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[13px] opacity-60">Shards: {shards}</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="mt-1" />
-                  <DropdownMenuItem onSelect={() => handleThemeToggle()} className="cursor-pointer">
-                    <div className="flex w-full items-center gap-2">
-                    {resolvedTheme === 'dark' ? (
-                        <MoonIcon className="size-4 opacity-60" />
-                      ) : (
-                        <SunIcon className="size-4 opacity-60" />
-                      )}
-                      <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a
-                      href="https://discord.gg/mail0"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full"
-                    >
-                      <div className="flex items-center gap-2">
-                        <HelpCircle size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">
-                          {m['common.navUser.customerSupport']()}
-                        </p>
-                      </div>
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onSelect={() => handleLogout()}>
-                    <div className="flex items-center gap-2">
-                      <LogOut size={16} className="opacity-60" />
-                      <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="mt-1" />
-                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
-                    <a href="/privacy" className="hover:underline">
-                      Privacy
-                    </a>
-                    <span>·</span>
-                    <a href="/terms" className="hover:underline">
-                      Terms
-                    </a>
-                  </div>
+                  
                 </>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -411,7 +327,7 @@ export function NavUser() {
                       </AvatarFallback>
                     </Avatar>
                     {activeAccount.id === activeConnection?.id && data.connections.length > 1 && (
-                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
+                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-card" />
                     )}
                   </div>
                 </div>
@@ -450,7 +366,7 @@ export function NavUser() {
                           </AvatarFallback>
                         </Avatar>
                         {connection.id === activeConnection?.id && otherConnections.length > 1 && (
-                          <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
+                          <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-card" />
                         )}
                       </div>
                     </div>
@@ -611,12 +527,6 @@ export function NavUser() {
                         </p>
                       </div>
                     </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
-                    <div className="flex items-center gap-2">
-                      <LogOut size={16} className="opacity-60" />
-                      <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
-                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="mt-1" />
                   <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">

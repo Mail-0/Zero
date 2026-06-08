@@ -105,9 +105,9 @@ function SortableNote({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative mb-3 overflow-hidden rounded-md border border-[#E7E7E7] p-3 dark:border-[#252525]',
+        'group relative mb-3 overflow-hidden rounded-md border border-border p-3 dark:border-border',
         note.isPinned && 'ring-1 ring-amber-200 dark:ring-amber-800',
-        note.color === 'default' ? 'bg-white dark:bg-[#202020]' : '',
+        note.color === 'default' ? 'bg-card' : '',
       )}
     >
       <div
@@ -149,7 +149,7 @@ function SortableNote({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="dark:bg-panelDark border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]"
+              className="dark:bg-panelDark border-border bg-card dark:border-border"
             >
               <DropdownMenuItem
                 onClick={onEdit}
@@ -187,7 +187,7 @@ function SortableNote({
                   <span>{m['common.notes.actions.changeColor']()}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="dark:bg-panelDark w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]">
+                  <DropdownMenuSubContent className="dark:bg-panelDark w-48 border-border bg-card dark:border-border">
                     <DropdownMenuRadioGroup value={note.color} onValueChange={onColorChange}>
                       {NOTE_COLORS.map((color) => {
                         return (
@@ -499,7 +499,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              'inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]',
+              'inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-card',
               notes.length > 0 && 'text-amber-500',
               isOpen && 'bg-white/80 dark:bg-[#313131]/80',
             )}
@@ -519,17 +519,17 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             <span className="sr-only">{m['common.notes.title']()}</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+        <TooltipContent side="bottom" className="bg-card">
           <p>{m['common.notes.noteCount']({ count: notes.length })}</p>
         </TooltipContent>
       </Tooltip>
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark max-w-screen fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
+          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark max-w-screen fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full overflow-hidden rounded-t-lg border border-t bg-card shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-border"
           onClick={handlePanelClick}
         >
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border p-3 dark:border-border">
             <h3 className="flex items-center text-sm font-medium text-black dark:text-white">
               <StickyNote className="mr-2 h-4 w-4" />
               {m['common.notes.title']()}{' '}
@@ -542,7 +542,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 rounded-md p-0 hover:bg-white/10"
+              className="h-7 w-7 rounded-md p-0 hover:bg-foreground/10"
               onClick={() => setIsOpen(false)}
             >
               <X className="h-4 w-4 fill-[#9A9A9A]" />
@@ -558,7 +558,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                   placeholder={m['common.notes.search']()}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-[#E7E7E7] bg-white pl-8 text-sm text-black placeholder:text-[#797979] focus:outline-none dark:border-[#252525] dark:bg-[#202020] dark:text-white"
+                  className="border-border bg-white pl-8 text-sm text-black placeholder:text-[#797979] focus:outline-none dark:border-border dark:bg-[#202020] dark:text-white"
                 />
               </div>
             </div>
@@ -603,7 +603,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="mt-4 border-[#E7E7E7] bg-white text-black dark:border-[#252525] dark:bg-[#313131] dark:text-white/90"
+                            className="mt-4 border-border bg-white text-black dark:border-border dark:bg-[#313131] dark:text-white/90"
                             onClick={() => setSearchQuery('')}
                           >
                             {m['common.notes.clearSearch']()}
@@ -671,7 +671,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       )}
 
                       {isAddingNewNote && (
-                        <div className="relative mb-3 overflow-hidden rounded-md border-[#E7E7E7] bg-[#FFFFFF] dark:border-[#252525] dark:bg-[#202020]">
+                        <div className="relative mb-3 overflow-hidden rounded-md border-border bg-card dark:border-border dark:bg-[#202020]">
                           <div
                             className={cn(
                               'absolute bottom-0 left-0 top-0 w-1.5 border-l-4',
@@ -723,7 +723,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                       </TooltipTrigger>
                                       <TooltipContent
                                         side="bottom"
-                                        className="bg-white dark:bg-[#313131]"
+                                        className="bg-card"
                                       >
                                         {color.label}
                                       </TooltipContent>
@@ -737,7 +737,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               <Button
                                 variant="ghost"
                                 size="xs"
-                                className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
+                                className="text-[#8C8C8C] hover:bg-foreground/10 hover:text-[#a0a0a0]"
                                 onClick={() => {
                                   setIsAddingNewNote(false);
                                   setNewNoteContent('');
@@ -762,7 +762,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                         <Button
                           variant="outline"
                           size="xs"
-                          className="mt-1 w-full border-[#E7E7E7] bg-white/5 hover:bg-white/10 dark:border-[#252525] dark:text-white/90"
+                          className="mt-1 w-full border-border bg-foreground/5 hover:bg-foreground/10 dark:border-border dark:text-white/90"
                           onClick={() => setIsAddingNewNote(true)}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" />
@@ -776,7 +776,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
               <DragOverlay>
                 {activeId ? (
-                  <div className="rounded-md border border-[#E7E7E7] bg-white p-3 pl-7 shadow-md dark:border-[#252525] dark:bg-[#202020]">
+                  <div className="rounded-md border border-border bg-white p-3 pl-7 shadow-md dark:border-border dark:bg-[#202020]">
                     <div className="pl-1.5">
                       <div className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
                         {notes.find((n) => n.id === activeId)?.content}
@@ -788,7 +788,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             </DndContext>
 
             {editingNoteId && (
-              <div className="dark:bg-panelDark border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525]">
+              <div className="dark:bg-panelDark border-t border-border bg-card p-3 dark:border-border">
                 <div className="space-y-2">
                   <div className="mb-1 text-xs font-medium text-[#8C8C8C]">
                     {m['common.notes.editNote']()}:
@@ -798,7 +798,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, 'edit')}
-                    className="min-h-[100px] resize-none border-[#E7E7E7] bg-[#FFFFFF] text-sm text-black dark:border-[#252525] dark:bg-[#202020] dark:text-white/90"
+                    className="min-h-[100px] resize-none border-border bg-card text-sm text-black dark:border-border dark:bg-[#202020] dark:text-white/90"
                     placeholder={m['common.notes.addYourNote']()}
                   />
 
@@ -806,7 +806,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     <Button
                       variant="ghost"
                       size="xs"
-                      className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
+                      className="text-[#8C8C8C] hover:bg-foreground/10 hover:text-[#a0a0a0]"
                       onClick={() => {
                         setEditingNoteId(null);
                         setEditContent('');
