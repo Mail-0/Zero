@@ -1,6 +1,6 @@
-const TITLE = 'Zero';
+const TITLE = 'Doorman';
 const DESCRIPTION =
-  'Experience email the way you want with 0 - the first open source email app that puts your privacy and safety first.';
+  'Doorman to provide AI based email system.';
 
 export const siteConfig = {
   title: TITLE,
@@ -8,7 +8,7 @@ export const siteConfig = {
   icons: {
     icon: '/favicon.ico',
   },
-  applicationName: 'Zero',
+  applicationName: 'Doorman',
   creator: '@nizzyabi @bruvimtired @ripgrim @needleXO @dakdevs @mrgsub',
   openGraph: {
     title: TITLE,

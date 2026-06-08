@@ -32,9 +32,7 @@ import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Balancer } from 'react-wrap-balancer';
 import { Navigation } from '../navigation';
-import { useTheme } from 'next-themes';
 import { motion } from 'motion/react';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 import Footer from './footer';
 import React from 'react';
@@ -57,20 +55,15 @@ const tabs = [
 ];
 
 export default function HomeContent() {
-  const { setTheme } = useTheme();
   const navigate = useNavigate();
   const { data: session } = useSession();
 
-  useEffect(() => {
-    setTheme('dark');
-  }, [setTheme]);
-
   return (
-    <main className="relative flex h-full flex-1 flex-col overflow-x-hidden bg-[#0F0F0F] px-2">
+    <main className="relative flex h-full flex-1 flex-col overflow-x-hidden bg-background px-2">
       <PixelatedBackground
-        className="z-1 absolute left-1/2 top-[-40px] h-auto w-screen min-w-[1920px] -translate-x-1/2 object-cover"
+        className="z-1 absolute left-1/2 top-[-40px] h-auto w-screen min-w-[1920px] -translate-x-1/2 object-cover opacity-30"
         style={{
-          mixBlendMode: 'screen',
+          mixBlendMode: 'multiply',
           maskImage: 'linear-gradient(to bottom, black, transparent)',
         }}
       />
@@ -82,7 +75,7 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center text-4xl font-medium md:text-6xl"
+          className="text-foreground text-center text-4xl font-medium md:text-6xl"
         >
           <Balancer className="mb-3 max-w-[1130px]">
             AI Powered Email, Built to Save You Time
@@ -92,16 +85,16 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg"
+          className="text-muted-foreground mx-auto mb-4 max-w-2xl text-center text-base font-medium md:text-lg"
         >
-          Zero is an AI-native email client that manages your inbox, so you don't have to.
+          Doorman is an AI-native email client that manages your inbox, so you don't have to.
         </motion.p>
-        <p className="mb-4 ml-0.5 text-xs text-[#B7B7B7]/60">No credit card required.</p>
+        <p className="text-muted-foreground/60 mb-4 ml-0.5 text-xs">No credit card required.</p>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1"
+          className="border-border bg-card mb-6 inline-flex items-center gap-4 rounded-full border px-4 py-1"
         >
           <Link to="https://yc.vc" target="_blank" className="flex items-center gap-2 text-sm">
             Backed by
@@ -194,7 +187,7 @@ export default function HomeContent() {
         />
       </div>
 
-      <div className="relative -top-3.5 hidden h-px w-full bg-[#313135] md:block" />
+      <div className="relative -top-3.5 hidden h-px w-full bg-border md:block" />
 
       <div className="relative mt-52">
         <motion.div
@@ -203,7 +196,7 @@ export default function HomeContent() {
           transition={{ duration: 0.5 }}
           className="flex items-center justify-center"
         >
-          <h1 className="text-lg font-light text-white/40 md:text-xl">
+          <h1 className="text-lg font-light text-muted-foreground md:text-xl">
             Designed for power users who value time
           </h1>
         </motion.div>
@@ -213,10 +206,10 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-2 flex flex-col items-center justify-center md:mt-8"
         >
-          <h1 className="text-center text-4xl font-medium text-white md:text-6xl">
+          <h1 className="text-center text-4xl font-medium text-foreground md:text-6xl">
             Speed Is Everything
           </h1>
-          <h1 className="mb-3 text-center text-4xl font-medium text-white/40 md:text-6xl">
+          <h1 className="mb-3 text-center text-4xl font-medium text-muted-foreground md:text-6xl">
             Reply in seconds
           </h1>
         </motion.div>
@@ -224,13 +217,13 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="relative bottom-3 mx-12 flex items-center justify-center bg-[#0F0F0F] md:mx-0"
+          className="relative bottom-3 mx-12 flex items-center justify-center bg-background md:mx-0"
         >
-          <div className="bg-panelDark mx-auto mt-10 inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md">
+          <div className="bg-card mx-auto mt-10 inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md">
             <div className="inline-flex h-12 items-center justify-start gap-2 self-stretch border-b-[0.50px] p-4">
               <div className="text-base-gray-500/50 justify-start text-sm leading-none">To:</div>
               <div className="flex flex-1 items-center justify-start gap-1">
-                <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1.5 rounded-full border border-[#2B2B2B] py-1 pl-1 pr-1.5">
+                <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1.5 rounded-full border border-border py-1 pl-1 pr-1.5">
                   <img
                     height={20}
                     width={20}
@@ -246,7 +239,7 @@ export default function HomeContent() {
                     </div>
                   </div>
                 </div>
-                <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1.5 rounded-full border border-[#2B2B2B] py-1 pl-1 pr-1.5">
+                <div className="outline-tokens-badge-default/10 flex items-center justify-start gap-1.5 rounded-full border border-border py-1 pl-1 pr-1.5">
                   <img
                     height={20}
                     width={20}
@@ -265,7 +258,7 @@ export default function HomeContent() {
               </div>
             </div>
             <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch p-4">
-              <Clock className="relative h-3.5 w-3.5 overflow-hidden fill-[#9A9A9A]" />
+              <Clock className="relative h-3.5 w-3.5 overflow-hidden fill-muted-foreground" />
               <div className="inline-flex flex-1 flex-col items-start justify-start gap-3">
                 <div className="inline-flex items-center justify-start gap-1 self-stretch">
                   <div className="text-base-gray-950 flex-1 justify-start text-sm font-normal leading-none">
@@ -274,17 +267,17 @@ export default function HomeContent() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-start justify-start gap-12 self-stretch rounded-2xl bg-[#202020] px-4 py-3">
+            <div className="flex flex-col items-start justify-start gap-12 self-stretch rounded-2xl bg-secondary px-4 py-3">
               <div className="flex flex-col items-start justify-start gap-3 self-stretch">
-                <div className="justify-start self-stretch text-sm font-normal leading-normal text-white">
+                <div className="justify-start self-stretch text-sm font-normal leading-normal text-foreground">
                   Hey team,
                 </div>
-                <div className="justify-start self-stretch text-sm font-normal leading-normal text-white">
+                <div className="justify-start self-stretch text-sm font-normal leading-normal text-foreground">
                   I took a look at the code review feedback. Really like the keyboard navigation -
                   it makes everything much faster to access. The search implementation is clean,
                   though I'd love to see the link to test it out myself.
                 </div>
-                <div className="justify-start self-stretch text-sm font-normal leading-normal text-white">
+                <div className="justify-start self-stretch text-sm font-normal leading-normal text-foreground">
                   Let me know when you can share the preview and I'll provide more detailed
                   feedback.
                 </div>
@@ -298,21 +291,21 @@ export default function HomeContent() {
                           Send <span className="hidden md:inline">now</span>
                         </div>
                       </div>
-                      <div className="flex h-5 items-center justify-center gap-2.5 rounded bg-[#E7E7E7] px-1 outline outline-1 -outline-offset-1 outline-[#D2D2D2]">
+                      <div className="flex h-5 items-center justify-center gap-2.5 rounded bg-muted px-1 outline outline-1 -outline-offset-1 outline-border">
                         <div className="text-tokens-shortcut-primary-symbol justify-start text-center text-sm font-semibold leading-none">
                           ⏎
                         </div>
                       </div>
                     </div>
                     <div className="bg-base-gray-950 flex items-center justify-start gap-2.5 self-stretch px-2 pr-3">
-                      <div className="relative h-3 w-px rounded-full bg-[#D0D0D0]" />
+                      <div className="relative h-3 w-px rounded-full bg-border" />
                     </div>
                     <div className="bg-base-gray-950 flex h-7 items-center justify-center gap-1.5 overflow-hidden rounded-br-md rounded-tr-md pr-2">
                       <ChevronDown className="relative h-2 w-2 overflow-hidden fill-black" />
                     </div>
                   </div>
-                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-[#373737] px-1.5">
-                    <Plus className="relative h-2.5 w-2.5 overflow-hidden fill-[#9A9A9A]" />
+                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-accent px-1.5">
+                    <Plus className="relative h-2.5 w-2.5 overflow-hidden fill-muted-foreground" />
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
                       <div className="text-base-gray-950 justify-start text-sm leading-none">
                         Add <span className="hidden md:inline">files</span>
@@ -321,8 +314,8 @@ export default function HomeContent() {
                   </div>
                 </div>
                 <div className="hidden items-start justify-start gap-3 md:flex">
-                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-[#373737] px-1.5">
-                    <Cube className="relative h-3 w-3 overflow-hidden fill-[#9A9A9A]" />
+                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-accent px-1.5">
+                    <Cube className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
 
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
                       <div className="text-base-gray-950 justify-start text-sm leading-none">
@@ -330,8 +323,8 @@ export default function HomeContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-[#373737] px-1.5">
-                    <MediumStack className="relative mx-1 h-2.5 w-2.5 overflow-hidden fill-[#9A9A9A]" />
+                  <div className="flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-accent px-1.5">
+                    <MediumStack className="relative mx-1 h-2.5 w-2.5 overflow-hidden fill-muted-foreground" />
 
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
                       <div className="text-base-gray-950 justify-start text-sm leading-none">
@@ -345,26 +338,26 @@ export default function HomeContent() {
             <div className="inline-flex items-start justify-start self-stretch">
               <div className="border-tokens-stroke-light/5 flex h-12 flex-1 items-center justify-center gap-2 border-r-[0.50px]">
                 <div className="flex items-center justify-start gap-1">
-                  <div className="flex h-5 w-5 items-center justify-center gap-2.5 rounded-[5px] bg-[#2B2B2B] px-1.5">
-                    <div className="justify-start text-center text-sm font-semibold leading-none text-[#8C8C8C]">
+                  <div className="flex h-5 w-5 items-center justify-center gap-2.5 rounded-[5px] bg-secondary px-1.5">
+                    <div className="justify-start text-center text-sm font-semibold leading-none text-muted-foreground">
                       ↓
                     </div>
                   </div>
-                  <div className="flex h-5 w-5 items-center justify-center gap-2.5 rounded-[5px] bg-[#2B2B2B] px-1.5">
-                    <div className="justify-start text-center text-sm font-semibold leading-none text-[#8C8C8C]">
+                  <div className="flex h-5 w-5 items-center justify-center gap-2.5 rounded-[5px] bg-secondary px-1.5">
+                    <div className="justify-start text-center text-sm font-semibold leading-none text-muted-foreground">
                       ↑
                     </div>
                   </div>
                 </div>
-                <div className="justify-start text-sm leading-none text-[#8C8C8C]">to navigate</div>
+                <div className="justify-start text-sm leading-none text-muted-foreground">to navigate</div>
               </div>
               <div className="flex h-12 flex-1 items-center justify-center gap-2">
-                <div className="flex h-5 items-center justify-center gap-2.5 rounded-[5px] bg-[#2B2B2B] px-1">
-                  <div className="justify-start text-center text-sm font-semibold leading-none text-[#8C8C8C]">
+                <div className="flex h-5 items-center justify-center gap-2.5 rounded-[5px] bg-secondary px-1">
+                  <div className="justify-start text-center text-sm font-semibold leading-none text-muted-foreground">
                     ⌘Z
                   </div>
                 </div>
-                <div className="justify-start text-sm leading-none text-[#8C8C8C]">
+                <div className="justify-start text-sm leading-none text-muted-foreground">
                   return generation
                 </div>
               </div>
@@ -382,52 +375,52 @@ export default function HomeContent() {
             className="flex flex-col"
           >
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl md:h-96">
-              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl border border-[#252525] bg-neutral-800 md:h-96 md:w-96" />
-              <div className="outline-tokens-stroke-light/5 bg-panelDark absolute left-1/2 top-[34px] inline-flex h-[771px] w-72 -translate-x-1/2 flex-col items-start justify-start overflow-hidden rounded-lg">
-                <div className="inline-flex h-10 items-center justify-start gap-3 self-stretch overflow-hidden border-b-[0.38px] border-[#252525] px-4 py-5">
+              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl border border-border bg-neutral-800 md:h-96 md:w-96" />
+              <div className="outline-tokens-stroke-light/5 bg-card absolute left-1/2 top-[34px] inline-flex h-[771px] w-72 -translate-x-1/2 flex-col items-start justify-start overflow-hidden rounded-lg">
+                <div className="inline-flex h-10 items-center justify-start gap-3 self-stretch overflow-hidden border-b-[0.38px] border-border px-4 py-5">
                   <div className="flex flex-1 items-center justify-start gap-2">
                     <div className="flex flex-1 items-center justify-start gap-1.5">
-                      <PanelLeftOpen className="h-3 w-3 fill-[#8C8C8C]" />
-                      <div className="ml-1 justify-start text-xs leading-3 text-white">Inbox</div>
+                      <PanelLeftOpen className="h-3 w-3 fill-muted-foreground" />
+                      <div className="ml-1 justify-start text-xs leading-3 text-foreground">Inbox</div>
                     </div>
                   </div>
                   <div className="flex items-center justify-start gap-1">
-                    <Check className="h-2.5 w-2.5 fill-[#8C8C8C]" />
-                    <div className="justify-start text-xs leading-3 text-[#8C8C8C]">Select</div>
+                    <Check className="h-2.5 w-2.5 fill-muted-foreground" />
+                    <div className="justify-start text-xs leading-3 text-muted-foreground">Select</div>
                   </div>
-                  <div className="relative h-2.5 w-[0.76px] rounded-full bg-[#252525]" />
+                  <div className="relative h-2.5 w-[0.76px] rounded-full bg-secondary" />
                   <div className="flex items-center justify-start gap-2">
-                    <Filter className="relative h-3 w-3 fill-[#8C8C8C]" />
+                    <Filter className="relative h-3 w-3 fill-muted-foreground" />
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-3 self-stretch p-4">
-                  <div className="inline-flex h-7 items-center justify-start gap-1 self-stretch overflow-hidden rounded bg-[#141414] pl-1.5 pr-[3.04px]">
-                    <Search className="relative mr-1 h-3 w-3 overflow-hidden rounded-[1.14px] fill-[#8C8C8C]" />
-                    <div className="flex-1 justify-start text-xs leading-3 text-[#929292]">
+                  <div className="inline-flex h-7 items-center justify-start gap-1 self-stretch overflow-hidden rounded bg-muted pl-1.5 pr-[3.04px]">
+                    <Search className="relative mr-1 h-3 w-3 overflow-hidden rounded-[1.14px] fill-muted-foreground" />
+                    <div className="flex-1 justify-start text-xs leading-3 text-muted-foreground">
                       Search
                     </div>
-                    <div className="flex h-5 items-center justify-center gap-2 rounded-sm bg-[#262626] px-1">
-                      <div className="justify-start text-xs leading-3 text-[#929292]">⌘K</div>
+                    <div className="flex h-5 items-center justify-center gap-2 rounded-sm bg-accent px-1">
+                      <div className="justify-start text-xs leading-3 text-muted-foreground">⌘K</div>
                     </div>
                   </div>
                   <div className="inline-flex items-start justify-start gap-1.5 self-stretch">
-                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-[#313131]">
-                      <Lightning className="relative h-3 w-3 overflow-hidden fill-[#989898]" />
+                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-accent">
+                      <Lightning className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
                     </div>
-                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-[#313131]">
-                      <ExclamationTriangle className="relative h-3.5 w-3.5 overflow-hidden fill-[#989898]" />
+                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-accent">
+                      <ExclamationTriangle className="relative h-3.5 w-3.5 overflow-hidden fill-muted-foreground" />
                     </div>
                     <div className="flex h-6 flex-1 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-[#39AE4A] px-2.5">
                       <User className="relative h-3 w-3 overflow-hidden fill-white" />
                       <div className="flex items-center justify-center gap-2 px-[1.52px]">
-                        <div className="justify-start text-xs leading-3 text-white">Personal</div>
+                        <div className="justify-start text-xs leading-3 text-foreground">Personal</div>
                       </div>
                     </div>
-                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-[#313131]">
-                      <Bell className="relative h-3 w-3 overflow-hidden fill-[#989898]" />
+                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-accent">
+                      <Bell className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
                     </div>
-                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-[#313131]">
-                      <Tag className="relative h-3 w-3 overflow-hidden fill-[#989898]" />
+                    <div className="flex h-6 w-6 items-center justify-center gap-[3.04px] overflow-hidden rounded bg-accent">
+                      <Tag className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
                     </div>
                   </div>
                   <div className="relative flex flex-col items-start justify-center gap-2.5 self-stretch overflow-hidden rounded-md bg-[#12341D] px-2 py-2.5">
@@ -443,8 +436,8 @@ export default function HomeContent() {
                 </div>
                 <div className="inline-flex items-center justify-start gap-1 self-stretch px-4 pb-3 pt-5">
                   <div className="flex flex-1 items-center justify-start gap-1">
-                    <div className="justify-start text-xs leading-3 text-[#8C8C8C]">Pinned</div>
-                    <div className="justify-start text-xs leading-3 text-[#8C8C8C]">[3]</div>
+                    <div className="justify-start text-xs leading-3 text-muted-foreground">Pinned</div>
+                    <div className="justify-start text-xs leading-3 text-muted-foreground">[3]</div>
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-1.5 self-stretch px-1.5">
@@ -463,15 +456,15 @@ export default function HomeContent() {
                             <div className="text-base-gray-950 justify-start text-xs leading-3">
                               Nizzy
                             </div>
-                            <div className="justify-start text-center text-xs leading-3 text-[#8C8C8C]">
+                            <div className="justify-start text-center text-xs leading-3 text-muted-foreground">
                               [9]
                             </div>
                           </div>
                         </div>
-                        <div className="text-xs font-normal leading-3 text-[#8C8C8C]">Mar 29</div>
+                        <div className="text-xs font-normal leading-3 text-muted-foreground">Mar 29</div>
                       </div>
                       <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                        <div className="text-xs font-normal leading-3 text-[#8C8C8C]">
+                        <div className="text-xs font-normal leading-3 text-muted-foreground">
                           New design review
                         </div>
                         <div className="flex items-start justify-start gap-[3.04px]">
@@ -481,8 +474,8 @@ export default function HomeContent() {
                     </div>
                   </div>
                   <div className="inline-flex items-center justify-start gap-2.5 self-stretch rounded-lg p-2.5">
-                    <div className="inline-flex h-6 w-6 flex-col items-center justify-center gap-2 overflow-hidden rounded-full bg-[#313131] px-1 py-2">
-                      <GroupPeople className="relative h-5 w-5 overflow-hidden fill-[#989898]" />
+                    <div className="inline-flex h-6 w-6 flex-col items-center justify-center gap-2 overflow-hidden rounded-full bg-accent px-1 py-2">
+                      <GroupPeople className="relative h-5 w-5 overflow-hidden fill-muted-foreground" />
                     </div>
                     <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
                       <div className="inline-flex items-start justify-start gap-2 self-stretch">
@@ -491,15 +484,15 @@ export default function HomeContent() {
                             <div className="text-base-gray-950 justify-start text-xs leading-3">
                               Alex, Ali, Sarah
                             </div>
-                            <div className="justify-start text-center text-xs leading-3 text-[#8C8C8C]">
+                            <div className="justify-start text-center text-xs leading-3 text-muted-foreground">
                               [6]
                             </div>
                           </div>
                         </div>
-                        <div className="text-xs font-normal leading-3 text-[#8C8C8C]">Mar 28</div>
+                        <div className="text-xs font-normal leading-3 text-muted-foreground">Mar 28</div>
                       </div>
                       <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                        <div className="text-xs font-normal leading-3 text-[#8C8C8C]">
+                        <div className="text-xs font-normal leading-3 text-muted-foreground">
                           Re: Design review feedback
                         </div>
                         <div className="flex items-start justify-start gap-[3.04px]">
@@ -513,10 +506,10 @@ export default function HomeContent() {
               </div>
             </div>
             <div className="mt-4 gap-4">
-              <h1 className="mb-2 text-xl font-medium leading-loose text-white">
+              <h1 className="mb-2 text-xl font-medium leading-loose text-foreground">
                 Lightning-Fast Interface
               </h1>
-              <p className="max-w-sm text-sm font-light text-[#979797]">
+              <p className="max-w-sm text-sm font-light text-muted-foreground">
                 Email at the speed of thought. Navigate your entire inbox using just your keyboard.
                 Process hundreds of emails in minutes.
               </p>
@@ -528,16 +521,16 @@ export default function HomeContent() {
             transition={{ duration: 0.5 }}
           >
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl md:h-96">
-              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl bg-[#2B2B2B] md:h-96 md:w-96" />
+              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl bg-secondary md:h-96 md:w-96" />
               <div className="absolute left-[44px] top-0 h-[720px] w-[610px]">
-                <div className="absolute left-[31px] top-[29px] inline-flex h-[720px] w-[547px] flex-col items-start justify-start overflow-hidden rounded-lg bg-[#202020] opacity-20">
+                <div className="absolute left-[31px] top-[29px] inline-flex h-[720px] w-[547px] flex-col items-start justify-start overflow-hidden rounded-lg bg-secondary opacity-20">
                   <div className="border-tokens-stroke-light/5 inline-flex h-9 items-center justify-between self-stretch overflow-hidden border-b-[0.35px] py-3 pl-3.5 pr-2">
                     <div className="flex items-center justify-start gap-3">
-                      <X className="relative h-3 w-3 overflow-hidden fill-[#8C8C8C]" />
-                      <div className="relative h-2 w-[0.71px] rounded-full bg-[#2B2B2B]" />
+                      <X className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
+                      <div className="relative h-2 w-[0.71px] rounded-full bg-secondary" />
                       <div className="flex items-center justify-start gap-2">
-                        <ChevronLeft className="relative h-3 w-3 overflow-hidden fill-[#8C8C8C]" />
-                        <ChevronRight className="relative h-3 w-3 overflow-hidden fill-[#8C8C8C]" />
+                        <ChevronLeft className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
+                        <ChevronRight className="relative h-3 w-3 overflow-hidden fill-muted-foreground" />
                       </div>
                     </div>
                     <div className="flex items-center justify-start gap-2">
@@ -581,7 +574,7 @@ export default function HomeContent() {
                           </div>
                         </div>
                         <div className="inline-flex items-start justify-start gap-1 self-stretch">
-                          <Calendar className="relative bottom-px h-2.5 w-2.5 overflow-hidden fill-[#8C8C8C]" />
+                          <Calendar className="relative bottom-px h-2.5 w-2.5 overflow-hidden fill-muted-foreground" />
                           <div className="text-base-gray-500/50 flex-1 justify-start text-[9.92px] font-normal leading-[9.92px]">
                             March 25 - March 29
                           </div>
@@ -731,10 +724,10 @@ export default function HomeContent() {
                     </div>
                     <div className="flex items-center justify-start gap-1 text-xs leading-3 text-[#948CA4]">
                       AI Summary
-                      <ChevronDown className="relative h-2 w-2 overflow-hidden fill-[#8C8C8C]" />
+                      <ChevronDown className="relative h-2 w-2 overflow-hidden fill-muted-foreground" />
                     </div>
                   </div>
-                  <div className="justify-start self-stretch text-base font-normal leading-snug text-white">
+                  <div className="justify-start self-stretch text-base font-normal leading-snug text-foreground">
                     Design review of new email client features. Team discussed command center
                     improvements and{' '}
                     <span className="text-[#D8C8FC]">
@@ -746,10 +739,10 @@ export default function HomeContent() {
               </div>
             </div>
             <div>
-              <h1 className="mb-2 mt-4 text-lg font-medium leading-loose text-white">
+              <h1 className="mb-2 mt-4 text-lg font-medium leading-loose text-foreground">
                 AI-Powered Summaries
               </h1>
-              <p className="max-w-sm text-sm font-light text-[#979797]">
+              <p className="max-w-sm text-sm font-light text-muted-foreground">
                 Your personal email copilot. Let our AI draft responses, summarize long threads, and
                 extract action items automatically.
               </p>
@@ -761,25 +754,25 @@ export default function HomeContent() {
             transition={{ duration: 0.5 }}
           >
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl md:h-96">
-              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl bg-[#2B2B2B] md:h-96 md:w-96" />
-              <div className="bg-panelDark absolute left-[34px] top-[34px] inline-flex w-[600px] flex-col items-start justify-start overflow-hidden rounded-xl">
+              <div className="absolute left-0 top-0 aspect-square w-full rounded-2xl bg-secondary md:h-96 md:w-96" />
+              <div className="bg-card absolute left-[34px] top-[34px] inline-flex w-[600px] flex-col items-start justify-start overflow-hidden rounded-xl">
                 <div className="bg-tokens-surface-secondary border-tokens-stroke-light/5 inline-flex h-12 items-center justify-center gap-3 self-stretch overflow-hidden border-b-[0.50px] px-4 py-3">
-                  <div className="flex h-6 items-center justify-center overflow-hidden rounded bg-[#262626] pl-1 pr-1.5">
-                    <X className="relative h-3.5 w-3.5 overflow-hidden fill-[#767676]" />
-                    <div className="flex items-center justify-center gap-2.5 px-0.5 text-[#767676]">
+                  <div className="flex h-6 items-center justify-center overflow-hidden rounded bg-accent pl-1 pr-1.5">
+                    <X className="relative h-3.5 w-3.5 overflow-hidden fill-muted-foreground" />
+                    <div className="flex items-center justify-center gap-2.5 px-0.5 text-muted-foreground">
                       esc
                     </div>
                   </div>
                   <div className="flex flex-1 items-center justify-start gap-1">
-                    <div className="relative w-px self-stretch rounded-full bg-[#767676]" />
-                    <div className="flex-1 justify-center text-sm font-normal leading-none text-[#767676]">
+                    <div className="relative w-px self-stretch rounded-full bg-muted-foreground" />
+                    <div className="flex-1 justify-center text-sm font-normal leading-none text-muted-foreground">
                       Search by sender, subject, or content...
                     </div>
                   </div>
                 </div>
                 <div className="bg-tokens-surface-secondary border-tokens-stroke-light/5 flex flex-col items-start justify-start self-stretch overflow-hidden border-b-[0.50px]">
                   <div className="inline-flex items-center justify-start gap-1.5 self-stretch px-5 pb-3 pt-5">
-                    <div className="flex-1 justify-start text-sm leading-none text-[#8C8C8C]">
+                    <div className="flex-1 justify-start text-sm leading-none text-muted-foreground">
                       Recently interacted
                     </div>
                   </div>
@@ -810,7 +803,7 @@ export default function HomeContent() {
                           </div>
                         </div>
                         <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                          <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                          <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                             Payment confirmation #1234
                           </div>
                           <div className="flex items-start justify-start gap-1">
@@ -847,7 +840,7 @@ export default function HomeContent() {
                           </div>
                         </div>
                         <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                          <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                          <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                             New shows added to your list
                           </div>
                           <div className="flex items-start justify-start gap-1">
@@ -857,7 +850,7 @@ export default function HomeContent() {
                         </div>
                       </div>
                     </div>
-                    <div className="inline-flex items-center justify-start gap-3 self-stretch rounded-[10px] bg-[#202020] p-3">
+                    <div className="inline-flex items-center justify-start gap-3 self-stretch rounded-[10px] bg-secondary p-3">
                       <img
                         className="h-8 w-8 rounded-full"
                         src="/dudu.jpg"
@@ -872,7 +865,7 @@ export default function HomeContent() {
                               <div className="text-base-gray-950 justify-start text-sm leading-none">
                                 Dudu
                               </div>
-                              <div className="justify-start text-center text-sm leading-none text-[#8C8C8C]">
+                              <div className="justify-start text-center text-sm leading-none text-muted-foreground">
                                 [9]
                               </div>
                             </div>
@@ -882,7 +875,7 @@ export default function HomeContent() {
                           </div>
                         </div>
                         <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                          <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                          <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                             New design review
                           </div>
                           <div className="flex items-start justify-start gap-1">
@@ -892,7 +885,7 @@ export default function HomeContent() {
                       </div>
                     </div>
                     <div className="inline-flex items-center justify-start gap-3 self-stretch rounded-lg p-3">
-                      <div className="inline-flex h-8 w-8 flex-col items-center justify-center gap-2.5 overflow-hidden rounded-full bg-[#2B2B2B]">
+                      <div className="inline-flex h-8 w-8 flex-col items-center justify-center gap-2.5 overflow-hidden rounded-full bg-secondary">
                         <div className="relative h-8 w-8 overflow-hidden">
                           <div className="absolute left-[10.60px] top-[8px] h-4 w-2.5 overflow-hidden">
                             <Figma className="relative h-4 w-2.5 overflow-hidden" />
@@ -906,7 +899,7 @@ export default function HomeContent() {
                               <div className="text-base-gray-950 justify-start text-sm leading-none">
                                 Figma
                               </div>
-                              <div className="justify-start text-center text-sm leading-none text-[#8C8C8C]">
+                              <div className="justify-start text-center text-sm leading-none text-muted-foreground">
                                 [5]
                               </div>
                             </div>
@@ -1029,8 +1022,8 @@ export default function HomeContent() {
               </div>
             </div>
             <div className="mt-4">
-              <h1 className="mb-2 text-lg font-medium leading-loose text-white">Smart Search</h1>
-              <p className="max-w-sm text-sm font-light text-[#979797]">
+              <h1 className="mb-2 text-lg font-medium leading-loose text-foreground">Smart Search</h1>
+              <p className="max-w-sm text-sm font-light text-muted-foreground">
                 Your inbox, your rules. Create personalized email processing flows that match
                 exactly how you organize,write, reply, and work.
               </p>
@@ -1047,7 +1040,7 @@ export default function HomeContent() {
             transition={{ duration: 0.5 }}
             className="flex items-center justify-center"
           >
-            <h1 className="text-lg font-light text-white/40 md:text-xl">
+            <h1 className="text-lg font-light text-muted-foreground md:text-xl">
               AI email chat with natural language
             </h1>
           </motion.div>
@@ -1057,8 +1050,8 @@ export default function HomeContent() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-2 flex flex-col items-center justify-center md:mt-8"
           >
-            <h1 className="text-4xl font-medium text-white md:text-6xl">Ask away</h1>
-            <h1 className="mb-4 text-4xl font-medium text-white/40 md:text-6xl">
+            <h1 className="text-4xl font-medium text-foreground md:text-6xl">Ask away</h1>
+            <h1 className="mb-4 text-4xl font-medium text-muted-foreground md:text-6xl">
               Get your answers
             </h1>
           </motion.div>
@@ -1073,8 +1066,8 @@ export default function HomeContent() {
               <div className="absolute left-0 top-[319px] mx-auto inline-flex w-full max-w-[894px] flex-col items-start justify-start overflow-hidden rounded-xl bg-zinc-900 opacity-30">
                 <div className="inline-flex items-center justify-start gap-1.5 self-stretch px-5 pb-4 pt-7">
                   <div className="flex flex-1 items-center justify-start gap-1.5">
-                    <div className="justify-start text-sm leading-none text-[#8C8C8C]">Pinned</div>
-                    <div className="justify-start text-sm leading-none text-[#8C8C8C]">[3]</div>
+                    <div className="justify-start text-sm leading-none text-muted-foreground">Pinned</div>
+                    <div className="justify-start text-sm leading-none text-muted-foreground">[3]</div>
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-2 self-stretch px-2 pb-2">
@@ -1093,17 +1086,17 @@ export default function HomeContent() {
                             <div className="text-base-gray-950 justify-start text-sm leading-none">
                               Adam from Zero
                             </div>
-                            <div className="justify-start text-center text-sm leading-none text-[#8C8C8C]">
+                            <div className="justify-start text-center text-sm leading-none text-muted-foreground">
                               [9]
                             </div>
                           </div>
                         </div>
-                        <div className="justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="justify-start text-sm font-normal leading-none text-muted-foreground">
                           Mar 29
                         </div>
                       </div>
                       <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                        <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                           New design review
                         </div>
                         <div className="flex items-start justify-start gap-1">
@@ -1113,8 +1106,8 @@ export default function HomeContent() {
                     </div>
                   </div>
                   <div className="inline-flex items-center justify-start gap-3 self-stretch rounded-[10px] p-3">
-                    <div className="inline-flex h-8 w-8 flex-col items-center justify-center gap-2.5 overflow-hidden rounded-full bg-[#313131] px-1.5 py-2.5 shadow-[0px_0px_0px_0.5px_rgba(255,255,255,0.00)] shadow-[0px_1px_2px_0px_rgba(255,255,255,0.00)]">
-                      <GroupPeople className="h-5 w-5 overflow-hidden fill-[#989898]" />
+                    <div className="inline-flex h-8 w-8 flex-col items-center justify-center gap-2.5 overflow-hidden rounded-full bg-accent px-1.5 py-2.5 shadow-[0px_0px_0px_0.5px_rgba(255,255,255,0.00)] shadow-[0px_1px_2px_0px_rgba(255,255,255,0.00)]">
+                      <GroupPeople className="h-5 w-5 overflow-hidden fill-muted-foreground" />
                     </div>
                     <div className="inline-flex flex-1 flex-col items-start justify-start gap-2.5">
                       <div className="inline-flex items-start justify-start gap-2.5 self-stretch">
@@ -1123,17 +1116,17 @@ export default function HomeContent() {
                             <div className="text-base-gray-950 justify-start text-sm leading-none">
                               Alex, Ali, Sarah
                             </div>
-                            <div className="justify-start text-center text-sm leading-none text-[#8C8C8C]">
+                            <div className="justify-start text-center text-sm leading-none text-muted-foreground">
                               [6]
                             </div>
                           </div>
                         </div>
-                        <div className="justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="justify-start text-sm font-normal leading-none text-muted-foreground">
                           Mar 28
                         </div>
                       </div>
                       <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                        <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                           Re: Design review feedback
                         </div>
                         <div className="flex items-start justify-start gap-1">
@@ -1156,17 +1149,17 @@ export default function HomeContent() {
                             <div className="text-base-gray-950 justify-start text-sm leading-none">
                               GitHub
                             </div>
-                            <div className="justify-start text-center text-sm leading-none text-[#8C8C8C]">
+                            <div className="justify-start text-center text-sm leading-none text-muted-foreground">
                               [8]
                             </div>
                           </div>
                         </div>
-                        <div className="justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="justify-start text-sm font-normal leading-none text-muted-foreground">
                           Mar 28
                         </div>
                       </div>
                       <div className="inline-flex items-center justify-start gap-2.5 self-stretch">
-                        <div className="flex-1 justify-start text-sm font-normal leading-none text-[#8C8C8C]">
+                        <div className="flex-1 justify-start text-sm font-normal leading-none text-muted-foreground">
                           Security alert: Critical vulnerability
                         </div>
                         <div className="flex items-start justify-start gap-1">
@@ -1179,22 +1172,22 @@ export default function HomeContent() {
                   </div>
                 </div>
               </div>
-              <div className="absolute top-0 inline-flex aspect-96/125 w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#252525] md:h-[500px] md:w-96">
+              <div className="absolute top-0 inline-flex aspect-96/125 w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-secondary md:h-[500px] md:w-96">
                 <div className="border-tokens-stroke-light/5 inline-flex items-center justify-start gap-2 self-stretch overflow-hidden border-b-[0.50px] py-3.5 pl-5 pr-3.5">
                   <div className="flex flex-1 items-center justify-start gap-3">
                     <div className="text-base-gray-950 flex flex-1 items-center justify-start text-sm leading-none">
-                      <X className="mr-2 h-4 w-4 fill-[#8C8C8C]" />
+                      <X className="mr-2 h-4 w-4 fill-muted-foreground" />
                       New chat
                     </div>
                   </div>
                   <div className="flex h-6 items-center justify-center gap-0.5 overflow-hidden rounded-md px-1">
-                    <Plus className="h-3 w-3 overflow-hidden fill-[#8C8C8C]" />
+                    <Plus className="h-3 w-3 overflow-hidden fill-muted-foreground" />
                   </div>
                   <div className="flex h-6 items-center justify-center gap-0.5 overflow-hidden rounded-md px-1">
-                    <PanelLeftOpen className="h-3 w-3 overflow-hidden fill-[#8C8C8C]" />
+                    <PanelLeftOpen className="h-3 w-3 overflow-hidden fill-muted-foreground" />
                   </div>
                   <div className="flex h-6 items-center justify-center gap-0.5 overflow-hidden rounded-md px-1">
-                    <Expand className="h-2.5 w-2.5 overflow-hidden fill-[#8C8C8C]" />
+                    <Expand className="h-2.5 w-2.5 overflow-hidden fill-muted-foreground" />
                   </div>
                 </div>
                 <div className="relative flex h-full flex-1 flex-col items-center justify-between gap-8 self-stretch overflow-hidden px-5 py-4">
@@ -1209,7 +1202,7 @@ export default function HomeContent() {
                     <div className="text-base-gray-950 justify-start text-sm leading-none">
                       Ask anything about your emails
                     </div>
-                    <div className="justify-start text-sm font-normal leading-none text-[#929292]">
+                    <div className="justify-start text-sm font-normal leading-none text-muted-foreground">
                       Ask to do or show anything using natural language
                     </div>
                   </div>
@@ -1220,10 +1213,10 @@ export default function HomeContent() {
                         {firstRowQueries.map((query) => (
                           <div
                             key={query}
-                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
+                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-accent px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
-                              <div className="justify-start text-sm leading-none text-[#8B8B8B]">
+                              <div className="justify-start text-sm leading-none text-muted-foreground">
                                 {query}
                               </div>
                             </div>
@@ -1240,10 +1233,10 @@ export default function HomeContent() {
                         {secondRowQueries.map((query) => (
                           <div
                             key={query}
-                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
+                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-accent px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
-                              <div className="justify-start text-sm leading-none text-[#8B8B8B]">
+                              <div className="justify-start text-sm leading-none text-muted-foreground">
                                 {query}
                               </div>
                             </div>
@@ -1255,12 +1248,12 @@ export default function HomeContent() {
                     </div>
                   </div>
                   <div className="inline-flex w-full items-center justify-start gap-4 overflow-hidden p-0 md:w-96 md:p-4 md:pb-0">
-                    <div className="flex h-8 flex-1 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#141414] pl-2.5 pr-1">
+                    <div className="flex h-8 flex-1 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-muted pl-2.5 pr-1">
                       <div className="relative h-3 w-px rounded-full bg-white" />
-                      <div className="flex-1 justify-start text-sm leading-none text-[#727272]">
+                      <div className="flex-1 justify-start text-sm leading-none text-muted-foreground">
                         Ask Zero to do anything...
                       </div>
-                      <div className="flex h-6 items-center justify-center gap-2.5 rounded bg-[#262626] px-1">
+                      <div className="flex h-6 items-center justify-center gap-2.5 rounded bg-accent px-1">
                         <CurvedArrow className="relative left-px mt-1 h-4 w-4 fill-black dark:fill-[#929292]" />
                       </div>
                     </div>
@@ -1286,18 +1279,18 @@ export default function HomeContent() {
         transition={{ duration: 0.5 }}
         className="relative hidden lg:block"
       >
-        <div className="mx-auto max-w-[920px] text-center text-4xl font-normal leading-[48px] text-white">
+        <div className="mx-auto max-w-[920px] text-center text-4xl font-normal leading-[48px] text-foreground">
           <span className="text-[#B7B7B7]">Work smarter, not harder.</span>{' '}
-          <span className="pr-12 text-white">Automate repetitive</span>{' '}
+          <span className="pr-12 text-foreground">Automate repetitive</span>{' '}
           <span className="text-[#B7B7B7]">email</span>
           <span className="text-[#B7B7B7]"> tasks with</span>{' '}
-          <span className="pr-14 text-white">smart templates, </span>{' '}
-          <span className="text-white">scheduled sends</span>
+          <span className="pr-14 text-foreground">smart templates, </span>{' '}
+          <span className="text-foreground">scheduled sends</span>
           <span className="text-[#B7B7B7]">
             , follow-up reminders, and batch processing capabilities that
           </span>{' '}
           <br />
-          <span className="text-white underline">save hours every week.</span>
+          <span className="text-foreground underline">save hours every week.</span>
         </div>
         <div className="flex items-center justify-center">
           <img

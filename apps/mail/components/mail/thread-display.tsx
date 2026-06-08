@@ -732,7 +732,7 @@ export function ThreadDisplay() {
                 <div className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-2">
                   <button
                     onClick={toggleAISidebar}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
+                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-accent transition-colors cursor-pointer"
                   >
                     <Sparkles className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
@@ -743,7 +743,7 @@ export function ThreadDisplay() {
                   </button>
                   <button
                     onClick={() => setIsComposeOpen('true')}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
+                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131] hover:bg-accent transition-colors cursor-pointer"
                   >
                     <Mail className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
                     <div className="flex items-center justify-center gap-2.5 px-0.5">
@@ -783,7 +783,7 @@ export function ThreadDisplay() {
                         <X className="fill-iconLight dark:fill-iconDark h-3.5 w-3.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                    <TooltipContent side="bottom" className="bg-card">
                       {m['common.actions.close']()}
                     </TooltipContent>
                   </Tooltip>
@@ -802,7 +802,7 @@ export function ThreadDisplay() {
                     setMode('replyAll');
                     setActiveReplyId(emailData?.latest?.id ?? '');
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
+                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131] hover:bg-accent transition-colors cursor-pointer"
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
@@ -817,7 +817,7 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={handleToggleStar}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-card hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Star
                           className={cn(
@@ -829,7 +829,7 @@ export function ThreadDisplay() {
                         />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                    <TooltipContent side="bottom" className="bg-card">
                       {isStarred
                         ? m['common.threadDisplay.unstar']()
                         : m['common.threadDisplay.star']()}
@@ -842,12 +842,12 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => moveThreadTo('archive')}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131] hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors cursor-pointer"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-card hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Archive className="fill-iconLight dark:fill-iconDark" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                    <TooltipContent side="bottom" className="bg-card">
                       {m['common.threadDisplay.archive']()}
                     </TooltipContent>
                   </Tooltip>
@@ -864,7 +864,7 @@ export function ThreadDisplay() {
                           <Trash className="fill-[#F43F5E]" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                      <TooltipContent side="bottom" className="bg-card">
                         {m['common.mail.moveToBin']()}
                       </TooltipContent>
                     </Tooltip>
@@ -877,7 +877,7 @@ export function ThreadDisplay() {
                       <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                  <DropdownMenuContent align="end" className="bg-card">
                     {/* <DropdownMenuItem onClick={() => setIsFullscreen(!isFullscreen)}>
                       <Expand className="fill-iconLight dark:fill-iconDark mr-2" />
                       <span>

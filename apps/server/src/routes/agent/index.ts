@@ -1697,18 +1697,18 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         `[ZeroDriver] Failed to trigger sync coordinator workflow for ${this.name}/${folder}:`,
         error,
       );
-      //   try {
-      //     const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
-      //       id: `${this.name}-${folder}`,
-      //       params: {
-      //         connectionId: this.name,
-      //         folder: folder,
-      //       },
-      //     });
-      //     console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
-      //   } catch (fallbackError) {
-      //     console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
-      //   }
+        try {
+          const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
+            id: `${this.name}-${folder}`,
+            params: {
+              connectionId: this.name,
+              folder: folder,
+            },
+          });
+          console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
+        } catch (fallbackError) {
+          console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
+        }
     }
   }
 }

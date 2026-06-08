@@ -20,6 +20,7 @@ const Sidebar = React.forwardRef<
     variant?: 'sidebar' | 'floating' | 'inset';
     collapsible?: 'offcanvas' | 'icon' | 'none';
     collapsed?: boolean;
+    topBarOffset?: boolean;
   }
 >(
   (
@@ -27,6 +28,7 @@ const Sidebar = React.forwardRef<
       side = 'left',
       variant = 'sidebar',
       collapsible = 'offcanvas',
+      topBarOffset = false,
       className,
       children,
       ...props
@@ -71,6 +73,35 @@ const Sidebar = React.forwardRef<
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
+      );
+    }
+
+    if (topBarOffset) {
+      return (
+        <div
+          ref={ref}
+          className={cn(
+            'text-sidebar-foreground group peer hidden h-full shrink-0 md:block',
+            className,
+          )}
+          data-state={state}
+          data-collapsible={state === 'collapsed' ? collapsible : ''}
+          data-variant={variant}
+          data-side={side}
+          {...props}
+        >
+          <div
+            data-sidebar="sidebar"
+            className={cn(
+              'bg-sidebar dark:bg-sidebar flex h-full w-(--sidebar-width) flex-col overflow-hidden transition-[width] duration-200 ease-in-out',
+              variant === 'floating' || variant === 'inset'
+                ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
+                : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)',
+            )}
+          >
+            {children}
+          </div>
+        </div>
       );
     }
 

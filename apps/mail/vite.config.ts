@@ -50,14 +50,14 @@ export default defineConfig({
     }),
   ],
   server: {
-    host: '127.0.0.1',
+    host: 'localhost',
     port: 3000,
     strictPort: true,
-    allowedHosts: ['mail.waterfall-doorman.xyz'],
+    // allowedHosts: ['mail.waterfall-doorman.xyz'],
     hmr: {
-      protocol: 'wss',
-      host: 'mail.waterfall-doorman.xyz',
-      clientPort: 443,
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 3000,
     },
     warmup: {
       clientFiles: ['./app/**/*', './components/**/*'],

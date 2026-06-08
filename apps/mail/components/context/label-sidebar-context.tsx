@@ -52,7 +52,7 @@ export function LabelSidebarContextMenu({ children, labelId, hide }: LabelSideba
     <>
       <ContextMenu modal={false}>
         <ContextMenuTrigger>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="bg-white dark:bg-[#313131]">
+        <ContextMenuContent className="bg-card">
           <ContextMenuItem
             asChild
             onClick={() => setDeleteDialogOpen(true)}

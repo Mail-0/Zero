@@ -22,6 +22,33 @@ const threadSelect = {
   latestSubject: threads.latestSubject,
 } as const;
 
+function classifyThread(thread: InsertThread): string[] {
+  const text =
+    `${thread.latestSubject ?? ''} ${thread.latestSender ?? ''}`.toLowerCase();
+
+  const categories: string[] = [];
+
+  if (/linkedin|job|career|recruit|internship|hiring|application|resume/.test(text))
+    categories.push('auto_category_career');
+  
+  if (/kaist|seminar|workshop|forum|lecture|course|education|university|school|class|thesis/.test(text))
+    categories.push('auto_category_education');
+  
+  if (/github|aws|azure|docker|software|developer|programming|code|api|cloud|vercel|figma|canva/.test(text))
+    categories.push('auto_category_software');
+  
+  if (/football|soccer|nba|sport|fifa|premier league|match|game|team/.test(text))
+    categories.push('auto_category_sport');
+  
+  if (/deadline|required|submit|register|urgent|action|verify|confirm|payment|receipt|invoice/.test(text))
+    categories.push('auto_category_action_required');
+  
+  if (/facebook|instagram|twitter|x\.com|social|friend|linkedin/.test(text))
+    categories.push('auto_category_social');
+
+  return categories;
+}
+
 async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {
   if (labelIds.length === 0) return;
 
@@ -45,6 +72,8 @@ async function createMissingLabels(db: DB, labelIds: string[]): Promise<void> {
 }
 
 export async function create(db: DB, thread: InsertThread, labelIds?: string[]): Promise<Thread> {
+  const autoCategoryIds = classifyThread(thread);
+  const finalLabelIds = Array.from(new Set([...(labelIds ?? []), ...autoCategoryIds]));
   return await db.transaction(async (tx) => {
     // Create the thread first
     const [res] = await tx
@@ -56,12 +85,15 @@ export async function create(db: DB, thread: InsertThread, labelIds?: string[]):
       })
       .returning();
 
-    if (labelIds && labelIds.length > 0) {
+    // if (labelIds && labelIds.length > 0) {
+    if (finalLabelIds.length > 0) {
       // Ensure all labels exist (create missing ones)
-      await createMissingLabels(tx, labelIds);
+      // await createMissingLabels(tx, labelIds);
+      await createMissingLabels(tx, finalLabelIds);
 
       // Create thread-label relationships
-      const threadLabelInserts: InsertThreadLabel[] = labelIds.map((labelId) => ({
+      // const threadLabelInserts: InsertThreadLabel[] = labelIds.map((labelId) => ({
+      const threadLabelInserts: InsertThreadLabel[] = finalLabelIds.map((labelId) => ({
         threadId: thread.id,
         labelId,
       }));

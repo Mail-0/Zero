@@ -3,6 +3,39 @@ import { getZeroAgent } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
 
+const automaticCategories = [
+  {
+    id: 'auto_category_social',
+    name: 'Social',
+    type: 'user',
+  },
+  {
+    id: 'auto_category_education',
+    name: 'Education',
+    type: 'user',
+  },
+  {
+    id: 'auto_category_software',
+    name: 'Software',
+    type: 'user',
+  },
+  {
+    id: 'auto_category_action_required',
+    name: 'Action Required',
+    type: 'user',
+  },
+  {
+    id: 'auto_category_sport',
+    name: 'Sport',
+    type: 'user',
+  },
+  {
+    id: 'auto_category_career',
+    name: 'Career',
+    type: 'user',
+  },
+];
+
 export const labelsRouter = router({
   list: activeDriverProcedure
     .use(
@@ -27,9 +60,20 @@ export const labelsRouter = router({
       ),
     )
     .query(async ({ ctx }) => {
+      console.log('[labels.list] returning automatic categories');
       const { activeConnection } = ctx;
       const { stub: agent } = await getZeroAgent(activeConnection.id);
-      return await agent.getUserLabels();
+      // return await agent.getUserLabels();
+      const labels = await agent.getUserLabels();
+
+      const existingIds = new Set(labels.map((label) => label.id));
+
+      const mergedLabels = [
+        ...labels,
+        ...automaticCategories.filter((label) => !existingIds.has(label.id)),
+      ];
+
+      return mergedLabels;
     }),
   create: activeDriverProcedure
     .use(

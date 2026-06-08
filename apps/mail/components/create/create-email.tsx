@@ -92,7 +92,7 @@ export function CreateEmail({
     const fromEmail = data.fromEmail || aliases?.[0]?.email || userEmail;
 
     const zeroSignature = settings?.settings.zeroSignature
-      ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
+      ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://mail.waterfall-doorman.xyz/" style="color: #0066cc; text-decoration: none;">Doorman</a></p>'
       : '';
 
     const result = await sendEmail({

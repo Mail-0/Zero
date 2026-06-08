@@ -12,15 +12,20 @@ import {
   useEffect,
   useMemo,
   useRef,
-  type ComponentProps,
   useState,
 } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useIsFetching, type UseQueryResult } from '@tanstack/react-query';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import type { IGetThreadResponse, ParsedDraft } from '../../../server/src/lib/driver/types';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
-import type { ParsedDraft } from '../../../server/src/lib/driver/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMail, type Config } from '@/components/mail/use-mail';
@@ -31,15 +36,14 @@ import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
 import { cn, FOLDERS, formatDate } from '@/lib/utils';
 import { useTRPC } from '@/providers/query-provider';
-import { useThreadLabels } from '@/hooks/use-labels';
 import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
-import { RenderLabels } from './render-labels';
-import { Badge } from '@/components/ui/badge';
+import { PriorityScoreCircle } from './priority-score-circle';
+import { RemovableTextLabels } from './removable-text-labels';
 import { useDraft } from '@/hooks/use-drafts';
-import { Check, Star } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -47,6 +51,69 @@ import { Button } from '../ui/button';
 import { Avatar } from '../ui/avatar';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
+
+export type MailSortOption = 'receivedDate' | 'priorityScore';
+
+const MAIL_SORT_OPTIONS: { value: MailSortOption; label: string }[] = [
+  { value: 'receivedDate', label: 'Sort by Received Date' },
+  { value: 'priorityScore', label: 'Sort by Priority score' },
+];
+
+export function MailSortDropdown() {
+  // TODO_doorman:implement_mail_list_sorting
+  const [sortBy, setSortBy] = useQueryState('sortBy', { defaultValue: 'receivedDate' });
+  const [isOpen, setIsOpen] = useState(false);
+
+  const currentLabel =
+    MAIL_SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? 'Received Date';
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
+          )}
+          aria-label="Sort mail list"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+        >
+          <span className="text-sm font-medium">{currentLabel}</span>
+          <ChevronDown
+            className={cn(
+              'text-muted-foreground h-4 w-4 transition-transform duration-200',
+              isOpen ? 'rotate-180' : 'rotate-0',
+            )}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
+        align="start"
+        role="menu"
+        aria-label="Sort options"
+      >
+        {MAIL_SORT_OPTIONS.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
+            onClick={(event: React.MouseEvent) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void setSortBy(option.value);
+            }}
+            role="menuitemradio"
+            aria-checked={sortBy === option.value}
+          >
+            <span className="text-foreground font-medium">{option.label}</span>
+            {sortBy === option.value && <Check className="text-primary ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 const Thread = memo(
   function Thread({
@@ -136,7 +203,7 @@ const Thread = memo(
         optimisticState.optimisticLabels,
       ]);
 
-    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
+    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo, optimisticToggleLabel } =
       useOptimisticActions();
 
     const handleToggleStar = useCallback(
@@ -185,8 +252,12 @@ const Thread = memo(
       [idToUse, folder, optimisticMoveThreadsTo, handleNext],
     );
 
-    const { labels: threadLabels } = useThreadLabels(
-      optimisticLabels ? optimisticLabels.map((l) => l.id) : [],
+    const handleRemoveLabel = useCallback(
+      (label: { id: string; name: string }) => {
+        if (!idToUse) return;
+        optimisticToggleLabel([idToUse], label.id, false);
+      },
+      [idToUse, optimisticToggleLabel],
     );
 
     const [mailState, setMail] = useMail();
@@ -265,7 +336,7 @@ const Thread = memo(
                 </TooltipTrigger>
                 <TooltipContent
                   side={index === 0 ? 'bottom' : 'top'}
-                  className="mb-1 bg-white dark:bg-[#1A1A1A]"
+                  className="mb-1 bg-card"
                 >
                   {displayStarred
                     ? m['common.threadDisplay.unstar']()
@@ -344,7 +415,7 @@ const Thread = memo(
             <div
               className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
-              <div>
+              <div className="flex flex-col items-center gap-1">
                 {isMailBulkSelected ? (
                   <Avatar
                     className={cn(
@@ -386,6 +457,7 @@ const Thread = memo(
                     )}
                   />
                 )}
+                <PriorityScoreCircle score={latestMessage.priorityScore} />
                 {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
                     <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
@@ -460,7 +532,6 @@ const Thread = memo(
                           <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
                         </span>
                       ) : null} */}
-                      <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
@@ -494,18 +565,19 @@ const Thread = memo(
                     {/* <div className="hidden md:flex">
                       {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
                     </div> */}
-                    {threadLabels && (
-                      <div className="mr-0 flex w-fit items-center justify-end gap-1">
-                        {!isFolderSent ? <RenderLabels labels={threadLabels} /> : null}
-                        {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
-                      </div>
-                    )}
                   </div>
                   {emailContent && (
                     <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
                       {highlightText(emailContent, searchValue.highlight)}
                     </div>
                   )}
+                  {!isFolderSent && latestMessage.tags?.length ? (
+                    <RemovableTextLabels
+                      labels={latestMessage.tags}
+                      onRemove={handleRemoveLabel}
+                      className="mt-2"
+                    />
+                  ) : null}
                   {/* {mainSearchTerm && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
                       <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
@@ -534,8 +606,7 @@ const Thread = memo(
       displayUnread,
       isMailSelected,
       isMailBulkSelected,
-      threadLabels,
-      optimisticLabels,
+      handleRemoveLabel,
       emailContent,
     ]);
 
@@ -729,6 +800,8 @@ export const MailList = memo(
     const [{ refetch, isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
     const trpc = useTRPC();
+    const queryClient = useQueryClient();
+    const [sortBy] = useQueryState('sortBy', { defaultValue: 'receivedDate' });
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
     const itemsRef = useRef(items);
     const parentRef = useRef<HTMLDivElement>(null);
@@ -906,7 +979,23 @@ export const MailList = memo(
       });
     };
 
-    const filteredItems = useMemo(() => items.filter((item) => item.id), [items]);
+    const filteredItems = useMemo(() => {
+      const base = items.filter((item) => item.id);
+      if (sortBy !== 'priorityScore') return base;
+
+      // TODO_doorman:implement_mail_list_sorting
+      return [...base].sort((a, b) => {
+        const getPriorityScore = (threadId: string) => {
+          const data = queryClient.getQueryData(
+            trpc.mail.get.queryKey({ id: threadId }),
+          ) as IGetThreadResponse | undefined;
+          const score = data?.latest?.priorityScore;
+          return typeof score === 'number' && Number.isFinite(score) ? score : -1;
+        };
+
+        return getPriorityScore(b.id) - getPriorityScore(a.id);
+      });
+    }, [items, sortBy, queryClient, trpc]);
 
     const Comp = useMemo(() => (folder === FOLDERS.DRAFT ? Draft : Thread), [folder]);
 
@@ -1021,85 +1110,12 @@ export const MailList = memo(
 
 export const MailLabels = memo(
   function MailListLabels({ labels }: { labels: { id: string; name: string }[] }) {
-    if (!labels?.length) return null;
-
-    const visibleLabels = labels.filter(
-      (label) => !['unread', 'inbox'].includes(label.name.toLowerCase()),
-    );
-
-    if (!visibleLabels.length) return null;
-
-    return (
-      <div className={cn('flex select-none items-center')}>
-        {visibleLabels.map((label) => {
-          const style = getDefaultBadgeStyle(label.name);
-          if (label.name.toLowerCase() === 'notes') {
-            return (
-              <Tooltip key={label.id}>
-                <TooltipTrigger asChild>
-                  <Badge className="rounded-md bg-amber-100 p-1 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400">
-                    {getLabelIcon(label.name)}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent className="hidden px-1 py-0 text-xs">
-                  {m['common.notes.title']()}
-                </TooltipContent>
-              </Tooltip>
-            );
-          }
-
-          // Skip rendering if style is "secondary" (default case)
-          if (style === 'secondary') return null;
-          const content = getLabelIcon(label.name);
-
-          return content ? (
-            <Badge key={label.id} className="rounded-md p-1" variant={style}>
-              {content}
-            </Badge>
-          ) : null;
-        })}
-      </div>
-    );
+    return <RemovableTextLabels labels={labels} />;
   },
   (prev, next) => {
     return JSON.stringify(prev.labels) === JSON.stringify(next.labels);
   },
 );
-
-function getLabelIcon(label: string) {
-  const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-  switch (normalizedLabel) {
-    case 'starred':
-      return <Star className="h-[12px] w-[12px] fill-yellow-400 stroke-yellow-400" />;
-    default:
-      return null;
-  }
-}
-
-function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>['variant'] {
-  const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-  switch (normalizedLabel) {
-    case 'starred':
-    case 'important':
-      return 'important';
-    case 'promotions':
-      return 'promotions';
-    case 'personal':
-      return 'personal';
-    case 'updates':
-      return 'updates';
-    case 'work':
-      return 'default';
-    case 'forums':
-      return 'forums';
-    case 'notes':
-      return 'secondary';
-    default:
-      return 'secondary';
-  }
-}
 
 // Helper function to clean name display
 const cleanNameDisplay = (name?: string) => {
