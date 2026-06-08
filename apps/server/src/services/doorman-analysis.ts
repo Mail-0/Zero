@@ -14,26 +14,14 @@ import {
   userProfile,
 } from '../db/schema';
 import type { ZeroEnv } from '../env';
+import { DEFAULT_USER_CATEGORIES } from './category-service';
 
 type JobOptions = {
   batchSize?: number;
   emailIds?: string[];
 };
 
-const DEFAULT_CATEGORIES = [
-  'academic',
-  'work-related',
-  'advertisement',
-  'event',
-  'seminar',
-  'survey',
-  'policy',
-  'culture',
-  'startup',
-  'personal',
-  'spam',
-  'uncategorized',
-];
+const DEFAULT_CATEGORIES = [...DEFAULT_USER_CATEGORIES];
 
 const DEFAULT_ACTIONS = [
   'forwarding',

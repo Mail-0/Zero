@@ -1,12 +1,15 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
-import { LabelDialog } from '@/components/labels/label-dialog';
-import { useMutation } from '@tanstack/react-query';
+import {
+  CategoryDialog,
+  type CategoryFormValues,
+  type EditableCategory,
+} from '@/components/categories/category-dialog';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
-import { useLabels } from '@/hooks/use-labels';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { type Label as LabelType } from '@/types';
+import { Bin } from '@/components/icons/icons';
 import { Plus, Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -15,22 +18,40 @@ import { toast } from 'sonner';
 
 export default function CategoriesSettingsPage() {
   const trpc = useTRPC();
-  const { userLabels, isLoading, error, refetch } = useLabels();
+  const categoriesQuery = useQuery(
+    trpc.categories.list.queryOptions(undefined, {
+      staleTime: 60 * 1000,
+    }),
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingLabel, setEditingLabel] = useState<LabelType | null>(null);
+  const [editingCategory, setEditingCategory] = useState<EditableCategory | null>(null);
 
-  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
-  const { mutateAsync: updateLabel } = useMutation(trpc.labels.update.mutationOptions());
+  const { mutateAsync: createCategory } = useMutation(trpc.categories.create.mutationOptions());
+  const { mutateAsync: updateCategory } = useMutation(trpc.categories.update.mutationOptions());
+  const { mutateAsync: deleteCategory } = useMutation(trpc.categories.delete.mutationOptions());
 
-  const labelFilters = useMemo(() => {
-    return userLabels.slice().sort((a, b) => a.name.localeCompare(b.name));
-  }, [userLabels]);
+  const categories = useMemo(() => {
+    return (categoriesQuery.data ?? [])
+      .slice()
+      .sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+  }, [categoriesQuery.data]);
 
-  const handleSubmit = async (data: LabelType) => {
+  const refetch = async () => {
+    await categoriesQuery.refetch();
+  };
+
+  const handleSubmit = async (data: CategoryFormValues) => {
     await toast.promise(
-      editingLabel
-        ? updateLabel({ id: editingLabel.id!, name: data.name, color: data.color })
-        : createLabel({ color: data.color, name: data.name }),
+      editingCategory
+        ? updateCategory({
+            categoryId: editingCategory.categoryId,
+            categoryName: data.categoryName,
+            promptHint: data.promptHint,
+          })
+        : createCategory({
+            categoryName: data.categoryName,
+            promptHint: data.promptHint,
+          }),
       {
         loading: m['common.labels.savingLabel'](),
         success: m['common.labels.saveLabelSuccess'](),
@@ -40,13 +61,22 @@ export default function CategoriesSettingsPage() {
     await refetch();
   };
 
-  const handleEdit = (label: LabelType) => {
-    setEditingLabel(label);
+  const handleDelete = async (categoryId: string) => {
+    await toast.promise(deleteCategory({ categoryId }), {
+      loading: m['common.labels.deletingLabel'](),
+      success: m['common.labels.deleteLabelSuccess'](),
+      error: m['common.labels.failedToDeleteLabel'](),
+    });
+    await refetch();
+  };
+
+  const handleEdit = (category: EditableCategory) => {
+    setEditingCategory(category);
     setIsDialogOpen(true);
   };
 
   const handleOpenAdd = () => {
-    setEditingLabel(null);
+    setEditingCategory(null);
     setIsDialogOpen(true);
   };
 
@@ -67,18 +97,18 @@ export default function CategoriesSettingsPage() {
         </div>
       }
       action={
-        <LabelDialog
+        <CategoryDialog
           trigger={
             <Button onClick={handleOpenAdd}>
               <Plus className="mr-2 h-4 w-4" />
               Add label filter
             </Button>
           }
-          editingLabel={editingLabel}
+          editingCategory={editingCategory}
           open={isDialogOpen}
           onOpenChange={(open) => {
             setIsDialogOpen(open);
-            if (!open) setEditingLabel(null);
+            if (!open) setEditingCategory(null);
           }}
           onSubmit={handleSubmit}
           onSuccess={refetch}
@@ -87,43 +117,58 @@ export default function CategoriesSettingsPage() {
     >
       <div className="space-y-3">
         <Label>Label filters</Label>
-        {isLoading ? (
+        {categoriesQuery.isLoading ? (
           <p className="text-muted-foreground text-sm">Loading label filters...</p>
-        ) : error ? (
-          <p className="text-muted-foreground text-sm">{error.message}</p>
-        ) : labelFilters.length === 0 ? (
+        ) : categoriesQuery.error ? (
+          <p className="text-muted-foreground text-sm">{categoriesQuery.error.message}</p>
+        ) : categories.length === 0 ? (
           <p className="text-muted-foreground text-sm">No label filters found.</p>
         ) : (
           <div className="border-border divide-border max-h-[420px] divide-y overflow-y-auto rounded-lg border">
-            {labelFilters.map((labelFilter) => (
+            {categories.map((categoryItem) => (
               <div
-                key={labelFilter.id}
+                key={categoryItem.categoryId}
                 className="hover:bg-muted/40 flex items-center justify-between gap-4 px-4 py-3 transition-colors"
               >
-                <Badge
-                  className="px-2 py-1 font-normal"
-                  style={{
-                    backgroundColor:
-                      labelFilter.color?.backgroundColor || 'hsl(var(--secondary))',
-                    color: labelFilter.color?.textColor || 'hsl(var(--secondary-foreground))',
-                  }}
-                >
-                  {labelFilter.name}
-                </Badge>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <Badge className="bg-muted text-foreground px-2 py-1 font-normal">
+                    {categoryItem.categoryName}
+                  </Badge>
+                  {categoryItem.promptHint ? (
+                    <p className="text-muted-foreground line-clamp-2 text-xs">
+                      {categoryItem.promptHint}
+                    </p>
+                  ) : null}
+                </div>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => handleEdit(labelFilter)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{m['common.labels.editLabel']()}</TooltipContent>
-                </Tooltip>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(categoryItem)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{m['common.labels.editLabel']()}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23]"
+                        onClick={() => handleDelete(categoryItem.categoryId)}
+                      >
+                        <Bin className="fill-[#F43F5E]" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{m['common.labels.deleteLabel']()}</TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             ))}
           </div>

@@ -1,3 +1,4 @@
+import { ensureDefaultCategories } from './category-service';
 import { createDb } from '../db';
 import { userProfile } from '../db/schema';
 import type { ZeroEnv } from '../env';
@@ -74,6 +75,8 @@ export async function getOrCreateUserProfile(
       })
       .returning();
 
+    await ensureDefaultCategories(env, userId);
+
     return created;
   } finally {
     await conn.end();
@@ -116,6 +119,8 @@ export async function updateUserProfile(
           ...payload,
         })
         .returning();
+
+      await ensureDefaultCategories(env, userId);
 
       return created;
     }
