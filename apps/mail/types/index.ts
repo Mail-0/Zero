@@ -86,6 +86,7 @@ export interface ParsedMessage {
   attachments?: Attachment[];
   priorityScore?: number | null;
   suggestedAction?: string | null;
+  category?: string | null;
 }
 
 export interface IConnection {

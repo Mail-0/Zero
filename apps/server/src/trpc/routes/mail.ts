@@ -17,6 +17,7 @@ import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { enrichThreadWithActionSuggestions } from '../../lib/doorman/enrich-action-suggestions';
+import { enrichThreadWithCategories } from '../../lib/doorman/enrich-categories';
 import { enrichThreadWithPriorityScores } from '../../lib/doorman/enrich-priority-scores';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
@@ -85,7 +86,11 @@ export const mailRouter = router({
         activeConnection.id,
         result.result,
       );
-      return enrichThreadWithActionSuggestions(activeConnection.id, withPriorityScores);
+      const withActionSuggestions = await enrichThreadWithActionSuggestions(
+        activeConnection.id,
+        withPriorityScores,
+      );
+      return enrichThreadWithCategories(activeConnection.id, withActionSuggestions);
     }),
   listThreads: activeDriverProcedure
     .input(

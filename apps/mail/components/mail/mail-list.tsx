@@ -571,12 +571,21 @@ const Thread = memo(
                       {highlightText(emailContent, searchValue.highlight)}
                     </div>
                   )}
-                  {!isFolderSent && latestMessage.tags?.length ? (
-                    <RemovableTextLabels
-                      labels={latestMessage.tags}
-                      onRemove={handleRemoveLabel}
-                      className="mt-2"
-                    />
+                  {!isFolderSent &&
+                  (latestMessage.category || latestMessage.tags?.length) ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {latestMessage.category ? (
+                        <span className="bg-muted text-foreground inline-flex rounded px-1.5 py-0.5 text-xs font-medium">
+                          {latestMessage.category}
+                        </span>
+                      ) : null}
+                      {latestMessage.tags?.length ? (
+                        <RemovableTextLabels
+                          labels={latestMessage.tags}
+                          onRemove={handleRemoveLabel}
+                        />
+                      ) : null}
+                    </div>
                   ) : null}
                   {latestMessage.suggestedAction ? (
                     <div className="border-border bg-muted mt-2 w-fit max-w-full rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
