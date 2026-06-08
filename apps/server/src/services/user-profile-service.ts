@@ -22,6 +22,27 @@ const normalizeStringList = (values: string[]) =>
     ),
   );
 
+export async function hasUserProfile(env: ZeroEnv, userId: string): Promise<boolean> {
+  const databaseUrl = getDatabaseUrl(env);
+  if (!databaseUrl) {
+    return false;
+  }
+
+  const { db, conn } = createDb(databaseUrl);
+
+  try {
+    const [existing] = await db
+      .select({ userId: userProfile.userId })
+      .from(userProfile)
+      .where(eq(userProfile.userId, userId))
+      .limit(1);
+
+    return !!existing;
+  } finally {
+    await conn.end();
+  }
+}
+
 export async function getOrCreateUserProfile(
   env: ZeroEnv,
   userId: string,

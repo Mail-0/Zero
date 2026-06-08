@@ -1,5 +1,6 @@
 import {
   getOrCreateUserProfile,
+  hasUserProfile,
   updateUserProfile,
 } from '../../services/user-profile-service';
 import { privateProcedure, router } from '../trpc';
@@ -16,6 +17,20 @@ const userProfileSchema = z.object({
 });
 
 export const userRouter = router({
+  hasProfile: privateProcedure
+    .output(z.object({ exists: z.boolean() }))
+    .query(async ({ ctx }) => {
+      try {
+        const exists = await hasUserProfile(ctx.c.env, ctx.sessionUser.id);
+        return { exists };
+      } catch (error) {
+        console.error('[USER_PROFILE] Failed to check profile existence', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to check user profile',
+        });
+      }
+    }),
   getProfile: privateProcedure.output(userProfileSchema).query(async ({ ctx }) => {
     try {
       const profile = await getOrCreateUserProfile(
