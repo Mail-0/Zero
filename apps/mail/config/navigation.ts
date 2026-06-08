@@ -5,17 +5,11 @@ import {
   Folder,
   Inbox,
   SettingsGear,
-  Stars,
   Tabs,
-  Users,
   ArrowLeft,
-  Danger,
-  Sheet,
   Plane2,
-  LockIcon,
   Clock,
 } from '@/components/icons/icons';
-import { MessageSquareIcon } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 
 export interface NavItem {
@@ -146,71 +140,16 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: ArrowLeft,
             isBackButton: true,
           },
-
           {
-            title: m['navigation.settings.general'](),
-            url: '/settings/general',
+            title: m['navigation.settings.userInformation'](),
+            url: '/settings/user-information',
             icon: SettingsGear,
             shortcut: 'g + s',
-          },
-          {
-            title: m['navigation.settings.connections'](),
-            url: '/settings/connections',
-            icon: Users,
-          },
-          {
-            title: m['navigation.settings.privacy'](),
-            url: '/settings/privacy',
-            icon: LockIcon,
-          },
-          {
-            title: m['navigation.settings.appearance'](),
-            url: '/settings/appearance',
-            icon: Stars,
-          },
-          {
-            title: m['navigation.settings.labels'](),
-            url: '/settings/labels',
-            icon: Sheet,
           },
           {
             title: m['navigation.settings.categories'](),
             url: '/settings/categories',
             icon: Tabs,
-          },
-          {
-            title: m['navigation.settings.signatures'](),
-            url: '/settings/signatures',
-            icon: MessageSquareIcon,
-            disabled: true,
-          },
-          {
-            title: m['navigation.settings.shortcuts'](),
-            url: '/settings/shortcuts',
-            icon: Tabs,
-            shortcut: '?',
-          },
-          // {
-          //   title: 'navigation.settings.signatures',
-          //   url: '/settings/signatures',
-          //   icon: MessageSquareIcon,
-          //   disabled: true,
-          // },
-          // {
-          //   title: 'navigation.settings.shortcuts',
-          //   url: '/settings/shortcuts',
-          //   icon: Tabs,
-          //   disabled: true,
-          // },
-          // {
-          //   title: "Notifications",
-          //   url: "/settings/notifications",
-          //   icon: BellIcon,
-          // },
-          {
-            title: m['navigation.settings.deleteAccount'](),
-            url: '/settings/danger-zone',
-            icon: Danger,
           },
         ].map((item) => ({
           ...item,
@@ -228,7 +167,7 @@ export const bottomNavItems = [
       {
         id: 'settings',
         title: m['navigation.sidebar.settings'](),
-        url: '/settings/general',
+        url: '/settings/user-information',
         icon: SettingsGear,
         isSettingsButton: true,
       },

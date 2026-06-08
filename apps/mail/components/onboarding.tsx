@@ -74,7 +74,7 @@ export function OnboardingDialog({
       <DialogTitle></DialogTitle>
       <DialogContent
         showOverlay
-        className="bg-panelLight mx-auto w-full max-w-[90%] rounded-xl border p-0 sm:max-w-[690px] dark:bg-[#111111]"
+        className="bg-panelLight mx-auto w-full max-w-[90%] rounded-xl border p-0 sm:max-w-[690px] dark:bg-card"
       >
         <div className="flex flex-col gap-4 p-4">
           {steps[currentStep] && steps[currentStep].video && (

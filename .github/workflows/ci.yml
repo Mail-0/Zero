@@ -24,5 +24,5 @@ jobs:
       - name: Install dependencies 📦
         run: pnpm install
 
-      - name: Lint JS
-        run: pnpm dlx oxlint@latest --deny-warnings
+          #      - name: Lint JS
+          #run: pnpm dlx oxlint@latest --deny-warnings

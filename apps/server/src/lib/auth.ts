@@ -25,6 +25,7 @@ import { createDb } from '../db';
 import { Effect } from 'effect';
 import { env } from '../env';
 import { Dub } from 'dub';
+import { forceReSync } from './server-utils';
 
 const scheduleCampaign = (userInfo: { address: string; name: string }) =>
   Effect.gen(function* () {
@@ -143,6 +144,12 @@ const connectionHandlerHook = async (account: Account) => {
     updatingInfo,
   );
 
+  if (result?.id) {
+    console.log('[auth] Starting forceReSync for connection:', result.id);
+    await forceReSync(result.id);
+    console.log('[auth] Finished forceReSync');
+  }
+
   if (env.NODE_ENV === 'production') {
     await Effect.runPromise(
       scheduleCampaign({ address: userInfo.address, name: userInfo.name || 'there' }),
@@ -260,7 +267,7 @@ export const createAuth = () => {
     },
     emailAndPassword: {
       enabled: false,
-      requireEmailVerification: true,
+      requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
         await resend().emails.send({
           from: '0.email <onboarding@0.email>',
@@ -356,11 +363,15 @@ const createAuthConfig = () => {
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
     trustedOrigins: [
+      env.VITE_PUBLIC_APP_URL,
+      env.VITE_PUBLIC_BACKEND_URL,
       'https://app.0.email',
       'https://sapi.0.email',
       'https://staging.0.email',
       'https://0.email',
       'http://localhost:3000',
+      'https://mail.waterfall-doorman.xyz',
+      'https://api.waterfall-doorman.xyz',
     ],
     session: {
       cookieCache: {

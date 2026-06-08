@@ -23,8 +23,9 @@ import {
 import { SyncThreadsCoordinatorWorkflow } from './workflows/sync-threads-coordinator-workflow';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 // import { instrument, type ResolveConfigFn } from '@microlabs/otel-cf-workers';
-import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
+import { disposeRpcStub, getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { SyncThreadsWorkflow } from './workflows/sync-threads-workflow';
+import { runDoormanAnalysisJob } from './services/doorman-analysis';
 import { ShardRegistry, ZeroAgent, ZeroDriver } from './routes/agent';
 import { ThreadSyncWorker } from './routes/agent/sync-worker';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
@@ -709,6 +710,39 @@ const api = new Hono<HonoContext>()
   .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
     return c.var.auth.handler(c.req.raw);
   })
+  .get('/doorman/dev/ping', (c) => {
+    return c.json({ ok: true, service: 'doorman-dev' });
+  })
+  .post('/doorman/dev/enable-auto-receive/:connectionId', async (c) => {
+    const connectionId = c.req.param('connectionId');
+
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+
+    try {
+      const [foundConnection] = await db
+        .select()
+        .from(connection)
+        .where(eq(connection.id, connectionId));
+
+      if (!foundConnection) {
+        return c.json({ success: false, error: 'connection not found' }, { status: 404 });
+      }
+
+      await enableBrainFunction({
+        id: foundConnection.id,
+        providerId: foundConnection.providerId as EProviders,
+      });
+
+      return c.json({
+        success: true,
+        connectionId: foundConnection.id,
+        providerId: foundConnection.providerId,
+        message: 'Doorman auto receive enabled',
+      });
+    } finally {
+      await conn.end();
+    }
+  })
   .use(
     trpcServer({
       endpoint: '/api/trpc',
@@ -879,47 +913,75 @@ const app = new Hono<HonoContext>()
         return c.json({ message: 'OK' }, { status: 200 });
       }
       const providerId = c.req.param('providerId');
+//doorman-realtime sub/pub
       if (providerId === EProviders.google) {
-        const body = await c.req.json<{ historyId: string }>();
-        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+  	    const body = await c.req.json<{ historyId?: string; emailAddress?: string }>();
+  	    const subHeader = c.req.header('x-goog-pubsub-subscription-name');
 
-        span.setAttributes({
-          'history.id': body.historyId,
-          'subscription.name': subHeader || 'missing',
+  	    console.log('[A8N_NOTIFY] Google push received', {
+    	    body,
+    	    subscriptionName: subHeader,
+    	    hasAuthorization: !!c.req.header('Authorization'),
         });
 
-        if (!subHeader) {
-          console.log('[GOOGLE] no subscription header', body);
-          span.setAttributes({ 'error.type': 'missing_subscription_header' });
-          return c.json({}, { status: 200 });
-        }
-        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-        if (!isValid) {
-          console.log('[GOOGLE] invalid request', body);
-          span.setAttributes({ 'auth.status': 'invalid' });
-          return c.json({}, { status: 200 });
+  	    span.setAttributes({
+    	    'history.id': body.historyId || 'missing',
+    	    'subscription.name': subHeader || 'missing',
+        });
+
+  	    if (!subHeader) {
+    	    console.log('[A8N_NOTIFY] Missing subscription header', body);
+    	    span.setAttributes({ 'error.type': 'missing_subscription_header' });
+    	    return c.json({}, { status: 200 });
+  	    }
+
+  	    if (!body.historyId) {
+    	    console.log('[A8N_NOTIFY] Missing historyId', body);
+    	    span.setAttributes({ 'error.type': 'missing_history_id' });
+    	    return c.json({}, { status: 200 });
+  	    }
+
+  	    const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+  	    if (!isValid) {
+    	    console.log('[A8N_NOTIFY] Invalid Google push token', body);
+    	    span.setAttributes({ 'auth.status': 'invalid' });
+    	    return c.json({}, { status: 200 });
+  	    }
+
+  	    span.setAttributes({ 'auth.status': 'valid' });
+
+        //doorman
+  	    try {
+    	    const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
+          let result;
+          try {
+            result = await workflowRunner.runMainWorkflow({
+              providerId,
+              historyId: body.historyId,
+              subscriptionName: subHeader,
+          });
+        } finally {
+          disposeRpcStub(workflowRunner);
         }
 
-        span.setAttributes({ 'auth.status': 'valid' });
-
-        try {
-          await env.thread_queue.send({
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          });
-          span.setAttributes({ 'queue.message_sent': true });
-        } catch (error) {
-          console.error('Error sending to thread queue', error, {
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          });
-          span.recordException(error as Error);
-          span.setStatus({ code: 2, message: (error as Error).message });
+    	    console.log('[A8N_NOTIFY] Workflow result', result);
+    	    span.setAttributes({
+      	    'workflow.direct_run': true,
+      	    'workflow.result': typeof result === 'string' ? result : JSON.stringify(result),
+    	    });
+  	    } catch (error) {
+    	    console.error('[A8N_NOTIFY] Error running workflow directly', error, {
+      	    providerId,
+      	    historyId: body.historyId,
+      	    subscriptionName: subHeader,
+    	    });
+    	    span.recordException(error as Error);
+    	    span.setStatus({ code: 2, message: (error as Error).message });
         }
+
         return c.json({ message: 'OK' }, { status: 200 });
-      }
+      } 
+      return c.json({ message: 'Unsupported provider' }, { status: 200 });
     } catch (error) {
       span.recordException(error as Error);
       span.setStatus({ code: 2, message: (error as Error).message });
@@ -1099,6 +1161,8 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     await this.processScheduledEmails();
 
     await this.processExpiredSubscriptions();
+
+    await runDoormanAnalysisJob(this.env);
   }
 
   private async processScheduledEmails() {

@@ -155,14 +155,14 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "vars": {
         "NODE_ENV": "local",
-        "COOKIE_DOMAIN": "localhost",
-        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
-        "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+        "COOKIE_DOMAIN": "waterfall-doorman.xyz",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.waterfall-doorman.xyz",
+        "VITE_PUBLIC_APP_URL": "https://mail.waterfall-doorman.xyz",
         "JWT_SECRET": "secret",
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
@@ -171,7 +171,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
         "CLOUDFLARE_ACCOUNT_ID": "",
@@ -385,7 +385,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "vars": {
@@ -484,7 +484,7 @@
         {
           "binding": "HYPERDRIVE",
           "id": "b1be316b45fb439a9e54b74ecc20aa21",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+          "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/zerodotemail",
         },
       ],
       "durable_objects": {
@@ -608,14 +608,17 @@
       ],
       "vars": {
         "NODE_ENV": "production",
-        "COOKIE_DOMAIN": "0.email",
-        "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
-        "VITE_PUBLIC_APP_URL": "https://0.email",
+        "COOKIE_DOMAIN": "waterfall-doorman.xyz",
+        "VITE_PUBLIC_BACKEND_URL": "https://api.waterfall-doorman.xyz",
+        "VITE_PUBLIC_APP_URL": "https://mail.waterfall-doorman.xyz",
+        "BETTER_AUTH_URL": "https://api.waterfall-doorman.xyz",
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "60",
         "THREAD_SYNC_LOOP": "true",
-        "DISABLE_WORKFLOWS": "true",
+        "DEV_PROXY": "https://api.waterfall-doorman.xyz",
+        "GOOGLE_CLOUD_PROJECT_ID": "doormankim",
+        "DISABLE_WORKFLOWS": "false",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.axiom.co/v1/traces",
         "OTEL_SERVICE_NAME": "zero-email-server-production",
         "DD_API_KEY": "",
@@ -625,43 +628,43 @@
       "kv_namespaces": [
         {
           "binding": "gmail_history_id",
-          "id": "10005d74e84f4f18a17c9618d9e9cecf",
+          "id": "366fc93edcff4eaaae37a23d5fc5f07d",
         },
         {
           "binding": "gmail_processing_threads",
-          "id": "3348ff0976284269a8d8a5e6e4c04c56",
+          "id": "0460ce60793041549e7319c346ca8dbc",
         },
         {
           "binding": "subscribed_accounts",
-          "id": "5902b3b948ff4c4ba1aedbbbbe25503d",
+          "id": "d105c3ca6a034df49f6595a960990a60",
         },
         {
           "binding": "connection_labels",
-          "id": "9a13290a55ad4f62824c67005dd66f6f",
+          "id": "679eb008746540a0a1b23cf82e15da05",
         },
         {
           "binding": "prompts_storage",
-          "id": "2a4ebda553f3456085cfcf92cc0f570f",
+          "id": "a27e47db723d4f5d889c2ed609ea5005",
         },
         {
           "binding": "gmail_sub_age",
-          "id": "0591e91fffcc4675aaf00f909bee77d2",
+          "id": "c3ebb1f4efdf435aac7b2ab34810eeab",
         },
         {
           "binding": "pending_emails_status",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9",
+          "id": "bf4c47a702a54c64911243b097ddc9dc",
         },
         {
           "binding": "pending_emails_payload",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload",
+          "id": "3aa0079d3e0a4386bda68356699fd105",
         },
         {
           "binding": "scheduled_emails",
-          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled",
+          "id": "d4b636e1c76a449999ce046b18fce28c",
         },
         {
           "binding": "snoozed_emails",
-          "id": "f0952e9c3b024cb499c4b9dfe8bb603e",
+          "id": "1b6eee223cf54fb085944edb0f09105f",
         },
       ],
     },

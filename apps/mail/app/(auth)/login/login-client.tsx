@@ -133,10 +133,10 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   });
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-between bg-[#111111]">
+    <div className="flex min-h-screen w-full flex-col items-center justify-between bg-background">
       <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
         <div className="w-full space-y-4">
-          <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
+          <p className="text-center text-4xl font-bold text-foreground md:text-5xl">Login to Doorman</p>
 
           {error && (
             <Alert variant="default" className="border-orange-500/40 bg-orange-500/10">
@@ -303,19 +303,19 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           )}
         </div>
       </div>
-      <a href={'/'} className='text-white hover:text-gray-200'>Return home</a>
+      <a href={'/'} className="text-foreground/70 hover:text-foreground">Return home</a>
 
       <footer className="w-full px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
           <a
             href="/terms"
-            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-muted-foreground hover:text-foreground"
           >
             Terms of Service
           </a>
           <a
             href="/privacy"
-            className="text-[10px] text-gray-400 hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-[10px] text-muted-foreground hover:text-foreground"
           >
             Privacy Policy
           </a>

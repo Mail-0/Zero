@@ -43,7 +43,13 @@ import {
   type ParsedMessage,
 } from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
-import { connectionToDriver, getZeroSocketAgent, reSyncThread } from '../../lib/server-utils';
+//doorman
+import {
+  connectionToDriver,
+  disposeRpcStub,
+  getZeroSocketAgent,
+  reSyncThread,
+} from '../../lib/server-utils';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
@@ -678,6 +684,13 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
     return await this.driver.getMessageAttachments(messageId);
   }
 
+  async getRawEmail(messageId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getRawEmail(messageId);
+  }
+
   private dropTables() {
     this.sql.exec(`DROP TABLE IF EXISTS threads`);
     this.sql.exec(`DROP TABLE IF EXISTS thread_labels`);
@@ -947,12 +960,15 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
         this.syncThreadsInProgress.set(threadId, true);
 
-        const latest = yield* Effect.tryPromise(() =>
-          this.env.THREAD_SYNC_WORKER.get(this.env.THREAD_SYNC_WORKER.newUniqueId()).syncThread(
-            this.connection!,
-            threadId,
-          ),
-        );
+        //doorman
+        const latest = yield* Effect.tryPromise(async () => {
+          const worker = this.env.THREAD_SYNC_WORKER.get(this.env.THREAD_SYNC_WORKER.newUniqueId());
+          try {
+            return await worker.syncThread(this.connection!, threadId);
+          } finally {
+            disposeRpcStub(worker);
+          }
+        });
 
         if (!latest) {
           this.syncThreadsInProgress.delete(threadId);
@@ -1681,18 +1697,18 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         `[ZeroDriver] Failed to trigger sync coordinator workflow for ${this.name}/${folder}:`,
         error,
       );
-      //   try {
-      //     const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
-      //       id: `${this.name}-${folder}`,
-      //       params: {
-      //         connectionId: this.name,
-      //         folder: folder,
-      //       },
-      //     });
-      //     console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
-      //   } catch (fallbackError) {
-      //     console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
-      //   }
+        try {
+          const fallbackInstance = await this.env.SYNC_THREADS_WORKFLOW.create({
+            id: `${this.name}-${folder}`,
+            params: {
+              connectionId: this.name,
+              folder: folder,
+            },
+          });
+          console.log(`[ZeroDriver] Fallback to original workflow: ${fallbackInstance.id}`);
+        } catch (fallbackError) {
+          console.error(`[ZeroDriver] Fallback workflow also failed:`, fallbackError);
+        }
     }
   }
 }
