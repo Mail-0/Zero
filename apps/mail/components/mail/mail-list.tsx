@@ -578,6 +578,11 @@ const Thread = memo(
                       className="mt-2"
                     />
                   ) : null}
+                  {latestMessage.suggestedAction ? (
+                    <div className="border-border bg-muted mt-2 w-fit max-w-full rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
+                      Suggested Action : {latestMessage.suggestedAction}
+                    </div>
+                  ) : null}
                   {/* {mainSearchTerm && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
                       <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
@@ -1070,7 +1075,7 @@ export const MailList = memo(
                   ref={vListRef}
                   count={filteredItems.length}
                   overscan={5}
-                  itemSize={100}
+                  itemSize={120}
                   className="scrollbar-none flex-1 overflow-x-hidden"
                   onScroll={() => {
                     if (!vListRef.current) return;
