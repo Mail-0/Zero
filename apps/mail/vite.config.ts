@@ -53,7 +53,7 @@ export default defineConfig({
     host: 'localhost',
     port: 3000,
     strictPort: true,
-    // allowedHosts: ['mail.waterfall-doorman.xyz'],
+    allowedHosts: ['mail.waterfall-doorman.xyz', 'localhost'],
     hmr: {
       protocol: 'ws',
       host: 'localhost',

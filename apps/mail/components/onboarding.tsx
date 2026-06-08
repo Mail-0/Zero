@@ -144,20 +144,5 @@ export function OnboardingDialog({
 }
 
 export function OnboardingWrapper() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const ONBOARDING_KEY = 'hasCompletedOnboarding';
-
-  useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY) === 'true';
-    setShowOnboarding(!hasCompletedOnboarding);
-  }, []);
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      localStorage.setItem(ONBOARDING_KEY, 'true');
-    }
-    setShowOnboarding(open);
-  };
-
-  return <OnboardingDialog open={showOnboarding} onOpenChange={handleOpenChange} />;
+  return null;
 }
