@@ -38,7 +38,6 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
-import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
@@ -585,7 +584,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
-  const { optimisticToggleLabel } = useOptimisticActions();
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
@@ -1076,14 +1074,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     alert('feedback is not implemented yet');
   };
 
-  const handleRemoveLabel = useCallback(
-    (label: { id: string; name: string }) => {
-      if (!emailData.threadId) return;
-      optimisticToggleLabel([emailData.threadId], label.id, false);
-    },
-    [emailData.threadId, optimisticToggleLabel],
-  );
-
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1186,10 +1176,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <RemovableTextLabels
-                      labels={emailData.tags ?? []}
-                      onRemove={handleRemoveLabel}
-                    />
+                    <RemovableTextLabels labels={emailData.tags ?? []} />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {threadData?.latest?.suggestedAction ? (

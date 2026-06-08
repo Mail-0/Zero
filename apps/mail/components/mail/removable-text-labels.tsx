@@ -1,6 +1,5 @@
 import type { Label } from '@/types';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
 
 const HIDDEN_LABELS = new Set(['unread', 'inbox']);
 
@@ -14,11 +13,10 @@ type RemovableLabel = Pick<Label, 'id' | 'name'> & {
 
 interface RemovableTextLabelsProps {
   labels: RemovableLabel[];
-  onRemove?: (label: RemovableLabel) => void;
   className?: string;
 }
 
-export function RemovableTextLabels({ labels, onRemove, className }: RemovableTextLabelsProps) {
+export function RemovableTextLabels({ labels, className }: RemovableTextLabelsProps) {
   const visibleLabels = labels.filter(
     (label) => !HIDDEN_LABELS.has(label.name.toLowerCase()),
   );
@@ -41,21 +39,6 @@ export function RemovableTextLabels({ labels, onRemove, className }: RemovableTe
           }
         >
           <span>{formatLabelDisplayName(label.name)}</span>
-          {onRemove ? (
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                event.preventDefault();
-                // TODO_doorman:implement_removal
-                onRemove(label);
-              }}
-              className="hover:bg-foreground/10 rounded-full p-0.5"
-              aria-label={`Remove ${formatLabelDisplayName(label.name)}`}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          ) : null}
         </span>
       ))}
     </div>

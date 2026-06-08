@@ -203,7 +203,7 @@ const Thread = memo(
         optimisticState.optimisticLabels,
       ]);
 
-    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo, optimisticToggleLabel } =
+    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
       useOptimisticActions();
 
     const handleToggleStar = useCallback(
@@ -250,14 +250,6 @@ const Thread = memo(
         optimisticMoveThreadsTo([idToUse], folder ?? '', destination);
       },
       [idToUse, folder, optimisticMoveThreadsTo, handleNext],
-    );
-
-    const handleRemoveLabel = useCallback(
-      (label: { id: string; name: string }) => {
-        if (!idToUse) return;
-        optimisticToggleLabel([idToUse], label.id, false);
-      },
-      [idToUse, optimisticToggleLabel],
     );
 
     const [mailState, setMail] = useMail();
@@ -580,10 +572,7 @@ const Thread = memo(
                         </span>
                       ) : null}
                       {latestMessage.tags?.length ? (
-                        <RemovableTextLabels
-                          labels={latestMessage.tags}
-                          onRemove={handleRemoveLabel}
-                        />
+                        <RemovableTextLabels labels={latestMessage.tags} />
                       ) : null}
                     </div>
                   ) : null}
@@ -620,7 +609,6 @@ const Thread = memo(
       displayUnread,
       isMailSelected,
       isMailBulkSelected,
-      handleRemoveLabel,
       emailContent,
     ]);
 
