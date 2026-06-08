@@ -40,6 +40,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
+import { CategoryBadge } from './category-badge';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
 import { useDraft } from '@/hooks/use-drafts';
@@ -567,9 +568,7 @@ const Thread = memo(
                   (latestMessage.category || latestMessage.tags?.length) ? (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {latestMessage.category ? (
-                        <span className="bg-muted text-foreground inline-flex rounded px-1.5 py-0.5 text-xs font-medium">
-                          {latestMessage.category}
-                        </span>
+                        <CategoryBadge category={latestMessage.category} />
                       ) : null}
                       {latestMessage.tags?.length ? (
                         <RemovableTextLabels labels={latestMessage.tags} />
