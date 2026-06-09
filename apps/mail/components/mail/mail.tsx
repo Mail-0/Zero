@@ -1,23 +1,17 @@
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { useCommandPalette } from '../context/command-palette-context';
-import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
+import { useHotkeysContext } from 'react-hotkeys-hook';
 import { ThreadDisplay } from '@/components/mail/thread-display';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
-import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
-import { MailList } from '@/components/mail/mail-list';
+import { MailList, MailSortDropdown } from '@/components/mail/mail-list';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -25,7 +19,6 @@ import { PricingDialog } from '../ui/pricing-dialog';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
-import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
@@ -343,6 +336,17 @@ export function MailLayout() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const [threadId] = useQueryState('threadId');
+  const threadPanelRef = useRef<ImperativePanelHandle>(null);
+
+  useEffect(() => {
+    if (!isDesktop || !threadPanelRef.current) return;
+
+    if (threadId) {
+      threadPanelRef.current.expand();
+    } else {
+      threadPanelRef.current.collapse();
+    }
+  }, [threadId, isDesktop]);
 
   useEffect(() => {
     if (threadId) {
@@ -415,24 +419,26 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
+      <div className="rounded-inherit z-5 relative flex h-full p-0 md:mr-0.5">
         <ResizablePanelGroup
           direction="horizontal"
-          autoSaveId="mail-panel-layout"
-          className="rounded-inherit overflow-hidden"
+          autoSaveId="mail-panel-layout-v2"
+          className="rounded-inherit h-full overflow-hidden"
         >
           <ResizablePanel
-            defaultSize={35}
-            minSize={35}
-            maxSize={35}
+            id="mail-list"
+            defaultSize={threadId ? 35 : 76}
+            minSize={threadId ? 35 : 50}
+            maxSize={threadId ? 35 : 100}
             className={cn(
-              `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
+              `bg-panelLight dark:bg-panelDark mb-1 shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-full lg:shadow-sm`,
+              threadId ? 'w-fit' : 'w-full flex-1',
               isDesktop && threadId && 'hidden lg:block',
             )}
             // onMouseEnter={handleMailListMouseEnter}
             // onMouseLeave={handleMailListMouseLeave}
           >
-            <div className="w-full md:h-[calc(100dvh-10px)]">
+            <div className="flex h-full w-full flex-col">
               <div className="z-15 sticky top-0 p-4 pb-0">
                 <div className="flex items-center gap-2">
                   <SidebarToggle className="h-10 w-10" />
@@ -485,7 +491,7 @@ export function MailLayout() {
                       </Button>
 
                       {activeConnection?.providerId === 'google' && folder === 'inbox' && (
-                        <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+                        <MailSortDropdown />
                       )}
                     </>
                   ) : (
@@ -533,7 +539,7 @@ export function MailLayout() {
                 />
               </div>
 
-              <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
+              <div className="z-1 relative min-h-0 flex-1 overflow-hidden pt-0">
                 <MailList />
               </div>
             </div>
@@ -543,17 +549,22 @@ export function MailLayout() {
 
           {isDesktop && (
             <ResizablePanel
-              className={cn(
-                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-[calc(100dvh-8px)]',
-                // Only show on md screens and larger when there is a threadId
-                !threadId && 'hidden lg:block',
-              )}
-              defaultSize={30}
+              ref={threadPanelRef}
+              id="thread-display"
+              collapsible
+              collapsedSize={0}
+              defaultSize={threadId ? 30 : 0}
               minSize={30}
+              className={cn(
+                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-full',
+                !threadId && 'overflow-hidden',
+              )}
             >
-              <div className="relative flex-1">
-                <ThreadDisplay />
-              </div>
+              {threadId ? (
+                <div className="relative flex-1">
+                  <ThreadDisplay />
+                </div>
+              ) : null}
             </ResizablePanel>
           )}
 
@@ -569,7 +580,6 @@ export function MailLayout() {
           )}
 
           {activeConnection?.id ? <AISidebar /> : null}
-          {activeConnection?.id ? <AIToggleButton /> : null}
         </ResizablePanelGroup>
       </div>
     </TooltipProvider>
@@ -688,125 +698,3 @@ export const Categories = () => {
 
   return categories as CategoryItem[];
 };
-interface CategoryDropdownProps {
-  isMultiSelectMode?: boolean;
-}
-
-function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
-  const categorySettings = useCategorySettings();
-  const { setLabels, labels } = useSearchLabels();
-  const params = useParams<{ folder: string }>();
-  const folder = params?.folder ?? 'inbox';
-  const [isOpen, setIsOpen] = useState(false);
-
-  useHotkeys(
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    (key) => {
-      const category = categorySettings[Number(key.key) - 1];
-      if (!category) return;
-      const isCurrentlyActive = labels.includes(category.searchValue);
-
-      if (isCurrentlyActive) {
-        setLabels(labels.filter((label) => label !== category.searchValue));
-      } else {
-        setLabels([...labels, category.searchValue]);
-      }
-    },
-    {
-      scopes: ['mail-list'],
-      preventDefault: true,
-      enableOnFormTags: false,
-    },
-  );
-
-  const handleLabelChange = (searchValue: string) => {
-    const trimmed = searchValue.trim();
-    if (!trimmed) {
-      setLabels([]);
-      return;
-    }
-
-    const parsedLabels = trimmed
-      .split(',')
-      .map((label) => label.trim())
-      .filter((label) => label.length > 0);
-
-    if (parsedLabels.length === 0) {
-      setLabels([]);
-      return;
-    }
-
-    const currentLabelsSet = new Set(labels);
-    const parsedLabelsSet = new Set(parsedLabels);
-
-    const allLabelsSelected = parsedLabels.every((label) => currentLabelsSet.has(label));
-
-    if (allLabelsSelected) {
-      const updatedLabels = labels.filter((label) => !parsedLabelsSet.has(label));
-      setLabels(updatedLabels);
-    } else {
-      const newLabelsSet = new Set([...labels, ...parsedLabels]);
-      setLabels(Array.from(newLabelsSet));
-    }
-  };
-
-  if (folder !== 'inbox' || isMultiSelectMode) return null;
-
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'text-muted-foreground border-border/40 bg-background/50 hover:bg-accent/30 dark:border-border/20 dark:bg-background/40 flex h-10 min-w-fit items-center gap-2 rounded-lg border px-3 backdrop-blur-sm transition-all',
-          )}
-          aria-label="Filter by labels"
-          aria-expanded={isOpen}
-          aria-haspopup="menu"
-        >
-          <span className="text-sm font-medium">
-            {labels.length > 0
-              ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
-              : m['navigation.settings.categories']()}
-          </span>
-          <ChevronDown
-            className={cn(
-              'text-muted-foreground h-4 w-4 transition-transform duration-200',
-              isOpen ? 'rotate-180' : 'rotate-0',
-            )}
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="border-border/50 bg-muted w-48 rounded-xl border p-2 dark:bg-[#232323]"
-        align="start"
-        role="menu"
-        aria-label="Label filter options"
-      >
-        {categorySettings.map((category) => (
-          <DropdownMenuItem
-            key={category.id}
-            className="hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLabelChange(category.searchValue);
-            }}
-            role="menuitemcheckbox"
-            aria-checked={labels.includes(category.id)}
-          >
-            <span className="text-foreground font-medium capitalize">
-              {category.name.toLowerCase()}
-            </span>
-            {/* Special case: empty searchValue means "All Mail" - shows everything */}
-            {(category.searchValue === ''
-              ? labels.length === 0
-              : category.searchValue.split(',').some((val) => labels.includes(val))) && (
-              <Check className="text-primary ml-auto h-4 w-4" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}

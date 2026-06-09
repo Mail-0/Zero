@@ -31,6 +31,18 @@ import { Effect } from 'effect';
 
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
 
+//doorman
+const hasVectorizeGetByIds = (
+  index: unknown,
+): index is { getByIds: (ids: string[]) => Promise<any[]> } =>
+  typeof (index as { getByIds?: unknown } | undefined)?.getByIds === 'function';
+
+const hasVectorizeUpsert = (
+  index: unknown,
+): index is { upsert: (items: any[]) => Promise<unknown> } =>
+  typeof (index as { upsert?: unknown } | undefined)?.upsert === 'function';
+
+//
 export const workflowFunctions: Record<string, WorkflowFunction> = {
   analyzeEmailIntent: async (context) => {
     if (!context.thread.messages || context.thread.messages.length === 0) {
@@ -110,7 +122,10 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   createDraft: async (context) => {
     const draftContentResult = context.results?.get('generate-draft-content');
     if (!draftContentResult?.draftContent) {
-      throw new Error('No draft content available');
+      console.log('[WORKFLOW_FUNCTIONS] Skipping draft creation because no draft content is available', {
+        threadId: context.threadId,
+      });
+      return { draftId: null, skipped: true, reason: 'missing-draft-content' };
     }
 
     const latestMessage = context.thread.messages[context.thread.messages.length - 1];
@@ -158,6 +173,12 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   findMessagesToVectorize: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Finding messages to vectorize');
+    //doorman
+    if (!hasVectorizeGetByIds(env.VECTORIZE_MESSAGE)) {
+      console.warn('[WORKFLOW_FUNCTIONS] VECTORIZE_MESSAGE binding unavailable, skipping message vector lookup');
+      return { messagesToVectorize: [], existingMessages: [] };
+    }
+    
     const messageIds = context.thread.messages.map((message) => message.id);
     console.log('[WORKFLOW_FUNCTIONS] Found message IDs:', messageIds);
 
@@ -303,6 +324,11 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       '[WORKFLOW_FUNCTIONS] Upserting message vectors:',
       vectorizeResult.embeddings.length,
     );
+    //doorman
+    if (!hasVectorizeUpsert(env.VECTORIZE_MESSAGE)) {
+      console.warn('[WORKFLOW_FUNCTIONS] VECTORIZE_MESSAGE binding unavailable, skipping message vector upsert');
+      return { upserted: 0 };
+    }
     await env.VECTORIZE_MESSAGE.upsert(vectorizeResult.embeddings);
     console.log('[WORKFLOW_FUNCTIONS] Successfully upserted message vectors');
 
@@ -323,7 +349,24 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   checkExistingSummary: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Getting existing thread summary for:', context.threadId);
-    const threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
+    //const threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
+    //doorman
+    if (!hasVectorizeGetByIds(env.VECTORIZE)) {
+      console.warn('[WORKFLOW_FUNCTIONS] VECTORIZE binding unavailable, skipping existing summary lookup');
+      return { existingSummary: null };
+    }
+
+    let threadSummary;
+    try {
+      threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
+    } catch (error) {
+      console.warn('[WORKFLOW_FUNCTIONS] Failed to load existing thread summary', {
+        threadId: context.threadId,
+        error,
+      });
+      return { existingSummary: null };
+    }
+
     if (!threadSummary.length) {
       console.log('[WORKFLOW_FUNCTIONS] No existing thread summary found');
       return { existingSummary: null };
@@ -394,6 +437,11 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     console.log('[WORKFLOW_FUNCTIONS] Upserting thread vector');
     const newestMessage = context.thread.messages[context.thread.messages.length - 1];
+    //doorman
+    if (!hasVectorizeUpsert(env.VECTORIZE)) {
+      console.warn('[WORKFLOW_FUNCTIONS] VECTORIZE binding unavailable, skipping thread vector upsert');
+      return { upserted: false };
+    }
     await env.VECTORIZE.upsert([
       {
         id: context.threadId.toString(),

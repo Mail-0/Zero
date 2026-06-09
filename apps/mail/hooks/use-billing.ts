@@ -64,7 +64,9 @@ export const useBilling = () => {
   const { attach, track, openBillingPortal } = useAutumn();
 
   useEffect(() => {
-    if (error) signOut();
+    if (error) {
+      console.warn('[Billing] Autumn disabled or unavailable:', error);
+    }
   }, [error]);
 
   const { isPro, ...customerFeatures } = useMemo(() => {

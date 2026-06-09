@@ -26,10 +26,15 @@ export const RecursiveFolder = ({
 
   const handleFilterByLabel = useCallback(
     (labelToFilter: LabelType) => {
+      // if (labels?.includes(labelToFilter.id)) {
+      //   setLabels(labels.filter((l) => l !== labelToFilter.id));
+      // } else {
+      //   setLabels([...(labels ?? []), labelToFilter.id]);
+      // }
       if (labels?.includes(labelToFilter.id)) {
-        setLabels(labels.filter((l) => l !== labelToFilter.id));
+        setLabels([]);
       } else {
-        setLabels([...(labels ?? []), labelToFilter.id]);
+        setLabels([labelToFilter.id]);
       }
     },
     [labels, setLabels],

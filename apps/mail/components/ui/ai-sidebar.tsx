@@ -46,7 +46,7 @@ function ChatHeader({
   onNewChat,
 }: ChatHeaderProps) {
   const [, setPricingDialog] = useQueryState('pricingDialog');
-  const { chatMessages } = useBilling();
+  // const { chatMessages } = useBilling();
   return (
     <div className="relative flex items-center justify-between px-2.5 pb-[10px] pt-[13px]">
       <TooltipProvider delayDuration={0}>
@@ -337,7 +337,10 @@ export function useAISidebar() {
 function AISidebar({ className }: AISidebarProps) {
   const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
     useAISidebar();
-  const { isPro, track, refetch: refetchBilling } = useBilling();
+  // const { isPro, track, refetch: refetchBilling } = useBilling();
+  const isPro = true;
+  const isLoading = false;
+  const openBillingPortal = () => {};
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const [threadId] = useQueryState('threadId');
@@ -483,7 +486,7 @@ function AISidebar({ className }: AISidebarProps) {
                 defaultSize={24}
                 minSize={24}
                 maxSize={24}
-                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-[calc(100dvh-8px)] shadow-sm md:block md:rounded-2xl md:shadow-sm"
+                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-full shadow-sm md:block md:rounded-2xl md:shadow-sm"
               >
                 <div className={cn('h-[calc(98vh)]', 'flex flex-col', '', className)}>
                   <div className="flex h-full flex-col">
@@ -521,7 +524,7 @@ function AISidebar({ className }: AISidebarProps) {
           >
             <div
               className={cn(
-                'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-[#E7E7E7] shadow-lg dark:border-[#252525]',
+                'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-border shadow-lg dark:border-border',
                 'md:hidden',
                 isPopup && !isFullScreen && 'w-[600px] max-w-[90vw] sm:w-[400px] md:block',
                 isFullScreen && 'block! max-w-none! rounded-none! border-none!',

@@ -20,15 +20,16 @@ export class LoggingService {
             timestamp: Date.now(),
         };
 
-        // Immediately export to Datadog
-        try {
-            await this.datadogService.logSingleCall(
-                callData.sessionId,
-                callData.userId,
-                log
-            );
-        } catch (error) {
-            console.error('❌ Failed to log TRPC call to Datadog:', error);
+        if (this.datadogService.enabled) {
+            try {
+                await this.datadogService.logSingleCall(
+                    callData.sessionId,
+                    callData.userId,
+                    log,
+                );
+            } catch (error) {
+                console.error('Failed to log TRPC call to Datadog:', error);
+            }
         }
 
         // Update in-memory session stats

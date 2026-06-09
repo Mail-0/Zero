@@ -1389,24 +1389,66 @@ export class GoogleMailManager implements MailManager {
     fn: () => Promise<T> | T,
     context?: Record<string, unknown>,
   ): Promise<T> {
-    try {
-      return await Promise.resolve(fn());
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      const isFatal = FatalErrors.includes(error.message);
-      console.error(
-        `[${isFatal ? 'FATAL_ERROR' : 'ERROR'}] [Gmail Driver] Operation: ${operation}`,
-        {
-          error: error.message,
-          code: error.code,
-          context: sanitizeContext(context),
-          stack: error.stack,
-          isFatal,
-        },
-      );
-      if (isFatal) await deleteActiveConnection();
-      throw new StandardizedError(error, operation, context);
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await Promise.resolve(fn());
+      } catch (error: any) {
+        const message = error?.message || '';
+        const code = error?.code || error?.errno;
+        const status = error?.response?.status || error?.status;
+        const isFatal = FatalErrors.includes(message);
+
+        const isRetryable =
+          message.includes('Network connection lost') ||
+          message.includes('fetch failed') ||
+          message.includes('socket hang up') ||
+          message.includes('timeout') ||
+          code === 'ECONNRESET' ||
+          code === 'ETIMEDOUT' ||
+          code === 'ECONNABORTED' ||
+          code === 'EAI_AGAIN' ||
+          status === 429 ||
+          (typeof status === 'number' && status >= 500);
+
+        if (isRetryable && !isFatal && attempt < maxAttempts) {
+          const delayMs = 500 * 2 ** (attempt - 1);
+
+          console.warn(`[WARN] [Gmail Driver] Retrying operation: ${operation}`, {
+            attempt,
+            nextAttempt: attempt + 1,
+            maxAttempts,
+            delayMs,
+            error: message,
+            code,
+            status,
+            context: sanitizeContext(context),
+          });
+
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+
+        console.error(
+          `[${isFatal ? 'FATAL_ERROR' : 'ERROR'}] [Gmail Driver] Operation: ${operation}`,
+          {
+            error: message,
+            code,
+            status,
+            context: sanitizeContext(context),
+            stack: error?.stack,
+            isFatal,
+            attempt,
+          },
+        );
+
+        if (isFatal) await deleteActiveConnection();
+        throw new StandardizedError(error, operation, context);
+      }
     }
+
+    throw new Error(`Unexpected retry failure in Gmail operation: ${operation}`);
   }
   private withSyncErrorHandler<T>(
     operation: string,

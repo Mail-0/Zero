@@ -1,12 +1,12 @@
 {
-  "name": "Zero",
-  "short_name": "0",
-  "description": "Zero - the first open source email app that puts your privacy and safety first.",
+  "name": "Doorman",
+  "short_name": "Doorman",
+  "description": "Doorman - AI based email system.",
   "scope": "/",
   "start_url": "/mail/inbox",
   "display": "standalone",
-  "background_color": "#000",
-  "theme_color": "#fff",
+  "background_color": "#FFF0F5",
+  "theme_color": "#FFF0F5",
   "icons": [
     {
       "src": "/icons-pwa/icon-512.png",

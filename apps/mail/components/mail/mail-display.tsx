@@ -1,37 +1,37 @@
 import {
-  Bell,
   Docx,
   Figma,
   Forward,
   ImageFile,
-  Lightning,
   PDF,
   Reply,
   ReplyAll,
   ThreeDots,
-  Tag,
-  User,
   ChevronDown,
   Printer,
 } from '../icons/icons';
 import {
-  Briefcase,
-  Star,
-  StickyNote,
-  Users,
   Lock,
   HardDriveDownload,
   Loader2,
   CopyIcon,
+  CircleAlert,
+  MessageSquareText,
+  Tag,
+  Check,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { cn, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
+import { Textarea } from '../ui/textarea';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -40,21 +40,21 @@ import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useAttachments } from '@/hooks/use-attachments';
 import { useTRPC } from '@/providers/query-provider';
-import { useThreadLabels } from '@/hooks/use-labels';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { BimiAvatar } from '../ui/bimi-avatar';
-import { RenderLabels } from './render-labels';
+import { useLabels } from '@/hooks/use-labels';
+import { PriorityScoreCircle } from './priority-score-circle';
+import { RemovableTextLabels } from './removable-text-labels';
 import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
 import { useQueryState } from 'nuqs';
-import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -157,87 +157,6 @@ type Props = {
   onReplyAll?: () => void;
   onForward?: () => void;
   threadAttachments?: Attachment[];
-};
-
-const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const visibleLabels = labels.filter(
-    (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
-  );
-
-  if (!visibleLabels.length) return null;
-
-  return (
-    <div className="flex">
-      {visibleLabels.map((label, index) => {
-        const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
-
-        let icon = null;
-        let bgColor = '';
-        let labelText = '';
-
-        switch (normalizedLabel) {
-          case 'important':
-            icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#F59E0D]';
-            labelText = m['common.mailCategories.important']();
-            break;
-          case 'promotions':
-            icon = <Tag className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#F43F5E]';
-            labelText = m['common.mailCategories.promotions']();
-            break;
-          case 'personal':
-            icon = <User className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#39AE4A]';
-            labelText = m['common.mailCategories.personal']();
-            break;
-          case 'updates':
-            icon = <Bell className="h-3.5 w-3.5 fill-white" />;
-            bgColor = 'bg-[#8B5CF6]';
-            labelText = m['common.mailCategories.updates']();
-            break;
-          case 'work':
-            icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
-            bgColor = '';
-            labelText = m['common.mailCategories.work']();
-            break;
-          case 'forums':
-            icon = <Users className="h-3.5 w-3.5 text-white" />;
-            bgColor = 'bg-blue-600';
-            labelText = m['common.mailCategories.forums']();
-            break;
-          case 'notes':
-            icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
-            bgColor = 'bg-amber-500';
-            labelText = m['common.mailCategories.notes']();
-            break;
-          case 'starred':
-            icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
-            bgColor = 'bg-yellow-500';
-            labelText = m['common.mailCategories.starred']();
-            break;
-          default:
-            return null;
-        }
-
-        return (
-          <Tooltip key={`${label}-${index}`}>
-            <TooltipTrigger>
-              <Badge
-                key={`${label}-${index}`}
-                className={`rounded-md p-1 ${bgColor} dark:border-panelDark -ml-1.5 border-2 border-white transition-transform first:ml-0`}
-              >
-                {icon}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">{labelText}</p>
-            </TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </div>
-  );
 };
 
 // Helper function to clean email display
@@ -656,6 +575,8 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [priorityScoreOverride, setPriorityScoreOverride] = useState<number | null>(null);
+  const [suggestedActionOverride, setSuggestedActionOverride] = useState<string | null>(null);
   const { data: threadData } = useThread(emailData.threadId ?? null);
   const { data: messageAttachments } = useAttachments(emailData.id);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
@@ -669,17 +590,60 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   //     url: string;
   //   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
+  const [openActionFeedbackDialog, setOpenActionFeedbackDialog] = useState<boolean>(false);
+  const [actionFeedbackMessage, setActionFeedbackMessage] = useState<string>('');
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
-  const { labels: threadLabels } = useThreadLabels(
-    emailData.tags ? emailData.tags.map((l) => l.id) : [],
-  );
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
-  //   const trpc = useTRPC();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { mutateAsync: submitClassificationCorrection } = useMutation(
+    trpc.mail.submitClassificationCorrection.mutationOptions(),
+  );
+  const { mutateAsync: submitActionSuggestionFeedback, isPending: isSubmittingActionFeedback } =
+    useMutation(trpc.mail.submitActionSuggestionFeedback.mutationOptions());
+
+  const { userLabels, systemLabels } = useLabels();
+  const allLabels = useMemo(() => [...userLabels, ...systemLabels], [userLabels, systemLabels]);
+  const { mutateAsync: modifyLabels, isPending: isMovingLabel } = useMutation(
+    trpc.mail.modifyLabels.mutationOptions(),
+  );
+
+  const currentLabelIds = useMemo(
+    () => new Set((emailData.tags ?? []).map((t) => t.id ?? t.name)),
+    [emailData.tags],
+  );
+
+  const handleMoveToLabel = async (labelId: string, labelName: string) => {
+    const isAlreadyApplied = currentLabelIds.has(labelId);
+    try {
+      await modifyLabels({
+        threadId: [emailData.threadId ?? emailData.id],
+        addLabels: isAlreadyApplied ? [] : [labelId],
+        removeLabels: isAlreadyApplied ? [labelId] : [],
+      });
+      toast.success(
+        isAlreadyApplied ? `Removed label "${labelName}"` : `Moved to "${labelName}"`,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: emailData.threadId ?? emailData.id }),
+      });
+    } catch (error) {
+      console.error('Failed to modify label:', error);
+      toast.error('Failed to update label.');
+    }
+  };
+
+  const emailScopedSuggestedAction = useMemo(() => {
+    if (suggestedActionOverride) return suggestedActionOverride;
+
+    const matchedMessage = threadData?.messages?.find((message) => message.id === emailData.id);
+    return matchedMessage?.suggestedAction ?? emailData.suggestedAction ?? null;
+  }, [suggestedActionOverride, threadData?.messages, emailData.id, emailData.suggestedAction]);
 
   const isLastEmail = useMemo(
     () => emailData.id === threadData?.latest?.id,
@@ -1161,6 +1125,163 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   };
 
+  const handlePriorityScoreFeedback = async (rating: 'low' | 'high') => {
+    try {
+      const correctionInput: {
+        threadId: string;
+        messageId: string;
+        correctedPriority: 'low' | 'high';
+        currentPriorityScore?: number;
+      } = {
+        threadId: emailData.threadId ?? emailData.id,
+        messageId: emailData.id,
+        correctedPriority: rating,
+      };
+
+      if (emailData.priorityScore != null) {
+        correctionInput.currentPriorityScore = emailData.priorityScore;
+      }
+
+      const response = await submitClassificationCorrection(correctionInput);
+
+      if (response?.refreshed?.priorityScore != null) {
+        setPriorityScoreOverride(response.refreshed.priorityScore);
+      }
+
+      if (response?.refreshed?.suggestedAction) {
+        setSuggestedActionOverride(response.refreshed.suggestedAction);
+      }
+
+      const currentThreadId = emailData.threadId ?? emailData.id;
+      queryClient.setQueryData(
+        trpc.mail.get.queryKey({ id: currentThreadId }),
+        (existingThread: any) => {
+          if (!existingThread) return existingThread;
+
+          const updatedMessages = (existingThread.messages ?? []).map((message: any) => {
+            if (message.id !== emailData.id) return message;
+            return {
+              ...message,
+              priorityScore:
+                response?.refreshed?.priorityScore != null
+                  ? response.refreshed.priorityScore
+                  : message.priorityScore,
+              category: response?.refreshed?.category ?? message.category,
+              suggestedAction:
+                response?.refreshed?.suggestedAction ?? message.suggestedAction,
+            };
+          });
+
+          const updatedLatest = existingThread.latest?.id === emailData.id
+            ? {
+                ...existingThread.latest,
+                priorityScore:
+                  response?.refreshed?.priorityScore != null
+                    ? response.refreshed.priorityScore
+                    : existingThread.latest.priorityScore,
+                category: response?.refreshed?.category ?? existingThread.latest.category,
+                suggestedAction:
+                  response?.refreshed?.suggestedAction ?? existingThread.latest.suggestedAction,
+              }
+            : existingThread.latest;
+
+          return {
+            ...existingThread,
+            messages: updatedMessages,
+            latest: updatedLatest,
+          };
+        },
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: currentThreadId }),
+      });
+
+      toast.success(
+        `Updated by LLM: priority score ${response?.refreshed?.priorityScore ?? 'saved'}`,
+      );
+    } catch (error) {
+      console.error('Failed to submit priority score feedback:', error);
+      toast.error('Failed to regenerate LLM result from your feedback.');
+    }
+  };
+
+  const handleActionSuggestionFeedback = async () => {
+    const trimmedFeedback = actionFeedbackMessage.trim();
+    if (!trimmedFeedback) return;
+
+    try {
+      const response = await submitActionSuggestionFeedback({
+        threadId: emailData.threadId ?? emailData.id,
+        messageId: emailData.id,
+        feedbackMessage: trimmedFeedback,
+        currentSuggestedAction: emailScopedSuggestedAction ?? undefined,
+        currentPriorityScore: emailData.priorityScore ?? undefined,
+      });
+
+      if (response?.refreshed?.priorityScore != null) {
+        setPriorityScoreOverride(response.refreshed.priorityScore);
+      }
+
+      if (response?.refreshed?.suggestedAction) {
+        setSuggestedActionOverride(response.refreshed.suggestedAction);
+      }
+
+      const currentThreadId = emailData.threadId ?? emailData.id;
+      queryClient.setQueryData(
+        trpc.mail.get.queryKey({ id: currentThreadId }),
+        (existingThread: any) => {
+          if (!existingThread) return existingThread;
+
+          const updatedMessages = (existingThread.messages ?? []).map((message: any) => {
+            if (message.id !== emailData.id) return message;
+            return {
+              ...message,
+              priorityScore:
+                response?.refreshed?.priorityScore != null
+                  ? response.refreshed.priorityScore
+                  : message.priorityScore,
+              category: response?.refreshed?.category ?? message.category,
+              suggestedAction:
+                response?.refreshed?.suggestedAction ?? message.suggestedAction,
+            };
+          });
+
+          const updatedLatest =
+            existingThread.latest?.id === emailData.id
+              ? {
+                  ...existingThread.latest,
+                  priorityScore:
+                    response?.refreshed?.priorityScore != null
+                      ? response.refreshed.priorityScore
+                      : existingThread.latest.priorityScore,
+                  category: response?.refreshed?.category ?? existingThread.latest.category,
+                  suggestedAction:
+                    response?.refreshed?.suggestedAction ?? existingThread.latest.suggestedAction,
+                }
+              : existingThread.latest;
+
+          return {
+            ...existingThread,
+            messages: updatedMessages,
+            latest: updatedLatest,
+          };
+        },
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: currentThreadId }),
+      });
+
+      setOpenActionFeedbackDialog(false);
+      setActionFeedbackMessage('');
+      toast.success('Action feedback applied. LLM analysis refreshed.');
+    } catch (error) {
+      console.error('Failed to submit action suggestion feedback:', error);
+      toast.error('Failed to refresh analysis from your action feedback.');
+    }
+  };
+
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1248,6 +1369,45 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             person={researchSender}
           />
         )}
+        <Dialog open={openActionFeedbackDialog} onOpenChange={setOpenActionFeedbackDialog}>
+          <DialogContent showOverlay onClick={(e) => e.stopPropagation()}>
+            <DialogHeader>
+              <DialogTitle>Improve Action Suggestion</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-muted-foreground text-sm">
+                Provide feedback for this email and we will update the prompt, resend to OpenAI,
+                and refresh the analysis result.
+              </p>
+              <Textarea
+                value={actionFeedbackMessage}
+                onChange={(event) => setActionFeedbackMessage(event.target.value)}
+                placeholder="Example: This is time-sensitive and should be marked as reply now."
+                className="min-h-[120px] resize-y"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                  onClick={() => {
+                    setOpenActionFeedbackDialog(false);
+                    setActionFeedbackMessage('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm disabled:opacity-50"
+                  disabled={!actionFeedbackMessage.trim() || isSubmittingActionFeedback}
+                  onClick={() => void handleActionSuggestionFeedback()}
+                >
+                  {isSubmittingActionFeedback ? 'Regenerating...' : 'Regenerate Analysis'}
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="relative h-full overflow-y-auto">
           <div className={cn('px-4', index === 0 && 'border-b py-4')}>
             {index === 0 && (
@@ -1261,51 +1421,51 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </span>
 
-                <div className="mt-2 flex items-center gap-2">
-                  {emailData?.tags?.length ? (
-                    <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
-                  ) : null}
-                  {emailData?.tags?.length ? (
-                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                  ) : null}
-                  <RenderLabels labels={threadLabels} />
-                  {threadLabels.length ? (
-                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                  ) : null}
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
-                    {(() => {
-                      if (people.length <= 2) {
-                        return people.map(renderPerson);
-                      }
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <RemovableTextLabels labels={emailData.tags ?? []} />
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {emailScopedSuggestedAction ? (
+                      <div className="border-border bg-muted max-w-[240px] truncate rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
+                        Suggested Action : {emailScopedSuggestedAction}
+                      </div>
+                    ) : null}
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
+                      {(() => {
+                        if (people.length <= 2) {
+                          return people.map(renderPerson);
+                        }
 
-                      // Only show first two people plus count if we have at least two people
-                      const firstPerson = people[0];
-                      const secondPerson = people[1];
+                        // Only show first two people plus count if we have at least two people
+                        const firstPerson = people[0];
+                        const secondPerson = people[1];
 
-                      if (firstPerson && secondPerson) {
-                        return (
-                          <>
-                            {renderPerson(firstPerson)}
-                            {renderPerson(secondPerson)}
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-sm">
-                                  +{people.length - 2}{' '}
-                                  {people.length - 2 === 1 ? 'other' : 'others'}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent className="flex flex-col gap-1">
-                                {people.slice(2).map((person) => (
-                                  <div key={person.email}>{renderPerson(person)}</div>
-                                ))}
-                              </TooltipContent>
-                            </Tooltip>
-                          </>
-                        );
-                      }
+                        if (firstPerson && secondPerson) {
+                          return (
+                            <>
+                              {renderPerson(firstPerson)}
+                              {renderPerson(secondPerson)}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="text-sm">
+                                    +{people.length - 2}{' '}
+                                    {people.length - 2 === 1 ? 'other' : 'others'}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="flex flex-col gap-1">
+                                  {people.slice(2).map((person) => (
+                                    <div key={person.email}>{renderPerson(person)}</div>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </>
+                          );
+                        }
 
-                      return null;
-                    })()}
+                        return null;
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <AiSummary />
@@ -1318,11 +1478,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           <div className="flex cursor-pointer flex-col pb-2 duration-200" onClick={toggleCollapse}>
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
-                <BimiAvatar
-                  email={emailData?.sender?.email}
-                  name={emailData?.sender?.name}
-                  className="mt-3 h-8 w-8"
-                />
+                <div className="mt-3 flex flex-col items-center gap-1">
+                  <BimiAvatar
+                    email={emailData?.sender?.email}
+                    name={emailData?.sender?.name}
+                    className="h-8 w-8"
+                  />
+                  <PriorityScoreCircle score={priorityScoreOverride ?? emailData?.priorityScore} />
+                </div>
 
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">
@@ -1500,7 +1663,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                            <DropdownMenuContent align="end" className="bg-card">
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -1511,6 +1674,85 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                                 {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handlePriorityScoreFeedback('low');
+                                }}
+                              >
+                                <CircleAlert className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Priority score is low
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handlePriorityScoreFeedback('high');
+                                }}
+                              >
+                                <CircleAlert className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Priority score is high
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setOpenActionFeedbackDialog(true);
+                                }}
+                              >
+                                <MessageSquareText className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Feedback on action suggestion
+                              </DropdownMenuItem>
+                              <DropdownMenuSub>
+                                <DropdownMenuSubTrigger
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="cursor-pointer"
+                                >
+                                  <Tag className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                  Move to label
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="bg-card max-h-64 overflow-y-auto">
+                                  {allLabels.length === 0 ? (
+                                    <DropdownMenuItem disabled>
+                                      No labels available
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    allLabels.map((label) => {
+                                      const applied = currentLabelIds.has(label.id ?? label.name);
+                                      return (
+                                        <DropdownMenuItem
+                                          key={label.id ?? label.name}
+                                          disabled={isMovingLabel}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            void handleMoveToLabel(
+                                              label.id ?? label.name,
+                                              label.name,
+                                            );
+                                          }}
+                                        >
+                                          <span
+                                            className="mr-2 h-2 w-2 rounded-full"
+                                            style={{
+                                              backgroundColor:
+                                                label.color?.backgroundColor || 'transparent',
+                                              border: label.color?.backgroundColor
+                                                ? undefined
+                                                : '1px solid currentColor',
+                                            }}
+                                          />
+                                          {label.name}
+                                          {applied && (
+                                            <Check className="ml-auto h-4 w-4 opacity-60" />
+                                          )}
+                                        </DropdownMenuItem>
+                                      );
+                                    })
+                                  )}
+                                </DropdownMenuSubContent>
+                              </DropdownMenuSub>
                               {(messageAttachments?.length ?? 0) > 0 && (
                                 <DropdownMenuItem
                                   disabled={!messageAttachments?.length}

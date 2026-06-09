@@ -74,7 +74,7 @@ export function OnboardingDialog({
       <DialogTitle></DialogTitle>
       <DialogContent
         showOverlay
-        className="bg-panelLight mx-auto w-full max-w-[90%] rounded-xl border p-0 sm:max-w-[690px] dark:bg-[#111111]"
+        className="bg-panelLight mx-auto w-full max-w-[90%] rounded-xl border p-0 sm:max-w-[690px] dark:bg-card"
       >
         <div className="flex flex-col gap-4 p-4">
           {steps[currentStep] && steps[currentStep].video && (
@@ -144,20 +144,5 @@ export function OnboardingDialog({
 }
 
 export function OnboardingWrapper() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const ONBOARDING_KEY = 'hasCompletedOnboarding';
-
-  useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY) === 'true';
-    setShowOnboarding(!hasCompletedOnboarding);
-  }, []);
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      localStorage.setItem(ONBOARDING_KEY, 'true');
-    }
-    setShowOnboarding(open);
-  };
-
-  return <OnboardingDialog open={showOnboarding} onOpenChange={handleOpenChange} />;
+  return null;
 }

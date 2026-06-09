@@ -38,16 +38,43 @@ export const autumnApi = new Hono<AutumnContext>()
             },
           },
     );
-    c.set('autumn', new Autumn({ secretKey: env.AUTUMN_SECRET_KEY }));
+    const autumnSecretKey = env.AUTUMN_SECRET_KEY?.trim();
+
+    c.set(
+      'autumn',
+      autumnSecretKey && autumnSecretKey !== 'dummy'
+        ? new Autumn({ secretKey: autumnSecretKey })
+        : undefined,
+    );
+
     await next();
   })
   .post('/customers', async (c) => {
     const { autumn, customerData } = c.var;
-    const body = await c.req.json();
-    if (!customerData) return c.json({ error: 'No customer ID found' }, 401);
+    const body = await c.req.json().catch(() => ({}));
+
+    if (!customerData) {
+      return c.json({
+        id: 'dev-anonymous',
+        name: 'Dev User',
+        email: 'dev@example.com',
+        features: {},
+        products: [],
+      });
+    }
+
+    if (!autumn) {
+      return c.json({
+        id: customerData.customerId,
+        ...customerData.customerData,
+        ...sanitizeCustomerBody(body),
+        features: {},
+        products: [],
+      });
+    }
 
     return c.json(
-      await autumn!.customers
+      await autumn.customers
         .create({
           id: customerData.customerId,
           ...customerData.customerData,
