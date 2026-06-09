@@ -359,6 +359,262 @@ export const mailRouter = router({
         await conn.end();
       }
     }),
+  submitActionSuggestionFeedback: activeDriverProcedure
+    .input(
+      z.object({
+        threadId: z.string().min(1),
+        messageId: z.string().min(1),
+        feedbackMessage: z.string().min(1).max(1500),
+        currentSuggestedAction: z.string().optional(),
+        currentPriorityScore: z.number().min(0).max(100).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const databaseUrl = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
+      if (!databaseUrl) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database connection not configured',
+        });
+      }
+
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'OPENAI_API_KEY not configured',
+        });
+      }
+
+      const { db, conn } = createDb(databaseUrl);
+
+      try {
+        const [targetEmail] = await db
+          .select({
+            emailId: emailTable.emailId,
+            userId: mailbox.userId,
+            subject: emailTable.subject,
+            body: emailTable.body,
+            sender: emailTable.sender,
+            receiver: emailTable.receiver,
+            metadata: emailTable.metadata,
+          })
+          .from(emailTable)
+          .innerJoin(mailbox, eq(emailTable.mailboxId, mailbox.mailboxId))
+          .where(
+            and(
+              eq(emailTable.emailId, input.messageId),
+              eq(emailTable.mailboxId, `inbox:${ctx.activeConnection.id}`),
+            ),
+          )
+          .limit(1);
+
+        if (!targetEmail) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Email not found for this connection',
+          });
+        }
+
+        const [profile] = await db
+          .select()
+          .from(userProfile)
+          .where(eq(userProfile.userId, targetEmail.userId))
+          .limit(1);
+
+        const profileCategories = await db
+          .select()
+          .from(category)
+          .where(and(eq(category.userId, targetEmail.userId), eq(category.enabled, true)));
+
+        const profileActions = await db
+          .select()
+          .from(actionItem)
+          .where(and(eq(actionItem.userId, targetEmail.userId), eq(actionItem.enabled, true)));
+
+        const allowedCategories =
+          profileCategories.length > 0
+            ? profileCategories.map((item) => item.categoryName)
+            : ['academic', 'seminar', 'event', 'survey', 'advertisement', 'spam', 'uncategorized'];
+
+        const allowedActions =
+          profileActions.length > 0
+            ? profileActions.map((item) => item.name)
+            : ['forwarding', 'replying', 'mark at calendar', 'revise later', 'ignore', 'No action needed'];
+
+        const cleanedSubject = String(targetEmail.subject ?? '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 300);
+        const cleanedBody = String(targetEmail.body ?? '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 6000);
+
+        const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
+        const { object } = await generateObject({
+          model: openai(env.OPENAI_MODEL || 'gpt-4o-mini'),
+          schema: reanalysisSchema,
+          output: 'object',
+          system:
+            'Analyze the email and return category, priority_score, action, and reason as JSON. ' +
+            'Use only provided categories/actions and do not hallucinate details. ' +
+            'Priority score rubric: sender importance up to 30, content importance up to 40, deadline urgency up to 30. ' +
+            'You are receiving a user feedback message about the suggested action. Treat that feedback as high-priority guidance and improve the action suggestion accordingly while staying grounded in the email content.',
+          prompt: JSON.stringify({
+            email: {
+              subject: cleanedSubject,
+              body: cleanedBody,
+              sender: targetEmail.sender ?? '',
+              receiver: targetEmail.receiver ?? '',
+              metadata: targetEmail.metadata ?? {},
+            },
+            user_profile: {
+              user_type: profile?.userType ?? '',
+              interests: profile?.interest ?? [],
+              affiliations: profile?.affiliation ?? [],
+              important_contacts: profile?.importantContacts ?? [],
+            },
+            allowed: {
+              categories: allowedCategories,
+              actions: allowedActions,
+            },
+            action_feedback: {
+              feedback_message: input.feedbackMessage,
+              current_suggested_action: input.currentSuggestedAction ?? null,
+              current_priority_score: input.currentPriorityScore ?? null,
+            },
+          }),
+        });
+
+        const categoryByLower = new Map(allowedCategories.map((name) => [name.toLowerCase(), name]));
+        const actionByLower = new Map(allowedActions.map((name) => [name.toLowerCase(), name]));
+
+        const normalizedCategory =
+          categoryByLower.get(String(object.category ?? '').trim().toLowerCase()) ?? 'uncategorized';
+        const normalizedAction =
+          actionByLower.get(String(object.action ?? '').trim().toLowerCase()) ?? 'No action needed';
+
+        const rawScore = Number(object.priority_score ?? 0);
+        const normalizedScore = Number.isFinite(rawScore)
+          ? Math.max(0, Math.min(100, Math.round(rawScore)))
+          : 0;
+
+        const normalizedReason =
+          String(object.reason ?? '').trim() ||
+          'Regenerated from LLM using action suggestion feedback.';
+
+        const matchedCategory = profileCategories.find(
+          (item) => item.categoryName.toLowerCase() === normalizedCategory.toLowerCase(),
+        );
+        const matchedAction = profileActions.find(
+          (item) => item.name.toLowerCase() === normalizedAction.toLowerCase(),
+        );
+
+        const [existingAnalysis] = await db
+          .select({ id: analysisResult.id })
+          .from(analysisResult)
+          .where(eq(analysisResult.emailId, input.messageId))
+          .limit(1);
+
+        const analysisId = existingAnalysis?.id ?? crypto.randomUUID();
+
+        if (existingAnalysis) {
+          await db
+            .update(analysisResult)
+            .set({
+              categoryId: matchedCategory?.categoryId ?? null,
+              category: normalizedCategory,
+              priorityScore: normalizedScore,
+              suggestedActions: normalizedAction,
+              reason: normalizedReason,
+              source: 'llm-feedback-action',
+              rawResult: {
+                ...object,
+                action_feedback: {
+                  feedback_message: input.feedbackMessage,
+                  current_suggested_action: input.currentSuggestedAction ?? null,
+                  current_priority_score: input.currentPriorityScore ?? null,
+                },
+              },
+              hallucinationChecked: true,
+              analyzedAt: new Date(),
+            })
+            .where(eq(analysisResult.id, analysisId));
+        } else {
+          await db.insert(analysisResult).values({
+            id: analysisId,
+            userId: targetEmail.userId,
+            emailId: input.messageId,
+            categoryId: matchedCategory?.categoryId ?? null,
+            category: normalizedCategory,
+            priorityScore: normalizedScore,
+            suggestedActions: normalizedAction,
+            reason: normalizedReason,
+            source: 'llm-feedback-action',
+            rawResult: {
+              ...object,
+              action_feedback: {
+                feedback_message: input.feedbackMessage,
+                current_suggested_action: input.currentSuggestedAction ?? null,
+                current_priority_score: input.currentPriorityScore ?? null,
+              },
+            },
+            hallucinationChecked: true,
+            analyzedAt: new Date(),
+          });
+        }
+
+        await db
+          .update(emailTable)
+          .set({
+            categoryId: matchedCategory?.categoryId ?? null,
+            priorityScore: normalizedScore,
+          })
+          .where(eq(emailTable.emailId, input.messageId));
+
+        await db.delete(priorityScoreTable).where(eq(priorityScoreTable.emailId, input.messageId));
+        await db.insert(priorityScoreTable).values({
+          id: crypto.randomUUID(),
+          analysisId,
+          emailId: input.messageId,
+          score: normalizedScore,
+        });
+
+        await db.delete(actionSuggestion).where(eq(actionSuggestion.emailId, input.messageId));
+        await db.insert(actionSuggestion).values({
+          id: crypto.randomUUID(),
+          analysisId,
+          emailId: input.messageId,
+          actionItemId: matchedAction?.actionItemId ?? null,
+          actionLabel: normalizedAction,
+          reason: normalizedReason,
+        });
+
+        await db.insert(feedbackData).values({
+          id: crypto.randomUUID(),
+          userId: targetEmail.userId,
+          analysisId,
+          emailId: input.messageId,
+          targetType: 'action_suggestion',
+          rating: input.feedbackMessage,
+          createdAt: new Date(),
+        });
+
+        return {
+          success: true,
+          refreshed: {
+            category: normalizedCategory,
+            priorityScore: normalizedScore,
+            suggestedAction: normalizedAction,
+            reason: normalizedReason,
+          },
+        };
+      } finally {
+        await conn.end();
+      }
+    }),
   suggestRecipients: activeDriverProcedure
     .input(
       z.object({

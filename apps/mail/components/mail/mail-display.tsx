@@ -16,6 +16,7 @@ import {
   Loader2,
   CopyIcon,
   CircleAlert,
+  MessageSquareText,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ import {
 } from '../ui/dropdown-menu';
 import { cn, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
+import { Textarea } from '../ui/textarea';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -582,6 +584,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   //     url: string;
   //   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
+  const [openActionFeedbackDialog, setOpenActionFeedbackDialog] = useState<boolean>(false);
+  const [actionFeedbackMessage, setActionFeedbackMessage] = useState<string>('');
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -594,6 +598,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const { mutateAsync: submitClassificationCorrection } = useMutation(
     trpc.mail.submitClassificationCorrection.mutationOptions(),
   );
+  const { mutateAsync: submitActionSuggestionFeedback, isPending: isSubmittingActionFeedback } =
+    useMutation(trpc.mail.submitActionSuggestionFeedback.mutationOptions());
 
   const emailScopedSuggestedAction = useMemo(() => {
     if (suggestedActionOverride) return suggestedActionOverride;
@@ -1163,6 +1169,82 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   };
 
+  const handleActionSuggestionFeedback = async () => {
+    const trimmedFeedback = actionFeedbackMessage.trim();
+    if (!trimmedFeedback) return;
+
+    try {
+      const response = await submitActionSuggestionFeedback({
+        threadId: emailData.threadId ?? emailData.id,
+        messageId: emailData.id,
+        feedbackMessage: trimmedFeedback,
+        currentSuggestedAction: emailScopedSuggestedAction ?? undefined,
+        currentPriorityScore: emailData.priorityScore ?? undefined,
+      });
+
+      if (response?.refreshed?.priorityScore != null) {
+        setPriorityScoreOverride(response.refreshed.priorityScore);
+      }
+
+      if (response?.refreshed?.suggestedAction) {
+        setSuggestedActionOverride(response.refreshed.suggestedAction);
+      }
+
+      const currentThreadId = emailData.threadId ?? emailData.id;
+      queryClient.setQueryData(
+        trpc.mail.get.queryKey({ id: currentThreadId }),
+        (existingThread: any) => {
+          if (!existingThread) return existingThread;
+
+          const updatedMessages = (existingThread.messages ?? []).map((message: any) => {
+            if (message.id !== emailData.id) return message;
+            return {
+              ...message,
+              priorityScore:
+                response?.refreshed?.priorityScore != null
+                  ? response.refreshed.priorityScore
+                  : message.priorityScore,
+              category: response?.refreshed?.category ?? message.category,
+              suggestedAction:
+                response?.refreshed?.suggestedAction ?? message.suggestedAction,
+            };
+          });
+
+          const updatedLatest =
+            existingThread.latest?.id === emailData.id
+              ? {
+                  ...existingThread.latest,
+                  priorityScore:
+                    response?.refreshed?.priorityScore != null
+                      ? response.refreshed.priorityScore
+                      : existingThread.latest.priorityScore,
+                  category: response?.refreshed?.category ?? existingThread.latest.category,
+                  suggestedAction:
+                    response?.refreshed?.suggestedAction ?? existingThread.latest.suggestedAction,
+                }
+              : existingThread.latest;
+
+          return {
+            ...existingThread,
+            messages: updatedMessages,
+            latest: updatedLatest,
+          };
+        },
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: currentThreadId }),
+      });
+
+      setOpenActionFeedbackDialog(false);
+      setActionFeedbackMessage('');
+      toast.success('Action feedback applied. LLM analysis refreshed.');
+    } catch (error) {
+      console.error('Failed to submit action suggestion feedback:', error);
+      toast.error('Failed to refresh analysis from your action feedback.');
+    }
+  };
+
   const renderPerson = useCallback(
     (person: Sender) => (
       <Popover key={person.email}>
@@ -1250,6 +1332,45 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             person={researchSender}
           />
         )}
+        <Dialog open={openActionFeedbackDialog} onOpenChange={setOpenActionFeedbackDialog}>
+          <DialogContent showOverlay onClick={(e) => e.stopPropagation()}>
+            <DialogHeader>
+              <DialogTitle>Improve Action Suggestion</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-muted-foreground text-sm">
+                Provide feedback for this email and we will update the prompt, resend to OpenAI,
+                and refresh the analysis result.
+              </p>
+              <Textarea
+                value={actionFeedbackMessage}
+                onChange={(event) => setActionFeedbackMessage(event.target.value)}
+                placeholder="Example: This is time-sensitive and should be marked as reply now."
+                className="min-h-[120px] resize-y"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                  onClick={() => {
+                    setOpenActionFeedbackDialog(false);
+                    setActionFeedbackMessage('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm disabled:opacity-50"
+                  disabled={!actionFeedbackMessage.trim() || isSubmittingActionFeedback}
+                  onClick={() => void handleActionSuggestionFeedback()}
+                >
+                  {isSubmittingActionFeedback ? 'Regenerating...' : 'Regenerate Analysis'}
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="relative h-full overflow-y-auto">
           <div className={cn('px-4', index === 0 && 'border-b py-4')}>
             {index === 0 && (
@@ -1535,6 +1656,16 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               >
                                 <CircleAlert className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
                                 Priority score is high
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setOpenActionFeedbackDialog(true);
+                                }}
+                              >
+                                <MessageSquareText className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                Feedback on action suggestion
                               </DropdownMenuItem>
                               {(messageAttachments?.length ?? 0) > 0 && (
                                 <DropdownMenuItem
