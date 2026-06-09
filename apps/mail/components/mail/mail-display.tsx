@@ -17,11 +17,16 @@ import {
   CopyIcon,
   CircleAlert,
   MessageSquareText,
+  Tag,
+  Check,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { cn, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
@@ -41,6 +46,7 @@ import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { BimiAvatar } from '../ui/bimi-avatar';
+import { useLabels } from '@/hooks/use-labels';
 import { PriorityScoreCircle } from './priority-score-circle';
 import { RemovableTextLabels } from './removable-text-labels';
 import { cleanHtml } from '@/lib/email-utils';
@@ -600,6 +606,37 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   );
   const { mutateAsync: submitActionSuggestionFeedback, isPending: isSubmittingActionFeedback } =
     useMutation(trpc.mail.submitActionSuggestionFeedback.mutationOptions());
+
+  const { userLabels, systemLabels } = useLabels();
+  const allLabels = useMemo(() => [...userLabels, ...systemLabels], [userLabels, systemLabels]);
+  const { mutateAsync: modifyLabels, isPending: isMovingLabel } = useMutation(
+    trpc.mail.modifyLabels.mutationOptions(),
+  );
+
+  const currentLabelIds = useMemo(
+    () => new Set((emailData.tags ?? []).map((t) => t.id ?? t.name)),
+    [emailData.tags],
+  );
+
+  const handleMoveToLabel = async (labelId: string, labelName: string) => {
+    const isAlreadyApplied = currentLabelIds.has(labelId);
+    try {
+      await modifyLabels({
+        threadId: [emailData.threadId ?? emailData.id],
+        addLabels: isAlreadyApplied ? [] : [labelId],
+        removeLabels: isAlreadyApplied ? [labelId] : [],
+      });
+      toast.success(
+        isAlreadyApplied ? `Removed label "${labelName}"` : `Moved to "${labelName}"`,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: emailData.threadId ?? emailData.id }),
+      });
+    } catch (error) {
+      console.error('Failed to modify label:', error);
+      toast.error('Failed to update label.');
+    }
+  };
 
   const emailScopedSuggestedAction = useMemo(() => {
     if (suggestedActionOverride) return suggestedActionOverride;
@@ -1667,6 +1704,55 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <MessageSquareText className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
                                 Feedback on action suggestion
                               </DropdownMenuItem>
+                              <DropdownMenuSub>
+                                <DropdownMenuSubTrigger
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="cursor-pointer"
+                                >
+                                  <Tag className="text-iconLight dark:text-iconDark mr-2 h-4 w-4" />
+                                  Move to label
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="bg-card max-h-64 overflow-y-auto">
+                                  {allLabels.length === 0 ? (
+                                    <DropdownMenuItem disabled>
+                                      No labels available
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    allLabels.map((label) => {
+                                      const applied = currentLabelIds.has(label.id ?? label.name);
+                                      return (
+                                        <DropdownMenuItem
+                                          key={label.id ?? label.name}
+                                          disabled={isMovingLabel}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            void handleMoveToLabel(
+                                              label.id ?? label.name,
+                                              label.name,
+                                            );
+                                          }}
+                                        >
+                                          <span
+                                            className="mr-2 h-2 w-2 rounded-full"
+                                            style={{
+                                              backgroundColor:
+                                                label.color?.backgroundColor || 'transparent',
+                                              border: label.color?.backgroundColor
+                                                ? undefined
+                                                : '1px solid currentColor',
+                                            }}
+                                          />
+                                          {label.name}
+                                          {applied && (
+                                            <Check className="ml-auto h-4 w-4 opacity-60" />
+                                          )}
+                                        </DropdownMenuItem>
+                                      );
+                                    })
+                                  )}
+                                </DropdownMenuSubContent>
+                              </DropdownMenuSub>
                               {(messageAttachments?.length ?? 0) > 0 && (
                                 <DropdownMenuItem
                                   disabled={!messageAttachments?.length}
