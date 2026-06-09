@@ -587,7 +587,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
-  //   const trpc = useTRPC();
+  const trpc = useTRPC();
+  const { mutateAsync: submitClassificationCorrection } = useMutation(
+    trpc.mail.submitClassificationCorrection.mutationOptions(),
+  );
 
   const isLastEmail = useMemo(
     () => emailData.id === threadData?.latest?.id,
@@ -1069,9 +1072,20 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   };
 
-  // TODO_doorman : Implement priorityscorefeedback
-  const handlePriorityScoreFeedback = (_rating: 'low' | 'high') => {
-    alert('feedback is not implemented yet');
+  const handlePriorityScoreFeedback = async (rating: 'low' | 'high') => {
+    try {
+      await submitClassificationCorrection({
+        threadId: emailData.threadId ?? emailData.id,
+        messageId: emailData.id,
+        correctedPriority: rating,
+        currentPriorityScore: emailData.priorityScore,
+      });
+
+      toast.success('Thanks. Priority score feedback recorded.');
+    } catch (error) {
+      console.error('Failed to submit priority score feedback:', error);
+      toast.error('Failed to record priority score feedback.');
+    }
   };
 
   const renderPerson = useCallback(

@@ -3,8 +3,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { authProxy } from '@/lib/auth-proxy';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { m } from '@/paraglide/messages';
+import { toast } from 'sonner';
 import type { Route } from './+types/page';
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
@@ -18,12 +21,28 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export default function FeedbackPage() {
+  const trpc = useTRPC();
   const [feedback, setFeedback] = useState('');
+  const { mutateAsync: submitFeedback, isPending } = useMutation(
+    trpc.mail.submitFeedback.mutationOptions(),
+  );
 
-  const handleSend = () => {
-    // TODO_doorman:need to implement
-    alert('Sending feedback complete');
-    setFeedback('');
+  const handleSend = async () => {
+    const trimmedFeedback = feedback.trim();
+    if (!trimmedFeedback) return;
+
+    try {
+      await submitFeedback({
+        message: trimmedFeedback,
+        source: 'feedback-page',
+      });
+
+      toast.success('Thanks for your feedback.');
+      setFeedback('');
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      toast.error('Failed to send feedback. Please try again.');
+    }
   };
 
   return (
@@ -34,8 +53,8 @@ export default function FeedbackPage() {
           description="Share your thoughts, report issues, or suggest improvements."
           footer={
             <div className="flex justify-end">
-              <Button onClick={handleSend} disabled={!feedback.trim()}>
-                Send
+              <Button onClick={() => void handleSend()} disabled={!feedback.trim() || isPending}>
+                {isPending ? 'Sending...' : 'Send'}
               </Button>
             </div>
           }

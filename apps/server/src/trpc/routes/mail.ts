@@ -54,6 +54,48 @@ const disposeRpc = (target: unknown) => {
 // };
 
 export const mailRouter = router({
+  submitFeedback: privateProcedure
+    .input(
+      z.object({
+        message: z.string().min(1).max(5000),
+        source: z.string().optional().default('feedback-page'),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const feedbackEvent = {
+        type: 'user_feedback',
+        source: input.source,
+        message: input.message,
+        userId: ctx.sessionUser?.id,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.info('[feedback] received', feedbackEvent);
+
+      return { success: true };
+    }),
+  submitClassificationCorrection: activeDriverProcedure
+    .input(
+      z.object({
+        threadId: z.string().min(1),
+        messageId: z.string().min(1),
+        correctedPriority: z.enum(['low', 'high']),
+        currentPriorityScore: z.number().min(0).max(100).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const correctionEvent = {
+        type: 'classification_correction',
+        connectionId: ctx.activeConnection.id,
+        userId: ctx.sessionUser?.id,
+        ...input,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.info('[priority-score-feedback] received', correctionEvent);
+
+      return { success: true };
+    }),
   suggestRecipients: activeDriverProcedure
     .input(
       z.object({
