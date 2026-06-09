@@ -595,6 +595,13 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     trpc.mail.submitClassificationCorrection.mutationOptions(),
   );
 
+  const emailScopedSuggestedAction = useMemo(() => {
+    if (suggestedActionOverride) return suggestedActionOverride;
+
+    const matchedMessage = threadData?.messages?.find((message) => message.id === emailData.id);
+    return matchedMessage?.suggestedAction ?? emailData.suggestedAction ?? null;
+  }, [suggestedActionOverride, threadData?.messages, emailData.id, emailData.suggestedAction]);
+
   const isLastEmail = useMemo(
     () => emailData.id === threadData?.latest?.id,
     [emailData.id, threadData?.latest?.id],
@@ -1261,9 +1268,9 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     <RemovableTextLabels labels={emailData.tags ?? []} />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    {(suggestedActionOverride || threadData?.latest?.suggestedAction) ? (
+                    {emailScopedSuggestedAction ? (
                       <div className="border-border bg-muted max-w-[240px] truncate rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
-                        Suggested Action : {suggestedActionOverride || threadData?.latest?.suggestedAction}
+                        Suggested Action : {emailScopedSuggestedAction}
                       </div>
                     ) : null}
                     <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
