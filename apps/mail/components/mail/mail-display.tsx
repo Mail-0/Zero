@@ -33,7 +33,7 @@ import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useAttachments } from '@/hooks/use-attachments';
 import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
@@ -567,6 +567,8 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [priorityScoreOverride, setPriorityScoreOverride] = useState<number | null>(null);
+  const [suggestedActionOverride, setSuggestedActionOverride] = useState<string | null>(null);
   const { data: threadData } = useThread(emailData.threadId ?? null);
   const { data: messageAttachments } = useAttachments(emailData.id);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
@@ -588,6 +590,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { mutateAsync: submitClassificationCorrection } = useMutation(
     trpc.mail.submitClassificationCorrection.mutationOptions(),
   );
@@ -1074,17 +1077,82 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
   const handlePriorityScoreFeedback = async (rating: 'low' | 'high') => {
     try {
-      await submitClassificationCorrection({
+      const correctionInput: {
+        threadId: string;
+        messageId: string;
+        correctedPriority: 'low' | 'high';
+        currentPriorityScore?: number;
+      } = {
         threadId: emailData.threadId ?? emailData.id,
         messageId: emailData.id,
         correctedPriority: rating,
-        currentPriorityScore: emailData.priorityScore,
+      };
+
+      if (emailData.priorityScore != null) {
+        correctionInput.currentPriorityScore = emailData.priorityScore;
+      }
+
+      const response = await submitClassificationCorrection(correctionInput);
+
+      if (response?.refreshed?.priorityScore != null) {
+        setPriorityScoreOverride(response.refreshed.priorityScore);
+      }
+
+      if (response?.refreshed?.suggestedAction) {
+        setSuggestedActionOverride(response.refreshed.suggestedAction);
+      }
+
+      const currentThreadId = emailData.threadId ?? emailData.id;
+      queryClient.setQueryData(
+        trpc.mail.get.queryKey({ id: currentThreadId }),
+        (existingThread: any) => {
+          if (!existingThread) return existingThread;
+
+          const updatedMessages = (existingThread.messages ?? []).map((message: any) => {
+            if (message.id !== emailData.id) return message;
+            return {
+              ...message,
+              priorityScore:
+                response?.refreshed?.priorityScore != null
+                  ? response.refreshed.priorityScore
+                  : message.priorityScore,
+              category: response?.refreshed?.category ?? message.category,
+              suggestedAction:
+                response?.refreshed?.suggestedAction ?? message.suggestedAction,
+            };
+          });
+
+          const updatedLatest = existingThread.latest?.id === emailData.id
+            ? {
+                ...existingThread.latest,
+                priorityScore:
+                  response?.refreshed?.priorityScore != null
+                    ? response.refreshed.priorityScore
+                    : existingThread.latest.priorityScore,
+                category: response?.refreshed?.category ?? existingThread.latest.category,
+                suggestedAction:
+                  response?.refreshed?.suggestedAction ?? existingThread.latest.suggestedAction,
+              }
+            : existingThread.latest;
+
+          return {
+            ...existingThread,
+            messages: updatedMessages,
+            latest: updatedLatest,
+          };
+        },
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.mail.get.queryKey({ id: currentThreadId }),
       });
 
-      toast.success('Thanks. Priority score feedback recorded.');
+      toast.success(
+        `Updated by LLM: priority score ${response?.refreshed?.priorityScore ?? 'saved'}`,
+      );
     } catch (error) {
       console.error('Failed to submit priority score feedback:', error);
-      toast.error('Failed to record priority score feedback.');
+      toast.error('Failed to regenerate LLM result from your feedback.');
     }
   };
 
@@ -1193,9 +1261,9 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     <RemovableTextLabels labels={emailData.tags ?? []} />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    {threadData?.latest?.suggestedAction ? (
+                    {(suggestedActionOverride || threadData?.latest?.suggestedAction) ? (
                       <div className="border-border bg-muted max-w-[240px] truncate rounded-md border px-2 py-1 text-xs font-medium text-black dark:text-white">
-                        Suggested Action : {threadData.latest.suggestedAction}
+                        Suggested Action : {suggestedActionOverride || threadData?.latest?.suggestedAction}
                       </div>
                     ) : null}
                     <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
@@ -1251,7 +1319,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     name={emailData?.sender?.name}
                     className="h-8 w-8"
                   />
-                  <PriorityScoreCircle score={emailData?.priorityScore} />
+                  <PriorityScoreCircle score={priorityScoreOverride ?? emailData?.priorityScore} />
                 </div>
 
                 <div className="flex w-full items-center justify-between">

@@ -13,12 +13,26 @@ import {
   IGetThreadsResponseSchema,
   type IGetThreadsResponse,
 } from '../../lib/driver/types';
+import {
+  actionItem,
+  actionSuggestion,
+  analysisResult,
+  category,
+  email as emailTable,
+  feedbackData,
+  mailbox,
+  priorityScore as priorityScoreTable,
+  userProfile,
+} from '../../db/schema';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createDb } from '../../db';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { enrichThreadWithActionSuggestions } from '../../lib/doorman/enrich-action-suggestions';
 import { enrichThreadWithCategories } from '../../lib/doorman/enrich-categories';
 import { enrichThreadWithPriorityScores } from '../../lib/doorman/enrich-priority-scores';
+import { generateObject } from 'ai';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { toAttachmentFiles } from '../../lib/attachments';
@@ -27,11 +41,19 @@ import { getContext } from 'hono/context-storage';
 import { type HonoContext } from '../../ctx';
 import { TRPCError } from '@trpc/server';
 import { env } from '../../env';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 const senderSchema = z.object({
   name: z.string().optional(),
   email: z.string(),
+});
+
+const reanalysisSchema = z.object({
+  category: z.string(),
+  priority_score: z.number(),
+  action: z.string(),
+  reason: z.string().optional(),
 });
 
 const disposeRpc = (target: unknown) => {
@@ -84,17 +106,258 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const correctionEvent = {
-        type: 'classification_correction',
-        connectionId: ctx.activeConnection.id,
-        userId: ctx.sessionUser?.id,
-        ...input,
-        timestamp: new Date().toISOString(),
-      };
+      const databaseUrl = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
+      if (!databaseUrl) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database connection not configured',
+        });
+      }
 
-      console.info('[priority-score-feedback] received', correctionEvent);
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'OPENAI_API_KEY not configured',
+        });
+      }
 
-      return { success: true };
+      const { db, conn } = createDb(databaseUrl);
+
+      try {
+        const [targetEmail] = await db
+          .select({
+            emailId: emailTable.emailId,
+            userId: mailbox.userId,
+            subject: emailTable.subject,
+            body: emailTable.body,
+            sender: emailTable.sender,
+            receiver: emailTable.receiver,
+            metadata: emailTable.metadata,
+          })
+          .from(emailTable)
+          .innerJoin(mailbox, eq(emailTable.mailboxId, mailbox.mailboxId))
+          .where(
+            and(
+              eq(emailTable.emailId, input.messageId),
+              eq(emailTable.mailboxId, `inbox:${ctx.activeConnection.id}`),
+            ),
+          )
+          .limit(1);
+
+        if (!targetEmail) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Email not found for this connection',
+          });
+        }
+
+        const [profile] = await db
+          .select()
+          .from(userProfile)
+          .where(eq(userProfile.userId, targetEmail.userId))
+          .limit(1);
+
+        const profileCategories = await db
+          .select()
+          .from(category)
+          .where(and(eq(category.userId, targetEmail.userId), eq(category.enabled, true)));
+
+        const profileActions = await db
+          .select()
+          .from(actionItem)
+          .where(and(eq(actionItem.userId, targetEmail.userId), eq(actionItem.enabled, true)));
+
+        const allowedCategories =
+          profileCategories.length > 0
+            ? profileCategories.map((item) => item.categoryName)
+            : ['academic', 'seminar', 'event', 'survey', 'advertisement', 'spam', 'uncategorized'];
+
+        const allowedActions =
+          profileActions.length > 0
+            ? profileActions.map((item) => item.name)
+            : ['forwarding', 'replying', 'mark at calendar', 'revise later', 'ignore', 'No action needed'];
+
+        const cleanedSubject = String(targetEmail.subject ?? '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 300);
+        const cleanedBody = String(targetEmail.body ?? '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 6000);
+
+        const priorityBandInstruction =
+          input.correctedPriority === 'low'
+            ? 'User says previous classification was TOO HIGH. Keep priority_score in low range (0-49) unless email clearly proves otherwise.'
+            : 'User says previous classification was TOO LOW. Keep priority_score in high range (50-100) unless email clearly proves otherwise.';
+
+        const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
+        const { object } = await generateObject({
+          model: openai(env.OPENAI_MODEL || 'gpt-4o-mini'),
+          schema: reanalysisSchema,
+          output: 'object',
+          system:
+            'Analyze the email and return category, priority_score, action, and reason as JSON. ' +
+            'Use only provided categories/actions and do not hallucinate details. ' +
+            'Priority score rubric: sender importance up to 30, content importance up to 40, deadline urgency up to 30. ' +
+            `Correction feedback to honor: ${priorityBandInstruction}`,
+          prompt: JSON.stringify({
+            email: {
+              subject: cleanedSubject,
+              body: cleanedBody,
+              sender: targetEmail.sender ?? '',
+              receiver: targetEmail.receiver ?? '',
+              metadata: targetEmail.metadata ?? {},
+            },
+            user_profile: {
+              user_type: profile?.userType ?? '',
+              interests: profile?.interest ?? [],
+              affiliations: profile?.affiliation ?? [],
+              important_contacts: profile?.importantContacts ?? [],
+            },
+            allowed: {
+              categories: allowedCategories,
+              actions: allowedActions,
+            },
+            correction_feedback: {
+              corrected_priority: input.correctedPriority,
+              previous_priority_score: input.currentPriorityScore ?? null,
+            },
+          }),
+        });
+
+        const categoryByLower = new Map(allowedCategories.map((name) => [name.toLowerCase(), name]));
+        const actionByLower = new Map(allowedActions.map((name) => [name.toLowerCase(), name]));
+
+        const normalizedCategory =
+          categoryByLower.get(String(object.category ?? '').trim().toLowerCase()) ?? 'uncategorized';
+        const normalizedAction =
+          actionByLower.get(String(object.action ?? '').trim().toLowerCase()) ?? 'No action needed';
+
+        const rawScore = Number(object.priority_score ?? 0);
+        let normalizedScore = Number.isFinite(rawScore)
+          ? Math.max(0, Math.min(100, Math.round(rawScore)))
+          : 0;
+
+        if (input.correctedPriority === 'low') {
+          normalizedScore = Math.min(normalizedScore, 49);
+        } else {
+          normalizedScore = Math.max(normalizedScore, 50);
+        }
+
+        const normalizedReason =
+          String(object.reason ?? '').trim() ||
+          `Regenerated from LLM using ${input.correctedPriority} correction feedback.`;
+
+        const matchedCategory = profileCategories.find(
+          (item) => item.categoryName.toLowerCase() === normalizedCategory.toLowerCase(),
+        );
+        const matchedAction = profileActions.find(
+          (item) => item.name.toLowerCase() === normalizedAction.toLowerCase(),
+        );
+
+        const [existingAnalysis] = await db
+          .select({ id: analysisResult.id })
+          .from(analysisResult)
+          .where(eq(analysisResult.emailId, input.messageId))
+          .limit(1);
+
+        const analysisId = existingAnalysis?.id ?? crypto.randomUUID();
+
+        if (existingAnalysis) {
+          await db
+            .update(analysisResult)
+            .set({
+              categoryId: matchedCategory?.categoryId ?? null,
+              category: normalizedCategory,
+              priorityScore: normalizedScore,
+              suggestedActions: normalizedAction,
+              reason: normalizedReason,
+              source: 'llm-feedback',
+              rawResult: {
+                ...object,
+                correction_feedback: {
+                  corrected_priority: input.correctedPriority,
+                  previous_priority_score: input.currentPriorityScore ?? null,
+                },
+              },
+              hallucinationChecked: true,
+              analyzedAt: new Date(),
+            })
+            .where(eq(analysisResult.id, analysisId));
+        } else {
+          await db.insert(analysisResult).values({
+            id: analysisId,
+            userId: targetEmail.userId,
+            emailId: input.messageId,
+            categoryId: matchedCategory?.categoryId ?? null,
+            category: normalizedCategory,
+            priorityScore: normalizedScore,
+            suggestedActions: normalizedAction,
+            reason: normalizedReason,
+            source: 'llm-feedback',
+            rawResult: {
+              ...object,
+              correction_feedback: {
+                corrected_priority: input.correctedPriority,
+                previous_priority_score: input.currentPriorityScore ?? null,
+              },
+            },
+            hallucinationChecked: true,
+            analyzedAt: new Date(),
+          });
+        }
+
+        await db
+          .update(emailTable)
+          .set({
+            categoryId: matchedCategory?.categoryId ?? null,
+            priorityScore: normalizedScore,
+          })
+          .where(eq(emailTable.emailId, input.messageId));
+
+        await db.delete(priorityScoreTable).where(eq(priorityScoreTable.emailId, input.messageId));
+        await db.insert(priorityScoreTable).values({
+          id: crypto.randomUUID(),
+          analysisId,
+          emailId: input.messageId,
+          score: normalizedScore,
+        });
+
+        await db.delete(actionSuggestion).where(eq(actionSuggestion.emailId, input.messageId));
+        await db.insert(actionSuggestion).values({
+          id: crypto.randomUUID(),
+          analysisId,
+          emailId: input.messageId,
+          actionItemId: matchedAction?.actionItemId ?? null,
+          actionLabel: normalizedAction,
+          reason: normalizedReason,
+        });
+
+        await db.insert(feedbackData).values({
+          id: crypto.randomUUID(),
+          userId: targetEmail.userId,
+          analysisId,
+          emailId: input.messageId,
+          targetType: 'priority_score',
+          rating: input.correctedPriority,
+          createdAt: new Date(),
+        });
+
+        return {
+          success: true,
+          refreshed: {
+            category: normalizedCategory,
+            priorityScore: normalizedScore,
+            suggestedAction: normalizedAction,
+            reason: normalizedReason,
+          },
+        };
+      } finally {
+        await conn.end();
+      }
     }),
   suggestRecipients: activeDriverProcedure
     .input(
