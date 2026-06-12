@@ -45,7 +45,13 @@ export const getListUnsubscribeAction = ({
   }
 
   // NOTE: List-Unsubscribe can contain multiple URLs, but the spec says to process the first one we can.
-  const url = new URL(match[1]);
+  let url: URL;
+  try {
+    url = new URL(match[1]);
+  } catch {
+    // The angle-bracket content is not a valid URL (malformed or placeholder header).
+    return null;
+  }
 
   if (url.protocol.startsWith('http')) {
     return processHttpUrl(url, listUnsubscribePost);
