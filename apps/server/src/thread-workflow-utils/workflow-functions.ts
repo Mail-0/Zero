@@ -1,14 +1,19 @@
 import {
+  applyAutoLabelClassification,
+  autoLabelDefinitions,
+  classifyThread,
+  hasProviderSpamLabel,
+} from '../lib/ai-auto-labeling';
+import {
   SummarizeMessage,
-  ThreadLabels,
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
-import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
 import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
+import { EPrompts, type ParsedMessage } from '../types';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
@@ -393,132 +398,56 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   generateLabels: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
-    console.log(summaryResult, context.results);
-    if (!summaryResult?.summary) {
-      console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
-      return { labels: [] };
-    }
+    const classification = classifyThread(context.thread);
+    const userLabels = Object.values(autoLabelDefinitions).map((definition) => ({
+      name: definition.labelName,
+      usecase: definition.description,
+    }));
 
-    console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
-    let userLabels: { name: string; usecase: string }[] = [];
-    try {
-      const agent = await getZeroAgent(context.connectionId);
-      const userTopics = await agent.getUserTopics();
-      if (userTopics.length > 0) {
-        userLabels = userTopics.map((topic: any) => ({
-          name: topic.topic,
-          usecase: topic.usecase,
-        }));
-        console.log('[WORKFLOW_FUNCTIONS] Using user topics as labels:', userLabels);
-      } else {
-        console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
-        userLabels = defaultLabels;
-      }
-    } catch (error) {
-      console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
-      userLabels = defaultLabels;
-    }
-
-    console.log('[WORKFLOW_FUNCTIONS] Generating labels for thread:', {
-      userLabels,
+    console.log('[WORKFLOW_FUNCTIONS] Auto-label classification:', {
       threadId: context.threadId,
-      threadLabels: context.thread.labels,
+      classification,
     });
 
-    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-      messages: [
-        { role: 'system', content: ThreadLabels(userLabels, context.thread.labels) },
-        { role: 'user', content: summaryResult.summary },
-      ],
-    });
-
-    if (labelsResponse?.response?.replaceAll('!', '').trim()?.length) {
-      console.log('[WORKFLOW_FUNCTIONS] Labels generated:', labelsResponse.response);
-      const labels: string[] = labelsResponse?.response
-        ?.split(',')
-        .map((e: string) => e.trim())
-        .filter((e: string) => e.length > 0)
-        .filter((e: string) =>
-          userLabels.find((label) => label.name.toLowerCase() === e.toLowerCase()),
-        );
-      return { labels, userLabelsUsed: userLabels };
-    } else {
-      console.log('[WORKFLOW_FUNCTIONS] No labels generated');
-      return { labels: [], userLabelsUsed: userLabels };
-    }
+    return {
+      labels:
+        classification.labelName &&
+        (classification.category !== 'spam' || hasProviderSpamLabel(context.thread))
+          ? [classification.labelName]
+          : [],
+      classification,
+      userLabelsUsed: userLabels,
+    };
   },
 
   applyLabels: async (context) => {
     const labelsResult = context.results?.get('generate-labels');
-    const userLabelsResult = context.results?.get('get-user-labels');
-
     if (!labelsResult?.labels || labelsResult.labels.length === 0) {
       console.log('[WORKFLOW_FUNCTIONS] No labels to apply');
       return { applied: false };
     }
 
-    if (!userLabelsResult?.userAccountLabels) {
-      console.log('[WORKFLOW_FUNCTIONS] No user account labels available');
+    if (!labelsResult.classification) {
+      console.log('[WORKFLOW_FUNCTIONS] No classification available');
       return { applied: false };
     }
 
-    const userAccountLabels = userLabelsResult.userAccountLabels;
-    const generatedLabels = labelsResult.labels;
-
-    console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
-
     const agent = await getZeroAgent(context.connectionId);
+    const currentLabelIds = [
+      ...new Set([
+        ...context.thread.labels.map((label) => label.id),
+        ...context.thread.messages.flatMap((message) => message.tags.map((tag) => tag.id)),
+      ]),
+    ];
+    const result = await applyAutoLabelClassification(
+      agent,
+      context.threadId.toString(),
+      labelsResult.classification,
+      currentLabelIds,
+    );
 
-    const validLabelIds = generatedLabels
-      .map((name: string) => {
-        const foundLabel = userAccountLabels.find(
-          (label: { name: string; id: string }) => label.name.toLowerCase() === name.toLowerCase(),
-        );
-        return foundLabel?.id;
-      })
-      .filter((id: string | undefined): id is string => id !== undefined && id !== '');
-
-    if (validLabelIds.length > 0) {
-      const currentLabelIds = context.thread.labels?.map((l: { id: string }) => l.id) || [];
-      const labelsToAdd = validLabelIds.filter((id: string) => !currentLabelIds.includes(id));
-
-      const aiManagedLabelNames = new Set(
-        (labelsResult.userLabelsUsed || []).map((topic: { name: string }) =>
-          topic.name.toLowerCase(),
-        ),
-      );
-
-      const aiManagedLabelIds = new Set(
-        userAccountLabels
-          .filter((label: { name: string }) => aiManagedLabelNames.has(label.name.toLowerCase()))
-          .map((label: { id: string }) => label.id),
-      );
-
-      const labelsToRemove = currentLabelIds.filter(
-        (id: string) => aiManagedLabelIds.has(id) && !validLabelIds.includes(id),
-      );
-
-      if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
-        console.log('[WORKFLOW_FUNCTIONS] Applying label changes:', {
-          add: labelsToAdd,
-          remove: labelsToRemove,
-        });
-        await agent.modifyThreadLabelsInDB(
-          context.threadId.toString(),
-          labelsToAdd,
-          labelsToRemove,
-        );
-        console.log('[WORKFLOW_FUNCTIONS] Successfully modified thread labels');
-        return { applied: true, added: labelsToAdd.length, removed: labelsToRemove.length };
-      } else {
-        console.log('[WORKFLOW_FUNCTIONS] No label changes needed - labels already match');
-        return { applied: false };
-      }
-    }
-
-    console.log('[WORKFLOW_FUNCTIONS] No valid labels found in user account');
-    return { applied: false };
+    console.log('[WORKFLOW_FUNCTIONS] Auto-label application result:', result);
+    return result;
   },
 };
 

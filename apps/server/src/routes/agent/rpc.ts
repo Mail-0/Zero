@@ -121,6 +121,11 @@ export class DriverRpcDO extends RpcTarget {
     return result;
   }
 
+  async applyAutoLabel(threadId: string, addLabelIds: string[], removeLabelIds: string[]) {
+    await this.mainDo.modifyLabels([threadId], addLabelIds, removeLabelIds);
+    return await this.mainDo.modifyThreadLabelsInDB(threadId, addLabelIds, removeLabelIds);
+  }
+
   async createDraft(draftData: CreateDraftData) {
     return await this.mainDo.createDraft(draftData);
   }
