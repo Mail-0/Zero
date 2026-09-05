@@ -1,0 +1,8 @@
+{
+  "appId": "com.tippye.zeromail",
+  "appName": "Zero Mail",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "ios": { "contentInset": "automatic" },
+  "android": { "allowMixedContent": false }
+}

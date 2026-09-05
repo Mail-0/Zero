@@ -1,0 +1,22 @@
+{
+  "name": "zero-mobile-shell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Experimental Capacitor packaging scaffold. Native authentication and release validation are not implemented.",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "prepare:web": "node scripts/prepare-web.mjs",
+    "add:ios": "cap add ios",
+    "add:android": "cap add android",
+    "sync": "npm run prepare:web && cap sync",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android",
+    "test": "node --test scripts/prepare-web.test.mjs"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/ios": "^8.0.0"
+  },
+  "devDependencies": { "@capacitor/cli": "^8.0.0" }
+}

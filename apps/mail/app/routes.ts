@@ -3,6 +3,7 @@ import { type RouteConfig, index, layout, prefix, route } from '@react-router/de
 export default [
   index('page.tsx'),
   route('/home', 'home/page.tsx'),
+  route('/imap', 'imap/page.tsx'),
 
   route('/api/mailto-handler', 'mailto-handler.ts'),
 

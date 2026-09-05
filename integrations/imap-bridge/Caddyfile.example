@@ -1,0 +1,8 @@
+# Run Caddy on the host, not in a different container with its own loopback interface.
+# Replace the hostname, point DNS at the host, and allow inbound TCP 80/443.
+bridge.example.com {
+    request_body {
+        max_size 12MB
+    }
+    reverse_proxy 127.0.0.1:3033
+}

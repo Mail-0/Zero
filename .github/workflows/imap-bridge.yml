@@ -1,0 +1,38 @@
+name: IMAP bridge checks
+on:
+  pull_request:
+    paths:
+      - 'integrations/imap-bridge/**'
+      - '.github/workflows/imap-bridge.yml'
+  push:
+    branches: ['feat/imap-byok-mobile']
+    paths:
+      - 'integrations/imap-bridge/**'
+      - '.github/workflows/imap-bridge.yml'
+permissions:
+  contents: read
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: integrations/imap-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npm run check && npm test && npm run test:dependencies
+      - run: docker build -t zero-imap-bridge:test .
+      - name: Container startup check (no external mailbox access)
+        run: |
+          node scripts/init-env.mjs
+          docker run -d --name bridge-test --env-file .env -p 127.0.0.1:3033:3033 zero-imap-bridge:test
+          trap 'docker rm -f bridge-test >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3033/healthz; then exit 0; fi
+            sleep 1
+          done
+          exit 1

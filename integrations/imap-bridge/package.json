@@ -1,0 +1,21 @@
+{
+  "name": "zero-imap-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/core.mjs && node --check src/mail.mjs && node --check src/server.mjs",
+    "test:dependencies": "node --test test/dependencies.mjs"
+  },
+  "dependencies": {
+    "imapflow": "1.7.8",
+    "mailparser": "3.9.20",
+    "nodemailer": "10.0.0",
+    "sanitize-html": "2.17.7"
+  }
+}

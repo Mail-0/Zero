@@ -18,8 +18,10 @@ import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
 import { loggingRouter } from './routes/logging';
+import { imapRouter } from './routes/imap';
 
 export const appRouter = router({
+  imap: imapRouter,
   ai: aiRouter,
   bimi: bimiRouter,
   brain: brainRouter,

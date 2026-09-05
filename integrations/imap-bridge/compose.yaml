@@ -1,0 +1,32 @@
+services:
+  imap-bridge:
+    build: .
+    init: true
+    restart: unless-stopped
+    environment:
+      BRIDGE_SECRET: ${BRIDGE_SECRET:?Run node scripts/init-env.mjs first}
+      BRIDGE_ENCRYPTION_KEY: ${BRIDGE_ENCRYPTION_KEY:?An encryption key is required}
+      BRIDGE_ALLOWED_MAIL_HOSTS: ${BRIDGE_ALLOWED_MAIL_HOSTS:-}
+      BRIDGE_ALLOWED_AI_ORIGINS: ${BRIDGE_ALLOWED_AI_ORIGINS:-}
+      BRIDGE_DATA_DIR: /data
+    ports:
+      - "127.0.0.1:${BRIDGE_PORT:-3033}:3033"
+    volumes:
+      - bridge-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3033/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+volumes:
+  bridge-data:
