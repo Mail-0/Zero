@@ -193,6 +193,90 @@ export const mailRouter = router({
       console.debug('[listThreads] Returning threadsResponse:', threadsResponse);
       return threadsResponse;
     }),
+  listAllThreads: privateProcedure
+    .input(
+      z.object({
+        folder: z.string().optional().default('inbox'),
+        maxResultsPerAccount: z.number().optional().default(20),
+      }),
+    )
+    .output(
+      z.object({
+        threads: z.array(
+          z.object({
+            id: z.string(),
+            historyId: z.string().nullable(),
+            receivedOn: z.string().nullable().optional(),
+            subject: z.string().nullable().optional(),
+            sender: z
+              .object({ name: z.string().optional(), email: z.string() })
+              .nullable()
+              .optional(),
+            connectionId: z.string(),
+            accountEmail: z.string(),
+            accountPicture: z.string().nullable(),
+          }),
+        ),
+        accounts: z.array(
+          z.object({
+            id: z.string(),
+            email: z.string(),
+            name: z.string().nullable(),
+            picture: z.string().nullable(),
+          }),
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { folder, maxResultsPerAccount } = input;
+      const { sessionUser } = ctx;
+      const db = await getZeroDB(sessionUser.id);
+      const connections = (await db.findManyConnections()).filter(
+        (connection) => connection.accessToken && connection.refreshToken,
+      );
+
+      const perConnectionResults = await Promise.allSettled(
+        connections.map(async (connection) => {
+          const response = await getThreadsFromDB(connection.id, {
+            folder,
+            maxResults: maxResultsPerAccount,
+          });
+          return response.threads.map((thread) => ({
+            ...thread,
+            connectionId: connection.id,
+            accountEmail: connection.email,
+            accountPicture: connection.picture,
+          }));
+        }),
+      );
+
+      perConnectionResults.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(
+            `[listAllThreads] Failed to fetch threads for connection ${connections[index]?.id}:`,
+            result.reason,
+          );
+        }
+      });
+
+      const threads = perConnectionResults
+        .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+        .sort((a, b) => {
+          const aTime = a.receivedOn ? new Date(a.receivedOn).getTime() : 0;
+          const bTime = b.receivedOn ? new Date(b.receivedOn).getTime() : 0;
+          return bTime - aTime;
+        });
+
+      return {
+        threads,
+        accounts: connections.map((connection) => ({
+          id: connection.id,
+          email: connection.email,
+          name: connection.name,
+          picture: connection.picture,
+        })),
+      };
+    }),
   markAsRead: activeDriverProcedure
     .input(
       z.object({

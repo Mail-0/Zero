@@ -1,4 +1,10 @@
-import type { IOutgoingMessage, ParsedMessage, Label, DeleteAllSpamResponse } from '../../types';
+import type {
+  IOutgoingMessage,
+  ParsedMessage,
+  Label,
+  DeleteAllSpamResponse,
+  Sender,
+} from '../../types';
 import { ParsedMessageSchema } from '../../types';
 import type { CreateDraftData } from '../schemas';
 import { z } from 'zod';
@@ -120,7 +126,15 @@ export interface MailManager {
 }
 
 export interface IGetThreadsResponse {
-  threads: { id: string; historyId: string | null; $raw?: unknown }[];
+  threads: {
+    id: string;
+    historyId: string | null;
+    $raw?: unknown;
+    /** Preview fields, populated when listing threads straight from the local DB cache. */
+    receivedOn?: string | null;
+    subject?: string | null;
+    sender?: Sender | null;
+  }[];
   nextPageToken: string | null;
 }
 
@@ -130,6 +144,9 @@ export const IGetThreadsResponseSchema = z.object({
       id: z.string(),
       historyId: z.string().nullable(),
       $raw: z.unknown().optional(),
+      receivedOn: z.string().nullable().optional(),
+      subject: z.string().nullable().optional(),
+      sender: z.object({ name: z.string().optional(), email: z.string() }).nullable().optional(),
     }),
   ),
   nextPageToken: z.string().nullable(),

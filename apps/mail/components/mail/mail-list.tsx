@@ -29,7 +29,7 @@ import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
-import { cn, FOLDERS, formatDate } from '@/lib/utils';
+import { cleanNameDisplay, cn, FOLDERS, formatDate } from '@/lib/utils';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { useSettings } from '@/hooks/use-settings';
@@ -1101,9 +1101,3 @@ function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>['vari
   }
 }
 
-// Helper function to clean name display
-const cleanNameDisplay = (name?: string) => {
-  if (!name) return '';
-  const match = name.match(/^[^\p{L}\p{N}.]*(.*?)[^\p{L}\p{N}.]*$/u);
-  return match ? match[1] : name;
-};

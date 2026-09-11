@@ -3,6 +3,7 @@ import {
   Bin,
   ExclamationCircle,
   Folder,
+  Folders,
   Inbox,
   SettingsGear,
   Stars,
@@ -55,6 +56,12 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/inbox',
             icon: Inbox,
             shortcut: 'g + i',
+          },
+          {
+            id: 'combined',
+            title: m['navigation.sidebar.combined'](),
+            url: '/mail/combined',
+            icon: Folders,
           },
           {
             id: 'drafts',

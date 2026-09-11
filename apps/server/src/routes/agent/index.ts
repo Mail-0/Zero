@@ -1191,6 +1191,13 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
 
       console.log('[queryThreads] params:', { labelIds, folder, q, pageToken, maxResults });
 
+      const mapThreadRow = (thread: any) => ({
+        id: thread.id,
+        latest_received_on: thread.latestReceivedOn,
+        latest_subject: thread.latestSubject,
+        latest_sender: thread.latestSender,
+      });
+
       // Import the new database functions
       const {
         findThreadsWithPagination,
@@ -1205,10 +1212,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       if (!folder && labelIds.length === 0 && !q && !pageToken) {
         console.log('[queryThreads] Case: all threads');
         const threads = await list(this.db);
-        return threads.map((thread: any) => ({
-          id: thread.id,
-          latest_received_on: thread.latestReceivedOn,
-        }));
+        return threads.map(mapThreadRow);
       }
 
       // Case 2: Folder only
@@ -1221,16 +1225,10 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
             pageToken,
             maxResults,
           });
-          return result.threads.map((thread: any) => ({
-            id: thread.id,
-            latest_received_on: thread.latestReceivedOn,
-          }));
+          return result.threads.map(mapThreadRow);
         } else {
           const threads = await findThreadsByFolder(this.db, folderLabel);
-          return threads.slice(0, maxResults).map((thread: any) => ({
-            id: thread.id,
-            latest_received_on: thread.latestReceivedOn,
-          }));
+          return threads.slice(0, maxResults).map(mapThreadRow);
         }
       }
 
@@ -1245,16 +1243,10 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
             pageToken,
             maxResults,
           });
-          return result.threads.map((thread: any) => ({
-            id: thread.id,
-            latest_received_on: thread.latestReceivedOn,
-          }));
+          return result.threads.map(mapThreadRow);
         } else {
           const threads = await findThreadsWithAnyLabels(this.db, [labelId]);
-          return threads.slice(0, maxResults).map((thread: any) => ({
-            id: thread.id,
-            latest_received_on: thread.latestReceivedOn,
-          }));
+          return threads.slice(0, maxResults).map(mapThreadRow);
         }
       }
 
@@ -1262,10 +1254,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
       if (q && !folder && labelIds.length === 0) {
         console.log('[queryThreads] Case: text search only', { q });
         const threads = await findThreadsWithTextSearch(this.db, q);
-        return threads.slice(0, maxResults).map((thread: any) => ({
-          id: thread.id,
-          latest_received_on: thread.latestReceivedOn,
-        }));
+        return threads.slice(0, maxResults).map(mapThreadRow);
       }
 
       // Case 5: Complex filtering (folder + labels + search + pagination)
@@ -1289,10 +1278,7 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
         requireAllLabels: true, // Require all labels to be present
       });
 
-      return result.threads.map((thread: any) => ({
-        id: thread.id,
-        latest_received_on: thread.latestReceivedOn,
-      }));
+      return result.threads.map(mapThreadRow);
     });
   }
 
@@ -1317,6 +1303,9 @@ export class ZeroDriver extends DurableObject<ZeroEnv> {
           const threads = result.map((row) => ({
             id: String(row.id),
             historyId: null,
+            receivedOn: row.latest_received_on ?? null,
+            subject: row.latest_subject ?? null,
+            sender: row.latest_sender ?? null,
           }));
 
           // Use latest_received_on for pagination cursor

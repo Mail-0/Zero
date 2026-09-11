@@ -174,6 +174,15 @@ export function formatDate(dateInput: string | Date | number): string {
   }
 }
 
+/**
+ * Strips stray leading/trailing punctuation and quotes from a sender's display name.
+ */
+export function cleanNameDisplay(name?: string): string {
+  if (!name) return '';
+  const match = name.match(/^[^\p{L}\p{N}.]*(.*?)[^\p{L}\p{N}.]*$/u);
+  return match ? match[1]! : name;
+}
+
 export const formatTime = (date: string) => {
   const dateObj = parseAndValidateDate(date);
   if (!dateObj) {

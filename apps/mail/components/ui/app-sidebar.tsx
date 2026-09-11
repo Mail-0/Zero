@@ -54,12 +54,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       const items = [...navigationConfig[currentSection].sections];
 
       if (currentSection === 'mail' && stats && stats.length) {
-        if (items[0]?.items[0]) {
-          items[0].items[0].badge =
+        const inboxItem = items[0]?.items.find((item) => item.id === 'inbox');
+        if (inboxItem) {
+          inboxItem.badge =
             stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
         }
-        if (items[0]?.items[3]) {
-          items[0].items[3].badge =
+        const sentItem = items[0]?.items.find((item) => item.id === 'sent');
+        if (sentItem) {
+          sentItem.badge =
             stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
         }
       }
