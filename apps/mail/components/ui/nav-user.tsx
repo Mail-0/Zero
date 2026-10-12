@@ -37,12 +37,13 @@ import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export function NavUser() {
+export function NavUser({ compact = false }: { compact?: boolean }) {
   const { data: session } = useSession();
   const { data } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { state } = useSidebar();
+  const { state: sidebarState } = useSidebar();
+  const state = compact ? 'collapsed' : sidebarState;
   const trpc = useTRPC();
   const [, setThreadId] = useQueryState('threadId');
   const { mutateAsync: setDefaultConnection } = useMutation(
@@ -119,6 +120,25 @@ export function NavUser() {
   const handleThemeToggle = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
+
+  const addAccountButton = isPro ? (
+    <AddConnectionDialog>
+      <button
+        aria-label={m['pages.settings.connections.addEmail']()}
+        className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]"
+      >
+        <Plus className="size-4" />
+      </button>
+    </AddConnectionDialog>
+  ) : (
+    <Button
+      aria-label={m['pages.settings.connections.addEmail']()}
+      onClick={() => setPricingDialog('true')}
+      className="hover:bg-offsetLight/80 flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent px-0 text-black dark:bg-[#262626] dark:text-[#929292]"
+    >
+      <Plus className="size-4" />
+    </Button>
+  );
 
   if (!isRendered) return null;
   if (!session) return null;
@@ -284,7 +304,7 @@ export function NavUser() {
                 </div>
                 <>
                   <DropdownMenuSeparator className="mt-1" />
-                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
+                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pt-1 pb-2 text-[10px]">
                     <a href="/privacy" className="hover:underline">
                       Privacy
                     </a>
@@ -327,7 +347,7 @@ export function NavUser() {
                       </AvatarFallback>
                     </Avatar>
                     {activeAccount.id === activeConnection?.id && data.connections.length > 1 && (
-                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
+                      <CircleCheck className="fill-mainBlue absolute -right-2 -bottom-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
                     )}
                   </div>
                 </div>
@@ -366,7 +386,7 @@ export function NavUser() {
                           </AvatarFallback>
                         </Avatar>
                         {connection.id === activeConnection?.id && otherConnections.length > 1 && (
-                          <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
+                          <CircleCheck className="fill-mainBlue absolute -right-2 -bottom-2 size-4 rounded-full bg-white dark:bg-black" />
                         )}
                       </div>
                     </div>
@@ -427,22 +447,7 @@ export function NavUser() {
                 </DropdownMenu>
               )}
 
-              {isPro ? (
-                <AddConnectionDialog>
-                  <button className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
-                    <Plus className="size-4" />
-                  </button>
-                </AddConnectionDialog>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => setPricingDialog('true')}
-                    className="hover:bg-offsetLight/80 flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent px-0 text-black dark:bg-[#262626] dark:text-[#929292]"
-                  >
-                    <Plus className="size-4" />
-                  </Button>
-                </>
-              )}
+              {addAccountButton}
             </div>
 
             <div className="flex items-center justify-center gap-1">
@@ -506,7 +511,7 @@ export function NavUser() {
                   </div>
 
                   <DropdownMenuSeparator className="mt-1" />
-                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
+                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pt-1 pb-2 text-[10px]">
                     <a href="/privacy" className="hover:underline">
                       Privacy
                     </a>
@@ -534,6 +539,41 @@ export function NavUser() {
             </div>
           </div>
         )}
+        {compact && (
+          <div className="flex items-center gap-1.5">
+            {otherConnections.map((connection) => (
+              <Tooltip key={connection.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label={`Switch to ${connection.email}`}
+                    onClick={handleAccountSwitch(connection.id)}
+                    className="flex cursor-pointer items-center"
+                  >
+                    <Avatar className="size-6 rounded-[5px] opacity-70 transition-opacity hover:opacity-100">
+                      <AvatarImage
+                        className="rounded-[5px]"
+                        src={connection.picture || undefined}
+                        alt={connection.name || connection.email}
+                      />
+                      <AvatarFallback className="rounded-[5px] text-[10px]">
+                        {(connection.name || connection.email)
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="text-muted-foreground text-xs">
+                  {connection.email}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+            {addAccountButton}
+          </div>
+        )}
       </div>
 
       {state !== 'collapsed' && (
@@ -547,7 +587,7 @@ export function NavUser() {
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
               ) : null}
             </div>
-            <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+            <div className="h-5 max-w-[200px] truncate overflow-hidden text-xs leading-none font-normal text-[#898989]">
               {activeAccount?.email || session.user.email}
             </div>
             {!isPro && (

@@ -1,4 +1,10 @@
+import {
+  emailContentQueryOptions,
+  resolveEmailContentTheme,
+  shouldLoadEmailImages,
+} from '@/lib/email-content-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { markThreadBodyPainted, markThreadContentCache } from '@/lib/perf';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/server/schemas';
 import { fixNonReadableColors } from '@/lib/email-utils';
@@ -14,13 +20,15 @@ interface MailContentProps {
   id: string;
   html: string;
   senderEmail: string;
+  /** Used only for thread-open perf instrumentation. */
+  threadId?: string;
 }
 
-export function MailContent({ id, html, senderEmail }: MailContentProps) {
+export function MailContent({ id, html, senderEmail, threadId }: MailContentProps) {
   const { data, refetch } = useSettings();
   const queryClient = useQueryClient();
   const isTrustedSender = useMemo(
-    () => data?.settings?.externalImages || data?.settings?.trustedSenders?.includes(senderEmail),
+    () => shouldLoadEmailImages(data?.settings, senderEmail),
     [data?.settings, senderEmail],
   );
   const [cspViolation, setCspViolation] = useState(false);
@@ -67,25 +75,23 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
     trpc.mail.processEmailContent.mutationOptions(),
   );
 
-  const { data: processedData } = useQuery({
-    queryKey: ['email-content', id, isTrustedSender || temporaryImagesEnabled, resolvedTheme],
-    queryFn: async () => {
-      const result = await processEmailContent({
-        html,
-        shouldLoadImages: isTrustedSender || temporaryImagesEnabled,
-        theme: (resolvedTheme as 'light' | 'dark') || 'light',
-      });
-
-      return {
-        html: result.processedHtml,
-        hasBlockedImages: result.hasBlockedImages,
-      };
-    },
-    staleTime: 30 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+  const contentQueryOptions = emailContentQueryOptions({
+    messageId: id,
+    html,
+    shouldLoadImages: isTrustedSender || temporaryImagesEnabled,
+    theme: resolveEmailContentTheme(resolvedTheme),
+    process: processEmailContent,
   });
+
+  // Record (once, at mount) whether the list-row prefetch already warmed this body.
+  const [initialContentCacheHit] = useState(
+    () => queryClient.getQueryData(contentQueryOptions.queryKey) !== undefined,
+  );
+  useEffect(() => {
+    markThreadContentCache(threadId, initialContentCacheHit);
+  }, [threadId, initialContentCacheHit]);
+
+  const { data: processedData } = useQuery(contentQueryOptions);
 
   useEffect(() => {
     if (processedData) {
@@ -105,7 +111,8 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
     if (!shadowRootRef.current || !processedData) return;
 
     shadowRootRef.current.innerHTML = processedData.html;
-  }, [processedData]);
+    markThreadBodyPainted(threadId);
+  }, [processedData, threadId]);
 
   useEffect(() => {
     if (!shadowRootRef.current) return;
@@ -200,7 +207,10 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
           </button>
         </div>
       )}
-      <div ref={hostRef} className={cn('mail-content w-full flex-1 overflow-scroll no-scrollbar px-4')} />
+      <div
+        ref={hostRef}
+        className={cn('mail-content no-scrollbar w-full flex-1 overflow-scroll px-4')}
+      />
     </>
   );
 }

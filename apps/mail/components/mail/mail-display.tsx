@@ -47,6 +47,7 @@ import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { RenderLabels } from './render-labels';
+import { useOptimisticThreadState } from './optimistic-thread-state';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -99,35 +100,36 @@ const getFileIcon = (filename: string) => {
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
+  const [isThinking, setIsThinking] = useState(true);
 
   useEffect(() => {
-    let currentIndex = 0;
     setIsComplete(false);
     setIsThinking(true);
+    setDisplayText('');
 
     const thinkingTimeout = setTimeout(() => {
       setIsThinking(false);
-      setDisplayText('');
-
-      const interval = setInterval(() => {
-        if (currentIndex < text.length) {
-          const nextChar = text[currentIndex];
-          setDisplayText((prev) => prev + nextChar);
-          currentIndex++;
-        } else {
-          setIsComplete(true);
-          clearInterval(interval);
-        }
-      }, 20);
-
-      return () => clearInterval(interval);
     }, 1000);
 
     return () => {
       clearTimeout(thinkingTimeout);
     };
   }, [text]);
+
+  useEffect(() => {
+    if (isThinking) return;
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex < text.length) {
+        currentIndex++;
+        setDisplayText(text.slice(0, currentIndex));
+      } else {
+        setIsComplete(true);
+        clearInterval(interval);
+      }
+    }, 20);
+    return () => clearInterval(interval);
+  }, [text, isThinking]);
 
   return (
     <div className="flex items-center gap-2">
@@ -158,6 +160,7 @@ type Props = {
   index: number;
   totalEmails?: number;
   demo?: boolean;
+  zen?: boolean;
   subject?: string;
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -174,7 +177,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
 
   return (
     <div className="flex">
-      {visibleLabels.map((label, index) => {
+      {[...new Set(visibleLabels)].map((label) => {
         const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
 
         let icon = null;
@@ -227,10 +230,9 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
         }
 
         return (
-          <Tooltip key={`${label}-${index}`}>
+          <Tooltip key={label}>
             <TooltipTrigger>
               <Badge
-                key={`${label}-${index}`}
                 className={`rounded-md p-1 ${bgColor} dark:border-panelDark -ml-1.5 border-2 border-white transition-transform first:ml-0`}
               >
                 {icon}
@@ -361,14 +363,14 @@ const ActionButton = ({ onClick, icon, text, shortcut }: ActionButtonProps) => {
       className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
     >
       {icon}
-      <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
+      <div className="flex items-center justify-center gap-2.5 pr-1 pl-0.5">
         <div className="justify-start text-sm leading-none text-black dark:text-white">{text}</div>
       </div>
       {shortcut && (
         <kbd
           className={cn(
             'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
-            '-me-1 ms-auto hidden max-h-full items-center md:inline-flex',
+            'ms-auto -me-1 hidden max-h-full items-center md:inline-flex',
           )}
         >
           {shortcut}
@@ -659,9 +661,33 @@ const MoreAboutQuery = ({
   );
 };
 
-const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+const MailDisplay = ({
+  emailData,
+  index,
+  totalEmails,
+  demo,
+  zen = false,
+  threadAttachments,
+}: Props) => {
   const { data: threadData } = useThread(emailData.threadId ?? null);
+  const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
+  const isLastEmail = emailData.id === threadData?.latest?.id;
+  // Start in the right state (instead of expanded-then-collapse in an effect) so collapsed
+  // messages never mount their body on first paint.
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(
+    () => !demo && activeReplyId !== emailData.id && !isLastEmail,
+  );
+  // Body (sanitize request + shadow DOM + color fixing) is only mounted once a message is
+  // first expanded; afterwards it stays mounted so collapse/expand animates and is instant.
+  const [hasBeenExpanded, setHasBeenExpanded] = useState(!isCollapsed);
+  if (!isCollapsed && !hasBeenExpanded) setHasBeenExpanded(true);
+  const { optimisticStarred } = useOptimisticThreadState(emailData.threadId ?? '');
+  const displayLabels = useMemo(() => {
+    const labels = emailData.tags?.map((tag) => tag.name) ?? [];
+    if (optimisticStarred === null) return labels;
+    const withoutStar = labels.filter((label) => label !== 'STARRED');
+    return optimisticStarred ? [...withoutStar, 'STARRED'] : withoutStar;
+  }, [emailData.tags, optimisticStarred]);
   const { data: messageAttachments } = useAttachments(emailData.id);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
@@ -677,7 +703,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
   const { labels: threadLabels } = useThreadLabels(
     emailData.tags ? emailData.tags.map((l) => l.id) : [],
   );
@@ -686,14 +711,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   //   const trpc = useTRPC();
 
-  const isLastEmail = useMemo(
-    () => emailData.id === threadData?.latest?.id,
-    [emailData.id, threadData?.latest?.id],
-  );
-
   const [, setMode] = useQueryState('mode');
 
   useEffect(() => {
+    let scrollTimeout: ReturnType<typeof setTimeout> | undefined;
     if (!demo) {
       if (activeReplyId === emailData.id) {
         // Always expand the email being replied to
@@ -707,14 +728,15 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
       // Set all emails to collapsed by default except the last one
       if (totalEmails && index === totalEmails - 1) {
         if (totalEmails > 5) {
-          setTimeout(() => {
+          scrollTimeout = setTimeout(() => {
             const element = document.getElementById(`mail-${emailData.id}`);
             element?.scrollIntoView({ behavior: 'smooth' });
           }, 100);
         }
       }
     }
-  }, [demo, emailData.id, isLastEmail, activeReplyId]);
+    return () => clearTimeout(scrollTimeout);
+  }, [demo, emailData.id, isLastEmail, activeReplyId, index, totalEmails]);
 
   //   const listUnsubscribeAction = useMemo(
   //     () =>
@@ -1179,7 +1201,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               name={person.name || person.email}
               className="h-5 w-5"
             />
-            <div className="text-panelDark justify-start text-sm font-medium leading-none dark:text-white">
+            <div className="text-panelDark justify-start text-sm leading-none font-medium dark:text-white">
               {person.name || person.email}
             </div>
           </div>
@@ -1254,7 +1276,13 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           />
         )}
         <div className="relative h-full overflow-y-auto">
-          <div className={cn('px-4', index === 0 && 'border-b py-4')}>
+          <div
+            className={cn(
+              'px-4',
+              index === 0 &&
+                (zen ? 'bg-panelLight dark:bg-panelDark mb-2 rounded-xl py-4' : 'border-b py-4'),
+            )}
+          >
             {index === 0 && (
               <>
                 <span className="inline-flex items-center gap-2 font-medium text-black dark:text-white">
@@ -1266,18 +1294,23 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </span>
 
-                <div className="mt-2 flex items-center gap-2">
-                  {emailData?.tags?.length ? (
-                    <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {displayLabels.length ? (
+                    <MailDisplayLabels labels={displayLabels} />
                   ) : null}
-                  {emailData?.tags?.length ? (
+                  {displayLabels.length ? (
                     <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
                   ) : null}
                   <RenderLabels labels={threadLabels} />
                   {threadLabels.length ? (
                     <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
                   ) : null}
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
+                  <div
+                    className={cn(
+                      'text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]',
+                      zen && 'hidden',
+                    )}
+                  >
                     {(() => {
                       if (people.length <= 2) {
                         return people.map(renderPerson);
@@ -1321,7 +1354,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             )}
           </div>
           <div
-            className="flex cursor-pointer flex-col pb-2 transition-all duration-200"
+            className={cn(
+              'flex cursor-pointer flex-col pb-2 transition-all duration-200',
+              zen && 'bg-panelLight dark:bg-panelDark rounded-t-xl',
+              zen && isCollapsed && 'rounded-xl',
+            )}
             onClick={toggleCollapse}
           >
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
@@ -1347,7 +1384,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 //   extra: emailData?.sender?.extra || '',
                               });
                             }}
-                            className="hover:bg-muted max-w-36 truncate whitespace-nowrap font-semibold md:max-w-none"
+                            className="hover:bg-muted max-w-36 truncate font-semibold whitespace-nowrap md:max-w-none"
                           >
                             {cleanNameDisplay(emailData?.sender?.name)}
                           </span>
@@ -1383,7 +1420,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                     {m['common.mailDisplay.from']()}:
                                   </span>
                                   <div className="ml-3">
-                                    <span className="text-muted-foreground text-nowrap pr-1 font-bold">
+                                    <span className="text-muted-foreground pr-1 font-bold text-nowrap">
                                       {cleanNameDisplay(emailData?.sender?.name)}
                                     </span>
                                     {emailData?.sender?.name !== emailData?.sender?.email && (
@@ -1394,7 +1431,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   </div>
                                 </div>
                                 <div className="flex">
-                                  <span className="w-24 text-nowrap text-end text-gray-500">
+                                  <span className="w-24 text-end text-nowrap text-gray-500">
                                     {m['common.mailDisplay.to']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
@@ -1405,7 +1442,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 {emailData?.replyTo && emailData.replyTo.length > 0 && (
                                   <div className="flex">
-                                    <span className="w-24 text-nowrap text-end text-gray-500">
+                                    <span className="w-24 text-end text-nowrap text-gray-500">
                                       {m['common.mailDisplay.replyTo']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
@@ -1486,7 +1523,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
                             {shouldShowSeparateTime(emailData?.receivedOn) && (
-                              <time className="whitespace-nowrap text-xs opacity-75">
+                              <time className="text-xs whitespace-nowrap opacity-75">
                                 {emailData?.receivedOn && formatTime(emailData.receivedOn)}
                               </time>
                             )}
@@ -1500,7 +1537,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   e.stopPropagation();
                                   e.preventDefault();
                                 }}
-                                className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]"
+                                className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:ring-0 focus:outline-none dark:bg-[#313131]"
                               >
                                 <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                               </button>
@@ -1652,6 +1689,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           <div
             className={cn(
               'grid overflow-hidden transition-all duration-200',
+              zen && 'bg-panelLight dark:bg-panelDark rounded-b-xl',
               isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
             )}
             onClick={(e) => e.stopPropagation()}
@@ -1659,9 +1697,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <div className="min-h-0 overflow-hidden">
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
-                {emailData?.decodedBody ? (
+                {emailData?.decodedBody && hasBeenExpanded ? (
                   <MailContent
                     id={emailData.id}
+                    threadId={emailData.threadId}
                     html={emailData?.decodedBody}
                     senderEmail={emailData.sender.email}
                   />
@@ -1682,7 +1721,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                           <span className="max-w-[15ch] truncate text-sm text-black dark:text-white">
                             {attachment.filename}
                           </span>{' '}
-                          <span className="text-muted-foreground whitespace-nowrap text-sm dark:text-[#929292]">
+                          <span className="text-muted-foreground text-sm whitespace-nowrap dark:text-[#929292]">
                             {formatFileSize(attachment.size)}
                           </span>
                         </button>

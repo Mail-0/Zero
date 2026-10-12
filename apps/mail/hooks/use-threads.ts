@@ -1,4 +1,9 @@
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
+import {
+  emailContentQueryOptions,
+  resolveEmailContentTheme,
+  shouldLoadEmailImages,
+} from '@/lib/email-content-query';
 import { useInfiniteQuery, useQuery, useMutation } from '@tanstack/react-query';
 import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -32,7 +37,7 @@ export const useThreads = () => {
         getNextPageParam: (lastPage) => lastPage?.nextPageToken ?? null,
         staleTime: 60 * 1000 * 1, // 1 minute
         refetchOnMount: true,
-        refetchIntervalInBackground: true,
+        refetchInterval: false, // Updates arrive through mailbox notifications and reconnect/focus catch-up.
       },
     ),
   );
@@ -62,13 +67,21 @@ export const useThreads = () => {
   return [threadsQuery, threads, isReachingEnd, loadMore] as const;
 };
 
+/**
+ * Thread for the given id, falling back to the `?threadId=` URL param.
+ * Subscribes to URL state – prefer `useThreadById` when the id is always known
+ * (list rows, message views) so search-param changes don't re-render the caller.
+ */
 export const useThread = (threadId: string | null) => {
-  const { data: session } = useSession();
   const [_threadId] = useQueryState('threadId');
-  const id = threadId ? threadId : _threadId;
+  return useThreadById(threadId ? threadId : _threadId);
+};
+
+export const useThreadById = (id: string | null) => {
+  const { data: session } = useSession();
   const trpc = useTRPC();
   const { data: settings } = useSettings();
-  const { theme: systemTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   const threadQuery = useQuery(
     trpc.mail.get.queryOptions(
@@ -77,7 +90,7 @@ export const useThread = (threadId: string | null) => {
       },
       {
         enabled: !!id && !!session?.user.id,
-        staleTime: 1000 * 60 * 60, // 1 minute
+        staleTime: 1000 * 60 * 60, // 1 hour; socket/focus events invalidate cached threads
       },
     ),
   );
@@ -122,47 +135,18 @@ export const useThread = (threadId: string | null) => {
     trpc.mail.processEmailContent.mutationOptions(),
   );
 
-  // Extract image loading condition to avoid duplication
-  const shouldLoadImages = useMemo(() => {
-    if (!settings?.settings || !latestMessage?.sender?.email) return false;
-    
-    return settings.settings.externalImages ||
-      settings.settings.trustedSenders?.includes(latestMessage.sender.email) ||
-      false;
-  }, [settings?.settings, latestMessage?.sender?.email]);
-
-  // Prefetch query - intentionally unused, just for caching
-  useQuery({
-    queryKey: [
-      'email-content',
-      latestMessage?.id,
-      shouldLoadImages,
-      systemTheme,
-    ],
-    queryFn: async () => {
-      if (!latestMessage?.decodedBody || !settings?.settings) return null;
-
-      const userTheme =
-        settings.settings.colorTheme === 'system' ? systemTheme : settings.settings.colorTheme;
-      const theme = userTheme === 'dark' ? 'dark' : 'light';
-
-      const result = await processEmailContent({
-        html: latestMessage.decodedBody,
-        shouldLoadImages,
-        theme,
-      });
-
-      return {
-        html: result.processedHtml,
-        hasBlockedImages: result.hasBlockedImages,
-      };
-    },
-    enabled: !!latestMessage?.decodedBody && !!settings?.settings,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  // Prefetch the latest message's processed body so opening the thread can paint
+  // without another round trip. Key MUST match MailContent – see email-content-query.ts.
+  useQuery(
+    emailContentQueryOptions({
+      messageId: latestMessage?.id,
+      html: latestMessage?.decodedBody,
+      shouldLoadImages: shouldLoadEmailImages(settings?.settings, latestMessage?.sender?.email),
+      theme: resolveEmailContentTheme(resolvedTheme),
+      process: processEmailContent,
+      enabled: !!latestMessage?.decodedBody && !!settings?.settings,
+    }),
+  );
 
   return { ...threadQuery, data: finalData, isGroupThread, latestDraft };
 };

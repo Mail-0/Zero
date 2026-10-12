@@ -1,22 +1,34 @@
 import { type OptimisticAction } from '@/store/optimistic-updates';
+import { selectAtom } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
 import { optimisticActionsAtom } from '@/store/optimistic-updates';
 
+const EMPTY: OptimisticAction[] = [];
+
+const sameActions = (a: OptimisticAction[], b: OptimisticAction[]) =>
+  a.length === b.length && a.every((action, i) => action === b[i]);
+
 export function useOptimisticThreadState(threadId: string) {
-  const allOptimisticActions = useAtomValue(optimisticActionsAtom);
-
-  const { isAffectedByOptimisticAction, optimisticActions } = useMemo(() => {
-    const actions = Object.values(allOptimisticActions).filter((action) =>
-      action.threadIds.includes(threadId),
-    ) as OptimisticAction[];
-
-    return {
-      isAffectedByOptimisticAction: actions.length > 0,
-      optimisticActions: actions,
-    };
-  }, [allOptimisticActions, threadId]);
+  // Only re-render when *this* thread's actions change, not on every optimistic action
+  // anywhere (e.g. mark-as-read on click would otherwise re-render every list row).
+  const threadActionsAtom = useMemo(
+    () =>
+      selectAtom(
+        optimisticActionsAtom,
+        (all) => {
+          const actions = Object.values(all).filter((action) =>
+            action.threadIds.includes(threadId),
+          );
+          return actions.length ? actions : EMPTY;
+        },
+        sameActions,
+      ),
+    [threadId],
+  );
+  const optimisticActions = useAtomValue(threadActionsAtom);
+  const isAffectedByOptimisticAction = optimisticActions.length > 0;
 
   const optimisticStates = useMemo(() => {
     const states = {

@@ -4,7 +4,7 @@ import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useLocation, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
-import { Categories } from '@/components/mail/mail';
+import { useMailCategories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { cleanSearchValue } from '@/lib/utils';
@@ -17,7 +17,7 @@ export function MailListHotkeys() {
   const [mail, setMail] = useMail();
   const [, items] = useThreads();
   const hoveredEmailId = useRef<string | null>(null);
-  const categories = Categories();
+  const categories = useMailCategories();
   const [, setCategory] = useQueryState('category');
   const [searchValue, setSearchValue] = useSearchValue();
   const pathname = useLocation().pathname;
