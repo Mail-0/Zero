@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIsFetching, type UseQueryResult } from '@tanstack/react-query';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import type { ParsedDraft } from '../../../server/src/lib/driver/types';
-import { ThreadContextMenu } from '@/components/context/thread-context';
+import { ThreadContextMenu, threadListFetchingAtom } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMail } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -47,7 +47,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { buildCategorySearchValue, parseCategoryIds } from '@/hooks/use-categories';
 import { useMailCategories } from './mail';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 /**
  * Stable callbacks shared by every row. Kept on a single object whose identity never
@@ -749,6 +749,10 @@ export const MailList = memo(
     const [searchValue, setSearchValue] = useSearchValue();
     const [{ isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
+    const setThreadListFetching = useSetAtom(threadListFetchingAtom);
+    useEffect(() => {
+      setThreadListFetching(isLoading || isFetching);
+    }, [isLoading, isFetching, setThreadListFetching]);
     const trpc = useTRPC();
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
     const itemsRef = useRef(items);

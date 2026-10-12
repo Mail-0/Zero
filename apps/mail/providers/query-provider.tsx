@@ -18,15 +18,54 @@ import { signOut } from '@/lib/auth-client';
 import { get, set, del } from 'idb-keyval';
 import superjson from 'superjson';
 
+/**
+ * The persist subscriber calls persistClient on *every* query/mutation cache event (each
+ * fetch start/success, observer add, ...), and each IDB put structured-clones the whole
+ * dehydrated cache on the main thread. Coalesce to at most one write per second, done when
+ * the main thread is idle, and flush when the page is hidden so nothing is lost on close.
+ */
+const PERSIST_THROTTLE_MS = 1000;
+
 function createIDBPersister(idbValidKey: IDBValidKey = 'zero-query-cache') {
+  let pending: PersistedClient | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = async () => {
+    timer = null;
+    const client = pending;
+    pending = null;
+    if (client) await set(idbValidKey, client);
+  };
+  const scheduleFlush = () => {
+    if (timer) return;
+    timer = setTimeout(() => {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(() => void flush(), { timeout: PERSIST_THROTTLE_MS });
+      } else void flush();
+    }, PERSIST_THROTTLE_MS);
+  };
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && pending) {
+        if (timer) clearTimeout(timer);
+        void flush();
+      }
+    });
+  }
+
   return {
     persistClient: async (client: PersistedClient) => {
-      await set(idbValidKey, client);
+      pending = client;
+      scheduleFlush();
     },
     restoreClient: async () => {
       return await get<PersistedClient>(idbValidKey);
     },
     removeClient: async () => {
+      pending = null;
+      if (timer) clearTimeout(timer);
+      timer = null;
       await del(idbValidKey);
     },
   } satisfies Persister;

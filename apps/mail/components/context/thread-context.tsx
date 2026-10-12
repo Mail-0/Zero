@@ -31,7 +31,8 @@ import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThreadById } from '@/hooks/use-threads';
 import { useMemo, type ReactNode, useState } from 'react';
 import { useTRPC } from '@/providers/query-provider';
-import { useIsFetching, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import { atom, useAtomValue } from 'jotai';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
@@ -129,9 +130,16 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
 };
 
 /**
- * Rendered for every mail-list row, so it must stay cheap: no URL-state, list, mail-config
- * or optimistic-action subscriptions here. All of that lives in ThreadContextMenuItems,
- * which Radix only mounts while the menu is open.
+ * Whether the current thread list is loading/refetching. Written once by MailList and read
+ * by every row's context menu. (A per-row useIsFetching re-scanned the whole query cache for
+ * every row on every cache event – ~40ms per thread open at 4x CPU throttle.)
+ */
+export const threadListFetchingAtom = atom(false);
+
+/**
+ * Rendered for every mail-list row, so it must stay cheap: no URL-state, list, mail-config,
+ * query-cache or optimistic-action subscriptions here. All of that lives in
+ * ThreadContextMenuItems, which Radix only mounts while the menu is open.
  */
 export function ThreadContextMenu({
   children,
@@ -141,8 +149,7 @@ export function ThreadContextMenu({
   isSent = false,
   isBin = false,
 }: EmailContextMenuProps) {
-  const trpc = useTRPC();
-  const isListFetching = useIsFetching({ queryKey: trpc.mail.listThreads.queryKey() }) > 0;
+  const isListFetching = useAtomValue(threadListFetchingAtom);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
 
   return (
