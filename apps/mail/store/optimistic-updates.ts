@@ -1,3 +1,4 @@
+import { optimisticActionsManager } from '../lib/optimistic-actions-manager';
 import type { ThreadDestination } from '@/lib/thread-actions';
 import { atom } from 'jotai';
 
@@ -28,7 +29,7 @@ export const getThreadOptimisticActions = (threadId: string) =>
   atom((get) => {
     const actions = get(optimisticActionsAtom);
     return Object.entries(actions)
-      .filter(([_, action]) => action.threadIds.includes(threadId))
+      .filter(([, action]) => action.threadIds.includes(threadId))
       .map(([id, action]) => ({ id, ...action }));
   });
 
@@ -44,6 +45,19 @@ export const addOptimisticActionAtom = atom(null, (get, set, action: OptimisticA
 
 export const removeOptimisticActionAtom = atom(null, (get, set, id: string) => {
   const currentActions = get(optimisticActionsAtom);
-  const { [id]: _, ...rest } = currentActions;
+  const rest = { ...currentActions };
+  delete rest[id];
   set(optimisticActionsAtom, rest);
+});
+
+export const pruneSettledReadActionsAtom = atom(null, (get, set) => {
+  const pendingIds = new Set(
+    [...optimisticActionsManager.pendingActions.values()].map((action) => action.optimisticId),
+  );
+  const actions = get(optimisticActionsAtom);
+  const remaining = Object.fromEntries(
+    Object.entries(actions).filter(([id, action]) => action.type !== 'READ' || pendingIds.has(id)),
+  );
+  if (Object.keys(remaining).length !== Object.keys(actions).length)
+    set(optimisticActionsAtom, remaining);
 });
