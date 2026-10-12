@@ -3,7 +3,12 @@ import {
   type PersistedClient,
   type Persister,
 } from '@tanstack/react-query-persist-client';
-import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
+import {
+  QueryCache,
+  QueryClient,
+  defaultShouldDehydrateQuery,
+  hashKey,
+} from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useMemo, type PropsWithChildren } from 'react';
@@ -26,6 +31,41 @@ function createIDBPersister(idbValidKey: IDBValidKey = 'zero-query-cache') {
     },
   } satisfies Persister;
 }
+
+/**
+ * In-memory lifetime of unused queries. Long enough that revisiting a thread within a
+ * session is instant (mail.get has a 1h staleTime and is kept fresh by socket/focus
+ * invalidation in mail-cache-sync); bounded so memory doesn't grow without limit.
+ */
+const IN_MEMORY_GC_TIME = 1000 * 60 * 30;
+
+/**
+ * How long the IndexedDB snapshot is trusted on reload. Deliberately short (see #1686):
+ * restored data keeps its original dataUpdatedAt, so a long maxAge combined with
+ * mail.get's 1h staleTime would show threads that changed while the tab was closed.
+ */
+const PERSISTED_MAX_AGE = 1000 * 60 * 1;
+
+const isTrpcPath = (queryKey: readonly unknown[], ...path: string[]) => {
+  const head = queryKey[0];
+  return Array.isArray(head) && path.every((segment, i) => head[i] === segment);
+};
+
+/**
+ * The persister re-serializes the whole dehydrated cache to IndexedDB on every cache
+ * change (throttled ~1s) on the main thread, so keep the snapshot small:
+ * - never persist processed bodies / attachments (large, cheap to refetch)
+ * - persist mail.get only for threads currently on screen (list rows render nothing until
+ *   their mail.get resolves, so these make a reload instant). Without this, the longer
+ *   in-memory gcTime would make the snapshot grow with every thread visited.
+ */
+const shouldPersistQuery: typeof defaultShouldDehydrateQuery = (query) => {
+  if (!defaultShouldDehydrateQuery(query)) return false;
+  if (query.queryKey[0] === 'email-content') return false;
+  if (isTrpcPath(query.queryKey, 'mail', 'getMessageAttachments')) return false;
+  if (isTrpcPath(query.queryKey, 'mail', 'get')) return query.getObserversCount() > 0;
+  return true;
+};
 
 export const makeQueryClient = (connectionId: string | null) =>
   new QueryClient({
@@ -53,7 +93,7 @@ export const makeQueryClient = (connectionId: string | null) =>
         retry: false,
         refetchOnWindowFocus: false,
         queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
-        gcTime: 1000 * 60 * 1 * 1, // 60 minutes, we're storing in DOs,
+        gcTime: IN_MEMORY_GC_TIME,
       },
       mutations: {
         onError: (err) => console.error(err.message),
@@ -61,7 +101,7 @@ export const makeQueryClient = (connectionId: string | null) =>
     },
   });
 
-let browserQueryClient = {
+const browserQueryClient = {
   queryClient: null,
   activeConnectionId: null,
 } as {
@@ -123,7 +163,8 @@ export function QueryProvider({
       persistOptions={{
         persister,
         buster: CACHE_BURST_KEY,
-        maxAge: 1000 * 60 * 1 * 1, // 60 minutes, we're storing in DOs,
+        maxAge: PERSISTED_MAX_AGE,
+        dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
       }}
     >
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
