@@ -32,6 +32,14 @@ export const createDraftData = z.object({
   id: z.string().nullable(),
   threadId: z.string().nullable(),
   fromEmail: z.string().nullable(),
+  // Threading for reply drafts, so the draft is a real reply (and can be matched back to the
+  // message it answers when the thread is reopened).
+  inReplyTo: z.string().optional(),
+  references: z.string().optional(),
+  replyToMessageId: z.string().optional(),
+  isForward: z.boolean().optional(),
+  /** Set by the server's automatic drafting; never by the client. */
+  isZeroSuggestion: z.boolean().optional(),
 });
 
 export type CreateDraftData = z.infer<typeof createDraftData>;
@@ -116,6 +124,44 @@ const categoriesSchema = z.array(mailCategorySchema).superRefine((cats, ctx) => 
   }
 });
 
+export const aiLabelSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  usecase: z.string().trim().max(300),
+});
+
+export const MAX_AI_LABELS = 32;
+
+/** Background AI on new mail (Pro). Summaries also gate on-open summaries. */
+export const aiSettingsSchema = z.object({
+  /**
+   * Master switch. When true every AI feature is off for the user (chat, compose,
+   * search, summaries, background workflows, MCP, voice), regardless of the
+   * per-feature toggles below, which are kept so re-enabling restores them.
+   */
+  disabled: z.boolean().default(false),
+  summaries: z.boolean().default(true),
+  autoLabels: z.boolean().default(true),
+  replyDrafts: z.boolean().default(false),
+  /** Labels auto-labeling chooses from. Absent means topics learned from the inbox. */
+  labels: z
+    .array(aiLabelSchema)
+    .max(MAX_AI_LABELS)
+    .refine(
+      (labels) => new Set(labels.map((l) => l.name.toLowerCase())).size === labels.length,
+      'Label names must be unique',
+    )
+    .optional(),
+});
+
+export type AiSettings = z.infer<typeof aiSettingsSchema>;
+
+export const defaultAiSettings: AiSettings = {
+  disabled: false,
+  summaries: true,
+  autoLabels: true,
+  replyDrafts: false,
+};
+
 export const userSettingsSchema = z.object({
   language: z.string(),
   timezone: z.string(),
@@ -131,6 +177,7 @@ export const userSettingsSchema = z.object({
   imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
   animations: z.boolean().default(false),
+  ai: aiSettingsSchema.default(defaultAiSettings),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -150,4 +197,5 @@ export const defaultUserSettings: UserSettings = {
   categories: defaultMailCategories,
   imageCompression: 'medium',
   animations: false,
+  ai: defaultAiSettings,
 };

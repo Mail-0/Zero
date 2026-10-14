@@ -1,28 +1,19 @@
-import {
-  GmailSearchAssistantSystemPrompt,
-  OutlookSearchAssistantSystemPrompt,
-} from '../../../lib/prompts';
-import { activeDriverProcedure } from '../../trpc';
-import { openai } from '@ai-sdk/openai';
+import { searchAssistantSystemPrompt } from '../../../lib/prompts';
+import { miniModel } from '../../../lib/ai-models';
+import { aiDriverProcedure } from '../../trpc';
 import { generateObject } from 'ai';
-import { env } from '../../../env';
 import { z } from 'zod';
 
-export const generateSearchQuery = activeDriverProcedure
+export const generateSearchQuery = aiDriverProcedure
   .input(z.object({ query: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const {
       activeConnection: { providerId },
     } = ctx;
-    const systemPrompt =
-      providerId === 'google'
-        ? GmailSearchAssistantSystemPrompt()
-        : providerId === 'microsoft'
-          ? OutlookSearchAssistantSystemPrompt()
-          : '';
+    const systemPrompt = searchAssistantSystemPrompt(providerId);
 
     const result = await generateObject({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+      model: miniModel(),
       system: systemPrompt,
       prompt: input.query,
       schema: z.object({

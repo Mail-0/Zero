@@ -1,29 +1,24 @@
 import {
-  } from '@/components/ui/dialog';
-import {
-  } from '@/components/ui/form';
+  SettingsEmpty,
+  SettingsGroup,
+  destructiveIconButton,
+  iconButton,
+  primaryButton,
+  rowClass,
+} from '@/components/settings/settings-ui';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { LabelDialog } from '@/components/labels/label-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-
-import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMutation } from '@tanstack/react-query';
-import { Plus, Pencil } from 'lucide-react';
 import { type Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
-
 import { Bin } from '@/components/icons/icons';
 import { useLabels } from '@/hooks/use-labels';
-
-
-
-import { Badge } from '@/components/ui/badge';
-
+import { Plus, Pencil } from 'lucide-react';
 import { m } from '@/paraglide/messages';
-
-
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -67,103 +62,82 @@ export default function LabelsPage() {
   };
 
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.labels.title']()}
-        description={m['pages.settings.labels.description']()}
-        action={
-          <LabelDialog
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                {m['common.mail.createNewLabel']()}
-              </Button>
-            }
-            editingLabel={editingLabel}
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) setEditingLabel(null);
-            }}
-            onSubmit={handleSubmit}
-            onSuccess={refetch}
-          />
-        }
-      >
-        <div className="space-y-6">
-          <Separator />
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4">
-              {isLoading && !error ? (
-                <div className="flex h-32 items-center justify-center">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                </div>
-              ) : error ? (
-                <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
-              ) : labels?.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-sm">
-                  {m['common.mail.noLabelsAvailable']()}
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                  {labels?.map((label) => {
-                    return (
-                      <div
-                        key={label.id}
-                        className="hover:bg-muted/50 group relative flex items-center justify-between rounded-lg p-3 transition-colors"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Badge
-                            className="px-2 py-1"
-                            style={{
-                              backgroundColor: label.color?.backgroundColor,
-                              color: label.color?.textColor,
-                            }}
-                          >
-                            <span>{label.name}</span>
-                          </Badge>
-                        </div>
-                        <div className="dark:bg-panelDark absolute right-2 z-25 flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 [&_svg]:size-3.5"
-                                onClick={() => handleEdit(label)}
-                              >
-                                <Pencil className="text-[#898989]" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              {m['common.labels.editLabel']()}
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
-                                onClick={() => handleDelete(label.id!)}
-                              >
-                                <Bin className="fill-[#F43F5E]" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              {m['common.labels.deleteLabel']()}
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+    <SettingsCard
+      title={m['pages.settings.labels.title']()}
+      description={m['pages.settings.labels.description']()}
+      action={
+        <LabelDialog
+          trigger={
+            <Button className={cn(primaryButton, 'gap-1.5')}>
+              <Plus className="size-3.5" />
+              {m['common.mail.createNewLabel']()}
+            </Button>
+          }
+          editingLabel={editingLabel}
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) setEditingLabel(null);
+          }}
+          onSubmit={handleSubmit}
+          onSuccess={refetch}
+        />
+      }
+    >
+      {isLoading && !error ? (
+        <SettingsGroup>
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className={rowClass}>
+              <Skeleton className="size-3 rounded-full" />
+              <Skeleton className="h-3.5 w-32" />
             </div>
-          </ScrollArea>
-        </div>
-      </SettingsCard>
-    </div>
+          ))}
+        </SettingsGroup>
+      ) : error ? (
+        <SettingsEmpty>{error.message}</SettingsEmpty>
+      ) : !labels?.length ? (
+        <SettingsEmpty>{m['common.mail.noLabelsAvailable']()}</SettingsEmpty>
+      ) : (
+        <SettingsGroup>
+          {labels.map((label) => (
+            <div key={label.id} className={cn(rowClass, 'group py-2')}>
+              <span
+                className="size-3 shrink-0 rounded-full border border-black/5 dark:border-white/10"
+                style={{ backgroundColor: label.color?.backgroundColor }}
+              />
+              <span className="min-w-0 flex-1 truncate text-[13px]">{label.name}</span>
+              <div className="flex items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={iconButton}
+                      aria-label={m['common.labels.editLabel']()}
+                      onClick={() => handleEdit(label)}
+                    >
+                      <Pencil />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{m['common.labels.editLabel']()}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={destructiveIconButton}
+                      aria-label={m['common.labels.deleteLabel']()}
+                      onClick={() => handleDelete(label.id!)}
+                    >
+                      <Bin className="fill-[#F43F5E]" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{m['common.labels.deleteLabel']()}</TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          ))}
+        </SettingsGroup>
+      )}
+    </SettingsCard>
   );
 }

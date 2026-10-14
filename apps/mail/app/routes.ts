@@ -30,6 +30,7 @@ export default [
         route('/create', '(routes)/mail/create/page.tsx'),
         route('/compose', '(routes)/mail/compose/page.tsx'),
         route('/under-construction/:path', '(routes)/mail/under-construction/[path]/page.tsx'),
+        route('/unified', '(routes)/mail/unified/page.tsx'),
         route('/:folder', '(routes)/mail/[folder]/page.tsx'),
       ]),
     ),
@@ -37,6 +38,7 @@ export default [
       '(routes)/settings/layout.tsx',
       prefix('/settings', [
         index('(routes)/settings/page.tsx'),
+        route('/ai', '(routes)/settings/ai/page.tsx'),
         route('/appearance', '(routes)/settings/appearance/page.tsx'),
         route('/connections', '(routes)/settings/connections/page.tsx'),
         route('/danger-zone', '(routes)/settings/danger-zone/page.tsx'),

@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { trimPersistedClient } from '@/lib/persist-trim';
 import { useMemo, type PropsWithChildren } from 'react';
 import type { AppRouter } from '@zero/server/trpc';
 import { CACHE_BURST_KEY } from '@/lib/constants';
@@ -34,7 +35,7 @@ function createIDBPersister(idbValidKey: IDBValidKey = 'zero-query-cache') {
     timer = null;
     const client = pending;
     pending = null;
-    if (client) await set(idbValidKey, client);
+    if (client) await set(idbValidKey, trimPersistedClient(client));
   };
   const scheduleFlush = () => {
     if (timer) return;
@@ -94,15 +95,17 @@ const isTrpcPath = (queryKey: readonly unknown[], ...path: string[]) => {
  * The persister re-serializes the whole dehydrated cache to IndexedDB on every cache
  * change (throttled ~1s) on the main thread, so keep the snapshot small:
  * - never persist processed bodies / attachments (large, cheap to refetch)
- * - persist mail.get only for threads currently on screen (list rows render nothing until
- *   their mail.get resolves, so these make a reload instant). Without this, the longer
- *   in-memory gcTime would make the snapshot grow with every thread visited.
+ * - persist mail.get only for threads currently observed (open thread, rows without a list
+ *   summary). Rows render from listThreads' summaries, which persist with the list. Without
+ *   this, the longer in-memory gcTime would make the snapshot grow with every thread visited.
  */
 const shouldPersistQuery: typeof defaultShouldDehydrateQuery = (query) => {
   if (!defaultShouldDehydrateQuery(query)) return false;
   if (query.queryKey[0] === 'email-content') return false;
   if (isTrpcPath(query.queryKey, 'mail', 'getMessageAttachments')) return false;
   if (isTrpcPath(query.queryKey, 'mail', 'get')) return query.getObserversCount() > 0;
+  // Must match the server's current default; a restored copy can point at another account.
+  if (isTrpcPath(query.queryKey, 'connections', 'getDefault')) return false;
   return true;
 };
 

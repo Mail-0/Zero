@@ -1,22 +1,38 @@
-import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
+import { getShortThreadSummary, shortSummaryDepsFromEnv } from '../../lib/thread-short-summary';
+import { getCurrentDateContext, searchAssistantSystemPrompt } from '../../lib/prompts';
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import { getZeroAgent } from '../../lib/server-utils';
-import { perplexity } from '@ai-sdk/perplexity';
+import { searchWeb } from '../../lib/context-dev';
+import { miniModel } from '../../lib/ai-models';
+import { connection } from '../../db/schema';
 import { colors } from '../../lib/prompts';
-import { openai } from '@ai-sdk/openai';
 import { generateText, tool } from 'ai';
 import { Tools } from '../../types';
+import { createDb } from '../../db';
+import { eq } from 'drizzle-orm';
 import { env } from '../../env';
 import { z } from 'zod';
 
-type ModelTypes = 'summarize' | 'general' | 'chat' | 'vectorize';
+/** The connection's mail provider, so query builders emit syntax its search accepts. */
+const connectionProviderId = async (connectionId: string) => {
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+  try {
+    const [row] = await db
+      .select({ providerId: connection.providerId })
+      .from(connection)
+      .where(eq(connection.id, connectionId));
+    return row?.providerId ?? 'google';
+  } finally {
+    await conn.end().catch(() => {});
+  }
+};
 
-const models: Record<ModelTypes, any> = {
+const models = {
   summarize: '@cf/facebook/bart-large-cnn',
   general: 'llama-3.3-70b-instruct-fp8-fast',
   chat: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
   vectorize: '@cf/baai/bge-large-en-v1.5',
-};
+} as const;
 
 export const getEmbeddingVector = async (
   text: string,
@@ -32,7 +48,8 @@ export const getEmbeddingVector = async (
         },
       },
     );
-    const embeddingVector = embeddingResponse.data[0];
+    if (!('data' in embeddingResponse)) throw new Error('Embedding response was asynchronous');
+    const embeddingVector = embeddingResponse.data?.[0];
     return embeddingVector ?? null;
   } catch (error) {
     console.log('[getEmbeddingVector] failed', error);
@@ -131,19 +148,14 @@ const getThreadSummary = (connectionId: string) =>
       id: z.string().describe('The ID of the email thread to get the summary of'),
     }),
     execute: async ({ id }) => {
-      const response = await env.VECTORIZE.getByIds([id]);
       const driver = await getZeroAgent(connectionId);
       const thread = await driver.getThread(id);
-      if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
-        const result = response[0].metadata as { summary: string; connection: string };
-        if (result.connection !== connectionId) {
-          return null;
-        }
-        const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
-          input_text: result.summary,
-        });
+      const short = thread?.latest?.subject
+        ? await getShortThreadSummary(shortSummaryDepsFromEnv(env), id, connectionId)
+        : null;
+      if (short) {
         return {
-          short: shortResponse.summary,
+          short,
           subject: thread.latest?.subject,
           sender: thread.latest?.sender,
           date: thread.latest?.receivedOn,
@@ -384,18 +396,19 @@ const deleteLabel = (connectionId: string) =>
     },
   });
 
-const buildGmailSearchQuery = () =>
+const buildGmailSearchQuery = (connectionId: string) =>
   tool({
-    description: 'Build a Gmail search query',
+    description: 'Build a search query for the mailbox (Gmail, Outlook or IMAP syntax)',
     parameters: z.object({
       query: z.string().describe('The search query to build, provided in natural language'),
     }),
     execute: async (params) => {
       console.log('[DEBUG] buildGmailSearchQuery', params);
 
+      const providerId = await connectionProviderId(connectionId).catch(() => 'google');
       const result = await generateText({
-        model: openai(env.OPENAI_MODEL || 'gpt-4o'),
-        system: GmailSearchAssistantSystemPrompt(),
+        model: miniModel(),
+        system: searchAssistantSystemPrompt(providerId),
         prompt: params.query,
       });
       return {
@@ -429,29 +442,14 @@ const getCurrentDate = () =>
 
 export const webSearch = () =>
   tool({
-    description: 'Search the web for information using Perplexity AI',
+    description:
+      'Search the web for external or current information: companies, people, products, news, prices, documentation, or any fact that is not in the mailbox. Use it whenever the user asks to search or look something up online, and for anything that may have changed recently. Never answer such questions from memory. Returns ranked results with relevant passages; base the answer on them.',
     parameters: z.object({
-      query: z.string().describe('The query to search the web for'),
+      query: z.string().describe('A concise web search query'),
     }),
-    execute: async ({ query }) => {
-      try {
-        const response = await generateText({
-          model: perplexity('sonar'),
-          messages: [
-            { role: 'system', content: 'Be precise and concise.' },
-            { role: 'system', content: 'Do not include sources in your response.' },
-            { role: 'system', content: 'Do not use markdown formatting in your response.' },
-            { role: 'user', content: query },
-          ],
-          maxTokens: 1024,
-        });
-
-        return response.text;
-      } catch (error) {
-        console.error('Error searching the web:', error);
-        throw new Error('Failed to search the web');
-      }
-    },
+    execute: async ({ query }, { abortSignal }) => ({
+      results: await searchWeb(query, abortSignal),
+    }),
   });
 
 export const tools = async (connectionId: string, ragEffect: boolean = false) => {
@@ -468,8 +466,9 @@ export const tools = async (connectionId: string, ragEffect: boolean = false) =>
     [Tools.BulkDelete]: bulkDelete(connectionId),
     [Tools.BulkArchive]: bulkArchive(connectionId),
     [Tools.DeleteLabel]: deleteLabel(connectionId),
-    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
+    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(connectionId),
     [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.WebSearch]: webSearch(),
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

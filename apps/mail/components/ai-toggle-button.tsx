@@ -1,20 +1,23 @@
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { useAISidebar } from './ui/ai-sidebar';
 import { Button } from './ui/button';
 
 // AI Toggle Button Component
 const AIToggleButton = () => {
   const { toggleOpen: toggleAISidebar, open: isSidebarOpen } = useAISidebar();
+  const aiEnabled = useAiEnabled();
 
   return (
+    aiEnabled &&
     !isSidebarOpen && (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed right-4 bottom-4 z-50">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
               size="icon"
-              className="dark:bg-sidebar border h-12 w-12 rounded-lg"
+              className="dark:bg-sidebar h-12 w-12 rounded-lg border"
               onClick={(e) => {
                 if (!isSidebarOpen) {
                   e.stopPropagation();

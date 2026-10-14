@@ -4,6 +4,7 @@ import { z } from 'zod';
 export enum EProviders {
   'google' = 'google',
   'microsoft' = 'microsoft',
+  'imap' = 'imap',
 }
 
 export interface ISubscribeBatch {
@@ -152,6 +153,8 @@ export const ParsedMessageSchema = z.object({
     )
     .optional(),
   isDraft: z.boolean().optional(),
+  /** Draft written by Zero's automatic drafting and not edited since. */
+  isZeroSuggestion: z.boolean().optional(),
 });
 
 export type ParsedMessage = z.infer<typeof ParsedMessageSchema>;
@@ -208,10 +211,16 @@ export interface IOutgoingMessage {
   fromEmail?: string;
   isForward?: boolean;
   originalMessage?: string | null;
+  /**
+   * Provider id of the message being replied to / forwarded. Outlook needs it to thread replies
+   * (Graph can't set In-Reply-To/References directly); forwards use it to fetch attachments.
+   */
+  replyToMessageId?: string;
 }
 export interface DeleteAllSpamResponse {
   success: boolean;
   message: string;
+  queued?: boolean;
   count?: number;
   error?: string;
 }

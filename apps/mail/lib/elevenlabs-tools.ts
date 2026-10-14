@@ -1,4 +1,5 @@
 import { trpcClient } from '@/providers/query-provider';
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const getCurrentThreadId = () => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
@@ -20,24 +21,34 @@ export const toolExecutors = {
         q: params.query,
       });
 
-      const threads = result.threads.slice(0, params.maxResults || 10);
+      const threads = await Promise.all(
+        result.threads
+          .slice(0, params.maxResults || 10)
+          .map(async ({ id }) => ({ id, detail: await trpcClient.mail.get.query({ id }) })),
+      );
 
       return {
         success: true,
-        threads: threads.map((thread: any) => ({
-          id: thread.id,
-          subject: thread.subject,
-          from: thread.sender,
-          date: thread.receivedOn,
-          preview: thread.snippet,
-          hasUnread: thread.hasUnread,
-        })),
+        threads: threads.flatMap(({ id, detail }) =>
+          detail.latest
+            ? [
+                {
+                  id,
+                  subject: detail.latest.subject,
+                  from: detail.latest.sender,
+                  date: detail.latest.receivedOn,
+                  preview: detail.latest.body.slice(0, 200),
+                  hasUnread: detail.hasUnread,
+                },
+              ]
+            : [],
+        ),
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  getEmail: async (params: any) => {
+  getEmail: async (params: { threadId?: string; thread_id?: string; id?: string }) => {
     try {
       // Handle various ways the AI might pass the threadId
       let threadId = null;
@@ -73,8 +84,8 @@ export const toolExecutors = {
         currentThreadId: threadId,
         message: `Retrieved email with thread ID: ${threadId}`,
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
   sendEmail: async (params: {
@@ -91,40 +102,40 @@ export const toolExecutors = {
         threadId: params.threadId,
       });
       return { success: true, message: 'Email sent successfully' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  markAsRead: async (params: any) => {
+  markAsRead: async (params: { threadIds: string[] }) => {
     try {
       await trpcClient.mail.markAsRead.mutate({ ids: params.threadIds });
       return { success: true, message: 'Emails marked as read' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  markAsUnread: async (params: any) => {
+  markAsUnread: async (params: { threadIds: string[] }) => {
     try {
       await trpcClient.mail.markAsUnread.mutate({ ids: params.threadIds });
       return { success: true, message: 'Emails marked as unread' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  archiveEmails: async (params: any) => {
+  archiveEmails: async (params: { threadIds: string[] }) => {
     try {
       await trpcClient.mail.bulkArchive.mutate({ ids: params.threadIds });
       return { success: true, message: 'Emails archived' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  deleteEmails: async (params: any) => {
+  deleteEmails: async (params: { threadIds: string[] }) => {
     try {
       await trpcClient.mail.bulkDelete.mutate({ ids: params.threadIds });
       return { success: true, message: 'Emails moved to trash' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
   deleteEmail: async () => {
@@ -139,8 +150,8 @@ export const toolExecutors = {
     try {
       await trpcClient.mail.bulkDelete.mutate({ ids: [threadId] });
       return { success: true, message: 'Email deleted' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
   createLabel: async (params: { name: string; backgroundColor: string; textColor: string }) => {
@@ -156,14 +167,14 @@ export const toolExecutors = {
       });
 
       return { success: true, message: 'Label created' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  applyLabel: async (params: any) => {
+  applyLabel: async (params: { threadIds: string[]; label: string }) => {
     try {
       const labels = await trpcClient.labels.list.query();
-      const label = labels.find((label: any) => label.name === params.label);
+      const label = labels.find((label) => label.name === params.label);
       if (!label) {
         return { success: false, error: 'Label not found' };
       }
@@ -174,11 +185,11 @@ export const toolExecutors = {
         removeLabels: [],
       });
       return { success: true, message: 'Label applied' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  removeLabel: async (params: any) => {
+  removeLabel: async (params: { threadIds: string[]; label: string }) => {
     try {
       const threadId = getCurrentThreadId();
       if (!threadId) {
@@ -191,7 +202,7 @@ export const toolExecutors = {
 
       const thread = await trpcClient.mail.get.query({ id: threadId });
       const labels = thread.labels;
-      const label = labels.find((label: any) => label.name === params.label);
+      const label = labels.find((label) => label.name === params.label);
       if (!label) {
         return { success: false, error: 'Label not found' };
       }
@@ -202,11 +213,11 @@ export const toolExecutors = {
         removeLabels: [label.id],
       });
       return { success: true, message: 'Label removed' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  searchEmails: async (params: any) => {
+  searchEmails: async (params: { question: string; maxResults?: number }) => {
     try {
       // just a simple search for now
       const result = await trpcClient.mail.listThreads.query({
@@ -214,23 +225,33 @@ export const toolExecutors = {
         folder: 'INBOX',
       });
 
-      const threads = result.threads.slice(0, params.maxResults || 5);
+      const threads = await Promise.all(
+        result.threads
+          .slice(0, params.maxResults || 5)
+          .map(async ({ id }) => ({ id, detail: await trpcClient.mail.get.query({ id }) })),
+      );
 
       return {
         success: true,
-        results: threads.map((thread: any) => ({
-          id: thread.id,
-          subject: thread.subject,
-          from: thread.sender,
-          date: thread.receivedOn,
-          preview: thread.snippet,
-        })),
+        results: threads.flatMap(({ id, detail }) =>
+          detail.latest
+            ? [
+                {
+                  id,
+                  subject: detail.latest.subject,
+                  from: detail.latest.sender,
+                  date: detail.latest.receivedOn,
+                  preview: detail.latest.body.slice(0, 200),
+                },
+              ]
+            : [],
+        ),
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
-  webSearch: async (params: any) => {
+  webSearch: async (params: { query: string }) => {
     console.log(params);
     const threadId = getCurrentThreadId();
     if (!threadId) {
@@ -243,7 +264,7 @@ export const toolExecutors = {
     try {
       const thread = await trpcClient.mail.get.query({ id: threadId });
 
-      const emailContent = thread.messages?.map((m: any) => m.body).join('\n\n') || '';
+      const emailContent = thread.messages?.map((m) => m.body).join('\n\n') || '';
       const subject = thread.latest?.subject || 'No subject';
       const from = thread.latest?.sender?.email || 'Unknown sender';
       const senderName = cleanNameDisplay(thread.latest?.sender?.name);
@@ -277,8 +298,8 @@ export const toolExecutors = {
         success: true,
         result: text,
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
   summarizeEmail: async () => {
@@ -296,7 +317,7 @@ export const toolExecutors = {
       try {
         const thread = await trpcClient.mail.get.query({ id: threadId });
 
-        const emailContent = thread.messages?.map((m: any) => m.body).join('\n\n') || '';
+        const emailContent = thread.messages?.map((m) => m.body).join('\n\n') || '';
         const subject = thread.latest?.subject || 'No subject';
         const from = thread.latest?.sender?.email || 'Unknown sender';
         const senderName = cleanNameDisplay(thread.latest?.sender?.name);
@@ -346,8 +367,8 @@ export const toolExecutors = {
           error: 'Failed to fetch email for summarization',
         };
       }
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: errorMessage(error) };
     }
   },
 };

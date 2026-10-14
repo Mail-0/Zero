@@ -8,4 +8,4 @@ export const useTemplates = () => {
       staleTime: 1000 * 60 * 5,
     }),
   );
-}; 
+};

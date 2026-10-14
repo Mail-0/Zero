@@ -43,4 +43,4 @@ export function useLoading() {
     throw new Error('useLoading must be used within a LoadingProvider');
   }
   return context;
-} 
+}

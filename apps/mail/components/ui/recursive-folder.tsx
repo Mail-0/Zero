@@ -7,7 +7,6 @@ import { Folder } from '../magicui/file-tree';
 import { useNavigate } from 'react-router';
 
 import { useCallback } from 'react';
-import * as React from 'react';
 
 export const RecursiveFolder = ({
   label,
@@ -15,7 +14,7 @@ export const RecursiveFolder = ({
   count,
 }: {
   label: Label & { originalLabel?: Label };
-  activeAccount?: any;
+  activeAccount?: { providerId: string } | null;
   count?: number;
 }) => {
   const { labels, setLabels } = useSearchLabels();
@@ -76,7 +75,7 @@ export const RecursiveFolder = ({
         count={count || 0}
         className="max-w-[192px]"
       >
-        {label.labels?.map((childLabel: any) => (
+        {label.labels?.map((childLabel) => (
           <RecursiveFolder
             key={childLabel.id}
             label={childLabel}

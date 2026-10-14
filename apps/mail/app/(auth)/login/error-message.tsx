@@ -1,8 +1,8 @@
 import { TriangleAlert } from 'lucide-react';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages';
 
 const errorMessages = ['required_scopes_missing'] as const;
 
@@ -31,7 +31,7 @@ const ErrorMessage = () => {
   }
 
   return (
-    <div className="border-red/10 bg-red/5 min-w-0 max-w-fit shrink overflow-hidden break-words rounded-lg border p-4 dark:border-white/10 dark:bg-white/5">
+    <div className="border-red/10 bg-red/5 max-w-fit min-w-0 shrink overflow-hidden rounded-lg border p-4 break-words dark:border-white/10 dark:bg-white/5">
       <div className="flex items-center">
         <TriangleAlert size={28} />
         <p className="ml-2 text-sm text-black/80 dark:text-white/80">

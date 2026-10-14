@@ -1,14 +1,14 @@
 import { cn } from '@/lib/utils';
 import React from 'react';
 
-interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+type PageHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
   ({ className, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={cn('flex flex-col space-y-2 border-b px-4 pb-4 pt-2', className)}
+        className={cn('flex flex-col space-y-2 border-b px-4 pt-2 pb-4', className)}
         {...props}
       >
         {children}
@@ -18,7 +18,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
 );
 PageHeader.displayName = 'PageHeader';
 
-interface PageHeaderTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+type PageHeaderTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
 
 const PageHeaderTitle = React.forwardRef<HTMLHeadingElement, PageHeaderTitleProps>(
   ({ className, children, ...props }, ref) => {
@@ -31,7 +31,7 @@ const PageHeaderTitle = React.forwardRef<HTMLHeadingElement, PageHeaderTitleProp
 );
 PageHeaderTitle.displayName = 'PageHeaderTitle';
 
-interface PageHeaderDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
+type PageHeaderDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 const PageHeaderDescription = React.forwardRef<HTMLParagraphElement, PageHeaderDescriptionProps>(
   ({ className, children, ...props }, ref) => {

@@ -1,3 +1,4 @@
+import { SettingsGroup, kbd } from '@/components/settings/settings-ui';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { formatDisplayKeys } from '@/lib/hotkeys/use-hotkey-utils';
 import { useShortcutCache } from '@/lib/hotkeys/use-hotkey-utils';
@@ -15,81 +16,83 @@ export default function ShortcutsPage() {
   const categorySettings = useCategorySettings();
 
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.shortcuts.title']()}
-        description={m['pages.settings.shortcuts.description']()}
-        // footer={
-        //   <div className="flex gap-4">
-        //     <Button
-        //       variant="outline"
-        //       onClick={async () => {
-        //         try {
-        //           await Promise.all(keyboardShortcuts.map((shortcut) => updateShortcut(shortcut)));
-        //           toast.success('Shortcuts reset to defaults');
-        //         } catch (error) {
-        //           console.error('Failed to reset shortcuts:', error);
-        //           toast.error('Failed to reset shortcuts');
-        //         }
-        //       }}
-        //     >
-        //       {t('common.actions.resetToDefaults')}
-        //     </Button>
-        //   </div>
-        // }
-      >
-        <div className="grid max-w-3xl gap-6">
-          {Object.entries(
-            shortcuts.reduce<Record<string, Shortcut[]>>((acc, shortcut) => {
-              const scope = shortcut.scope;
-              if (!acc[scope]) acc[scope] = [];
-              acc[scope].push(shortcut);
-              return acc;
-            }, {}),
-          ).map(([scope, scopedShortcuts]) => (
-            <div key={scope}>
-              <h3 className="mb-4 text-lg font-semibold capitalize">
-                {scope.split('-').join(' ')}
-              </h3>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {scopedShortcuts.map((shortcut, index) => {
-                  const categoryActionIndex: Record<string, number> = {
-                    showImportant: 0,
-                    showAllMail: 1,
-                    showPersonal: 2,
-                    showUpdates: 3,
-                    showPromotions: 4,
-                    showUnread: 5,
-                  };
+    <SettingsCard
+      title={m['pages.settings.shortcuts.title']()}
+      description={m['pages.settings.shortcuts.description']()}
+      // footer={
+      //   <div className="flex gap-4">
+      //     <Button
+      //       variant="outline"
+      //       onClick={async () => {
+      //         try {
+      //           await Promise.all(keyboardShortcuts.map((shortcut) => updateShortcut(shortcut)));
+      //           toast.success('Shortcuts reset to defaults');
+      //         } catch (error) {
+      //           console.error('Failed to reset shortcuts:', error);
+      //           toast.error('Failed to reset shortcuts');
+      //         }
+      //       }}
+      //     >
+      //       {t('common.actions.resetToDefaults')}
+      //     </Button>
+      //   </div>
+      // }
+    >
+      <div className="space-y-6">
+        {Object.entries(
+          shortcuts.reduce<Record<string, Shortcut[]>>((acc, shortcut) => {
+            const scope = shortcut.scope;
+            if (!acc[scope]) acc[scope] = [];
+            acc[scope].push(shortcut);
+            return acc;
+          }, {}),
+        ).map(([scope, scopedShortcuts]) => (
+          <div key={scope} className="space-y-2">
+            <h3 className="text-muted-foreground px-1 text-[11px] font-medium tracking-wide uppercase">
+              {scope.split('-').join(' ')}
+            </h3>
+            <SettingsGroup>
+              {scopedShortcuts.map((shortcut) => {
+                const categoryActionIndex: Record<string, number> = {
+                  showImportant: 0,
+                  showAllMail: 1,
+                  showPersonal: 2,
+                  showUpdates: 3,
+                  showPromotions: 4,
+                  showUnread: 5,
+                };
 
-                  let label: string;
+                let label: string;
+                const translation: unknown = Reflect.get(
+                  m,
+                  `pages.settings.shortcuts.actions.${shortcut.action}`,
+                );
+                const actionLabel =
+                  typeof translation === 'function' ? String(translation()) : shortcut.action;
 
-                  if (shortcut.action in categoryActionIndex && categorySettings.length) {
-                    const idx = categoryActionIndex[shortcut.action];
-                    const cat = categorySettings[idx];
-                    label = cat
-                      ? `Show ${cat.name}`
-                      : m[`pages.settings.shortcuts.actions.${shortcut.action}`]();
-                  } else {
-                    label = m[`pages.settings.shortcuts.actions.${shortcut.action}`]();
-                  }
+                if (shortcut.action in categoryActionIndex && categorySettings.length) {
+                  const idx = categoryActionIndex[shortcut.action];
+                  const cat = categorySettings[idx];
+                  label = cat ? `Show ${cat.name}` : actionLabel;
+                } else {
+                  label = actionLabel;
+                }
 
-                  return (
-                    <ShortcutItem
-                      key={`${scope}-${index}`}
-                      keys={shortcut.keys}
-                      //   action={shortcut.action}
-                    >
-                      {label}
-                    </ShortcutItem>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </SettingsCard>
-    </div>
+                return (
+                  <ShortcutItem
+                    key={`${scope}-${shortcut.action}-${shortcut.keys.join('+')}`}
+                    keys={shortcut.keys}
+                    //   action={shortcut.action}
+                  >
+                    {label}
+                  </ShortcutItem>
+                );
+              })}
+            </SettingsGroup>
+          </div>
+        ))}
+      </div>
+    </SettingsCard>
   );
 }
 
@@ -123,18 +126,13 @@ function ShortcutItem({ children, keys }: { children: ReactNode; keys: string[] 
   return (
     <>
       <div
-        className="bg-popover text-muted-foreground hover:bg-accent/50 flex cursor-pointer items-center justify-between gap-2 rounded-lg border p-2 text-sm"
+        className="flex items-center justify-between gap-3 px-4 py-2"
         // onClick={() => setIsRecording(true)}
-        role="button"
-        tabIndex={0}
       >
-        <span className="font-medium">{children}</span>
-        <div className="flex select-none gap-1">
+        <span className="min-w-0 truncate text-[13px]">{children}</span>
+        <div className="flex shrink-0 gap-1">
           {displayKeys.map((key) => (
-            <kbd
-              key={key}
-              className="border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6"
-            >
+            <kbd key={key} className={kbd}>
               {key}
             </kbd>
           ))}

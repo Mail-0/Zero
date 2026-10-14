@@ -13,10 +13,12 @@
         {
           "binding": "VECTORIZE",
           "index_name": "threads-vector-staging",
+          "remote": true,
         },
         {
           "binding": "VECTORIZE_MESSAGE",
           "index_name": "messages-vector-staging",
+          "remote": true,
         },
       ],
       "r2_buckets": [
@@ -51,6 +53,7 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          { "name": "GMAIL_QUOTA", "class_name": "GmailQuota" },
         ],
       },
       "queues": {
@@ -102,6 +105,7 @@
           "tag": "v7",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        { "tag": "v8", "new_sqlite_classes": ["GmailQuota"] },
       ],
 
       "observability": {
@@ -130,29 +134,12 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "5",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
-        "USE_OPENAI": "true",
         "CLOUDFLARE_ACCOUNT_ID": "",
         "CLOUDFLARE_API_TOKEN": "",
       },
       "kv_namespaces": [
-        {
-          "binding": "gmail_history_id",
-          "id": "4e814c70e35d413d99c923029928efae",
-        },
-        {
-          "binding": "gmail_processing_threads",
-          "id": "b7db3a98a80f4e16a8b6edc5fa8c7b76",
-        },
-        {
-          "binding": "subscribed_accounts",
-          "id": "7e6eadacf19c4c56a9ec3c357adb584a",
-        },
-        {
-          "binding": "connection_labels",
-          "id": "4d3a28d3265a4388aae2e9e9b534d019",
-        },
         {
           "binding": "prompts_storage",
           "id": "620e710aaea744e59df4788f9ec18ff9",
@@ -169,7 +156,7 @@
     },
     "staging": {
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["*/1 * * * *"],
       },
       "ai": {
         "binding": "AI",
@@ -213,6 +200,7 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          { "name": "GMAIL_QUOTA", "class_name": "GmailQuota" },
         ],
       },
       "r2_buckets": [
@@ -256,7 +244,8 @@
         },
         {
           "tag": "v4",
-          "new_sqlite_classes": ["ZeroAgent"],
+          // ZeroAgent is already declared in v2. Preserve the historical tag;
+          // production is at v8, so only the new v9 migration will be applied.
         },
         {
           "tag": "v5",
@@ -274,6 +263,7 @@
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        { "tag": "v9", "new_sqlite_classes": ["GmailQuota"] },
       ],
       "observability": {
         "enabled": true,
@@ -298,22 +288,6 @@
       },
       "kv_namespaces": [
         {
-          "binding": "gmail_history_id",
-          "id": "4e814c70e35d413d99c923029928efae",
-        },
-        {
-          "binding": "gmail_processing_threads",
-          "id": "b7db3a98a80f4e16a8b6edc5fa8c7b76",
-        },
-        {
-          "binding": "subscribed_accounts",
-          "id": "7e6eadacf19c4c56a9ec3c357adb584a",
-        },
-        {
-          "binding": "connection_labels",
-          "id": "4d3a28d3265a4388aae2e9e9b534d019",
-        },
-        {
           "binding": "prompts_storage",
           "id": "620e710aaea744e59df4788f9ec18ff9",
         },
@@ -329,7 +303,7 @@
     },
     "production": {
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["*/1 * * * *"],
       },
       "r2_buckets": [
         {
@@ -386,6 +360,7 @@
             "name": "WORKFLOW_RUNNER",
             "class_name": "WorkflowRunner",
           },
+          { "name": "GMAIL_QUOTA", "class_name": "GmailQuota" },
         ],
       },
       "queues": {
@@ -423,7 +398,7 @@
         },
         {
           "tag": "v4",
-          "new_sqlite_classes": ["ZeroAgent"],
+          // Preserve the deployed tag without declaring ZeroAgent twice.
         },
         {
           "tag": "v5",
@@ -441,6 +416,7 @@
           "tag": "v8",
           "new_sqlite_classes": ["WorkflowRunner"],
         },
+        { "tag": "v9", "new_sqlite_classes": ["GmailQuota"] },
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -454,22 +430,6 @@
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
-        {
-          "binding": "gmail_history_id",
-          "id": "10005d74e84f4f18a17c9618d9e9cecf",
-        },
-        {
-          "binding": "gmail_processing_threads",
-          "id": "3348ff0976284269a8d8a5e6e4c04c56",
-        },
-        {
-          "binding": "subscribed_accounts",
-          "id": "5902b3b948ff4c4ba1aedbbbbe25503d",
-        },
-        {
-          "binding": "connection_labels",
-          "id": "9a13290a55ad4f62824c67005dd66f6f",
-        },
         {
           "binding": "prompts_storage",
           "id": "2a4ebda553f3456085cfcf92cc0f570f",

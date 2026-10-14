@@ -18,24 +18,27 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CircleCheck, Inboxes, ThreeDots } from '../icons/icons';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useLoading } from '../context/loading-context';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
-import { CircleCheck, ThreeDots } from '../icons/icons';
 import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useBilling } from '@/hooks/use-billing';
 import { SunIcon } from '../icons/animated/sun';
 import { clear as idbClear } from 'idb-keyval';
-import { useLocation } from 'react-router';
 import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+// Outline (not box-shadow ring) so the offset gap stays transparent on any sidebar background.
+const ACTIVE_ACCOUNT_RING = 'rounded-[5px] outline-2 outline-offset-1 outline-mainBlue';
 
 export function NavUser({ compact = false }: { compact?: boolean }) {
   const { data: session } = useSession();
@@ -51,6 +54,8 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
   );
   const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
   const pathname = useLocation().pathname;
+  const navigate = useNavigate();
+  const isUnifiedActive = pathname === '/mail/unified';
   const queryClient = useQueryClient();
   const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
   const [, setPricingDialog] = useQueryState('pricingDialog');
@@ -79,8 +84,15 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => setIsRendered(true), []);
 
+  const isSwitchingRef = useRef(false);
+
   const handleAccountSwitch = (connectionId: string) => async () => {
-    if (connectionId === activeConnection?.id) return;
+    const currentId = activeConnection?.id ?? activeAccount?.id;
+    // Picking an account from the unified inbox leaves it for that account's own inbox.
+    if (isUnifiedActive) navigate('/mail/inbox');
+    if (!connectionId || !currentId || connectionId === currentId) return;
+    if (isSwitchingRef.current) return;
+    isSwitchingRef.current = true;
 
     try {
       setLoading(true, m['common.navUser.switchingAccounts']());
@@ -89,13 +101,19 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
 
       await setDefaultConnection({ connectionId });
 
-      queryClient.clear();
+      // Not clear(): it drops queries from under mounted observers without notifying them,
+      // so e.g. this switcher kept rendering the previous account while the mail list
+      // refetched for the new one. resetQueries wipes every query's data, notifies observers
+      // and refetches the active ones (including connections.getDefault) before resolving.
+      await queryClient.cancelQueries();
+      await queryClient.resetQueries();
     } catch (error) {
       console.error('Error switching accounts:', error);
       toast.error(m['common.navUser.failedToSwitchAccount']());
 
       await refetchActiveConnection();
     } finally {
+      isSwitchingRef.current = false;
       setLoading(false);
     }
   };
@@ -125,51 +143,89 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
     <AddConnectionDialog>
       <button
         aria-label={m['pages.settings.connections.addEmail']()}
-        className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]"
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]"
       >
         <Plus className="size-4" />
       </button>
     </AddConnectionDialog>
   ) : (
-    <Button
+    <button
+      type="button"
       aria-label={m['pages.settings.connections.addEmail']()}
       onClick={() => setPricingDialog('true')}
-      className="hover:bg-offsetLight/80 flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent px-0 text-black dark:bg-[#262626] dark:text-[#929292]"
+      className="hover:bg-offsetLight/80 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border border-dashed bg-transparent text-black dark:bg-[#262626] dark:text-[#929292] dark:hover:bg-[#313131] dark:hover:text-white"
     >
       <Plus className="size-4" />
-    </Button>
+    </button>
   );
+
+  const unifiedInboxButton =
+    (data?.connections.length ?? 0) > 1 ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to="/mail/unified"
+            aria-label={m['navigation.sidebar.unifiedInbox']()}
+            aria-current={isUnifiedActive ? 'page' : undefined}
+            className={cn(
+              'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[5px] bg-[#f0f0f0] text-black/70 transition-colors hover:bg-[#e5e5e5] hover:text-black dark:bg-[#262626] dark:text-[#b4b4b4] dark:hover:bg-[#313131] dark:hover:text-white',
+              isUnifiedActive && [
+                'text-black dark:bg-[#313131] dark:text-white',
+                ACTIVE_ACCOUNT_RING,
+              ],
+            )}
+          >
+            <Inboxes className="size-4" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent className="text-muted-foreground text-xs">
+          {m['navigation.sidebar.unifiedInbox']()}
+        </TooltipContent>
+      </Tooltip>
+    ) : null;
 
   if (!isRendered) return null;
   if (!session) return null;
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {state === 'collapsed' ? (
           activeAccount && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex cursor-pointer items-center">
-                  <div className="relative">
-                    <Avatar className="relative left-0.5 size-7 rounded-[5px]">
-                      <AvatarImage
-                        className="rounded-[5px]"
-                        src={activeAccount?.picture || undefined}
-                        alt={activeAccount?.name || activeAccount?.email}
-                      />
+                <button
+                  type="button"
+                  aria-label={activeAccount?.email}
+                  className={cn(
+                    'flex shrink-0 cursor-pointer items-center',
+                    !isUnifiedActive && ACTIVE_ACCOUNT_RING,
+                  )}
+                  // On the unified inbox the active avatar goes back to its own inbox instead of
+                  // opening the menu (Radix opens on pointerdown unless it's default-prevented).
+                  onPointerDown={(event) => {
+                    if (!isUnifiedActive || event.button !== 0) return;
+                    event.preventDefault();
+                    navigate('/mail/inbox');
+                  }}
+                >
+                  <Avatar className="size-7 rounded-[5px]">
+                    <AvatarImage
+                      className="rounded-[5px]"
+                      src={activeAccount?.picture || undefined}
+                      alt={activeAccount?.name || activeAccount?.email}
+                    />
 
-                      <AvatarFallback className="rounded-[5px] text-[10px]">
-                        {(activeAccount?.name || activeAccount?.email || '')
-                          .split(' ')
-                          .map((n: string) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
+                    <AvatarFallback className="rounded-[5px] text-[10px]">
+                      {(activeAccount?.name || activeAccount?.email || '')
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="ml-3 w-(--radix-dropdown-menu-trigger-width) min-w-56 bg-white font-medium dark:bg-[#131313]"
@@ -323,15 +379,10 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
               {data && activeAccount ? (
                 <div
                   key={activeAccount.id}
-                  onClick={handleAccountSwitch(activeAccount.id)}
-                  className={`flex cursor-pointer items-center ${
-                    activeAccount.id === activeConnection?.id && data.connections.length > 1
-                      ? 'outline-mainBlue rounded-[5px] outline outline-2'
-                      : ''
-                  }`}
+                  className={cn('flex shrink-0 items-center', ACTIVE_ACCOUNT_RING)}
                 >
                   <div className="relative">
-                    <Avatar className="size-6 rounded-[5px]">
+                    <Avatar className="size-7 rounded-[5px]">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={activeAccount.picture || undefined}
@@ -346,7 +397,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                           .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    {activeAccount.id === activeConnection?.id && data.connections.length > 1 && (
+                    {data.connections.length > 1 && (
                       <CircleCheck className="fill-mainBlue absolute -right-2 -bottom-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
                     )}
                   </div>
@@ -354,42 +405,35 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
               ) : (
                 <div className="flex cursor-pointer items-center">
                   <div className="relative">
-                    <div className="bg-muted size-6 animate-pulse rounded-[5px]" />
+                    <div className="bg-muted size-7 animate-pulse rounded-[5px]" />
                   </div>
                 </div>
               )}
               {otherConnections.slice(0, 2).map((connection) => (
                 <Tooltip key={connection.id}>
                   <TooltipTrigger asChild>
-                    <div
+                    <button
+                      type="button"
+                      aria-label={`Switch to ${connection.email}`}
                       onClick={handleAccountSwitch(connection.id)}
-                      className={`flex cursor-pointer items-center ${
-                        connection.id === activeConnection?.id && otherConnections.length > 1
-                          ? 'outline-mainBlue rounded-[5px] outline outline-2'
-                          : ''
-                      }`}
+                      className="flex shrink-0 cursor-pointer items-center"
                     >
-                      <div className="relative">
-                        <Avatar className="size-7 rounded-[5px]">
-                          <AvatarImage
-                            className="rounded-[5px]"
-                            src={connection.picture || undefined}
-                            alt={connection.name || connection.email}
-                          />
-                          <AvatarFallback className="rounded-[5px] text-[10px]">
-                            {(connection.name || connection.email)
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .toUpperCase()
-                              .slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {connection.id === activeConnection?.id && otherConnections.length > 1 && (
-                          <CircleCheck className="fill-mainBlue absolute -right-2 -bottom-2 size-4 rounded-full bg-white dark:bg-black" />
-                        )}
-                      </div>
-                    </div>
+                      <Avatar className="size-7 rounded-[5px] opacity-70 transition-opacity hover:opacity-100">
+                        <AvatarImage
+                          className="rounded-[5px]"
+                          src={connection.picture || undefined}
+                          alt={connection.name || connection.email}
+                        />
+                        <AvatarFallback className="rounded-[5px] text-[10px]">
+                          {(connection.name || connection.email)
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent className="text-muted-foreground text-xs">
                     {connection.email}
@@ -397,11 +441,11 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                 </Tooltip>
               ))}
 
-              {otherConnections.length > 3 && (
+              {otherConnections.length > 2 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="hover:bg-muted flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px]">
-                      <span className="text-[10px]">+{otherConnections.length - 3}</span>
+                    <button className="hover:bg-muted flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[5px]">
+                      <span className="text-[10px]">+{otherConnections.length - 2}</span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -410,7 +454,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                     side={'bottom'}
                     sideOffset={8}
                   >
-                    {otherConnections.slice(3).map((connection) => (
+                    {otherConnections.slice(2).map((connection) => (
                       <DropdownMenuItem
                         key={connection.id}
                         onClick={handleAccountSwitch(connection.id)}
@@ -540,16 +584,17 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
           </div>
         )}
         {compact && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {otherConnections.map((connection) => (
               <Tooltip key={connection.id}>
                 <TooltipTrigger asChild>
                   <button
+                    type="button"
                     aria-label={`Switch to ${connection.email}`}
                     onClick={handleAccountSwitch(connection.id)}
-                    className="flex cursor-pointer items-center"
+                    className="flex shrink-0 cursor-pointer items-center"
                   >
-                    <Avatar className="size-6 rounded-[5px] opacity-70 transition-opacity hover:opacity-100">
+                    <Avatar className="size-7 rounded-[5px] opacity-70 transition-opacity hover:opacity-100">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={connection.picture || undefined}
@@ -571,6 +616,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                 </TooltipContent>
               </Tooltip>
             ))}
+            {unifiedInboxButton}
             {addAccountButton}
           </div>
         )}

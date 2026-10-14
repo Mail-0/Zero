@@ -1,12 +1,12 @@
+import { createCoalescedRunner, refreshMailboxQueries } from '@/lib/mail-cache-sync';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { pruneSettledReadActionsAtom } from '@/store/optimistic-updates';
 import { useIsRestoring, useQueryClient } from '@tanstack/react-query';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { createCoalescedRunner, refreshMailboxQueries } from '@/lib/mail-cache-sync';
 import { useSearchValue } from '@/hooks/use-search-value';
 import useSearchLabels from '@/hooks/use-labels-search';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSetAtom } from 'jotai';
 
 // 10 seconds is appropriate for real-time notifications
@@ -45,6 +45,9 @@ export const NotificationProvider = () => {
   const catchUp = useCallback(() => {
     if (!activeConnection?.id || isRestoring) return;
     pruneSettledReadActions();
+    void queryClient.invalidateQueries({
+      queryKey: trpc.mail.listUnifiedInbox.infiniteQueryKey(),
+    });
     void refreshMailboxQueries(queryClient, {
       threads: trpc.mail.get.queryKey(),
       lists: trpc.mail.listThreads.infiniteQueryKey(),
@@ -70,16 +73,21 @@ export const NotificationProvider = () => {
 
   // Mailbox-wide refresh after per-thread pushes, coalesced (see createCoalescedRunner).
   const refreshMailboxRef = useRef(() => {});
-  refreshMailboxRef.current = () => {
-    pruneSettledReadActions();
-    void refreshMailboxQueries(queryClient, {
-      lists: trpc.mail.listThreads.infiniteQueryKey(),
-      counts: trpc.mail.count.queryKey(),
-      draftDetails: trpc.drafts.get.queryKey(),
-      draftLists: trpc.drafts.list.queryKey(),
-      status: trpc.mail.syncStatus.queryKey(),
-    });
-  };
+  useLayoutEffect(() => {
+    refreshMailboxRef.current = () => {
+      pruneSettledReadActions();
+      void queryClient.invalidateQueries({
+        queryKey: trpc.mail.listUnifiedInbox.infiniteQueryKey(),
+      });
+      void refreshMailboxQueries(queryClient, {
+        lists: trpc.mail.listThreads.infiniteQueryKey(),
+        counts: trpc.mail.count.queryKey(),
+        draftDetails: trpc.drafts.get.queryKey(),
+        draftLists: trpc.drafts.list.queryKey(),
+        status: trpc.mail.syncStatus.queryKey(),
+      });
+    };
+  }, [pruneSettledReadActions, queryClient, trpc]);
   const [mailboxRefresh] = useState(() =>
     createCoalescedRunner(() => refreshMailboxRef.current(), MAILBOX_REFRESH_WINDOW_MS),
   );
@@ -98,7 +106,9 @@ export const NotificationProvider = () => {
         if (type === IncomingMessageType.Mail_Get) {
           const { threadId } = JSON.parse(message.data);
           // The changed thread refreshes immediately; list/counts/drafts are coalesced.
-          void queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: threadId }) });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.mail.get.queryKey({ id: threadId }),
+          });
           mailboxRefresh.trigger();
         } else if (type === IncomingMessageType.Mail_Count) {
           await queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });

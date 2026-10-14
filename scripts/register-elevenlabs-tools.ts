@@ -178,7 +178,7 @@ export const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: Tools.WebSearch,
-    description: 'Search the web for information using Perplexity AI',
+    description: 'Search the web for information',
     parameters: z.object({
       query: z.string().describe('The query to search the web for'),
     }),

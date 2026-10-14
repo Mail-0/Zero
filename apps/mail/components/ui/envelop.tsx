@@ -4,7 +4,7 @@ export default function Envelop() {
       <div className="absolute left-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-slate-600 bg-linear-to-b from-[#eeeff1] to-[#f9f9fa] backdrop-blur-[85.60px]" />
       <div className="overflow-hidden">
         <div className="absolute h-[303.33px] w-[455px] rounded-[28.61px] bg-black/10" />
-        <div data-svg-wrapper className="absolute left-4 top-2">
+        <div data-svg-wrapper className="absolute top-2 left-4">
           <svg
             width="420"
             height="300"
@@ -270,11 +270,11 @@ export default function Envelop() {
             </defs>
           </svg>
         </div>
-        <div className="absolute left-0 top-0 h-[343.33px] w-[515px] border-8 border-[#f9fafa] opacity-40 blur-[28.61px]" />
-        <div className="absolute left-0 top-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-white/40" />
+        <div className="absolute top-0 left-0 h-[343.33px] w-[515px] border-8 border-[#f9fafa] opacity-40 blur-[28.61px]" />
+        <div className="absolute top-0 left-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-white/40" />
       </div>
-      <div className="absolute left-[170px] top-[32px]">
-        <div className="flex flex-col font-mono text-[9px] font-semibold leading-tight text-white/70">
+      <div className="absolute top-[32px] left-[170px]">
+        <div className="flex flex-col font-mono text-[9px] leading-tight font-semibold text-white/70">
           <span>0 Email</span>
           <span>123 Open Source Way</span>
           <span>Freemail City, FS 98765</span>

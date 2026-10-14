@@ -1,5 +1,6 @@
+import { AI_DISABLED_MESSAGE, isAiEnabledForUser } from '../lib/ai-access';
 import { systemPrompt } from '../services/call-service/system-prompt';
-import { openai } from '@ai-sdk/openai';
+import { chatModel } from '../lib/ai-models';
 import { tools } from './agent/tools';
 import { generateText } from 'ai';
 import { Tools } from '../types';
@@ -44,6 +45,8 @@ aiRouter.post('/do/:action', async (c) => {
   });
   await conn.end();
   if (!connection) return c.json({ success: false, error: 'Unauthorized' }, 401);
+  if (!(await isAiEnabledForUser(user.id)))
+    return c.json({ success: false, error: AI_DISABLED_MESSAGE }, 403);
 
   try {
     const action = c.req.param('action') as keyof ToolsReturnType;
@@ -63,9 +66,12 @@ aiRouter.post('/do/:action', async (c) => {
       messages: [],
     });
     return c.json({ success: true, result });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Error executing tool '${c.req.param('action')}':`, error);
-    return c.json({ success: false, error: error.message }, 400);
+    return c.json(
+      { success: false, error: error instanceof Error ? error.message : String(error) },
+      400,
+    );
   }
 });
 
@@ -126,10 +132,14 @@ aiRouter.post('/call', async (c) => {
     return c.json({ success: false, error: 'Unauthorized' }, 401);
   }
 
+  if (!(await isAiEnabledForUser(user.id))) {
+    return c.json({ success: false, error: AI_DISABLED_MESSAGE }, 403);
+  }
+
   console.log('[DEBUG] Creating toolset for connection:', connection.id);
   const toolset = await tools(connection.id);
   const { text } = await generateText({
-    model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+    model: chatModel(),
     system: systemPrompt,
     prompt: data.query,
     tools: toolset,

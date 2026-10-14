@@ -5,15 +5,17 @@ import {
 } from '../../lib/driver/types';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
-import { getZeroAgent, getZeroClient } from '../../lib/server-utils';
+import { pickForwardedAttachments } from '../../lib/forward-attachments';
+import { getGmailQuotaGovernor } from '../../lib/gmail-quota-client';
+import { isConnectionActive } from '../../lib/connection-status';
+import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
+import { isAiEnabledForUser } from '../../lib/ai-access';
 import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse } from '../../types';
-import { getContext } from 'hono/context-storage';
-import { type HonoContext } from '../../ctx';
-import { env } from 'cloudflare:workers';
 import { TRPCError } from '@trpc/server';
+import { env } from '../../env';
 import { z } from 'zod';
 
 const senderSchema = z.object({
@@ -31,6 +33,42 @@ const senderSchema = z.object({
 // };
 
 export const mailRouter = router({
+  syncStatus: activeDriverProcedure.query(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    const progress = await agent.syncProgress();
+    const quota =
+      ctx.activeConnection.providerId === 'google'
+        ? await getGmailQuotaGovernor().status(ctx.activeConnection.email.trim().toLowerCase())
+        : null;
+    return { ...progress, quota };
+  }),
+  labelSyncStatus: activeDriverProcedure.query(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    return agent.labelSyncStatus();
+  }),
+  retryLabelSync: activeDriverProcedure.mutation(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    await agent.retryLabelSync();
+    return { queued: true };
+  }),
+  mailboxSyncStatus: activeDriverProcedure.query(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    return agent.mailboxSyncStatus();
+  }),
+  retryMailboxSync: activeDriverProcedure.mutation(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    await agent.retryMailboxSync();
+    return { queued: true };
+  }),
+  unreadSyncStatus: activeDriverProcedure.query(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    return agent.unreadSyncStatus();
+  }),
+  retryUnreadSync: activeDriverProcedure.mutation(async ({ ctx }) => {
+    const agent = await getZeroAgent(ctx.activeConnection.id);
+    await agent.retryUnreadSync();
+    return { queued: true };
+  }),
   get: activeDriverProcedure
     .input(
       z.object({
@@ -40,8 +78,7 @@ export const mailRouter = router({
     .output(IGetThreadResponseSchema)
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const executionCtx = getContext<HonoContext>().executionCtx;
-      const agent = await getZeroClient(activeConnection.id, executionCtx);
+      const agent = await getZeroAgent(activeConnection.id);
       return await agent.getThread(input.id, true);
     }),
   count: activeDriverProcedure
@@ -151,8 +188,137 @@ export const mailRouter = router({
         threadsResponse.threads = filtered;
         console.debug('[listThreads] Snoozed threads after filtering:', filtered);
       }
-      console.debug('[listThreads] Returning threadsResponse:', threadsResponse);
+
+      // Row data for the whole page in one round trip (see ThreadListSummarySchema). Without
+      // it every visible list row fetches its full thread via mail.get.
+      let summaries: Awaited<ReturnType<typeof agent.getThreadListSummaries>> = [];
+      try {
+        summaries = await agent.getThreadListSummaries(threadsResponse.threads.map((t) => t.id));
+      } catch (error) {
+        console.warn('[listThreads] Failed to load row summaries', error);
+      }
+      threadsResponse = {
+        ...threadsResponse,
+        threads: threadsResponse.threads.map((thread, i) => ({
+          ...thread,
+          summary: summaries[i] ?? null,
+        })),
+      };
+
+      // Counts only: the response now carries subjects/senders/snippets, which must not hit logs.
+      console.debug('[listThreads] Returning', {
+        threads: threadsResponse.threads.length,
+        withSummary: threadsResponse.threads.filter((t) => t.summary).length,
+        hasNextPage: !!threadsResponse.nextPageToken,
+      });
       return threadsResponse;
+    }),
+  /**
+   * Inbox threads across every connected account, merged newest-first.
+   *
+   * Each account's thread store pages by `latest_received_on < cursor` (an ISO timestamp), so
+   * one shared timestamp cursor pages all accounts consistently: fetch a page per account
+   * older than the cursor, merge, keep the newest `maxResults`, and hand back the oldest kept
+   * timestamp as the next cursor. Accounts that fail (e.g. need reauthorization) are skipped
+   * and reported in `failedConnectionIds` instead of failing the whole page.
+   */
+  listUnifiedInbox: privateProcedure
+    .input(
+      z.object({
+        maxResults: z.number().int().min(1).max(50).optional().default(defaultPageSize),
+        cursor: z.string().optional().default(''),
+      }),
+    )
+    .output(
+      z.object({
+        threads: z.array(
+          IGetThreadsResponseSchema.shape.threads.element.extend({ connectionId: z.string() }),
+        ),
+        connections: z.array(
+          z.object({
+            id: z.string(),
+            email: z.string(),
+            name: z.string().nullable(),
+            picture: z.string().nullable(),
+            providerId: z.string(),
+          }),
+        ),
+        failedConnectionIds: z.array(z.string()),
+        nextPageToken: z.string().nullable(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { maxResults, cursor } = input;
+      const db = await getZeroDB(ctx.sessionUser.id);
+      const allConnections = await db.findManyConnections();
+      const connections = allConnections.filter(isConnectionActive);
+
+      const fallbackKey = cursor || new Date().toISOString();
+      const results = await Promise.allSettled(
+        connections.map(async (connection) => {
+          const agent = await getZeroAgent(connection.id);
+          const page = await agent.listThreads({
+            folder: FOLDERS.INBOX,
+            maxResults,
+            pageToken: cursor,
+          });
+          let summaries: Awaited<ReturnType<typeof agent.getThreadListSummaries>> = [];
+          try {
+            summaries = await agent.getThreadListSummaries(page.threads.map((t) => t.id));
+          } catch (error) {
+            console.warn('[listUnifiedInbox] Failed to load row summaries', connection.id, error);
+          }
+          // Threads arrive sorted newest-first; a thread without a summary inherits its
+          // predecessor's timestamp so it keeps its place in the merged order.
+          let previousKey = fallbackKey;
+          const threads = page.threads.map((thread, i) => {
+            const summary = summaries[i] ?? null;
+            const receivedOn = summary?.latest?.receivedOn;
+            const parsed = receivedOn ? new Date(receivedOn) : null;
+            const sortKey =
+              parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : previousKey;
+            previousKey = sortKey;
+            return { ...thread, summary, connectionId: connection.id, sortKey };
+          });
+          return { threads, hasMore: !!page.nextPageToken };
+        }),
+      );
+
+      const failedConnectionIds = allConnections
+        .filter((c) => !isConnectionActive(c))
+        .map((c) => c.id);
+      const merged: (IGetThreadsResponse['threads'][number] & {
+        connectionId: string;
+        sortKey: string;
+      })[] = [];
+      let anyHasMore = false;
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          merged.push(...result.value.threads);
+          anyHasMore ||= result.value.hasMore;
+        } else {
+          console.warn('[listUnifiedInbox] Connection failed', connections[i].id, result.reason);
+          failedConnectionIds.push(connections[i].id);
+        }
+      });
+
+      merged.sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+      const page = merged.slice(0, maxResults);
+      const hasMore = anyHasMore || merged.length > page.length;
+      const nextPageToken = hasMore && page.length > 0 ? page[page.length - 1].sortKey : null;
+
+      return {
+        threads: page.map(({ sortKey: _sortKey, ...thread }) => thread),
+        connections: allConnections.map((c) => ({
+          id: c.id,
+          email: c.email,
+          name: c.name ?? null,
+          picture: c.picture ?? null,
+          providerId: c.providerId,
+        })),
+        failedConnectionIds,
+        nextPageToken,
+      };
     }),
   markAsRead: activeDriverProcedure
     .input(
@@ -220,91 +386,37 @@ export const mailRouter = router({
     .input(
       z.object({
         ids: z.string().array(),
+        starred: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const executionCtx = getContext<HonoContext>().executionCtx;
-      const agent = await getZeroClient(activeConnection.id, executionCtx);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
-      const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
-
-      let anyStarred = false;
-      let processedThreads = 0;
-
-      for (const result of threadResults) {
-        if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
-          processedThreads++;
-          const isThreadStarred = result.value.messages.some((message) =>
-            message.tags?.some((tag) => tag.name.toLowerCase().startsWith('starred')),
-          );
-          if (isThreadStarred) {
-            anyStarred = true;
-            break;
-          }
-        }
-      }
-
-      const shouldStar = processedThreads > 0 && !anyStarred;
-
-      await agent.modifyLabels(
-        threadIds,
-        shouldStar ? ['STARRED'] : [],
-        shouldStar ? [] : ['STARRED'],
-      );
-
-      return { success: true };
+      return agent.setThreadsStarred(threadIds, input.starred);
     }),
   toggleImportant: activeDriverProcedure
     .input(
       z.object({
         ids: z.string().array(),
+        important: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const executionCtx = getContext<HonoContext>().executionCtx;
-      const agent = await getZeroClient(activeConnection.id, executionCtx);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
-      const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
-
-      let anyImportant = false;
-      let processedThreads = 0;
-
-      for (const result of threadResults) {
-        if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
-          processedThreads++;
-          const isThreadImportant = result.value.messages.some((message) =>
-            message.tags?.some((tag) => tag.name.toLowerCase().startsWith('important')),
-          );
-          if (isThreadImportant) {
-            anyImportant = true;
-            break;
-          }
-        }
-      }
-
-      const shouldMarkImportant = processedThreads > 0 && !anyImportant;
-
-      await agent.modifyLabels(
-        threadIds,
-        shouldMarkImportant ? ['IMPORTANT'] : [],
-        shouldMarkImportant ? [] : ['IMPORTANT'],
-      );
-
-      return { success: true };
+      return agent.setThreadsImportant(threadIds, input.important);
     }),
   bulkStar: activeDriverProcedure
     .input(
@@ -381,15 +493,43 @@ export const mailRouter = router({
         draftId: z.string().optional(),
         isForward: z.boolean().optional(),
         originalMessage: z.string().optional(),
+        replyToMessageId: z.string().optional(),
+        /** Original attachments to carry over on a forward, matched by file name and size. */
+        forwardAttachments: z
+          .array(z.object({ filename: z.string(), size: z.number().optional() }))
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      const { draftId, ...mail } = input;
+      const { draftId, forwardAttachments, ...mail } = input;
+
+      if (mail.isForward && mail.replyToMessageId && forwardAttachments?.length) {
+        const original = await agent.getMessageAttachments(mail.replyToMessageId);
+        const carried = pickForwardedAttachments(original ?? [], forwardAttachments);
+        if (carried.length < forwardAttachments.length) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Some attachments of the original message could not be loaded',
+          });
+        }
+        mail.attachments = [
+          ...mail.attachments,
+          ...carried.map((a) => ({
+            name: a.filename,
+            type: a.mimeType || 'application/octet-stream',
+            size: a.size,
+            lastModified: Date.now(),
+            base64: a.body,
+          })),
+        ];
+      }
 
       const afterTask = async () => {
         try {
+          // Learning the writing style is an AI call; skip it when AI is off.
+          if (!(await isAiEnabledForUser(ctx.sessionUser.id))) return;
           console.warn('Saving writing style matrix...');
           await updateWritingStyleMatrix(activeConnection.id, input.message);
           console.warn('Saved writing style matrix.');
@@ -401,7 +541,7 @@ export const mailRouter = router({
       if (draftId) {
         await agent.sendDraft(draftId, mail);
       } else {
-        await agent.create(input);
+        await agent.create(mail);
       }
 
       ctx.c.executionCtx.waitUntil(afterTask());
@@ -427,7 +567,7 @@ export const mailRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return agent.modifyLabels(input.ids, ['TRASH'], []);
+      return agent.bulkDelete(input.ids);
     }),
   bulkArchive: activeDriverProcedure
     .input(

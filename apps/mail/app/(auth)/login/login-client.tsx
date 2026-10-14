@@ -1,12 +1,14 @@
+import { ArrowLeft, ChevronDown, ExternalLink, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { PixelatedBackground } from '@/components/home/pixelated-bg';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
 import { Google, Microsoft } from '@/components/icons/icons';
 import ErrorMessage from '@/app/(auth)/login/error-message';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { TriangleAlert } from 'lucide-react';
 import { signIn } from '@/lib/auth-client';
-import { useNavigate } from 'react-router';
+import { motion } from 'motion/react';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
@@ -17,7 +19,7 @@ interface EnvVarStatus {
   defaultValue?: string;
 }
 
-interface Provider {
+export interface Provider {
   id: string;
   name: string;
   enabled: boolean;
@@ -113,7 +115,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
     } else {
       toast.promise(
         signIn.social({
-          provider: provider.id as any,
+          provider: provider.id as Parameters<typeof signIn.social>[0]['provider'],
           callbackURL: `${window.location.origin}/mail`,
         }),
         {
@@ -133,202 +135,197 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   });
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-between bg-[#111111]">
-      <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
-        <div className="w-full space-y-4">
-          <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
+    <main className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#0F0F0F] text-white">
+      <PixelatedBackground
+        className="pointer-events-none absolute top-[-40px] left-1/2 z-0 h-auto w-screen min-w-[1920px] -translate-x-1/2 object-cover"
+        style={{
+          mixBlendMode: 'screen',
+          maskImage: 'linear-gradient(to bottom, black, transparent)',
+        }}
+      />
 
-          {error && (
-            <Alert variant="default" className="border-orange-500/40 bg-orange-500/10">
-              <AlertTitle className="text-orange-400">Error</AlertTitle>
-              <AlertDescription>Failed to log you in. Please try again.</AlertDescription>
-            </Alert>
-          )}
+      <header className="relative z-10 flex w-full justify-center px-4 pt-6">
+        <nav className="flex w-full max-w-4xl items-center justify-between rounded-xl border-t border-[#2A2A2A] bg-[#1E1E1E] p-3 px-6">
+          <Link to="/" className="relative bottom-0.5 flex items-center gap-2">
+            <img src="/white-icon.svg" alt="Zero" width={22} height={22} />
+          </Link>
+          <Link
+            to="/"
+            className="flex items-center gap-1 text-sm text-[#B7B7B7] transition-colors hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </Link>
+        </nav>
+      </header>
 
-          {shouldShowDetailedConfig && (
-            <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center">
-                  <TriangleAlert size={28} />
-                  <h3 className="ml-2 text-base font-medium text-black dark:text-white">
-                    Configuration Required
-                  </h3>
-                </div>
+      <section className="relative z-10 flex grow items-center justify-center px-4 py-16">
+        <div className="w-full max-w-[440px]">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-center text-4xl font-medium md:text-5xl"
+          >
+            Welcome back
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mx-auto mt-3 max-w-sm text-center text-base font-medium text-[#B7B7B7]"
+          >
+            The AI-native email client that manages your inbox, so you don&apos;t have to.
+          </motion.p>
 
-                <p className="text-sm text-black/80 dark:text-white/80">
-                  To enable login with{' '}
-                  <span className="font-semibold">{missingRequiredProviders.join(', ')}</span>, add
-                  these variables to your{' '}
-                  <code className="rounded bg-black/10 px-1.5 py-0.5 font-mono dark:bg-white/10">
-                    .env
-                  </code>{' '}
-                  file:
-                </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-8 space-y-4 rounded-2xl border border-[#2A2A2A] bg-[#1E1E1E]/80 p-4 shadow-md backdrop-blur-sm sm:p-6"
+          >
+            {error && (
+              <Alert variant="default" className="border-orange-500/40 bg-orange-500/10">
+                <AlertTitle className="text-orange-400">Error</AlertTitle>
+                <AlertDescription>Failed to log you in. Please try again.</AlertDescription>
+              </Alert>
+            )}
 
-                <div className="space-y-3">
-                  {missingProviders.map((provider) => (
-                    <div
-                      key={provider.id}
-                      className="overflow-hidden rounded-md border border-black/10 dark:border-white/10"
-                    >
-                      <button
-                        onClick={() => toggleProvider(provider.id)}
-                        className="flex w-full items-center justify-between bg-black/5 px-4 py-3 text-left transition-colors hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
-                      >
-                        <div className="flex items-center">
-                          {getProviderIcon(provider.id)}
-                          <span className="font-medium text-black dark:text-white">
-                            {provider.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="mr-2 text-xs text-black/60 dark:text-white/60">
-                            {provider.envVarStatus.filter((v) => !v.set).length} missing
-                          </span>
-                          <svg
-                            className={`h-5 w-5 text-black/60 transition-transform duration-200 dark:text-white/60 ${expandedProviders[provider.id] ? 'rotate-180' : ''}`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </div>
-                      </button>
+            {shouldShowDetailedConfig && (
+              <div className="rounded-xl border border-[#2A2A2A] bg-[#0F0F0F] p-4">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center gap-2">
+                    <TriangleAlert size={20} className="text-orange-400" />
+                    <h3 className="text-sm font-medium">Configuration required</h3>
+                  </div>
 
+                  <p className="text-sm text-[#B7B7B7]">
+                    To enable login with{' '}
+                    <span className="font-semibold text-white">
+                      {missingRequiredProviders.join(', ')}
+                    </span>
+                    , add these variables to your{' '}
+                    <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono">.env</code> file:
+                  </p>
+
+                  <div className="space-y-3">
+                    {missingProviders.map((provider) => (
                       <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedProviders[provider.id] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                        key={provider.id}
+                        className="overflow-hidden rounded-lg border border-[#2A2A2A]"
                       >
-                        <div className="bg-black/3 p-4 font-mono text-sm dark:bg-white/3">
-                          {provider.envVarStatus.map((envVar) => (
-                            <div
-                              key={envVar.name}
-                              className={`mb-3 flex items-start transition-all duration-300 ease-in-out last:mb-0 ${expandedProviders[provider.id] ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
-                              style={{
-                                transitionDelay: expandedProviders[provider.id]
-                                  ? `${provider.envVarStatus.indexOf(envVar) * 50}ms`
-                                  : '0ms',
-                              }}
-                            >
-                              <div
-                                className={`mr-2 mt-1.5 h-2 w-2 rounded-full ${!envVar.set ? 'bg-red-500' : 'bg-green-500'}`}
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <span className="font-semibold text-black dark:text-white">
-                                    {envVar.name}
-                                  </span>
-                                  <span
-                                    className={`ml-2 rounded px-1.5 py-0.5 text-xs ${!envVar.set ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}
-                                  >
-                                    {!envVar.set ? 'Missing' : 'Set'}
-                                  </span>
-                                </div>
-                                {!envVar.set && (
-                                  <div className="mt-1.5">
-                                    <code className="block text-black/80 dark:text-white/80">
+                        <button
+                          onClick={() => toggleProvider(provider.id)}
+                          className="flex w-full items-center justify-between bg-[#1E1E1E] px-4 py-3 text-left transition-colors hover:bg-[#262626]"
+                        >
+                          <div className="flex items-center">
+                            {getProviderIcon(provider.id)}
+                            <span className="font-medium">{provider.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-[#B7B7B7]">
+                            {provider.envVarStatus.filter((v) => !v.set).length} missing
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${expandedProviders[provider.id] ? 'rotate-180' : ''}`}
+                            />
+                          </div>
+                        </button>
+
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedProviders[provider.id] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                        >
+                          <div className="space-y-3 p-4 font-mono text-sm">
+                            {provider.envVarStatus.map((envVar) => (
+                              <div key={envVar.name} className="flex items-start">
+                                <div
+                                  className={`mt-1.5 mr-2 h-2 w-2 rounded-full ${!envVar.set ? 'bg-red-500' : 'bg-green-500'}`}
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center">
+                                    <span className="font-semibold">{envVar.name}</span>
+                                    <span
+                                      className={`ml-2 rounded px-1.5 py-0.5 text-xs ${!envVar.set ? 'bg-red-900/30 text-red-300' : 'bg-green-900/30 text-green-300'}`}
+                                    >
+                                      {!envVar.set ? 'Missing' : 'Set'}
+                                    </span>
+                                  </div>
+                                  {!envVar.set && (
+                                    <code className="mt-1.5 block text-[#B7B7B7]">
                                       {envVar.name}=
                                       {envVar.defaultValue || `# from ${envVar.source}`}
                                     </code>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <a
-                  href="https://github.com/Mail-0/Mail-0/blob/main/README.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-sm text-black/60 underline underline-offset-2 hover:text-black dark:text-white/60 dark:hover:text-white"
-                >
-                  Setup instructions in documentation
-                  <svg
-                    className="ml-1 h-3 w-3"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <a
+                    href="https://github.com/Mail-0/Mail-0/blob/main/README.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-[#B7B7B7] underline underline-offset-2 hover:text-white"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
+                    Setup instructions in documentation
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {shouldShowSimplifiedMessage && (
-            <div className="rounded-lg border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center">
-                <TriangleAlert size={28} />
-                <p className="ml-2 text-sm text-black/80 dark:text-white/80">
-                  Authentication service unavailable
-                </p>
+            {shouldShowSimplifiedMessage && (
+              <div className="flex items-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#0F0F0F] p-4">
+                <TriangleAlert size={20} className="text-orange-400" />
+                <p className="text-sm text-[#B7B7B7]">Authentication service unavailable</p>
               </div>
-            </div>
-          )}
+            )}
 
-          <ErrorMessage />
+            <ErrorMessage />
 
-          {!hasMissingRequiredProviders && (
-            <div className="relative z-10 mx-auto flex w-full flex-col items-center justify-center gap-2">
-              {sortedProviders.map(
-                (provider) =>
-                  (provider.enabled || provider.isCustom) && (
-                    <Button
-                      key={provider.id}
-                      onClick={() => handleProviderClick(provider)}
-                      className="border-input bg-background text-primary hover:bg-accent hover:text-accent-foreground h-12 w-full rounded-lg border-2"
-                    >
-                      {getProviderIcon(provider.id)}
-                      Continue with {provider.name}
-                    </Button>
-                  ),
-              )}
-            </div>
-          )}
+            {!hasMissingRequiredProviders && (
+              <div className="flex w-full flex-col gap-2">
+                {sortedProviders.map(
+                  (provider) =>
+                    (provider.enabled || provider.isCustom) && (
+                      <Button
+                        key={provider.id}
+                        onClick={() => handleProviderClick(provider)}
+                        className="h-12 w-full rounded-lg bg-white text-base font-medium text-black hover:bg-white/90"
+                      >
+                        {getProviderIcon(provider.id)}
+                        Continue with {provider.name}
+                      </Button>
+                    ),
+                )}
+              </div>
+            )}
+
+            <p className="text-center text-xs text-[#B7B7B7]/60">No credit card required.</p>
+          </motion.div>
         </div>
-      </div>
-      <a href={'/'}>Return home</a>
+      </section>
 
-      <footer className="w-full px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
-          <a
-            href="/terms"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-          >
+      <footer className="relative z-10 w-full px-6 pb-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-center gap-6 text-xs text-[#B7B7B7]/60">
+          <Link to="/terms" className="transition-colors hover:text-white">
             Terms of Service
-          </a>
-          <a
-            href="/privacy"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-          >
+          </Link>
+          <Link to="/privacy" className="transition-colors hover:text-white">
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
 
 export function LoginClient(props: LoginClientProps) {
   const fallback = (
-    <div className="flex min-h-screen w-full items-center justify-center">
-      <p>Loading...</p>
+    <div className="flex min-h-screen w-full items-center justify-center bg-[#0F0F0F]">
+      <p className="text-sm text-[#B7B7B7]">Loading...</p>
     </div>
   );
 

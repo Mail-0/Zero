@@ -42,36 +42,7 @@ export const findHtmlBody = (parts: any[]): string => {
   return '';
 };
 
-export class StandardizedError extends Error {
-  code: string;
-  operation: string;
-  context?: Record<string, unknown>;
-  originalError: unknown;
-  constructor(
-    error: Error & { code: string },
-    operation: string,
-    context?: Record<string, unknown>,
-  ) {
-    super(error?.message || 'An unknown error occurred');
-    this.name = 'StandardizedError';
-    this.code = error?.code || 'UNKNOWN_ERROR';
-    this.operation = operation;
-    this.context = context;
-    this.originalError = error;
-  }
-}
-
-export function sanitizeContext(context?: Record<string, unknown>) {
-  if (!context) return undefined;
-  const sanitized = { ...context };
-  const sensitive = ['tokens', 'refresh_token', 'code', 'message', 'raw', 'data'];
-  for (const key of sensitive) {
-    if (key in sanitized) {
-      sanitized[key] = '[REDACTED]';
-    }
-  }
-  return sanitized;
-}
+export { StandardizedError, sanitizeContext } from './errors';
 
 /**
  * Retrieves the original sender address for a forwarded email from SimpleLogin

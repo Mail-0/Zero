@@ -4,7 +4,6 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { MAX_URL_LENGTH } from './constants';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Sender } from '@/types';
 import LZString from 'lz-string';
 
 export const FOLDERS = {
@@ -173,6 +172,29 @@ export function formatDate(dateInput: string | Date | number): string {
   }
 }
 
+/**
+ * formatDate for list rows: parse + timezone-format per row per render adds up while
+ * scrolling. Results only depend on the input and "now" (today / this month), so cache them
+ * per minute, bounded.
+ */
+const listDateCache = new Map<string, string>();
+let listDateCacheMinute = -1;
+const LIST_DATE_CACHE_MAX = 2000;
+
+export function formatListDate(dateInput: string): string {
+  const minute = Math.floor(Date.now() / 60_000);
+  if (minute !== listDateCacheMinute || listDateCache.size > LIST_DATE_CACHE_MAX) {
+    listDateCache.clear();
+    listDateCacheMinute = minute;
+  }
+  let formatted = listDateCache.get(dateInput);
+  if (formatted === undefined) {
+    formatted = formatDate(dateInput);
+    listDateCache.set(dateInput, formatted);
+  }
+  return formatted;
+}
+
 export const formatTime = (date: string) => {
   const dateObj = parseAndValidateDate(date);
   if (!dateObj) {
@@ -235,7 +257,7 @@ export const getFileIcon = (mimeType: string): string => {
   return '📎'; // Default icon
 };
 
-export const convertJSONToHTML = (json: any): string => {
+export const convertJSONToHTML = (json: unknown): string => {
   if (!json) return '';
 
   // Handle different types
@@ -250,75 +272,79 @@ export const convertJSONToHTML = (json: any): string => {
 
   // Handle objects (assuming they might have specific email content structure)
   if (typeof json === 'object') {
-    // Check if it's a text node
-    if (json.type === 'text') {
-      let text = json.text || '';
+    const node = json as Record<string, unknown>;
+    return convertContentNodeToHTML(node);
+  }
+  return '';
+};
 
-      // Apply formatting if present
-      if (json.bold) text = `<strong>${text}</strong>`;
-      if (json.italic) text = `<em>${text}</em>`;
-      if (json.underline) text = `<u>${text}</u>`;
-      if (json.code) text = `<code>${text}</code>`;
+const convertContentNodeToHTML = (json: Record<string, unknown>): string => {
+  // Check if it's a text node
+  if (json.type === 'text') {
+    let text = typeof json.text === 'string' ? json.text : '';
 
-      return text;
-    }
+    // Apply formatting if present
+    if (json.bold) text = `<strong>${text}</strong>`;
+    if (json.italic) text = `<em>${text}</em>`;
+    if (json.underline) text = `<u>${text}</u>`;
+    if (json.code) text = `<code>${text}</code>`;
 
-    // Handle paragraph
-    if (json.type === 'paragraph') {
-      return `<p>${convertJSONToHTML(json.children)}</p>`;
-    }
-
-    // Handle headings
-    if (json.type?.startsWith('heading-')) {
-      const level = json.type.split('-')[1];
-      return `<h${level}>${convertJSONToHTML(json.children)}</h${level}>`;
-    }
-
-    // Handle lists
-    if (json.type === 'bulleted-list') {
-      return `<ul>${convertJSONToHTML(json.children)}</ul>`;
-    }
-
-    if (json.type === 'numbered-list') {
-      return `<ol>${convertJSONToHTML(json.children)}</ol>`;
-    }
-
-    if (json.type === 'list-item') {
-      return `<li>${convertJSONToHTML(json.children)}</li>`;
-    }
-
-    // Handle links
-    if (json.type === 'link') {
-      return `<a href="${json.url}">${convertJSONToHTML(json.children)}</a>`;
-    }
-
-    // Handle images
-    if (json.type === 'image') {
-      return `<img src="${json.url}" alt="${json.alt || ''}" />`;
-    }
-
-    // Handle blockquote
-    if (json.type === 'block-quote') {
-      return `<blockquote>${convertJSONToHTML(json.children)}</blockquote>`;
-    }
-
-    // Handle code blocks
-    if (json.type === 'code-block') {
-      return `<pre><code>${convertJSONToHTML(json.children)}</code></pre>`;
-    }
-
-    // If it has children property, process it
-    if (json.children) {
-      return convertJSONToHTML(json.children);
-    }
-
-    // Process all other properties
-    return Object.values(json)
-      .map((value) => convertJSONToHTML(value))
-      .join('');
+    return text;
   }
 
-  return '';
+  // Handle paragraph
+  if (json.type === 'paragraph') {
+    return `<p>${convertJSONToHTML(json.children)}</p>`;
+  }
+
+  // Handle headings
+  if (typeof json.type === 'string' && json.type.startsWith('heading-')) {
+    const level = json.type.split('-')[1];
+    return `<h${level}>${convertJSONToHTML(json.children)}</h${level}>`;
+  }
+
+  // Handle lists
+  if (json.type === 'bulleted-list') {
+    return `<ul>${convertJSONToHTML(json.children)}</ul>`;
+  }
+
+  if (json.type === 'numbered-list') {
+    return `<ol>${convertJSONToHTML(json.children)}</ol>`;
+  }
+
+  if (json.type === 'list-item') {
+    return `<li>${convertJSONToHTML(json.children)}</li>`;
+  }
+
+  // Handle links
+  if (json.type === 'link') {
+    return `<a href="${json.url}">${convertJSONToHTML(json.children)}</a>`;
+  }
+
+  // Handle images
+  if (json.type === 'image') {
+    return `<img src="${json.url}" alt="${json.alt || ''}" />`;
+  }
+
+  // Handle blockquote
+  if (json.type === 'block-quote') {
+    return `<blockquote>${convertJSONToHTML(json.children)}</blockquote>`;
+  }
+
+  // Handle code blocks
+  if (json.type === 'code-block') {
+    return `<pre><code>${convertJSONToHTML(json.children)}</code></pre>`;
+  }
+
+  // If it has children property, process it
+  if (json.children) {
+    return convertJSONToHTML(json.children);
+  }
+
+  // Process all other properties
+  return Object.values(json)
+    .map((value) => convertJSONToHTML(value))
+    .join('');
 };
 
 export const getEmailLogo = (email: string) => {
@@ -340,56 +366,6 @@ export const contentToHTML = (content: string) => `
 <body style="margin: 0; padding: 0;">
 ${content}
 </body></html>`;
-
-export const constructReplyBody = (
-  formattedMessage: string,
-  originalDate: string,
-  originalSender: Sender | undefined,
-  otherRecipients: Sender[],
-) => {
-  const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
-  const recipientEmails = otherRecipients.map((r) => r.email).join(', ');
-
-  return `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-      <div style="">
-        ${formattedMessage}
-      </div>
-      <div style="padding-left: 16px; border-left: 3px solid #e2e8f0; color: #64748b;">
-        <div style="font-size: 12px;">
-          On ${originalDate}, ${senderName} ${recipientEmails ? `&lt;${recipientEmails}&gt;` : ''} wrote:
-        </div>
-      </div>
-    </div>
-  `;
-};
-
-export const constructForwardBody = (
-  formattedMessage: string,
-  originalDate: string,
-  originalSender: Sender | undefined,
-  otherRecipients: Sender[],
-) => {
-  const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
-  const recipientEmails = otherRecipients.map((r) => r.email).join(', ');
-
-  return `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-      <div style="">
-        ${formattedMessage}
-      </div>
-      <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">
-          ---------- Forwarded message ----------<br/>
-          From: ${senderName} ${originalSender?.email ? `&lt;${originalSender.email}&gt;` : ''}<br/>
-          Date: ${originalDate}<br/>
-          Subject: ${originalSender?.subject || 'No Subject'}<br/>
-          To: ${recipientEmails || 'No Recipients'}
-        </div>
-      </div>
-    </div>
-  `;
-};
 
 export const getMainSearchTerm = (searchQuery: string): string => {
   // Don't highlight terms if this is a date-based search
@@ -596,15 +572,22 @@ export const withExponentialBackoff = async <T>(
   while (true) {
     try {
       return await operation();
-    } catch (error: any) {
+    } catch (error) {
       if (retries >= maxRetries) {
         throw error;
       }
 
+      const details =
+        typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : {};
+      const firstError: unknown = Array.isArray(details.errors) ? details.errors[0] : undefined;
+      const reason =
+        typeof firstError === 'object' && firstError !== null && 'reason' in firstError
+          ? firstError.reason
+          : undefined;
       const isRateLimit =
-        error?.code === 429 ||
-        error?.errors?.[0]?.reason === 'rateLimitExceeded' ||
-        error?.errors?.[0]?.reason === 'userRateLimitExceeded';
+        details.code === 429 ||
+        reason === 'rateLimitExceeded' ||
+        reason === 'userRateLimitExceeded';
 
       if (!isRateLimit) {
         throw error;

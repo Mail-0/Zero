@@ -1,0 +1,60 @@
+diff --git a/transferable-object.ts b/transferable-object.ts
+index 0c2ca0180d2e90b2b68403228982dba3024fe562..943f158d28b0e5824e63e8e4f329c94380fc3744 100644
+--- a/transferable-object.ts
++++ b/transferable-object.ts
+@@ -19,12 +19,12 @@ export interface TransferableConfig {
+ }
+ 
+ // Simple Transfer class using remote-sql-cursor
+-export class Transfer {
++export class Transfer<Env = unknown> {
+   storage: DurableObjectStorage;
+   private config: TransferableConfig;
+ 
+   constructor(
+-    private durableObject: DurableObject,
++    private durableObject: DurableObject<Env>,
+     config: TransferableConfig = {},
+   ) {
+     //@ts-ignore
+@@ -104,7 +104,6 @@ export class Transfer {
+       console.log("Getting table list from remote database...");
+       const tablesCursor = exec(
+         stub,
+-        undefined,
+         `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'`,
+       );
+ 
+@@ -130,7 +129,6 @@ export class Transfer {
+           // Get the CREATE TABLE statement from remote
+           const schemaCursor = exec(
+             stub,
+-            undefined,
+             `SELECT sql FROM sqlite_master WHERE type='table' AND name = ?`,
+             tableName,
+           );
+@@ -164,7 +162,6 @@ export class Transfer {
+           // Step 3: Get column information for parameterized inserts
+           const columnsCursor = exec(
+             stub,
+-            undefined,
+             `PRAGMA table_info(${tableName})`,
+           );
+ 
+@@ -183,7 +180,6 @@ export class Transfer {
+           // Step 4: Stream all data from remote table and insert row by row
+           const dataCursor = exec(
+             stub,
+-            undefined,
+             `SELECT * FROM ${tableName}`,
+           );
+ 
+@@ -336,7 +332,7 @@ export function Transferable<T extends new (...args: any[]) => DurableObject>(
+           }
+ 
+           // Call original fetch if it exists and is overridden
+-          if (super.fetch !== DurableObject.prototype.fetch) {
++          if (super.fetch && super.fetch !== DurableObject.prototype.fetch) {
+             return super.fetch(request);
+           }
+ 

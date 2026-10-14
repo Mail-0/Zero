@@ -7,15 +7,18 @@ export const useConnections = () => {
   return connectionsQuery;
 };
 
+/**
+ * The server resolves every mail query against the user's default connection, so this must
+ * always agree with it. It's cheap, so revalidate on mount/focus (another tab may have
+ * switched accounts) and never restore it from the IndexedDB snapshot (see query-provider).
+ */
 export const useActiveConnection = () => {
   const trpc = useTRPC();
   const connectionsQuery = useQuery(
     trpc.connections.getDefault.queryOptions(void 0, {
-      staleTime: 1000 * 60 * 60, // 1 hour,
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
+      staleTime: 1000 * 30,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
     }),
   );
   return connectionsQuery;

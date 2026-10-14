@@ -60,6 +60,21 @@ const FEATURE_IDS = {
 
 const PRO_PLANS = ['pro-example', 'pro_annual', 'team', 'enterprise'] as const;
 
+/** Local dev users are treated as paid: Pro with unlimited features. */
+const IS_LOCAL_DEV = import.meta.env.DEV;
+
+const UNLIMITED_FEATURE: FeatureState = {
+  ...DEFAULT_FEATURES.chatMessages,
+  unlimited: true,
+  enabled: true,
+};
+
+const LOCAL_DEV_FEATURES: Features = {
+  chatMessages: UNLIMITED_FEATURE,
+  connections: UNLIMITED_FEATURE,
+  brainActivity: UNLIMITED_FEATURE,
+};
+
 export const useBilling = () => {
   const { customer, refetch, isLoading, error } = useCustomer();
   const { attach, track, openBillingPortal } = useAutumn();
@@ -69,6 +84,8 @@ export const useBilling = () => {
   }, [error]);
 
   const { isPro, ...customerFeatures } = useMemo(() => {
+    if (IS_LOCAL_DEV) return { isPro: true, ...LOCAL_DEV_FEATURES };
+
     const isPro =
       customer?.products && Array.isArray(customer.products)
         ? customer.products.some((product) =>

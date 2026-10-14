@@ -1,6 +1,6 @@
 import { getZeroDB } from './server-utils';
-import { randomUUID } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
+import { randomUUID } from 'node:crypto';
 
 type EmailTemplate = {
   id: string;
@@ -39,14 +39,14 @@ export class TemplatesManager {
         message: 'Template name must be at most 100 characters',
       });
     }
-    
+
     if (payload.subject && payload.subject.length > 500) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: 'Template subject must be at most 500 characters',
       });
     }
-    
+
     if (payload.body && payload.body.length > 50000) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
@@ -55,21 +55,21 @@ export class TemplatesManager {
     }
 
     const db = await getZeroDB(userId);
-    
+
     const existingTemplates = (await db.listEmailTemplates()) as EmailTemplate[];
-    const nameExists = existingTemplates.some((template: EmailTemplate) => 
-      template.name.toLowerCase() === payload.name.toLowerCase()
+    const nameExists = existingTemplates.some(
+      (template: EmailTemplate) => template.name.toLowerCase() === payload.name.toLowerCase(),
     );
-    
+
     if (nameExists) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: `A template named "${payload.name}" already exists. Please choose a different name.`,
       });
     }
-    
+
     const id = payload.id ?? randomUUID();
-    const [template] = await db.createEmailTemplate({
+    const [template] = (await db.createEmailTemplate({
       id,
       name: payload.name,
       subject: payload.subject ?? null,
@@ -77,7 +77,7 @@ export class TemplatesManager {
       to: payload.to ?? null,
       cc: payload.cc ?? null,
       bcc: payload.bcc ?? null,
-    }) as EmailTemplate[];
+    })) as EmailTemplate[];
     return template;
   }
 
@@ -86,4 +86,4 @@ export class TemplatesManager {
     await db.deleteEmailTemplate(templateId);
     return true;
   }
-} 
+}

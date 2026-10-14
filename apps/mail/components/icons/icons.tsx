@@ -308,6 +308,32 @@ export const Inbox = ({ className }: { className?: string }) => (
   </svg>
 );
 
+/** Stacked inbox trays: the unified (all accounts) inbox. */
+export const Inboxes = ({ className }: { className?: string }) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M4.5 1h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1 0-1.5Z"
+      fill="var(--icon-color)"
+      fillOpacity="0.5"
+    />
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      transform="translate(0 1.5)"
+      d="M4.78373 3C3.85012 3 3.01349 3.57656 2.68113 4.44901L1.1474 8.47505C1.04995 8.73086 1 9.0023 1 9.27604V10.75C1 11.9926 2.00736 13 3.25 13H12.75C13.9926 13 15 11.9926 15 10.75V9.27604C15 9.0023 14.95 8.73086 14.8526 8.47505L13.3189 4.44901C12.9865 3.57656 12.1499 3 11.2163 3H4.78373ZM4.08286 4.983C4.19365 4.69219 4.47252 4.5 4.78373 4.5H11.2163C11.5275 4.5 11.8063 4.69219 11.9171 4.983L13.4474 9H11.0352C10.7008 9 10.3886 9.1671 10.2031 9.4453L9.79687 10.0547C9.6114 10.3329 9.29917 10.5 8.96482 10.5H7.03518C6.70083 10.5 6.3886 10.3329 6.20313 10.0547L5.79687 9.4453C5.6114 9.1671 5.29917 9 4.96482 9H2.55258L4.08286 4.983Z"
+      fill="var(--icon-color)"
+      fillOpacity="0.5"
+    />
+  </svg>
+);
+
 export const PaperPlane = () => (
   <svg
     width="24"
@@ -1035,7 +1061,7 @@ export const Figma = ({ className }: { className?: string }) => (
     <g clipPath="url(#clip0_2827_15426)">
       <mask
         id="mask0_2827_15426"
-        mask-type="luminance"
+        style={{ maskType: 'luminance' }}
         maskUnits="userSpaceOnUse"
         x="0"
         y="0"
@@ -1778,6 +1804,26 @@ export const OldPhone = ({ className }: { className?: string }) => (
       fillRule="evenodd"
       clipRule="evenodd"
       d="M0.5 3.5C0.5 1.84315 1.84315 0.5 3.5 0.5H4.87163C5.732 0.5 6.48197 1.08556 6.69064 1.92025L7.79644 6.34343C7.97941 7.0753 7.70594 7.84555 7.10242 8.29818L5.8088 9.2684C5.67447 9.36915 5.64527 9.51668 5.683 9.61969C6.81851 12.7195 9.28051 15.1815 12.3803 16.317C12.4833 16.3547 12.6309 16.3255 12.7316 16.1912L13.7018 14.8976C14.1545 14.2941 14.9247 14.0206 15.6566 14.2036L20.0798 15.3094C20.9144 15.518 21.5 16.268 21.5 17.1284V18.5C21.5 20.1569 20.1569 21.5 18.5 21.5H16.25C7.55151 21.5 0.5 14.4485 0.5 5.75V3.5Z"
+    />
+  </svg>
+);
+
+export const ICloud = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient id="icloud-gradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#3E82F7" />
+        <stop offset="100%" stopColor="#2563EB" />
+      </linearGradient>
+    </defs>
+    <path
+      fill="url(#icloud-gradient)"
+      d="M18.5 19H7a5 5 0 0 1-.9-9.92A6.5 6.5 0 0 1 18.4 8.5 5.25 5.25 0 0 1 18.5 19Z"
     />
   </svg>
 );

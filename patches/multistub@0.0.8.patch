@@ -1,0 +1,21 @@
+diff --git a/multistub.ts b/multistub.ts
+index 0217a8e3229308abcffb6694e312094dedaa2684..fb3be4610b2f7eb8af3885fb2a06e70fd229cead 100644
+--- a/multistub.ts
++++ b/multistub.ts
+@@ -34,13 +34,13 @@ export function getMultiStub<T extends Rpc.DurableObjectBranded>(
+   configs: (MultiStubConfig | undefined)[],
+   ctx: ExecutionContext,
+ ): DurableObjectStub<T> {
+-  configs = configs.filter((x) => !!x);
++  const validConfigs = configs.filter((x): x is MultiStubConfig => !!x);
+ 
+-  if (configs.length === 0) {
++  if (validConfigs.length === 0) {
+     throw new Error("At least one DO configuration is required");
+   }
+ 
+-  const [primaryStub, ...secondaryStubs] = getStubs(namespace, configs);
++  const [primaryStub, ...secondaryStubs] = getStubs(namespace, validConfigs);
+ 
+   // Create a proxy that intercepts method calls
+   return new Proxy(primaryStub as DurableObjectStub<T>, {

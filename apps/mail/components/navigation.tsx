@@ -163,7 +163,7 @@ export function Navigation() {
                 </NavigationMenuItem>
                 <NavigationMenuItem className="bg-transparent text-white">
                   <a href="/privacy">
-                    <Button variant="ghost" className="h-9 bg-transparent ml-1">
+                    <Button variant="ghost" className="ml-1 h-9 bg-transparent">
                       Privacy
                     </Button>
                   </a>
@@ -218,7 +218,7 @@ export function Navigation() {
       <div className="lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="fixed left-4 top-6 z-50">
+            <Button variant="ghost" size="icon" className="fixed top-6 left-4 z-50">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>

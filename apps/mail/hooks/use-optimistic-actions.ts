@@ -24,13 +24,18 @@ enum ActionType {
   UNSNOOZE = 'UNSNOOZE',
 }
 
-const actionEventNames: Record<ActionType, (params: any) => string> = {
+const actionEventNames: Record<ActionType, (params: PendingAction['params']) => string> = {
   [ActionType.MOVE]: () => 'email_moved',
-  [ActionType.STAR]: (params) => (params.starred ? 'email_starred' : 'email_unstarred'),
-  [ActionType.READ]: (params) => (params.read ? 'email_marked_read' : 'email_marked_unread'),
+  [ActionType.STAR]: (params) =>
+    'starred' in params && params.starred ? 'email_starred' : 'email_unstarred',
+  [ActionType.READ]: (params) =>
+    'read' in params && params.read ? 'email_marked_read' : 'email_marked_unread',
   [ActionType.IMPORTANT]: (params) =>
-    params.important ? 'email_marked_important' : 'email_unmarked_important',
-  [ActionType.LABEL]: (params) => (params.add ? 'email_label_added' : 'email_label_removed'),
+    'important' in params && params.important
+      ? 'email_marked_important'
+      : 'email_unmarked_important',
+  [ActionType.LABEL]: (params) =>
+    'add' in params && params.add ? 'email_label_added' : 'email_label_removed',
   [ActionType.SNOOZE]: () => 'email_snoozed',
   [ActionType.UNSNOOZE]: () => 'email_unsnoozed',
 };
@@ -58,12 +63,17 @@ export function useOptimisticActions() {
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-  const refreshData = useCallback(async () => {
-    return await Promise.all([
-      queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
-      queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
-    ]);
-  }, [queryClient]);
+  const refreshData = useCallback(
+    async (includeLabels = true) => {
+      return await Promise.all([
+        queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
+        ...(includeLabels
+          ? [queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() })]
+          : []),
+      ]);
+    },
+    [queryClient, trpc],
+  );
 
   function createPendingAction({
     type,
@@ -115,7 +125,10 @@ export function useOptimisticActions() {
     const itemCount = threadIds.length;
     const bulkActionMessage = itemCount > 1 ? `${toastMessage} (${itemCount} items)` : toastMessage;
 
+    let started = false;
     async function doAction() {
+      if (started || !optimisticActionsManager.pendingActions.has(pendingActionId)) return;
+      started = true;
       try {
         await execute();
         const typeActions = optimisticActionsManager.pendingActionsByType.get(type);
@@ -130,17 +143,34 @@ export function useOptimisticActions() {
           posthog.capture(eventName);
         }
 
-        optimisticActionsManager.pendingActions.delete(pendingActionId);
-        optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
-        if (typeActions?.size === 1) {
-          await refreshData();
-          removeOptimisticAction(optimisticId);
+        if (
+          type === ActionType.READ ||
+          type === ActionType.STAR ||
+          type === ActionType.MOVE ||
+          type === ActionType.IMPORTANT ||
+          type === ActionType.LABEL
+        ) {
+          await Promise.all([
+            ...threadIds.map((id) =>
+              queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id }) }),
+            ),
+            queryClient.invalidateQueries({ queryKey: trpc.mail.listThreads.infiniteQueryKey() }),
+            queryClient.invalidateQueries({
+              queryKey: trpc.mail.listUnifiedInbox.infiniteQueryKey(),
+            }),
+          ]);
+        }
+        const settled = optimisticActionsManager.settleAction(pendingActionId);
+        removeOptimisticAction(optimisticId);
+        if (settled?.typeDrained) {
+          await refreshData(
+            type !== ActionType.READ && type !== ActionType.STAR && type !== ActionType.MOVE,
+          );
         }
       } catch (error) {
         console.error('Action failed:', error);
         removeOptimisticAction(optimisticId);
-        optimisticActionsManager.pendingActions.delete(pendingActionId);
-        optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
+        optimisticActionsManager.settleAction(pendingActionId);
         toast.error('Action failed');
       }
     }
@@ -157,8 +187,7 @@ export function useOptimisticActions() {
           label: 'Undo',
           onClick: () => {
             undo();
-            optimisticActionsManager.pendingActions.delete(pendingActionId);
-            optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
+            optimisticActionsManager.settleAction(pendingActionId);
           },
         },
         duration: 5000,
@@ -245,7 +274,7 @@ export function useOptimisticActions() {
         params: { starred },
         optimisticId,
         execute: async () => {
-          await toggleStar({ ids: threadIds });
+          await toggleStar({ ids: threadIds, starred });
         },
         undo: () => {
           removeOptimisticAction(optimisticId);
@@ -383,7 +412,7 @@ export function useOptimisticActions() {
         params: { important: isImportant },
         optimisticId,
         execute: async () => {
-          await toggleImportant({ ids: threadIds });
+          await toggleImportant({ ids: threadIds, important: isImportant });
 
           if (mail.bulkSelected.length > 0) {
             setMail((prev) => ({ ...prev, bulkSelected: [] }));
@@ -445,7 +474,7 @@ export function useOptimisticActions() {
     createPendingAction({
       type: 'SNOOZE',
       threadIds,
-      params: { currentFolder, wakeAt: wakeAt.toISOString() } as any,
+      params: { currentFolder, wakeAt: wakeAt.toISOString() },
       optimisticId,
       execute: async () => {
         await snoozeThreads({ ids: threadIds, wakeAt: wakeAt.toISOString() });
@@ -463,7 +492,8 @@ export function useOptimisticActions() {
   }
 
   function optimisticUnsnooze(threadIds: string[], currentFolder: string) {
-    if (!threadIds.length) return;
+    const [first, ...rest] = threadIds;
+    if (!first) return;
 
     const optimisticId = addOptimisticAction({
       type: 'UNSNOOZE',
@@ -473,10 +503,10 @@ export function useOptimisticActions() {
     createPendingAction({
       type: 'UNSNOOZE',
       threadIds,
-      params: { currentFolder } as any,
+      params: { currentFolder },
       optimisticId,
       execute: async () => {
-        await unsnoozeThreads({ ids: threadIds });
+        await unsnoozeThreads({ ids: [first, ...rest] });
       },
       undo: () => {
         removeOptimisticAction(optimisticId);

@@ -7,6 +7,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { Provider as JotaiProvider } from 'jotai';
 import type { PropsWithChildren } from 'react';
 import Toaster from '@/components/ui/toast';
+import { MotionConfig } from 'motion/react';
 import { ThemeProvider } from 'next-themes';
 
 export function ClientProviders({ children }: PropsWithChildren) {
@@ -27,8 +28,10 @@ export function ClientProviders({ children }: PropsWithChildren) {
           <SidebarProvider>
             <PostHogProvider>
               <LoadingProvider>
-                {children}
-                <Toaster />
+                <MotionConfig reducedMotion="user">
+                  {children}
+                  <Toaster />
+                </MotionConfig>
               </LoadingProvider>
             </PostHogProvider>
           </SidebarProvider>

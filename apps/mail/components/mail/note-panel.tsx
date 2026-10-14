@@ -112,7 +112,7 @@ function SortableNote({
     >
       <div
         className={cn(
-          'absolute bottom-0 left-0 top-0 w-1.5 border-l-4',
+          'absolute top-0 bottom-0 left-0 w-1.5 border-l-4',
           note.color !== 'default' ? getNoteColorClass(note.color) : 'border-transparent',
         )}
         style={note.color !== 'default' ? getNoteColorStyle(note.color) : {}}
@@ -120,7 +120,7 @@ function SortableNote({
 
       <div className="flex items-start gap-3 pl-1.5">
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
+          <p className="text-sm break-words whitespace-pre-wrap text-black dark:text-white/90">
             {note.content}
           </p>
 
@@ -512,7 +512,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               )}
             />
             {notes.length > 0 && (
-              <span className="bg-primary text-primary-foreground absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px]">
+              <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px]">
                 {notes.length}
               </span>
             )}
@@ -526,7 +526,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-screen overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
+          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark fixed top-20 z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-screen overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:top-full sm:right-0 sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
           onClick={handlePanelClick}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
@@ -551,9 +551,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
           </div>
 
           {notes.length > 0 && (
-            <div className="sticky top-[49px] z-10 px-3 pb-0 pt-2">
+            <div className="sticky top-[49px] z-10 px-3 pt-2 pb-0">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#9A9A9A]" />
+                <Search className="absolute top-2.5 left-2 h-4 w-4 text-[#9A9A9A]" />
                 <Input
                   placeholder={m['common.notes.search']()}
                   value={searchQuery}
@@ -579,7 +579,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       <p className="text-sm text-black dark:text-white/90">
                         {m['common.notes.empty']()}
                       </p>
-                      <p className="mb-4 mt-1 max-w-[80%] text-xs text-[#8C8C8C]">
+                      <p className="mt-1 mb-4 max-w-[80%] text-xs text-[#8C8C8C]">
                         {m['common.notes.emptyDescription']()}
                       </p>
                       <Button
@@ -674,7 +674,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                         <div className="relative mb-3 overflow-hidden rounded-md border-[#E7E7E7] bg-[#FFFFFF] dark:border-[#252525] dark:bg-[#202020]">
                           <div
                             className={cn(
-                              'absolute bottom-0 left-0 top-0 w-1.5 border-l-4',
+                              'absolute top-0 bottom-0 left-0 w-1.5 border-l-4',
                               selectedColor !== 'default'
                                 ? getNoteColorClass(selectedColor)
                                 : 'border-transparent',
@@ -778,7 +778,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                 {activeId ? (
                   <div className="rounded-md border border-[#E7E7E7] bg-white p-3 pl-7 shadow-md dark:border-[#252525] dark:bg-[#202020]">
                     <div className="pl-1.5">
-                      <div className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
+                      <div className="text-sm break-words whitespace-pre-wrap text-black dark:text-white/90">
                         {notes.find((n) => n.id === activeId)?.content}
                       </div>
                     </div>

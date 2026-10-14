@@ -1,15 +1,10 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PurpleThickCheck } from '@/components/icons/icons';
 import { useBilling } from '@/hooks/use-billing';
 import { PricingSwitch } from './pricing-switch';
 
-import { useState, } from 'react';
 import { useQueryState } from 'nuqs';
+import { useState } from 'react';
 
 import { Badge } from './badge';
 import { toast } from 'sonner';
@@ -55,17 +50,17 @@ export function PricingDialog() {
             <img
               src="/pricing-gradient.png"
               alt="pricing-gradient"
-              className="absolute -right-0 -top-52 h-auto w-full"
+              className="absolute -top-52 -right-0 h-auto w-full"
               height={535}
               width={535}
             />
           </div>
 
-          <div className="relative right-5 top-[-70px] h-56 w-[720px]">
-            <div className="absolute left-[-157px] top-[-68.43px] h-36 w-[1034px] rounded-full bg-white/10 mix-blend-overlay blur-[100px]" />
+          <div className="relative top-[-70px] right-5 h-56 w-[720px]">
+            <div className="absolute top-[-68.43px] left-[-157px] h-36 w-[1034px] rounded-full bg-white/10 mix-blend-overlay blur-[100px]" />
 
             <img
-              className="absolute left-0 top-0 h-56 w-[719.25px] mix-blend-screen"
+              className="absolute top-0 left-0 h-56 w-[719.25px] mix-blend-screen"
               src="/small-pixel.png"
               height={56}
               width={719}
@@ -91,7 +86,7 @@ export function PricingDialog() {
 
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
-                  <div className="justify-center text-4xl font-semibold leading-10 text-white">
+                  <div className="justify-center text-4xl leading-10 font-semibold text-white">
                     ${isAnnual ? annualPrice : monthlyPrice}
                     {isAnnual && (
                       <span className="ml-2 text-base font-normal text-white/40 line-through">
@@ -100,13 +95,13 @@ export function PricingDialog() {
                     )}
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
-                    <div className="justify-center text-sm font-medium leading-tight text-white/40">
+                    <div className="justify-center text-sm leading-tight font-medium text-white/40">
                       / MONTH
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                  <div className="justify-center self-stretch text-sm font-normal leading-normal text-white opacity-70 lg:text-base">
+                  <div className="justify-center self-stretch text-sm leading-normal font-normal text-white opacity-70 lg:text-base">
                     For professionals and power users who want to supercharge their inbox
                     efficiency.
                   </div>
@@ -117,57 +112,57 @@ export function PricingDialog() {
             <div className="flex flex-col items-start justify-start gap-2.5 self-stretch">
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   Unlimited email connections
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   AI-powered chat with your inbox
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   Auto labeling
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   One-click AI email writing & replies
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   Instant thread AI-generated summaries
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   Priority customer support
                 </div>
               </div>
               <div className="inline-flex items-center justify-start gap-2.5">
                 <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-[#1F1F1F] p-[5px] dark:bg-white/10">
-                  <PurpleThickCheck className="relative left-px top-px" />
+                  <PurpleThickCheck className="relative top-px left-px" />
                 </div>
-                <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+                <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
                   Access to private Discord community
                 </div>
               </div>
@@ -179,7 +174,7 @@ export function PricingDialog() {
             disabled={isLoading}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
-              <div className="justify-start text-center font-semibold leading-none text-black">
+              <div className="justify-start text-center leading-none font-semibold text-black">
                 {isLoading ? 'Processing...' : 'Start 7 day free trial'}
               </div>
             </div>

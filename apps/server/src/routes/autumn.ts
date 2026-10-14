@@ -3,8 +3,8 @@ import type { HonoContext } from '../ctx';
 import { env } from '../env';
 import { Hono } from 'hono';
 
-const sanitizeCustomerBody = (body: any) => {
-  let bodyCopy = { ...body };
+const sanitizeCustomerBody = <T extends object>(body: T) => {
+  const bodyCopy: T & { id?: unknown; name?: unknown; email?: unknown } = { ...body };
   delete bodyCopy.id;
   delete bodyCopy.name;
   delete bodyCopy.email;
@@ -57,7 +57,7 @@ export const autumnApi = new Hono<AutumnContext>()
   })
   .post('/attach', async (c) => {
     const { autumn, customerData } = c.var;
-    const body = await c.req.json();
+    const body = await c.req.json<Parameters<typeof autumn.attach>[0]>();
     const sanitizedBody = sanitizeCustomerBody(body);
     if (!customerData) return c.json({ error: 'No customer ID found' }, 401);
 
@@ -73,7 +73,7 @@ export const autumnApi = new Hono<AutumnContext>()
   })
   .post('/cancel', async (c) => {
     const { autumn, customerData } = c.var;
-    const body = await c.req.json();
+    const body = await c.req.json<Parameters<typeof autumn.cancel>[0]>();
     const sanitizedBody = sanitizeCustomerBody(body);
     if (!customerData) return c.json({ error: 'No customer ID found' }, 401);
 

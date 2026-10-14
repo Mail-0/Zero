@@ -1,21 +1,22 @@
-import { useSettings } from '@/hooks/use-settings';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import type { CategorySetting } from '@/hooks/use-categories';
 import { useState, useEffect, useCallback } from 'react';
 import { useTRPC } from '@/providers/query-provider';
+import { useSettings } from '@/hooks/use-settings';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import type { CategorySetting } from '@/hooks/use-categories';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
-import { Sparkles } from '@/components/icons/icons';
-import { Loader, GripVertical } from 'lucide-react';
 import {
-  } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import {
   DndContext,
   closestCenter,
@@ -24,15 +25,13 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import { Sparkles } from '@/components/icons/icons';
+import { Loader, GripVertical } from 'lucide-react';
 import type { DragEndEvent } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
+import { Badge } from '@/components/ui/badge';
 import { CSS } from '@dnd-kit/utilities';
+import {} from '@/components/ui/select';
 import React from 'react';
 
 interface SortableCategoryItemProps {
@@ -43,7 +42,11 @@ interface SortableCategoryItemProps {
   setActiveAiCat: (id: string | null) => void;
   isGeneratingQuery: boolean;
   generateSearchQuery: (params: { query: string }) => Promise<{ query: string }>;
-  handleFieldChange: (id: string, field: keyof CategorySetting, value: any) => void;
+  handleFieldChange: (
+    id: string,
+    field: keyof CategorySetting,
+    value: string | number | boolean,
+  ) => void;
   toggleDefault: (id: string) => void;
 }
 
@@ -58,14 +61,9 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
   handleFieldChange,
   toggleDefault,
 }: SortableCategoryItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: cat.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: cat.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -76,27 +74,25 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border border-border bg-card p-4 shadow-sm ${
-        isDragging ? 'opacity-50 scale-95' : ''
+      className={`border-border bg-card rounded-lg border p-4 shadow-sm ${
+        isDragging ? 'scale-95 opacity-50' : ''
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted/50 transition-colors"
+            className="hover:bg-muted/50 cursor-grab rounded p-1 transition-colors active:cursor-grabbing"
             aria-label="Drag to reorder"
           >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            <GripVertical className="text-muted-foreground h-4 w-4" />
           </div>
-          <Badge variant="outline" className="text-xs font-normal bg-background">
+          <Badge variant="outline" className="bg-background text-xs font-normal">
             {cat.id}
           </Badge>
           {cat.isDefault && (
-            <Badge className="bg-blue-500/10 text-blue-500 border-blue-200 text-xs">
-              Default
-            </Badge>
+            <Badge className="border-blue-200 bg-blue-500/10 text-xs text-blue-500">Default</Badge>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -105,27 +101,27 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
             checked={!!cat.isDefault}
             onCheckedChange={() => toggleDefault(cat.id)}
           />
-          <Label htmlFor={`default-${cat.id}`} className="text-xs font-normal cursor-pointer">
+          <Label htmlFor={`default-${cat.id}`} className="cursor-pointer text-xs font-normal">
             Set as Default
           </Label>
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-12 items-start gap-4">
         <div className="col-span-12 sm:col-span-6">
-          <Label className="text-xs mb-1.5 block">Display Name</Label>
+          <Label className="mb-1.5 block text-xs">Display Name</Label>
           <Input
             className="h-8 text-sm"
             value={cat.name}
             onChange={(e) => handleFieldChange(cat.id, 'name', e.target.value)}
           />
         </div>
-        
+
         <div className="col-span-12 sm:col-span-6">
-          <Label className="text-xs mb-1.5 block">Search Query</Label>
+          <Label className="mb-1.5 block text-xs">Search Query</Label>
           <div className="relative">
             <Input
-              className="pr-8 h-8 text-sm font-mono"
+              className="h-8 pr-8 font-mono text-sm"
               value={cat.searchValue}
               onChange={(e) => handleFieldChange(cat.id, 'searchValue', e.target.value)}
             />
@@ -143,7 +139,7 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background hover:bg-secondary rounded-full p-1"
+                  className="bg-background hover:bg-secondary absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
                   aria-label="Generate search query with AI"
                 >
                   {isGeneratingQuery && isActiveAi ? (
@@ -153,7 +149,7 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-3 space-y-3" sideOffset={4} align="end">
+              <PopoverContent className="w-80 space-y-3 p-3" sideOffset={4} align="end">
                 <div className="space-y-1">
                   <Label className="text-xs">Natural Language Query</Label>
                   <Input
@@ -163,8 +159,8 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
                     onChange={(e) => setPromptValue(e.target.value)}
                   />
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Example: "emails that mention quarterly reports"
+                <div className="text-muted-foreground text-xs">
+                  Example: &quot;emails that mention quarterly reports&quot;
                 </div>
                 <Button
                   size="sm"
@@ -185,9 +181,9 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
                   }}
                 >
                   {isGeneratingQuery && isActiveAi ? (
-                    <Loader className="h-3 w-3 animate-spin mr-1" />
+                    <Loader className="mr-1 h-3 w-3 animate-spin" />
                   ) : (
-                    <Sparkles className="h-3 w-3 fill-white mr-1" />
+                    <Sparkles className="mr-1 h-3 w-3 fill-white" />
                   )}
                   Generate Query
                 </Button>
@@ -229,14 +225,11 @@ export default function CategoriesSettingsPage() {
     }),
   );
 
-  const toggleDefault = useCallback(
-    (id: string) => {
-      setCategories((prev) =>
-        prev.map((c) => ({ ...c, isDefault: c.id === id ? !c.isDefault : false })),
-      );
-    },
-    [],
-  );
+  const toggleDefault = useCallback((id: string) => {
+    setCategories((prev) =>
+      prev.map((c) => ({ ...c, isDefault: c.id === id ? !c.isDefault : false })),
+    );
+  }, []);
 
   useEffect(() => {
     if (!defaultMailCategories.length) return;
@@ -251,10 +244,12 @@ export default function CategoriesSettingsPage() {
     setCategories(merged.sort((a, b) => a.order - b.order));
   }, [data, defaultMailCategories]);
 
-  const handleFieldChange = (id: string, field: keyof CategorySetting, value: string | number | boolean) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)),
-    );
+  const handleFieldChange = (
+    id: string,
+    field: keyof CategorySetting,
+    value: string | number | boolean,
+  ) => {
+    setCategories((prev) => prev.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -267,9 +262,9 @@ export default function CategoriesSettingsPage() {
     setCategories((prev) => {
       const oldIndex = prev.findIndex((cat) => cat.id === active.id);
       const newIndex = prev.findIndex((cat) => cat.id === over.id);
-      
+
       const reorderedCategories = arrayMove(prev, oldIndex, newIndex);
-      
+
       return reorderedCategories.map((cat, index) => ({
         ...cat,
         order: index,
@@ -309,7 +304,7 @@ export default function CategoriesSettingsPage() {
   }
 
   return (
-    <div className="grid gap-6 max-w-[900px] mx-auto">
+    <div className="mx-auto grid max-w-[900px] gap-6">
       <SettingsCard
         title="Mail Categories"
         description="Customise how Zero shows the category tabs in your inbox. Drag and drop to reorder."
@@ -337,9 +332,7 @@ export default function CategoriesSettingsPage() {
                   cat={cat}
                   isActiveAi={activeAiCat === cat.id}
                   promptValue={promptValues[cat.id] ?? ''}
-                  setPromptValue={(val) =>
-                    setPromptValues((prev) => ({ ...prev, [cat.id]: val }))
-                  }
+                  setPromptValue={(val) => setPromptValues((prev) => ({ ...prev, [cat.id]: val }))}
                   setActiveAiCat={setActiveAiCat}
                   isGeneratingQuery={isGeneratingQuery}
                   generateSearchQuery={generateSearchQuery}

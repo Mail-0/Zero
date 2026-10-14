@@ -86,6 +86,7 @@ export function CreateEmail({
     message: string;
     attachments: File[];
     fromEmail?: string;
+    draftId?: string | null;
   }) => {
     const fromEmail = data.fromEmail || aliases?.[0]?.email || userEmail;
 
@@ -101,7 +102,8 @@ export function CreateEmail({
       message: data.message + zeroSignature,
       attachments: await serializeFiles(data.attachments),
       fromEmail: userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail,
-      draftId: draftId ?? undefined,
+      // The composer saves right before sending and passes the fresh id; ours may be stale.
+      draftId: data.draftId ?? draftId ?? undefined,
     });
 
     // Clear draft ID from URL

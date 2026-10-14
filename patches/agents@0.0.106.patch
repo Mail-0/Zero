@@ -1,0 +1,30 @@
+diff --git a/dist/chunk-CKHRUXM5.js b/dist/chunk-CKHRUXM5.js
+index cc3d576a0f206056da6f0f450115d87faa54fa0e..fea1874e8e9470e3a6b184c6ed69b99dcbae05e8 100644
+--- a/dist/chunk-CKHRUXM5.js
++++ b/dist/chunk-CKHRUXM5.js
+@@ -54,12 +54,14 @@ function getCurrentAgent() {
+   return store;
+ }
+ function withAgentContext(method) {
+-  return function(...args) {
++  const wrapped = function(...args) {
+     const { connection, request, email } = getCurrentAgent();
+     return agentContext.run({ agent: this, connection, request, email }, () => {
+       return method.apply(this, args);
+     });
+   };
++  wrapped.__agentContextWrapped = true;
++  return wrapped;
+ }
+ var _Agent = class _Agent extends Server {
+   constructor(ctx, env) {
+@@ -552,6 +554,9 @@ var _Agent = class _Agent extends Server {
+         if (!baseMethods.has(methodName)) {
+           const descriptor = Object.getOwnPropertyDescriptor(proto, methodName);
+           if (descriptor && typeof descriptor.value === "function") {
++            if (this[methodName].__agentContextWrapped) {
++              continue;
++            }
+             const wrappedFunction = withAgentContext(
+               // biome-ignore lint/suspicious/noExplicitAny: I can't typescript
+               this[methodName]

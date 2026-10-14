@@ -23,12 +23,6 @@
       "@zero/mail/*": ["../../apps/mail/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "e2e/**/*.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.test.ts", "**/*.test.tsx", "e2e/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -7,12 +7,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SettingsGroup,
+  primaryButton,
+  rowClass,
+  rowTitle,
+} from '@/components/settings/settings-ui';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTRPC } from '@/providers/query-provider';
@@ -23,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -91,77 +91,68 @@ export default function AppearancePage() {
 
   if (!data?.settings) return null;
 
+  const themes = [
+    { value: 'light', label: m['common.themes.light'](), icon: Sun },
+    { value: 'dark', label: m['common.themes.dark'](), icon: Moon },
+    { value: 'system', label: m['common.themes.system'](), icon: Laptop },
+  ] as const;
+
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.appearance.title']()}
-        description={m['pages.settings.appearance.description']()}
-        footer={
-          <Button type="submit" form="appearance-form" disabled={isSaving}>
-            {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
-          </Button>
-        }
-      >
-        <Form {...form}>
-          <form id="appearance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="space-y-4">
-              <div className="max-w-sm space-y-2">
-                {data.settings.colorTheme || theme ? (
-                  <FormField
-                    control={form.control}
-                    name="colorTheme"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>{m['pages.settings.appearance.theme']()}</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={(value) => {
-                              handleThemeChange(value);
-                            }}
-                            defaultValue={form.getValues().colorTheme}
+    <SettingsCard
+      title={m['pages.settings.appearance.title']()}
+      description={m['pages.settings.appearance.description']()}
+      footer={
+        <Button type="submit" form="appearance-form" disabled={isSaving} className={primaryButton}>
+          {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
+        </Button>
+      }
+    >
+      <Form {...form}>
+        <form id="appearance-form" onSubmit={form.handleSubmit(onSubmit)}>
+          <SettingsGroup>
+            <FormField
+              control={form.control}
+              name="colorTheme"
+              render={() => (
+                <FormItem className={cn(rowClass, 'flex-wrap')}>
+                  <FormLabel className={cn(rowTitle, 'flex-1')}>
+                    {m['pages.settings.appearance.theme']()}
+                  </FormLabel>
+                  <FormControl>
+                    <div
+                      role="radiogroup"
+                      className="bg-muted flex shrink-0 items-center gap-0.5 rounded-lg p-0.5 dark:bg-[#202020]"
+                    >
+                      {themes.map(({ value, label, icon: Icon }) => {
+                        const selected = theme === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            onClick={() => handleThemeChange(value)}
+                            className={cn(
+                              'flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] transition-colors',
+                              selected
+                                ? 'text-foreground bg-white shadow-xs dark:bg-[#313131]'
+                                : 'text-muted-foreground hover:text-foreground',
+                            )}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select theme">
-                                <div className="flex items-center gap-2 capitalize">
-                                  {theme === 'dark' && <Moon className="h-4 w-4" />}
-                                  {theme === 'light' && <Sun className="h-4 w-4" />}
-                                  {theme === 'system' && <Laptop className="h-4 w-4" />}
-                                  {m[`common.themes.${theme as 'dark' | 'light' | 'system'}`]()}
-                                </div>
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="dark">
-                                <div className="flex items-center gap-2">
-                                  <Moon className="h-4 w-4" />
-                                  {m['common.themes.dark']()}
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="system">
-                                <div className="flex items-center gap-2">
-                                  <Laptop className="h-4 w-4" />
-                                  {m['common.themes.system']()}
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="light">
-                                <div className="flex items-center gap-2">
-                                  <Sun className="h-4 w-4" />
-                                  {m['common.themes.light']()}
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ) : null}
-              </div>
-            </div>
-          </form>
-        </Form>
-      </SettingsCard>
-    </div>
+                            <Icon className="size-3.5" />
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </SettingsGroup>
+        </form>
+      </Form>
+    </SettingsCard>
   );
 }

@@ -144,6 +144,13 @@
       "accountSwitched": "Account switched successfully",
       "failedToSwitchAccount": "Failed to switch accounts. Please try again."
     },
+    "unifiedInbox": {
+      "empty": "No emails in any of your inboxes",
+      "loadFailed": "Couldn't load your inboxes",
+      "retry": "Try again",
+      "accountsUnavailable": "Some accounts couldn't be loaded: {accounts}",
+      "manageConnections": "Manage connections"
+    },
     "mailCategories": {
       "primary": "Primary",
       "allMail": "All Mail",
@@ -397,6 +404,7 @@
   "navigation": {
     "sidebar": {
       "inbox": "Inbox",
+      "unifiedInbox": "All Inboxes",
       "drafts": "Drafts",
       "sent": "Sent",
       "spam": "Spam",
@@ -419,7 +427,8 @@
       "categories": "Categories",
       "dangerZone": "Danger Zone",
       "deleteAccount": "Delete Account",
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "ai": "AI"
     }
   },
   "pages": {
@@ -470,7 +479,39 @@
         "connectEmailDescription": "Select an email provider to connect",
         "moreComingSoon": "More coming soon",
         "reconnect": "Reconnect",
-        "disconnected": "Disconnected"
+        "disconnected": "Disconnected",
+        "otherProvider": "Other (IMAP/SMTP)",
+        "imap": {
+          "title": "Connect with IMAP/SMTP",
+          "description": "Connect any mailbox that supports IMAP and SMTP.",
+          "reconnectTitle": "Reconnect mailbox",
+          "email": "Email address",
+          "name": "Your name",
+          "password": "Password",
+          "passwordHint": "Many providers require an app password instead of your regular password.",
+          "continue": "Continue",
+          "back": "Back",
+          "connect": "Connect",
+          "connecting": "Connecting...",
+          "detecting": "Detecting server settings...",
+          "serverSettings": "Server settings",
+          "incoming": "Incoming mail (IMAP)",
+          "outgoing": "Outgoing mail (SMTP)",
+          "host": "Server",
+          "port": "Port",
+          "security": "Security",
+          "username": "Username",
+          "ssl": "SSL/TLS",
+          "starttls": "STARTTLS",
+          "serverSavesSent": "Server saves sent mail automatically",
+          "signInWith": "Sign in with {provider}",
+          "learnMore": "Learn more",
+          "success": "Mailbox connected. Syncing your mail...",
+          "error": "Could not connect the mailbox",
+          "editSettings": "Edit settings",
+          "oauthError": "Could not connect the mailbox ({reason})",
+          "connectProvider": "Connect {provider}"
+        }
       },
       "security": {
         "title": "Security",
@@ -586,6 +627,10 @@
         "externalImagesDescription": "Allow emails to display images from external sources.",
         "trustedSenders": "Trusted Senders",
         "trustedSendersDescription": "Always display images for these senders."
+      },
+      "ai": {
+        "title": "AI",
+        "description": "Choose what Zero does with new mail, which labels it applies, and how it writes."
       }
     },
     "createEmail": {

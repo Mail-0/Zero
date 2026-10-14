@@ -1,6 +1,6 @@
-import type { Env } from './env';
 import type { Autumn } from 'autumn-js';
 import type { Auth } from './lib/auth';
+import type { ZeroEnv } from './env';
 
 export type SessionUser = NonNullable<Awaited<ReturnType<Auth['api']['getSession']>>>['user'];
 
@@ -10,4 +10,4 @@ export type HonoVariables = {
   autumn: Autumn;
 };
 
-export type HonoContext = { Variables: HonoVariables; Bindings: Env };
+export type HonoContext = { Variables: HonoVariables; Bindings: ZeroEnv };

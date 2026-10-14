@@ -7,6 +7,11 @@ import {
 import { Toaster as SonnerToaster } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
+// Shared by every toast button. `shrink-0` + `whitespace-nowrap` keep the label on a
+// single line so the toast's text content wraps instead of the button.
+const toastButton =
+  'inline-flex h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md! border px-2.5 text-xs! font-medium dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]! text-black! dark:text-white! pointer-events-auto cursor-pointer';
+
 const Toaster = () => {
   return (
     <SonnerToaster
@@ -21,19 +26,17 @@ const Toaster = () => {
       toastOptions={{
         unstyled: true,
         classNames: {
-          title: 'title flex-1 justify-center text-black! dark:text-white! text-sm leading-none',
-          description: 'text-black! dark:text-white! text-xs',
+          title: 'title text-black! dark:text-white! text-sm leading-snug',
+          description: 'text-black! dark:text-white! text-xs leading-snug',
           toast: 'p-1',
-          actionButton:
-            'inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1.5 dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]! pointer-events-auto cursor-pointer',
-          cancelButton:
-            'inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1.5 dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
-          closeButton:
-            'inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md! border px-1.5 dark:border-none bg-[#E0E0E0]! dark:bg-[#424242]!',
+          actionButton: `${toastButton} mr-1.5`,
+          cancelButton: toastButton,
+          closeButton: toastButton,
           loading: 'pl-3 -mr-3 loading',
           loader: 'pl-3 loader -mr-3',
-          icon: 'pl-3 icon mr-2',
-          content: 'p-1.5 pl-2',
+          icon: 'pl-3 icon mr-2 shrink-0',
+          // min-w-0 lets long titles/descriptions wrap rather than push the action button.
+          content: 'flex min-w-0 flex-1 flex-col gap-0.5 p-1.5 pl-2',
           default:
             'w-96 p-1.5 bg-white dark:bg-[#2C2C2C] rounded-xl inline-flex items-center gap-2 overflow-visible border dark:border-none',
         },

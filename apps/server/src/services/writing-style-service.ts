@@ -2,14 +2,13 @@ import { mapToObj, pipe, entries, sortBy, take, fromEntries } from 'remeda';
 
 import { writingStyleMatrix } from '../db/schema';
 
-
-import { env } from '../env';
-import { google } from '@ai-sdk/google';
+import { miniModel } from '../lib/ai-models';
 import { jsonrepair } from 'jsonrepair';
 import { generateObject } from 'ai';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
 import pRetry from 'p-retry';
+import { env } from '../env';
 import { z } from 'zod';
 
 // leaving these in here for testing between them
@@ -339,7 +338,7 @@ const extractStyleMatrix = async (emailBody: string) => {
   }
 
   const { object: result } = await generateObject({
-    model: google('gemini-2.0-flash'),
+    model: miniModel(),
     schema,
     temperature: 0,
     maxTokens: 600,

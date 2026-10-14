@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { useState, useCallback, useMemo } from 'react';
+import { memo, useState, useCallback, useMemo } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { useQuery } from '@tanstack/react-query';
 import { getEmailLogo } from '@/lib/utils';
@@ -19,13 +19,13 @@ interface BimiAvatarProps {
   onImageError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
 }
 
-export const BimiAvatar = ({
+export const BimiAvatar = memo(function BimiAvatar({
   email,
   name,
   className = 'h-8 w-8 rounded-full border dark:border-none',
   fallbackClassName = 'rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]',
   onImageError,
-}: BimiAvatarProps) => {
+}: BimiAvatarProps) {
   const trpc = useTRPC();
   const [useDefaultFallback, setUseDefaultFallback] = useState(false);
 
@@ -53,6 +53,12 @@ export const BimiAvatar = ({
 
   const firstLetter = getFirstLetterCharacter(name || email);
 
+  // Sanitizing is costly and this renders in every list row; only redo it when the logo changes.
+  const sanitizedSvg = useMemo(
+    () => (bimiData?.logo?.svgContent ? DOMPurify.sanitize(bimiData.logo.svgContent) : ''),
+    [bimiData?.logo?.svgContent],
+  );
+
   if (!email) {
     return (
       <Avatar className={className}>
@@ -63,10 +69,10 @@ export const BimiAvatar = ({
 
   return (
     <Avatar className={className}>
-      {bimiData?.logo?.svgContent && !isLoading ? (
+      {sanitizedSvg && !isLoading ? (
         <div
           className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white dark:bg-[#373737]"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bimiData.logo.svgContent) }}
+          dangerouslySetInnerHTML={{ __html: sanitizedSvg }}
         />
       ) : fallbackImageSrc && !useDefaultFallback ? (
         <AvatarImage
@@ -87,4 +93,4 @@ export const BimiAvatar = ({
       )}
     </Avatar>
   );
-};
+});

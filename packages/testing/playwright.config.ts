@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,14 +21,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { 
-      name: 'setup', 
+    {
+      name: 'setup',
       testMatch: /.*\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'] }
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/user.json',
       },

@@ -1,4 +1,3 @@
-import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { Construction } from 'lucide-react';
 import BackButton from './back-button';
 import { use } from 'react';
@@ -17,9 +16,6 @@ export default function UnderConstruction({ params }: UnderConstructionProps) {
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] w-screen items-center justify-center px-4">
       <div className="flex flex-col items-center justify-between p-4">
-        <div className="absolute left-2 top-2">
-          <SidebarToggle className="block md:hidden" />
-        </div>
         <div className="flex flex-col items-center text-center">
           <Construction className="text-muted-foreground h-16 w-16 animate-pulse" />
           <div className="mt-6 space-y-2">

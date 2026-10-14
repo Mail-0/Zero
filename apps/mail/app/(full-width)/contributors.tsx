@@ -174,14 +174,22 @@ export default function OpenPage() {
 
   const { data: repoData, error: repoError } = useQuery({
     queryFn: () =>
-      fetch(`https://api.github.com/repos/${REPOSITORY}`).then((res) => res.json() as any),
+      fetch(`https://api.github.com/repos/${REPOSITORY}`).then(
+        (res) =>
+          res.json() as Promise<{
+            stargazers_count: number;
+            forks_count: number;
+            subscribers_count: number;
+            open_issues_count: number;
+          }>,
+      ),
     queryKey: ['repo-data', REPOSITORY],
   });
 
   const { data: commitsData, error: commitsError } = useQuery({
     queryFn: () =>
       fetch(`https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`).then(
-        (res) => res.json() as any,
+        (res) => res.json() as Promise<{ commit: { author: { date: string } } }[]>,
       ),
     queryKey: ['commits-data', REPOSITORY],
   });
@@ -189,7 +197,7 @@ export default function OpenPage() {
   const { data: prsData, error: prsError } = useQuery({
     queryFn: () =>
       fetch(`https://api.github.com/repos/${REPOSITORY}/pulls?state=open`).then(
-        (res) => res.json() as any,
+        (res) => res.json() as Promise<{ id: number }[]>,
       ),
     queryKey: ['prs-data', REPOSITORY],
   });
@@ -410,7 +418,7 @@ export default function OpenPage() {
                 size="sm"
                 className="gap-2 border-neutral-200 bg-white/50 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
               >
-                <a href={`https://github.com/${REPOSITORY}`} target="_blank">
+                <a href={`https://github.com/${REPOSITORY}`} target="_blank" rel="noreferrer">
                   <Github className="h-4 w-4" />
                   View on GitHub
                 </a>
@@ -702,6 +710,7 @@ export default function OpenPage() {
                     <a
                       href={`https://github.com/${member.login}`}
                       target="_blank"
+                      rel="noreferrer"
                       className="rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
                     >
                       <Github className="h-4 w-4" />
@@ -710,6 +719,7 @@ export default function OpenPage() {
                       <a
                         href={`https://x.com/${specialRoles[member.login.toLowerCase()]?.x}`}
                         target="_blank"
+                        rel="noreferrer"
                         className="rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
                       >
                         <Twitter className="dark:fill-muted-foreground h-4 w-4" />
@@ -719,6 +729,7 @@ export default function OpenPage() {
                       <a
                         href={specialRoles[member.login.toLowerCase()]?.website || '#'}
                         target="_blank"
+                        rel="noreferrer"
                         className="rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
                       >
                         <svg
@@ -783,6 +794,7 @@ export default function OpenPage() {
                       key={contributor.login}
                       href={contributor.html_url}
                       target="_blank"
+                      rel="noreferrer"
                       className="group relative flex flex-col items-center rounded-xl border bg-white/50 p-4 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:bg-neutral-900 dark:hover:shadow-neutral-900/50"
                       style={{
                         animationDelay: `${index * 50}ms`,
@@ -933,6 +945,7 @@ export default function OpenPage() {
                       <a
                         href={`https://github.com/${REPOSITORY}/blob/main/.github/CONTRIBUTING.md`}
                         target="_blank"
+                        rel="noreferrer"
                       >
                         <span className="relative z-10 flex items-center">
                           <GitGraph className="mr-2 h-4 w-4" />
@@ -945,7 +958,11 @@ export default function OpenPage() {
                       variant="outline"
                       className="gap-2 border-neutral-200 bg-white/80 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
                     >
-                      <a href={`https://github.com/${REPOSITORY}/issues`} target="_blank">
+                      <a
+                        href={`https://github.com/${REPOSITORY}/issues`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         <MessageCircle className="h-4 w-4" />
                         Open Issues
                       </a>
@@ -1006,7 +1023,7 @@ export default function OpenPage() {
           </div>
         </div>
 
-        <div className="mb-6 mt-2 flex items-center justify-center gap-4">
+        <div className="mt-2 mb-6 flex items-center justify-center gap-4">
           <a
             href="https://discord.gg/mail0"
             target="_blank"

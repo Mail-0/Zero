@@ -1,4 +1,14 @@
 import {
+  IconTile,
+  SettingsGroup,
+  destructiveButton,
+  destructiveIconButton,
+  rowClass,
+  rowDescription,
+  rowTitle,
+  subtleButton,
+} from '@/components/settings/settings-ui';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -8,23 +18,24 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ImapReconnectDialog } from '@/components/connection/imap-reconnect';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { AddConnectionDialog } from '@/components/connection/add';
 
+import { Trash, Plus, Unplug, Mail, Settings2 } from 'lucide-react';
 import { useSession, authClient } from '@/lib/auth-client';
 import { useConnections } from '@/hooks/use-connections';
 import { useTRPC } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMutation } from '@tanstack/react-query';
-import { Trash, Plus, Unplug } from 'lucide-react';
 import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function ConnectionsPage() {
@@ -37,6 +48,21 @@ export default function ConnectionsPage() {
   const [{ refetch: refetchThreads }] = useThreads();
   const { isPro } = useBilling();
   const [, setPricingDialog] = useQueryState('pricingDialog');
+  const [imapError, setImapError] = useQueryState('imapError');
+  const [imapConnected, setImapConnected] = useQueryState('imapConnected');
+
+  // Result of the IMAP OAuth (XOAUTH2) redirect flow.
+  useEffect(() => {
+    if (imapConnected) {
+      toast.success(m['pages.settings.connections.imap.success']());
+      void setImapConnected(null);
+      void refetchConnections();
+    }
+    if (imapError) {
+      toast.error(m['pages.settings.connections.imap.oauthError']({ reason: imapError }));
+      void setImapError(null);
+    }
+  }, [imapConnected, imapError, setImapConnected, setImapError, refetchConnections]);
   const disconnectAccount = async (connectionId: string) => {
     await deleteConnection(
       { connectionId },
@@ -53,181 +79,175 @@ export default function ConnectionsPage() {
     void refetchThreads();
   };
 
+  const addEmailButton = (onClick?: () => void) => (
+    <Button variant="ghost" className={cn(subtleButton, 'gap-1.5')} onClick={onClick}>
+      <Plus className="size-3.5" />
+      {m['pages.settings.connections.addEmail']()}
+    </Button>
+  );
+
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.connections.title']()}
-        description={m['pages.settings.connections.description']()}
-      >
-        <div className="space-y-6">
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {[...Array(3)].map((n) => (
-                <div
-                  key={n}
-                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex min-w-0 items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-lg" />
-                    <div className="flex flex-col gap-1">
-                      <Skeleton className="h-4 w-full lg:w-32" />
-                      <Skeleton className="h-3 w-full lg:w-48" />
-                    </div>
-                  </div>
-                  <Skeleton className="ml-4 h-8 w-8 rounded-full" />
-                </div>
-              ))}
+    <SettingsCard
+      title={m['pages.settings.connections.title']()}
+      description={m['pages.settings.connections.description']()}
+      action={
+        isPro ? (
+          <AddConnectionDialog>{addEmailButton()}</AddConnectionDialog>
+        ) : (
+          addEmailButton(() => setPricingDialog('true'))
+        )
+      }
+    >
+      {isLoading ? (
+        <SettingsGroup>
+          {[0, 1, 2].map((n) => (
+            <div key={n} className={rowClass}>
+              <Skeleton className="size-8 rounded-lg" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
             </div>
-          ) : data?.connections?.length ? (
-            <div className="lg: grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-              {data.connections.map((connection) => {
-                const Icon = emailProviders.find(
-                  (p) => p.providerId === connection.providerId,
-                )?.icon;
-                return (
-                  <div
-                    key={connection.id}
-                    className="bg-popover flex items-center justify-between rounded-lg border p-4"
+          ))}
+        </SettingsGroup>
+      ) : data?.connections?.length ? (
+        <SettingsGroup>
+          {data.connections.map((connection) => {
+            const Icon =
+              emailProviders.find((p) => p.providerId === connection.providerId)?.icon ??
+              (connection.providerId === 'imap' ? Mail : undefined);
+            const isImap = connection.providerId === 'imap';
+            const isDisconnected = data.disconnectedIds?.includes(connection.id);
+            return (
+              <div key={connection.id} className={rowClass}>
+                {connection.picture ? (
+                  <img
+                    src={connection.picture}
+                    alt=""
+                    className="size-8 shrink-0 rounded-lg object-cover"
+                    width={32}
+                    height={32}
+                  />
+                ) : (
+                  <IconTile>{Icon && <Icon />}</IconTile>
+                )}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(rowTitle, 'truncate')}>{connection.name}</span>
+                    {isDisconnected && (
+                      <span className="rounded-md bg-[#FDE4E9] px-1.5 py-0.5 text-[11px] font-medium text-[#F43F5E] dark:bg-[#411D23]">
+                        {m['pages.settings.connections.disconnected']()}
+                      </span>
+                    )}
+                  </div>
+                  <Tooltip
+                    delayDuration={0}
+                    open={openTooltip === connection.id}
+                    onOpenChange={(open) => {
+                      if (window.innerWidth <= 768) {
+                        setOpenTooltip(open ? connection.id : null);
+                      }
+                    }}
                   >
-                    <div className="flex min-w-0 items-center gap-4">
-                      {connection.picture ? (
-                        <img
-                          src={connection.picture}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-lg object-cover"
-                          width={48}
-                          height={48}
-                        />
-                      ) : (
-                        <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-                          {Icon && <Icon className="size-6" />}
-                        </div>
-                      )}
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-sm font-medium">{connection.name}</span>
-                        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                          <Tooltip
-                            delayDuration={0}
-                            open={openTooltip === connection.id}
-                            onOpenChange={(open) => {
-                              if (window.innerWidth <= 768) {
-                                setOpenTooltip(open ? connection.id : null);
-                              }
-                            }}
-                          >
-                            <TooltipTrigger asChild>
-                              <span
-                                className="max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]"
-                                onClick={() => {
-                                  if (window.innerWidth <= 768) {
-                                    setOpenTooltip(
-                                      openTooltip === connection.id ? null : connection.id,
-                                    );
-                                  }
-                                }}
-                              >
-                                {connection.email}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" align="start" className="select-all">
-                              <div className="font-mono">{connection.email}</div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {data.disconnectedIds?.includes(connection.id) ? (
-                        <>
-                          <div>
-                            <Badge variant="destructive">
-                              {m['pages.settings.connections.disconnected']()}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={async () => {
-                              await authClient.linkSocial({
-                                provider: connection.providerId,
-                                callbackURL: `${window.location.origin}/settings/connections`,
-                              });
-                            }}
-                          >
-                            <Unplug className="size-4" />
-                            {m['pages.settings.connections.reconnect']()}
-                          </Button>
-                        </>
-                      ) : null}
-                      <Dialog>
+                    <TooltipTrigger asChild>
+                      <p
+                        className={cn(rowDescription, 'cursor-default truncate')}
+                        onClick={() => {
+                          if (window.innerWidth <= 768) {
+                            setOpenTooltip(openTooltip === connection.id ? null : connection.id);
+                          }
+                        }}
+                      >
+                        {connection.email}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="start" className="select-all">
+                      <div className="font-mono">{connection.email}</div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  {isImap && (
+                    <ImapReconnectDialog
+                      connectionId={connection.id}
+                      onDone={() => void refetchConnections()}
+                    >
+                      <Button variant="ghost" className={cn(subtleButton, 'gap-1.5')}>
+                        {isDisconnected ? (
+                          <Unplug className="size-3.5" />
+                        ) : (
+                          <Settings2 className="size-3.5" />
+                        )}
+                        {isDisconnected
+                          ? m['pages.settings.connections.reconnect']()
+                          : m['pages.settings.connections.imap.editSettings']()}
+                      </Button>
+                    </ImapReconnectDialog>
+                  )}
+                  {isDisconnected && !isImap && (
+                    <Button
+                      variant="ghost"
+                      className={cn(subtleButton, 'gap-1.5')}
+                      onClick={async () => {
+                        await authClient.linkSocial({
+                          provider: connection.providerId,
+                          callbackURL: `${window.location.origin}/settings/connections`,
+                        });
+                      }}
+                    >
+                      <Unplug className="size-3.5" />
+                      {m['pages.settings.connections.reconnect']()}
+                    </Button>
+                  )}
+                  <Dialog>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
                         <DialogTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-primary ml-4 shrink-0" 
+                            className={destructiveIconButton}
                             disabled={data.connections.length === 1}
+                            aria-label={m['pages.settings.connections.remove']()}
                           >
-                            <Trash className="h-4 w-4" />
+                            <Trash />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent showOverlay>
-                          <DialogHeader>
-                            <DialogTitle>
-                              {m['pages.settings.connections.disconnectTitle']()}
-                            </DialogTitle>
-                            <DialogDescription>
-                              {m['pages.settings.connections.disconnectDescription']()}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex justify-end gap-4">
-                            <DialogClose asChild>
-                              <Button variant="outline">
-                                {m['pages.settings.connections.cancel']()}
-                              </Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                              <Button onClick={() => disconnectAccount(connection.id)}>
-                                {m['pages.settings.connections.remove']()}
-                              </Button>
-                            </DialogClose>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-
-          <div className="flex items-center justify-start">
-            {isPro ? (
-              <AddConnectionDialog>
-                <Button
-                  variant="outline"
-                  className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-full sm:hover:w-[32.5%]"
-                >
-                  <Plus className="absolute left-2 h-4 w-4" />
-                  <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    {m['pages.settings.connections.addEmail']()}
-                  </span>
-                </Button>
-              </AddConnectionDialog>
-            ) : (
-              <Button
-                onClick={() => setPricingDialog('true')}
-                variant="outline"
-                className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-full sm:hover:w-[32.5%]"
-              >
-                <Plus className="absolute left-2 h-4 w-4" />
-                <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  {m['pages.settings.connections.addEmail']()}
-                </span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </SettingsCard>
-    </div>
+                      </TooltipTrigger>
+                      <TooltipContent>{m['pages.settings.connections.remove']()}</TooltipContent>
+                    </Tooltip>
+                    <DialogContent showOverlay className="rounded-2xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-[15px]">
+                          {m['pages.settings.connections.disconnectTitle']()}
+                        </DialogTitle>
+                        <DialogDescription className="text-[13px]">
+                          {m['pages.settings.connections.disconnectDescription']()}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex justify-end gap-2">
+                        <DialogClose asChild>
+                          <Button variant="ghost" className={subtleButton}>
+                            {m['pages.settings.connections.cancel']()}
+                          </Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                          <Button
+                            variant="ghost"
+                            className={destructiveButton}
+                            onClick={() => disconnectAccount(connection.id)}
+                          >
+                            {m['pages.settings.connections.remove']()}
+                          </Button>
+                        </DialogClose>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            );
+          })}
+        </SettingsGroup>
+      ) : null}
+    </SettingsCard>
   );
 }

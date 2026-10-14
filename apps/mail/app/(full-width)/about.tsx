@@ -3,14 +3,13 @@ import { Github, Mail, ArrowLeft } from 'lucide-react';
 import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
-import React from 'react';
 
 export default function AboutPage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <Navigation />
       <div className="relative z-10 flex grow flex-col">
-        <div className="absolute right-4 top-6 md:left-8 md:right-auto md:top-8">
+        <div className="absolute top-6 right-4 md:top-8 md:right-auto md:left-8">
           <a href="/">
             <Button
               variant="ghost"
@@ -59,8 +58,8 @@ const sections = [
     title: 'Our Mission',
     content: (
       <p>
-        Zero is an AI-powered email client that manages your inbox, so you don't have to. We help
-        busy professionals unclutter their inboxes, prioritize important messages, summarize
+        Zero is an AI-powered email client that manages your inbox, so you don&apos;t have to. We
+        help busy professionals unclutter their inboxes, prioritize important messages, summarize
         conversations, complete tasks, and even chat with their inbox — letting them spend less time
         managing email and more time getting things done.
       </p>
@@ -71,10 +70,10 @@ const sections = [
     content: (
       <p>
         We started Zero because we were frustrated that email — the most-used communication tool in
-        the world — hasn't meaningfully evolved in decades. Despite countless new apps, none
+        the world — hasn&apos;t meaningfully evolved in decades. Despite countless new apps, none
         actually solve the real problem: helping you finish what you intend to do. We realized the
-        real solution isn't just a new interface — it's AI acting like a true assistant inside your
-        inbox.
+        real solution isn&apos;t just a new interface — it&apos;s AI acting like a true assistant
+        inside your inbox.
       </p>
     ),
   },
@@ -112,7 +111,7 @@ const sections = [
         <p>
           The opportunity is massive: over 4 billion people use email daily, and most still manage
           it manually. Zero is poised to fundamentally change the way the world deals with
-          communication and tasks — and we're just getting started.
+          communication and tasks — and we&apos;re just getting started.
         </p>
       </div>
     ),
@@ -127,7 +126,8 @@ const sections = [
           in email firsthand while trying to build and grow companies.
         </p>
         <p>
-          We're driven by a shared belief that email should help you move faster, not slow you down.
+          We&apos;re driven by a shared belief that email should help you move faster, not slow you
+          down.
         </p>
       </div>
     ),

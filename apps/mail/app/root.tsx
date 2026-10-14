@@ -105,15 +105,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     message = error.status === 404 ? '404' : 'Error';
     details =
       error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
-    if (error.status === 404) {
-      return <NotFound />;
-    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   useEffect(() => {
+    if (isRouteErrorResponse(error) && error.status === 404) return;
     console.error(error);
     console.error({ message, details, stack });
 
@@ -146,6 +144,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       });
     }
   }, [error, message, details, stack]);
+
+  if (isRouteErrorResponse(error) && error.status === 404) return <NotFound />;
 
   return (
     <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
@@ -188,8 +188,8 @@ function NotFound() {
     <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
       <div className="flex-col items-center justify-center md:flex dark:text-gray-100">
         <div className="relative">
-          <h1 className="text-muted-foreground/20 select-none text-[150px] font-bold">404</h1>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <h1 className="text-muted-foreground/20 text-[150px] font-bold select-none">404</h1>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <AlertCircle className="text-muted-foreground h-20 w-20" />
           </div>
         </div>

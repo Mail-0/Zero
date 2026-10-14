@@ -1,0 +1,34 @@
+diff --git a/mod.ts b/mod.ts
+index 68471b094fa9da34ae7467f168b9343dd9c09f15..822b8a0567d792bb3099752e800c890ad6efbc01 100644
+--- a/mod.ts
++++ b/mod.ts
+@@ -1,15 +1,15 @@
+ //@ts-check
+ /// <reference types="@cloudflare/workers-types" />
+ import {
+-  ExecFn,
+-  RawFn,
++  type ExecFn,
++  type RawFn,
+   studioMiddleware,
+-  StudioOptions,
++  type StudioOptions,
+   QueryableObject,
+-  GetSchemaFn,
++  type GetSchemaFn,
+   QueryableHandler,
+ } from "queryable-object";
+-import { getMultiStub, MultiStubConfig } from "multistub";
++import { getMultiStub, type MultiStubConfig } from "multistub";
+ // Re-export useful features
+ export * from "multistub";
+ export * from "migratable-object";
+@@ -58,7 +58,7 @@ export function createClient<
+   const multistub = getMultiStub<T>(doNamespace, configs, ctx);
+   async function studio(request: Request): Promise<Response | undefined> {
+     const url = new URL(request.url);
+-    if (url.pathname === (studioConfig.pathname || "/db")) {
++    if (url.pathname === (studioConfig?.pathname || "/db")) {
+       return studioMiddleware(request, multistub.raw, {
+         basicAuth: studioConfig?.basicAuth,
+         dangerouslyDisableAuth: studioConfig?.dangerouslyDisableAuth,

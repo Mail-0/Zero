@@ -1,4 +1,13 @@
 import {
+  SettingsGroup,
+  iconButton,
+  primaryButton,
+  rowClass,
+  rowDescription,
+  rowDivider,
+  rowTitle,
+} from '@/components/settings/settings-ui';
+import {
   Form,
   FormControl,
   FormDescription,
@@ -9,7 +18,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { userSettingsSchema } from '@zero/server/schemas';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
@@ -21,6 +29,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { m } from '@/paraglide/messages';
 import { XIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -66,84 +75,88 @@ export default function PrivacyPage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.privacy.title']()}
-        description={m['pages.settings.privacy.description']()}
-        footer={
-          <Button type="submit" form="privacy-form" disabled={isSaving}>
-            {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
-          </Button>
-        }
-      >
-        <Form {...form}>
-          <form id="privacy-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full flex-col items-start gap-5">
-              <FormField
-                control={form.control}
-                name="externalImages"
-                render={({ field }) => (
-                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        {m['pages.settings.privacy.externalImages']()}
-                      </FormLabel>
-                      <FormDescription>
-                        {m['pages.settings.privacy.externalImagesDescription']()}
-                      </FormDescription>
+    <SettingsCard
+      title={m['pages.settings.privacy.title']()}
+      description={m['pages.settings.privacy.description']()}
+      footer={
+        <Button type="submit" form="privacy-form" disabled={isSaving} className={primaryButton}>
+          {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
+        </Button>
+      }
+    >
+      <Form {...form}>
+        <form id="privacy-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <SettingsGroup>
+            <FormField
+              control={form.control}
+              name="externalImages"
+              render={({ field }) => (
+                <FormItem className={rowClass}>
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <FormLabel className={rowTitle}>
+                      {m['pages.settings.privacy.externalImages']()}
+                    </FormLabel>
+                    <FormDescription className={rowDescription}>
+                      {m['pages.settings.privacy.externalImagesDescription']()}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </SettingsGroup>
+          <FormField
+            control={form.control}
+            name="trustedSenders"
+            render={({ field }) =>
+              (field.value?.length || 0) > 0 && !externalImages ? (
+                <FormItem className="space-y-3">
+                  <div className="space-y-0.5">
+                    <FormLabel className={rowTitle}>
+                      {m['pages.settings.privacy.trustedSenders']()}
+                    </FormLabel>
+                    <FormDescription className={rowDescription}>
+                      {m['pages.settings.privacy.trustedSendersDescription']()}
+                    </FormDescription>
+                  </div>
+                  <SettingsGroup>
+                    <div className={cn(rowDivider, 'max-h-64 overflow-y-auto')}>
+                      {field.value?.map((senderEmail) => (
+                        <div
+                          key={senderEmail}
+                          className="flex items-center justify-between gap-3 px-4 py-2"
+                        >
+                          <span className="truncate text-[13px]">{senderEmail}</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className={iconButton}
+                                aria-label={m['common.actions.remove']()}
+                                onClick={() =>
+                                  field.onChange(field.value?.filter((e) => e !== senderEmail))
+                                }
+                              >
+                                <XIcon />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{m['common.actions.remove']()}</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ))}
                     </div>
-                    <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="trustedSenders"
-                render={({ field }) =>
-                  (field.value?.length || 0) > 0 && !externalImages ? (
-                    <FormItem className="bg-popover flex w-full flex-col rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          {m['pages.settings.privacy.trustedSenders']()}
-                        </FormLabel>
-                        <FormDescription>
-                          {m['pages.settings.privacy.trustedSendersDescription']()}
-                        </FormDescription>
-                      </div>
-                      <ScrollArea className="flex max-h-32 flex-col pr-3">
-                        {field.value?.map((senderEmail) => (
-                          <div
-                            className="mt-1.5 flex items-center justify-between first:mt-0"
-                            key={senderEmail}
-                          >
-                            <span>{senderEmail}</span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() =>
-                                    field.onChange(field.value?.filter((e) => e !== senderEmail))
-                                  }
-                                >
-                                  <XIcon className="h-4 w-4 transition hover:opacity-80" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>{m['common.actions.remove']()}</TooltipContent>
-                            </Tooltip>
-                          </div>
-                        ))}
-                      </ScrollArea>
-                    </FormItem>
-                  ) : (
-                    <></>
-                  )
-                }
-              />
-            </div>
-          </form>
-        </Form>
-      </SettingsCard>
-    </div>
+                  </SettingsGroup>
+                </FormItem>
+              ) : (
+                <></>
+              )
+            }
+          />
+        </form>
+      </Form>
+    </SettingsCard>
   );
 }

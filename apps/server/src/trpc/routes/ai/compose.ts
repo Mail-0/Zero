@@ -4,13 +4,12 @@ import {
 } from '../../../services/writing-style-service';
 import { escapeXml } from '../../../thread-workflow-utils/workflow-utils';
 import { StyledEmailAssistantSystemPrompt } from '../../../lib/prompts';
+import { chatModel, miniModel } from '../../../lib/ai-models';
 import { webSearch } from '../../../routes/agent/tools';
-import { activeConnectionProcedure } from '../../trpc';
+import { aiConnectionProcedure } from '../../trpc';
 import { getPrompt } from '../../../lib/brain';
 import { stripHtml } from 'string-strip-html';
 import { EPrompts } from '../../../types';
-import { env } from '../../../env';
-import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
 
@@ -86,7 +85,7 @@ export async function composeEmail(input: ComposeEmailInput) {
         ];
 
   const { text } = await generateText({
-    model: openai(env.OPENAI_MINI_MODEL || 'gpt-4o-mini'),
+    model: miniModel(),
     messages: [
       {
         role: 'system',
@@ -112,7 +111,7 @@ export async function composeEmail(input: ComposeEmailInput) {
   return text;
 }
 
-export const compose = activeConnectionProcedure
+export const compose = aiConnectionProcedure
   .input(
     z.object({
       prompt: z.string(),
@@ -145,7 +144,7 @@ export const compose = activeConnectionProcedure
     return { newBody };
   });
 
-export const generateEmailSubject = activeConnectionProcedure
+export const generateEmailSubject = aiConnectionProcedure
   .input(
     z.object({
       message: z.string(),
@@ -267,7 +266,7 @@ const generateSubject = async (message: string, styleProfile?: WritingStyleMatri
   );
 
   const { text } = await generateText({
-    model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+    model: chatModel(),
     messages: [
       {
         role: 'system',

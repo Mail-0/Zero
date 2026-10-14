@@ -29,7 +29,7 @@ const steps = [
     description: (
       <>
         <span className="text-muted-foreground mb-4">
-          We're excited to bring these powerful features to all users very soon!
+          We&apos;re excited to bring these powerful features to all users very soon!
         </span>
       </>
     ),

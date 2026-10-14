@@ -1,20 +1,6 @@
-import config from "@zero/tsconfig/base";
-import { fileURLToPath } from "url";
+import { createJiti } from 'jiti';
 
+const jiti = createJiti(import.meta.url);
+const { default: config } = await jiti.import('./packages/eslint-config/config.ts');
 
-// @ts-ignore
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-
-export default [
-  // @ts-ignore
-  ...config,
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.json", "./apps/*/tsconfig.json", "./packages/*/tsconfig.json"],
-        tsconfigRootDir: __dirname,
-      },
-    },
-  },
-];
+export default config;

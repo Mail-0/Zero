@@ -1,10 +1,4 @@
 import {
-  createUpdatedMatrixFromNewEmail,
-  initializeStyleMatrixFromEmail,
-  type EmailMatrix,
-  type WritingStyleMatrix,
-} from './services/writing-style-service';
-import {
   account,
   connection,
   note,
@@ -14,23 +8,43 @@ import {
   userSettings,
   writingStyleMatrix,
   emailTemplate,
+  connectionImap,
 } from './db/schema';
+import {
+  createUpdatedMatrixFromNewEmail,
+  initializeStyleMatrixFromEmail,
+  type EmailMatrix,
+  type WritingStyleMatrix,
+} from './services/writing-style-service';
+import {
+  gmailNotification,
+  gmailSubscriptionConnection,
+  verifyGmailPushToken,
+} from './lib/gmail-push';
+import { getServiceAccount } from './lib/factories/google-subscription.factory';
 import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
-import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
+import { getZeroClient, getZeroDB, getZeroAgent } from './lib/server-utils';
+import { AI_DISABLED_MESSAGE, isAiEnabledForUser } from './lib/ai-access';
+import { authorizeAgentRequest } from './lib/agent-socket-auth';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
+import { IMAP_TOKEN_MARKER } from './lib/connection-status';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { enableBrainFunction } from './lib/brain';
+import { provisionMailboxPush } from './lib/brain';
+import { getNotificationsUrl } from './lib/utils';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
 import { WorkflowRunner } from './pipelines';
+export { GmailQuota } from './routes/gmail-quota';
+import { chatAttachmentsRouter } from './routes/chat-attachments';
+import { imapOAuthApi } from './routes/imap-oauth';
 import { autumnApi } from './routes/autumn';
 import { env, type ZeroEnv } from './env';
 import type { HonoContext } from './ctx';
@@ -41,6 +55,20 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
+
+export interface ImapConnectionInput {
+  /** Used when the address is not connected yet. */
+  id: string;
+  email: string;
+  name: string | null;
+  /** XOAUTH2 access token, or IMAP_TOKEN_MARKER for password auth. */
+  accessToken: string;
+  accessTokenExpiresAt?: Date;
+  settings: Omit<
+    typeof connectionImap.$inferInsert,
+    'connectionId' | 'createdAt' | 'updatedAt' | 'status' | 'lastError' | 'lastSyncAt'
+  >;
+}
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
 const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
@@ -152,6 +180,14 @@ export class DbRpcDO extends RpcTarget {
     connectionId: string,
   ): Promise<typeof connection.$inferSelect | undefined> {
     return await this.mainDo.findConnectionById(connectionId);
+  }
+
+  async upsertImapConnection(input: ImapConnectionInput) {
+    return await this.mainDo.upsertImapConnection(this.userId, input);
+  }
+
+  async findImapSettings(connectionId: string) {
+    return await this.mainDo.findImapSettings(this.userId, connectionId);
   }
 
   async syncUserMatrix(connectionId: string, emailStyleMatrix: EmailMatrix) {
@@ -443,6 +479,66 @@ class ZeroDB extends DurableObject<ZeroEnv> {
     });
   }
 
+  /**
+   * Creates or updates an IMAP connection and its settings in one transaction. Reconnecting an
+   * existing address (same user + email) replaces the settings and restores the tokens.
+   */
+  async upsertImapConnection(userId: string, input: ImapConnectionInput) {
+    const now = new Date();
+    return await this.db.transaction(async (tx) => {
+      const existing = await tx.query.connection.findFirst({
+        where: and(eq(connection.userId, userId), eq(connection.email, input.email)),
+      });
+      if (existing && existing.providerId !== 'imap')
+        throw new Error('This address is already connected with another provider');
+      const id = existing?.id ?? input.id;
+      const tokens = {
+        accessToken: input.accessToken,
+        refreshToken: IMAP_TOKEN_MARKER,
+        scope: input.settings.authMethod === 'xoauth2' ? 'imap:xoauth2' : 'imap:password',
+        expiresAt: input.accessTokenExpiresAt ?? new Date(now.getTime() + 3600_000),
+      };
+      if (existing) {
+        await tx
+          .update(connection)
+          .set({ ...tokens, name: input.name, updatedAt: now })
+          .where(eq(connection.id, id));
+      } else {
+        await tx.insert(connection).values({
+          id,
+          userId,
+          email: input.email,
+          name: input.name,
+          picture: null,
+          providerId: 'imap',
+          ...tokens,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      const settings = {
+        ...input.settings,
+        status: 'active' as const,
+        lastError: null,
+        updatedAt: now,
+      };
+      await tx
+        .insert(connectionImap)
+        .values({ ...settings, connectionId: id, createdAt: now })
+        .onConflictDoUpdate({ target: connectionImap.connectionId, set: settings });
+      return { id, created: !existing };
+    });
+  }
+
+  async findImapSettings(userId: string, connectionId: string) {
+    const [row] = await this.db
+      .select({ settings: connectionImap })
+      .from(connectionImap)
+      .innerJoin(connection, eq(connection.id, connectionImap.connectionId))
+      .where(and(eq(connection.userId, userId), eq(connectionImap.connectionId, connectionId)));
+    return row?.settings;
+  }
+
   async syncUserMatrix(connectionId: string, emailStyleMatrix: EmailMatrix) {
     await this.db.transaction(async (tx) => {
       const [existingMatrix] = await tx
@@ -585,11 +681,11 @@ const api = new Hono<HonoContext>()
     await next();
 
     c.set('sessionUser', undefined);
-    c.set('autumn', undefined as any);
-    c.set('auth', undefined as any);
   })
   .route('/ai', aiRouter)
+  .route('/chat-attachments', chatAttachmentsRouter)
   .route('/autumn', autumnApi)
+  .route('/imap-oauth', imapOAuthApi)
   .route('/public', publicRouter)
   .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
     return c.var.auth.handler(c.req.raw);
@@ -661,6 +757,8 @@ const app = new Hono<HonoContext>()
         console.log('Invalid auth provided', Array.from(request.headers.entries()));
         return new Response('Unauthorized', { status: 401 });
       }
+      if (!(await isAiEnabledForUser(session.userId)))
+        return new Response(AI_DISABLED_MESSAGE, { status: 403 });
       ctx.props = {
         userId: session?.userId,
       };
@@ -692,6 +790,8 @@ const app = new Hono<HonoContext>()
         console.log('Invalid auth provided', Array.from(request.headers.entries()));
         return new Response('Unauthorized', { status: 401 });
       }
+      if (!(await isAiEnabledForUser(session.userId)))
+        return new Response(AI_DISABLED_MESSAGE, { status: 403 });
       ctx.props = {
         userId: session?.userId,
       };
@@ -704,11 +804,8 @@ const app = new Hono<HonoContext>()
     '*',
     agentsMiddleware({
       options: {
-        onBeforeConnect: (c) => {
-          if (!c.headers.get('Cookie')) {
-            return new Response('Unauthorized', { status: 401 });
-          }
-        },
+        onBeforeConnect: authorizeAgentRequest,
+        onBeforeRequest: authorizeAgentRequest,
       },
     }),
   )
@@ -745,32 +842,31 @@ const app = new Hono<HonoContext>()
   })
   .post('/a8n/notify/:providerId', async (c) => {
     if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-    if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
     const providerId = c.req.param('providerId');
     if (providerId === EProviders.google) {
-      const body = await c.req.json<{ historyId: string }>();
-      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-      if (!subHeader) {
-        console.log('[GOOGLE] no subscription header', body);
-        return c.json({}, { status: 200 });
-      }
-      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-      if (!isValid) {
-        console.log('[GOOGLE] invalid request', body);
-        return c.json({}, { status: 200 });
-      }
       try {
+        const serviceAccount = getServiceAccount();
+        const audience = getNotificationsUrl(EProviders.google);
+        const isValid = await verifyGmailPushToken(
+          c.req.header('Authorization')!.split(' ')[1],
+          audience,
+          serviceAccount.client_email,
+        ).catch(() => false);
+        if (!isValid) return c.json({ error: 'Unauthorized' }, { status: 401 });
+        const notification = gmailNotification(
+          await c.req.json(),
+          c.req.header('x-goog-pubsub-subscription-name'),
+        );
+        gmailSubscriptionConnection(notification.subscriptionName, serviceAccount.project_id);
         await env.thread_queue.send({
           providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
+          ...notification,
         });
       } catch (error) {
-        console.error('Error sending to thread queue', error, {
-          providerId,
-          historyId: body.historyId,
-          subscriptionName: subHeader,
+        console.error('[GOOGLE] push admission failed', {
+          reason: error instanceof Error ? error.message : 'Unknown error',
         });
+        return c.json({ error: 'Push admission failed' }, { status: 503 });
       }
       return c.json({ message: 'OK' }, { status: 200 });
     }
@@ -785,21 +881,22 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     // }
     return app.fetch(request, this.env, this.ctx);
   }
-  async queue(batch: MessageBatch<any>) {
+  async queue(batch: MessageBatch<ISubscribeBatch | IThreadBatch>) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         await Promise.all(
-          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+          (batch.messages as Message<ISubscribeBatch>[]).map(async (msg) => {
             const connectionId = msg.body.connectionId;
             const providerId = msg.body.providerId;
             try {
-              await enableBrainFunction({ id: connectionId, providerId });
+              await provisionMailboxPush({ id: connectionId, providerId });
             } catch (error) {
               console.error(
-                `Failed to enable brain function for connection ${connectionId}:`,
+                `Failed to provision mailbox push for connection ${connectionId}:`,
                 error,
               );
+              msg.retry();
             }
           }),
         );
@@ -808,21 +905,22 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
       }
       case batch.queue.startsWith('thread-queue'): {
         await Promise.all(
-          batch.messages.map(async (msg: Message<IThreadBatch>) => {
+          (batch.messages as Message<IThreadBatch>[]).map(async (msg) => {
             const providerId = msg.body.providerId;
-            const historyId = msg.body.historyId;
             const subscriptionName = msg.body.subscriptionName;
 
             try {
-              const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
-              const result = await workflowRunner.runMainWorkflow({
-                providerId,
-                historyId,
+              if (providerId !== EProviders.google) throw new Error('Unsupported history provider');
+              const connectionId = gmailSubscriptionConnection(
                 subscriptionName,
-              });
-              console.log('[THREAD_QUEUE] result', result);
+                getServiceAccount().project_id,
+              );
+              const agent = await getZeroAgent(connectionId);
+              await agent.signalMailboxHistory();
+              msg.ack();
             } catch (error) {
               console.error('Error running workflow', error);
+              msg.retry();
             }
           }),
         );
@@ -839,6 +937,25 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     });
     await conn.end();
     console.log('[SCHEDULED] allAccounts', allAccounts.length);
+    // Bound startup fan-out. Each mailbox preserves its own polling/backoff
+    // deadlines; this is a recovery wakeup rather than a Gmail inbox poll.
+    for (let index = 0; index < allAccounts.length; index += 4) {
+      await Promise.all(
+        allAccounts.slice(index, index + 4).map(async ({ id, providerId }) => {
+          // Gmail recovers history sync; IMAP repairs its polling alarm.
+          if (providerId !== EProviders.google && providerId !== EProviders.imap) return;
+          try {
+            const agent = await getZeroAgent(id);
+            await agent.recoverMailboxSync();
+          } catch (error) {
+            console.error('[SCHEDULED] Mailbox recovery wakeup failed', {
+              connectionId: id,
+              error,
+            });
+          }
+        }),
+      );
+    }
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
@@ -858,7 +975,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
 
       for (const key of listResp.keys) {
         try {
-          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          const wakeAtIso = key.metadata?.wakeAt;
           if (!wakeAtIso) continue;
           const wakeAt = new Date(wakeAtIso).getTime();
           if (wakeAt > nowTs) continue;
@@ -889,19 +1006,22 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     );
 
     await Promise.all(
-      allAccounts.map(async ({ id, providerId }) => {
-        const lastSubscribed = await this.env.gmail_sub_age.get(`${id}__${providerId}`);
+      // Only Gmail has a push subscription to renew.
+      allAccounts
+        .filter(({ providerId }) => providerId === EProviders.google)
+        .map(async ({ id, providerId }) => {
+          const lastSubscribed = await this.env.gmail_sub_age.get(`${id}__${providerId}`);
 
-        if (lastSubscribed) {
-          const subscriptionDate = new Date(lastSubscribed);
-          if (subscriptionDate < fiveDaysAgo) {
-            console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+          if (lastSubscribed) {
+            const subscriptionDate = new Date(lastSubscribed);
+            if (subscriptionDate < fiveDaysAgo) {
+              console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+              expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
+            }
+          } else {
             expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
           }
-        } else {
-          expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
-        }
-      }),
+        }),
     );
 
     // Send expired subscriptions to queue for renewal
@@ -917,7 +1037,7 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
     }
 
     console.log(
-      `[SCHEDULED] Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
+      `[SCHEDULED] Processed ${allAccounts.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
     );
   }
 }

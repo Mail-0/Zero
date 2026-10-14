@@ -125,11 +125,15 @@ export const connection = createTable(
     email: text('email').notNull(),
     name: text('name'),
     picture: text('picture'),
+    /**
+     * OAuth providers: the provider access token. IMAP: a non-secret marker (password auth) or
+     * the XOAUTH2 access token. `null` means the connection must be reauthorized.
+     */
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
-    scope: text('scope').notNull(),
-    providerId: text('provider_id').$type<'google' | 'microsoft'>().notNull(),
-    expiresAt: timestamp('expires_at').notNull(),
+    scope: text('scope').notNull().default(''),
+    providerId: text('provider_id').$type<'google' | 'microsoft' | 'imap'>().notNull(),
+    expiresAt: timestamp('expires_at').notNull().defaultNow(),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },
@@ -140,6 +144,36 @@ export const connection = createTable(
     index('connection_provider_id_idx').on(t.providerId),
   ],
 );
+
+/** Server settings and encrypted credentials for `providerId = 'imap'` connections. */
+export const connectionImap = createTable('connection_imap', {
+  connectionId: text('connection_id')
+    .primaryKey()
+    .references(() => connection.id, { onDelete: 'cascade' }),
+  imapHost: text('imap_host').notNull(),
+  imapPort: integer('imap_port').notNull(),
+  imapSecurity: text('imap_security').$type<'tls' | 'starttls'>().notNull(),
+  imapUsername: text('imap_username').notNull(),
+  smtpHost: text('smtp_host').notNull(),
+  smtpPort: integer('smtp_port').notNull(),
+  smtpSecurity: text('smtp_security').$type<'tls' | 'starttls'>().notNull(),
+  smtpUsername: text('smtp_username').notNull(),
+  authMethod: text('auth_method').$type<'password' | 'xoauth2'>().notNull(),
+  /** XOAUTH2 only: which OAuth provider issued the tokens (used for refresh). */
+  oauthProvider: text('oauth_provider').$type<'google' | 'microsoft'>(),
+  /** AES-GCM ciphertext of the password (password auth) or refresh token (XOAUTH2). */
+  encryptedSecret: text('encrypted_secret').notNull(),
+  iv: text('iv').notNull(),
+  keyVersion: integer('key_version').notNull(),
+  /** Whether the SMTP server files sent mail into the Sent folder by itself. */
+  serverSavesSent: boolean('server_saves_sent').notNull().default(false),
+  capabilities: jsonb('capabilities').$type<string[]>(),
+  status: text('status').$type<'active' | 'auth_failed' | 'disabled'>().notNull().default('active'),
+  lastError: text('last_error'),
+  lastSyncAt: timestamp('last_sync_at'),
+  createdAt: timestamp('created_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull(),
+});
 
 export const summary = createTable(
   'summary',
@@ -308,9 +342,9 @@ export const emailTemplate = createTable(
     name: text('name').notNull(),
     subject: text('subject'),
     body: text('body'),
-    to: jsonb('to'),
-    cc: jsonb('cc'),
-    bcc: jsonb('bcc'),
+    to: jsonb('to').$type<string[]>(),
+    cc: jsonb('cc').$type<string[]>(),
+    bcc: jsonb('bcc').$type<string[]>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

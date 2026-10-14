@@ -1,6 +1,11 @@
 import {
+  LABEL_MODEL,
+  buildLabelRequest,
+  pickLabels,
+  type ClefLabelResponse,
+} from '../lib/clef-labels';
+import {
   SummarizeMessage,
-  ThreadLabels,
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
@@ -9,13 +14,28 @@ import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
-import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
-import { env } from 'cloudflare:workers';
 import { Effect } from 'effect';
+import { env } from '../env';
 
-export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
+export type WorkflowFunction = (context: WorkflowContext) => Promise<unknown>;
+
+const SYSTEM_LABEL = /^(INBOX|UNREAD|IMPORTANT|STARRED|SENT|DRAFT|SPAM|TRASH|CHAT)$|^CATEGORY_/;
+
+type WorkflowResults = {
+  'analyze-email-intent': ReturnType<typeof analyzeEmailIntent>;
+  'generate-draft-content': { draftContent: string };
+  'find-messages-to-vectorize': { messagesToVectorize: ParsedMessage[] };
+  'vectorize-messages': { embeddings: VectorizeVector[] };
+  'check-existing-summary': { existingSummary: { summary: string; lastMsg: string } | null };
+  'generate-thread-summary': { summary: string | null };
+  'generate-labels': { labels: string[]; userLabelsUsed?: { name: string; usecase: string }[] };
+  'get-user-labels': { userAccountLabels: { name: string; id: string }[] };
+};
+
+const getWorkflowResult = <K extends keyof WorkflowResults>(context: WorkflowContext, key: K) =>
+  context.results?.get(key) as WorkflowResults[K] | undefined;
 
 export const workflowFunctions: Record<string, WorkflowFunction> = {
   analyzeEmailIntent: async (context) => {
@@ -37,7 +57,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   validateResponseNeeded: async (context) => {
-    const intentResult = context.results?.get('analyze-email-intent');
+    const intentResult = getWorkflowResult(context, 'analyze-email-intent');
     if (!intentResult) {
       console.log('[WORKFLOW_FUNCTIONS] Email intent analysis not available');
       throw new Error('Email intent analysis not available');
@@ -83,7 +103,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   createDraft: async (context) => {
-    const draftContentResult = context.results?.get('generate-draft-content');
+    const draftContentResult = getWorkflowResult(context, 'generate-draft-content');
     if (!draftContentResult?.draftContent) {
       throw new Error('No draft content available');
     }
@@ -113,6 +133,14 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       id: null,
       threadId: context.threadId,
       fromEmail: context.foundConnection.email,
+      // Make it a real reply so the app can resume it when the user hits Reply.
+      inReplyTo: latestMessage.messageId || undefined,
+      references:
+        [...(latestMessage.references?.split(/\s+/) ?? []), latestMessage.messageId]
+          .filter(Boolean)
+          .join(' ') || undefined,
+      replyToMessageId: latestMessage.id,
+      isZeroSuggestion: true,
     };
 
     const agent = await getZeroAgent(context.connectionId);
@@ -136,7 +164,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       batches.push(messageIds.slice(i, i + batchSize));
     }
 
-    const getExistingMessagesBatch = (batch: string[]): Effect.Effect<any[], never> =>
+    const getExistingMessagesBatch = (batch: string[]): Effect.Effect<VectorizeVector[], never> =>
       Effect.tryPromise(async () => {
         console.log('[WORKFLOW_FUNCTIONS] Fetching batch of', batch.length, 'message IDs');
         return await env.VECTORIZE_MESSAGE.getByIds(batch);
@@ -158,7 +186,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
     const existingMessages = await Effect.runPromise(program);
 
-    const existingMessageIds = new Set(existingMessages.map((message: any) => message.id));
+    const existingMessageIds = new Set(existingMessages.map((message) => message.id));
     const messagesToVectorize = context.thread.messages.filter(
       (message) => !existingMessageIds.has(message.id),
     );
@@ -168,7 +196,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   vectorizeMessages: async (context) => {
-    const vectorizeResult = context.results?.get('find-messages-to-vectorize');
+    const vectorizeResult = getWorkflowResult(context, 'find-messages-to-vectorize');
     if (!vectorizeResult?.messagesToVectorize) {
       console.log('[WORKFLOW_FUNCTIONS] No messages to vectorize, skipping');
       return { embeddings: [] };
@@ -262,7 +290,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   upsertEmbeddings: async (context) => {
-    const vectorizeResult = context.results?.get('vectorize-messages');
+    const vectorizeResult = getWorkflowResult(context, 'vectorize-messages');
     if (!vectorizeResult?.embeddings || vectorizeResult.embeddings.length === 0) {
       console.log('[WORKFLOW_FUNCTIONS] No embeddings to upsert');
       return { upserted: 0 };
@@ -276,18 +304,6 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     console.log('[WORKFLOW_FUNCTIONS] Successfully upserted message vectors');
 
     return { upserted: vectorizeResult.embeddings.length };
-  },
-
-  cleanupWorkflowExecution: async (context) => {
-    const workflowKey = `workflow_${context.threadId}`;
-    const result = await bulkDeleteKeys([workflowKey]);
-    console.log(
-      '[WORKFLOW_FUNCTIONS] Cleaned up workflow execution tracking for thread:',
-      context.threadId,
-      'Result:',
-      result,
-    );
-    return { cleaned: true };
   },
 
   checkExistingSummary: async (context) => {
@@ -305,7 +321,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       return { existingSummary: null };
     }
 
-    const { summary, lastMsg } = metadata as any;
+    const { summary, lastMsg } = metadata;
     if (typeof summary !== 'string' || typeof lastMsg !== 'string') {
       console.warn(
         '[WORKFLOW_FUNCTIONS] Metadata missing required string properties (summary, lastMsg), returning null',
@@ -317,7 +333,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   generateThreadSummary: async (context) => {
-    const summaryResult = context.results?.get('check-existing-summary');
+    const summaryResult = getWorkflowResult(context, 'check-existing-summary');
     const existingSummary = summaryResult?.existingSummary;
 
     const newestMessage = context.thread.messages[context.thread.messages.length - 1];
@@ -349,7 +365,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   upsertThreadSummary: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
+    const summaryResult = getWorkflowResult(context, 'generate-thread-summary');
     if (!summaryResult?.summary) {
       console.log('[WORKFLOW_FUNCTIONS] No summary generated for thread');
       return { upserted: false };
@@ -393,32 +409,14 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   },
 
   generateLabels: async (context) => {
-    const summaryResult = context.results?.get('generate-thread-summary');
+    const summaryResult = getWorkflowResult(context, 'generate-thread-summary');
     console.log(summaryResult, context.results);
     if (!summaryResult?.summary) {
       console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
       return { labels: [] };
     }
 
-    console.log('[WORKFLOW_FUNCTIONS] Getting user topics for connection:', context.connectionId);
-    let userLabels: { name: string; usecase: string }[] = [];
-    try {
-      const agent = await getZeroAgent(context.connectionId);
-      const userTopics = await agent.getUserTopics();
-      if (userTopics.length > 0) {
-        userLabels = userTopics.map((topic: any) => ({
-          name: topic.topic,
-          usecase: topic.usecase,
-        }));
-        console.log('[WORKFLOW_FUNCTIONS] Using user topics as labels:', userLabels);
-      } else {
-        console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
-        userLabels = defaultLabels;
-      }
-    } catch (error) {
-      console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
-      userLabels = defaultLabels;
-    }
+    const userLabels = await labelCandidates(context);
 
     console.log('[WORKFLOW_FUNCTIONS] Generating labels for thread:', {
       userLabels,
@@ -426,32 +424,31 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       threadLabels: context.thread.labels,
     });
 
-    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-      messages: [
-        { role: 'system', content: ThreadLabels(userLabels, context.thread.labels) },
-        { role: 'user', content: summaryResult.summary },
-      ],
-    });
-
-    if (labelsResponse?.response?.replaceAll('!', '').trim()?.length) {
-      console.log('[WORKFLOW_FUNCTIONS] Labels generated:', labelsResponse.response);
-      const labels: string[] = labelsResponse?.response
-        ?.split(',')
-        .map((e: string) => e.trim())
-        .filter((e: string) => e.length > 0)
-        .filter((e: string) =>
-          userLabels.find((label) => label.name.toLowerCase() === e.toLowerCase()),
-        );
-      return { labels, userLabelsUsed: userLabels };
-    } else {
-      console.log('[WORKFLOW_FUNCTIONS] No labels generated');
+    const request = buildLabelRequest(
+      summaryResult.summary,
+      userLabels,
+      (context.thread.labels ?? [])
+        .map((label: { name: string }) => label.name)
+        .filter((name: string) => name && !SYSTEM_LABEL.test(name)),
+    );
+    if (!request) {
+      console.log('[WORKFLOW_FUNCTIONS] No label candidates for thread');
       return { labels: [], userLabelsUsed: userLabels };
     }
+
+    const labelsResponse = (await env.AI.run(
+      LABEL_MODEL as Parameters<typeof env.AI.run>[0],
+      request as unknown as Parameters<typeof env.AI.run>[1],
+    )) as ClefLabelResponse;
+
+    const labels = pickLabels(userLabels, labelsResponse);
+    console.log('[WORKFLOW_FUNCTIONS] Labels generated:', labels);
+    return { labels, userLabelsUsed: userLabels };
   },
 
   applyLabels: async (context) => {
-    const labelsResult = context.results?.get('generate-labels');
-    const userLabelsResult = context.results?.get('get-user-labels');
+    const labelsResult = getWorkflowResult(context, 'generate-labels');
+    const userLabelsResult = getWorkflowResult(context, 'get-user-labels');
 
     if (!labelsResult?.labels || labelsResult.labels.length === 0) {
       console.log('[WORKFLOW_FUNCTIONS] No labels to apply');
@@ -463,12 +460,29 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       return { applied: false };
     }
 
-    const userAccountLabels = userLabelsResult.userAccountLabels;
+    let userAccountLabels: { name: string; id: string }[] = userLabelsResult.userAccountLabels;
     const generatedLabels = labelsResult.labels;
 
     console.log('[WORKFLOW_FUNCTIONS] Modifying thread labels:', generatedLabels);
 
     const agent = await getZeroAgent(context.connectionId);
+
+    // Custom label lists are not created up front (inferred topics are, by
+    // getUserTopics), so create any chosen label the account doesn't have yet.
+    const missing = generatedLabels.filter(
+      (name: string) =>
+        !userAccountLabels.some((label) => label.name.toLowerCase() === name.toLowerCase()),
+    );
+    if (missing.length > 0 && context.aiLabels?.length) {
+      for (const name of missing) {
+        try {
+          await agent.createLabel({ name }, { kind: 'tag' });
+        } catch (error) {
+          console.warn('[WORKFLOW_FUNCTIONS] Failed to create label', { name, error });
+        }
+      }
+      userAccountLabels = await agent.getUserLabels();
+    }
 
     const validLabelIds = generatedLabels
       .map((name: string) => {
@@ -504,11 +518,9 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
           add: labelsToAdd,
           remove: labelsToRemove,
         });
-        await agent.modifyThreadLabelsInDB(
-          context.threadId.toString(),
-          labelsToAdd,
-          labelsToRemove,
-        );
+        // Persisted per provider (Gmail labels, IMAP keywords, else app-kept), so the
+        // labels survive re-imports and later changes to the thread.
+        await agent.applyAiLabels(context.threadId.toString(), labelsToAdd, labelsToRemove);
         console.log('[WORKFLOW_FUNCTIONS] Successfully modified thread labels');
         return { applied: true, added: labelsToAdd.length, removed: labelsToRemove.length };
       } else {
@@ -520,6 +532,63 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     console.log('[WORKFLOW_FUNCTIONS] No valid labels found in user account');
     return { applied: false };
   },
+
+  /**
+   * IMAP has no native inbox categories; the sync assigns one from headers. With a thread
+   * summary available, ask the model for the Personal / Promotions / Updates category and
+   * store it as the thread's override (never over a category the user chose).
+   */
+  classifyCategory: async (context) => {
+    if (context.foundConnection.providerId !== 'imap') return { skipped: 'provider' };
+    const summary = getWorkflowResult(context, 'generate-thread-summary')?.summary;
+    if (!summary) return { skipped: 'no_summary' };
+    const latest = context.thread.messages[context.thread.messages.length - 1];
+    const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+      messages: [
+        {
+          role: 'system',
+          content: CATEGORY_CLASSIFIER_PROMPT,
+        },
+        {
+          role: 'user',
+          content: `From: ${latest?.sender?.name ?? ''} <${latest?.sender?.email ?? ''}>\nSubject: ${latest?.subject ?? ''}\nSummary: ${summary}`,
+        },
+      ],
+    });
+    const answer = String('response' in response ? response.response : '')
+      .trim()
+      .toLowerCase();
+    const category = (['personal', 'promotions', 'updates'] as const).find((value) =>
+      answer.startsWith(value),
+    );
+    if (!category) return { skipped: 'unparsed', answer };
+    const agent = await getZeroAgent(context.connectionId);
+    await agent.setThreadCategory(context.threadId.toString(), category, 'ai');
+    return { category };
+  },
+};
+
+const CATEGORY_CLASSIFIER_PROMPT = `You sort emails into exactly one inbox tab.
+- personal: written by a person to the user (conversations, replies, direct requests), including work mail from colleagues or clients.
+- promotions: marketing, newsletters, offers, deals, product announcements, event invitations sent in bulk.
+- updates: automated notifications, receipts, orders, shipping, bills, statements, account and security alerts, reminders, mailing-list and forum digests.
+Answer with one word: personal, promotions or updates.`;
+
+/** The user's custom label list, else topics learned from the inbox, else defaults. */
+const labelCandidates = async (
+  context: WorkflowContext,
+): Promise<{ name: string; usecase: string }[]> => {
+  if (context.aiLabels?.length) return context.aiLabels;
+  try {
+    const agent = await getZeroAgent(context.connectionId);
+    const userTopics = await agent.getUserTopics();
+    if (userTopics.length > 0)
+      return userTopics.map((topic) => ({ name: topic.topic, usecase: topic.usecase }));
+    console.log('[WORKFLOW_FUNCTIONS] No user topics found, using defaults');
+  } catch (error) {
+    console.log('[WORKFLOW_FUNCTIONS] Failed to get user topics, using defaults:', error);
+  }
+  return defaultLabels;
 };
 
 // Helper function for thread summarization

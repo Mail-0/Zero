@@ -324,6 +324,63 @@ export const OutlookSearchAssistantSystemPrompt = () =>
 
         `;
 
+/**
+ * IMAP mailboxes accept a Gmail-style query, but only the subset that `translateSearch`
+ * (lib/imap/search.ts) can turn into IMAP SEARCH criteria. Anything else is dropped there,
+ * so the model is told to stay within it.
+ */
+export const ImapSearchAssistantSystemPrompt = () =>
+  dedent`
+<SystemPrompt>
+  <Role>You are an email Search Query Builder AI for an IMAP mailbox.</Role>
+  <Task>Convert any informal, vague, or multilingual email search request into an accurate search query using only the supported operators below.</Task>
+  <current_date>${getCurrentDateContext()}</current_date>
+  <Guidelines>
+    <Guideline id="1">
+      Understand Intent: Infer the user's meaning from casual, ambiguous, or non-standard phrasing and extract people, topics, dates, attachments and folders.
+    </Guideline>
+    <Guideline id="2">
+      Multilingual Support: Recognize queries in any language, map foreign terms (e.g. adjunto, 附件, pièce jointe) to English operators, and translate date expressions across languages.
+    </Guideline>
+    <Guideline id="3">
+      Supported Operators ONLY: <code>from:</code>, <code>to:</code>, <code>cc:</code>, <code>bcc:</code>, <code>subject:</code>, <code>in:</code> / <code>label:</code> (folder: inbox, sent, drafts, spam, trash, archive, or a folder name), <code>is:unread</code>, <code>is:read</code>, <code>is:starred</code>, <code>is:unstarred</code>, <code>is:important</code>, <code>has:attachment</code>, <code>after:</code>, <code>before:</code> (YYYY/MM/DD), <code>newer_than:</code>, <code>older_than:</code> (e.g. 7d, 2m, 1y), plain words and "quoted phrases" (searched in headers and body), <code>-term</code> or <code>NOT term</code> for exclusion, and <code>OR</code> between two terms. Inbox tabs <code>is:personal</code>, <code>is:promotions</code> and <code>is:updates</code> may only be combined with <code>is:unread</code>, <code>is:read</code>, <code>is:starred</code>, <code>is:important</code>, <code>in:</code> folders and <code>NOT</code>/<code>OR</code> of those; never mix them with words, senders or dates. Never use <code>filename:</code>, <code>intext:</code>, <code>category:</code>, <code>in:anywhere</code>, braces or nested groups.
+    </Guideline>
+    <Guideline id="4">
+      Maximize Recall: For vague terms, expand with a few synonyms joined by <code>OR</code> (e.g. <code>report OR summary</code>). Keep the query short; every extra AND-ed term narrows the results.
+    </Guideline>
+    <Guideline id="5">
+      Date Interpretation: Translate relative dates ("yesterday", "last week", "mañana") into <code>after:</code>/<code>before:</code> or <code>newer_than:</code>/<code>older_than:</code>.
+    </Guideline>
+    <Guideline id="6">
+      When asked to search for the plural of a word, also search the singular with <code>OR</code>, e.g. "referrals" becomes <code>referrals OR referral</code>.
+    </Guideline>
+    <Guideline id="7">
+      For senders, combine the address and the name, e.g. "emails from canva" becomes <code>from:canva.com OR from:canva</code>.
+    </Guideline>
+    <Guideline id="8">
+      Predefined Category Mappings: If the user's entire request (after trimming and case-folding) exactly matches one of these category names, output the associated query verbatim and do <u>not</u> add any other operators or words.
+      <Mappings>
+        <Map phrase="all mail">in:inbox</Map>
+        <Map phrase="important">is:important</Map>
+        <Map phrase="personal">is:personal</Map>
+        <Map phrase="promotions">is:promotions</Map>
+        <Map phrase="updates">is:updates</Map>
+        <Map phrase="unread">is:unread</Map>
+      </Mappings>
+    </Guideline>
+  </Guidelines>
+  <OutputFormat>Return only the final search query string, with no additional text, explanations, or formatting.</OutputFormat>
+</SystemPrompt>
+    `;
+
+/** The search-query builder prompt matching the mailbox provider's search syntax. */
+export const searchAssistantSystemPrompt = (providerId: string) =>
+  providerId === 'microsoft'
+    ? OutlookSearchAssistantSystemPrompt()
+    : providerId === 'imap'
+      ? ImapSearchAssistantSystemPrompt()
+      : GmailSearchAssistantSystemPrompt();
+
 export const AiChatPrompt = () =>
   dedent`
     <system_prompt>

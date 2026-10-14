@@ -1,0 +1,24 @@
+diff --git a/queryable.ts b/queryable.ts
+index 833357e14c4d376518a831330f5f5fb2915ca290..02b903dcfb33535009c22e512514a5ef6be525c3 100644
+--- a/queryable.ts
++++ b/queryable.ts
+@@ -1,5 +1,5 @@
+ import { DurableObject } from "cloudflare:workers";
+-export { studioMiddleware, StudioOptions } from "./studio-middleware";
++export { studioMiddleware, type StudioOptions } from "./studio-middleware";
+ 
+ export type RawFn = (
+   query: string,
+diff --git a/studio-middleware.ts b/studio-middleware.ts
+index 11c727a97de5c9d7ce38eee718867ac1c048d82a..c17723fb39def8a9a74ac519ba5c4fb7f0a2e4d7 100644
+--- a/studio-middleware.ts
++++ b/studio-middleware.ts
+@@ -139,7 +139,7 @@ async function executeQueryWithRaw(
+   return {
+     headers: columnNames,
+     rows: result.raw.map((row: any[]) =>
+-      columnNames.reduce((obj, col, idx) => {
++      columnNames.reduce((obj: Record<string, unknown>, col: { name: string }, idx: number) => {
+         obj[col.name] = row[idx];
+         return obj;
+       }, {} as Record<string, unknown>)

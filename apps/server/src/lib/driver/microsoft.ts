@@ -1,3 +1,10 @@
+import type {
+  OutlookCategory as Category,
+  FileAttachment,
+  MailFolder,
+  Message,
+  User,
+} from '@microsoft/microsoft-graph-types';
 import {
   deleteActiveConnection,
   FatalErrors,
@@ -5,12 +12,6 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
-import type {
-  OutlookCategory as Category,
-  MailFolder,
-  Message,
-  User,
-} from '@microsoft/microsoft-graph-types';
 import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import { Client } from '@microsoft/microsoft-graph-client';
@@ -74,6 +75,37 @@ export class OutlookMailManager implements MailManager {
       { messageId, attachmentId },
     );
   }
+  public getMessageAttachments(messageId: string) {
+    return this.withErrorHandler(
+      'getMessageAttachments',
+      async () => {
+        const files: (FileAttachment & { '@odata.type'?: string })[] = [];
+        let next: string | undefined = `/me/messages/${messageId}/attachments`;
+        while (next) {
+          const page: {
+            value: (FileAttachment & { '@odata.type'?: string })[];
+            '@odata.nextLink'?: string;
+          } = await this.graphClient.api(next).get();
+          files.push(...page.value);
+          next = page['@odata.nextLink'];
+        }
+        return files
+          .filter(
+            (file) => file['@odata.type'] === '#microsoft.graph.fileAttachment' && !file.isInline,
+          )
+          .map((file) => ({
+            filename: file.name ?? '',
+            mimeType: file.contentType ?? 'application/octet-stream',
+            size: file.size ?? 0,
+            attachmentId: file.id ?? '',
+            headers: [],
+            body: file.contentBytes ?? '',
+          }));
+      },
+      { messageId },
+    );
+  }
+
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
       const user: User = await this.graphClient.api('/me').select('mail,userPrincipalName').get();
@@ -133,7 +165,7 @@ export class OutlookMailManager implements MailManager {
           .select('id,displayName,userPrincipalName,mail')
           .get();
 
-        let photoUrl = '';
+        const photoUrl = '';
         try {
           // Requires separate fetching logic
         } catch (error: unknown) {
@@ -421,6 +453,13 @@ export class OutlookMailManager implements MailManager {
     return this.withErrorHandler(
       'create',
       async () => {
+        // Replies/forwards go through createReply/createForward so Exchange sets
+        // In-Reply-To/References and files them in the right conversation.
+        if (data.replyToMessageId) {
+          await this.sendAsReply(data.replyToMessageId, data);
+          return {};
+        }
+
         const messagePayload = await this.parseOutgoingOutlook(data);
 
         const res = await this.graphClient.api('/me/sendMail').post({
@@ -535,9 +574,140 @@ export class OutlookMailManager implements MailManager {
     return this.withErrorHandler(
       'sendDraft',
       async () => {
-        await this.graphClient.api(`/me/drafts/${draftId}/send`).post({});
+        if (data.replyToMessageId) {
+          // Drafts saved before replies were created via createReply are standalone messages;
+          // sending them would start a new conversation. Re-create those as proper replies.
+          const existing: Message | null = await this.graphClient
+            .api(`/me/messages/${draftId}`)
+            .select('id,conversationId')
+            .get()
+            .catch(() => null);
+          const threaded =
+            !!existing?.conversationId &&
+            !!data.threadId &&
+            existing.conversationId === data.threadId;
+          if (!threaded) {
+            await this.sendAsReply(data.replyToMessageId, data);
+            await this.graphClient
+              .api(`/me/messages/${draftId}`)
+              .delete()
+              .catch((error: unknown) => console.warn('Failed to delete replaced draft', error));
+            return;
+          }
+        }
+
+        // The saved draft can be up to one autosave behind; send exactly what the user sees.
+        await this.fillDraft(draftId, data, { keepExistingInline: !!data.isForward });
+        await this.graphClient.api(`/me/messages/${draftId}/send`).post({});
       },
       { draftId, data },
+    );
+  }
+
+  /** Create a reply/forward draft of `originalId`, fill it with `data`, and send it. */
+  private async sendAsReply(originalId: string, data: IOutgoingMessage) {
+    const draftId = await this.createReplyDraft(originalId, !!data.isForward);
+    try {
+      await this.fillDraft(draftId, data, { keepExistingInline: !!data.isForward });
+      await this.graphClient.api(`/me/messages/${draftId}/send`).post({});
+    } catch (error) {
+      await this.graphClient
+        .api(`/me/messages/${draftId}`)
+        .delete()
+        .catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private async createReplyDraft(originalId: string, isForward: boolean) {
+    const draft: Message = await this.graphClient
+      .api(`/me/messages/${originalId}/${isForward ? 'createForward' : 'createReply'}`)
+      .post({});
+    if (!draft?.id) throw new Error('Failed to create reply draft');
+    return draft.id;
+  }
+
+  /**
+   * Overwrite a draft's subject, recipients, body and attachments. Our body already contains the
+   * quoted/forwarded original, so it replaces whatever Exchange generated.
+   */
+  private async fillDraft(
+    draftId: string,
+    data: IOutgoingMessage,
+    options: { keepExistingInline: boolean },
+  ) {
+    const { attachments, ...message } = await this.parseOutgoingOutlook(data);
+    await this.graphClient.api(`/me/messages/${draftId}`).patch(message);
+    await this.syncDraftAttachments(draftId, attachments ?? [], options);
+  }
+
+  /**
+   * Make the draft's attachments match `desired` (by file name), uploading only what's
+   * missing. Graph can't PATCH the attachments collection, so this is list/delete/post.
+   * Forward drafts keep Exchange's copies of the original's inline images so the quoted body
+   * still renders.
+   */
+  private async syncDraftAttachments(
+    draftId: string,
+    desired: NonNullable<Message['attachments']>,
+    options: { keepExistingInline: boolean },
+  ) {
+    const existingRes: { value: (FileAttachment & { isInline?: boolean })[] } =
+      await this.graphClient
+        .api(`/me/messages/${draftId}/attachments`)
+        .select('id,name,size,isInline,contentType')
+        .get();
+    const existing = existingRes.value ?? [];
+    const desiredByName = new Map(
+      (desired as FileAttachment[]).map((a) => [a.name ?? '', a] as const),
+    );
+
+    for (const att of existing) {
+      if (!att.id) continue;
+      if (att.isInline && options.keepExistingInline) continue;
+      const wanted = desiredByName.get(att.name ?? '');
+      // Sizes reported by Graph include encoding overhead, so match on name and keep
+      // regular attachments that are still wanted; re-upload inline images (their cids change).
+      if (
+        wanted &&
+        !att.isInline &&
+        !(wanted as FileAttachment & { isInline?: boolean }).isInline
+      ) {
+        desiredByName.delete(att.name ?? '');
+        continue;
+      }
+      await this.graphClient.api(`/me/messages/${draftId}/attachments/${att.id}`).delete();
+    }
+
+    for (const att of desiredByName.values()) {
+      await this.graphClient.api(`/me/messages/${draftId}/attachments`).post(att);
+    }
+  }
+
+  public listThreadDrafts(threadId: string) {
+    return this.withErrorHandler(
+      'listThreadDrafts',
+      async () => {
+        const res: { value: Message[] } = await this.graphClient
+          .api('/me/mailFolders/drafts/messages')
+          .filter(`conversationId eq '${threadId.replace(/'/g, "''")}'`)
+          .select('id')
+          .top(50)
+          .get();
+        // In Graph a draft is just a message, so both ids are the same.
+        return (res.value ?? []).flatMap((m) => (m.id ? [{ draftId: m.id, messageId: m.id }] : []));
+      },
+      { threadId },
+    );
+  }
+
+  public deleteDraft(draftId: string) {
+    return this.withErrorHandler(
+      'deleteDraft',
+      async () => {
+        await this.graphClient.api(`/me/messages/${draftId}`).delete();
+      },
+      { draftId },
     );
   }
   public getDraft(draftId: string) {
@@ -558,7 +728,11 @@ export class OutlookMailManager implements MailManager {
           throw new Error('Failed to parse draft');
         }
 
-        return parsedDraft;
+        // Include attachment contents: the composer re-saves the draft with whatever files it
+        // holds, so a draft opened without them would lose its attachments on the next save.
+        const attachments = await this.getMessageAttachments(draftId);
+
+        return { ...parsedDraft, attachments };
       },
       { draftId },
     );
@@ -635,7 +809,15 @@ export class OutlookMailManager implements MailManager {
       async () => {
         const { html: message, inlineImages } = await sanitizeTipTapHtml(data.message);
 
-        const toRecipients = Array.isArray(data.to) ? data.to : data.to.split(', ');
+        const toAddressList = (value: string | undefined) =>
+          (value ? value.split(', ') : []).filter(Boolean).map((recipient) => {
+            const match = recipient.match(/^(.*?)\s*<([^>]+)>$/);
+            return {
+              emailAddress: match
+                ? { name: match[1]?.replace(/^"|"$/g, '') || undefined, address: match[2] }
+                : { address: recipient },
+            };
+          });
 
         const outlookMessage: Message = {
           subject: data.subject,
@@ -643,95 +825,67 @@ export class OutlookMailManager implements MailManager {
             contentType: 'html',
             content: message || '',
           },
-          toRecipients: toRecipients.map((recipient) => ({
-            emailAddress: {
-              address: typeof recipient === 'string' ? recipient : recipient.email,
-              name: typeof recipient === 'string' ? undefined : recipient.name || undefined,
-            },
-          })),
+          toRecipients: toAddressList(data.to),
+          ccRecipients: toAddressList(data.cc),
+          bccRecipients: toAddressList(data.bcc),
         };
 
-        if (data.cc) {
-          const ccRecipients = Array.isArray(data.cc) ? data.cc : data.cc.split(', ');
-          outlookMessage.ccRecipients = ccRecipients.map((recipient) => ({
-            emailAddress: {
-              address: typeof recipient === 'string' ? recipient : recipient.email,
-              name: typeof recipient === 'string' ? undefined : recipient.name || undefined,
-            },
-          }));
-        }
-
-        if (data.bcc) {
-          const bccRecipients = Array.isArray(data.bcc) ? data.bcc : data.bcc.split(', ');
-          outlookMessage.bccRecipients = bccRecipients.map((recipient) => ({
-            emailAddress: {
-              address: typeof recipient === 'string' ? recipient : recipient.email,
-              name: typeof recipient === 'string' ? undefined : recipient.name || undefined,
-            },
-          }));
-        }
-
-        const allAttachments = [];
-
-        if (inlineImages.length > 0) {
-          for (const image of inlineImages) {
-            allAttachments.push({
-              '@odata.type': '#microsoft.graph.fileAttachment',
-              name: image.cid,
-              contentType: image.mimeType,
-              contentBytes: image.data,
-              contentId: image.cid,
-              isInline: true,
-            });
-          }
-        }
-
-        if (data.attachments && data.attachments.length > 0) {
-          const regularAttachments = await Promise.all(
-            data.attachments.map(async (file) => {
-              const arrayBuffer = await file.arrayBuffer();
-              const buffer = Buffer.from(arrayBuffer);
-              const base64Content = buffer.toString('base64');
-
-              return {
+        const attachments: FileAttachment[] = [
+          ...inlineImages.map(
+            (image) =>
+              ({
+                '@odata.type': '#microsoft.graph.fileAttachment',
+                name: image.cid,
+                contentType: image.mimeType,
+                contentBytes: image.data,
+                contentId: image.cid,
+                isInline: true,
+              }) as FileAttachment,
+          ),
+          ...(data.attachments ?? []).map(
+            (file) =>
+              ({
                 '@odata.type': '#microsoft.graph.fileAttachment',
                 name: file.name,
                 contentType: file.type || 'application/octet-stream',
-                contentBytes: base64Content,
-              };
-            }),
-          );
-          allAttachments.push(...regularAttachments);
-        }
+                contentBytes: file.base64,
+              }) as FileAttachment,
+          ),
+        ];
 
-        if (allAttachments.length > 0) {
-          outlookMessage.attachments = allAttachments;
-        }
-
-        let res;
-
-        if (data.id) {
+        let id = data.id ?? undefined;
+        if (id) {
           try {
-            res = await this.graphClient
-              .api(`/me/mailfolders/drafts/messages/${data.id}`)
-              .patch(outlookMessage);
+            await this.graphClient.api(`/me/messages/${id}`).patch(outlookMessage);
           } catch (error) {
-            console.warn(`Failed to update draft ${data.id}, creating a new one`, error);
-            try {
-              await this.graphClient.api(`/me/mailfolders/drafts/messages/${data.id}`).delete();
-            } catch (deleteError) {
-              console.error(`Failed to delete draft ${data.id}`, deleteError);
-            }
+            console.warn(`Failed to update draft ${id}, creating a new one`, error);
+            await this.graphClient
+              .api(`/me/messages/${id}`)
+              .delete()
+              .catch(() => undefined);
+            id = undefined;
+          }
+        }
 
-            res = await this.graphClient
+        if (!id) {
+          if (data.replyToMessageId) {
+            // A real reply draft: lives in the conversation and carries threading headers.
+            id = await this.createReplyDraft(data.replyToMessageId, !!data.isForward);
+            await this.graphClient.api(`/me/messages/${id}`).patch(outlookMessage);
+          } else {
+            const res: Message = await this.graphClient
               .api('/me/mailfolders/drafts/messages')
               .post(outlookMessage);
+            id = res.id ?? undefined;
           }
-        } else {
-          res = await this.graphClient.api('/me/mailfolders/drafts/messages').post(outlookMessage);
         }
+        if (!id) throw new Error('Failed to save draft');
 
-        return res;
+        await this.syncDraftAttachments(id, attachments, {
+          keepExistingInline: !!data.isForward,
+        });
+
+        return { id };
       },
       { data },
     );
@@ -1102,15 +1256,16 @@ export class OutlookMailManager implements MailManager {
     headers,
     cc,
     bcc,
+    originalMessage,
   }: IOutgoingMessage): Promise<Message> {
     // Outlook Graph API expects a Message object structure for sending/creating drafts
-    console.log(to);
     const { html: processedMessage, inlineImages } = await sanitizeTipTapHtml(message.trim());
     const outlookMessage: Message = {
       subject: subject,
       body: {
-        contentType: 'html', // Or 'text'
-        content: processedMessage,
+        contentType: 'html',
+        // Same as the Gmail driver: the quoted/forwarded original goes after the user's text.
+        content: originalMessage ? `${processedMessage}${originalMessage}` : processedMessage,
       },
       toRecipients:
         to?.map((rec) => ({
@@ -1140,12 +1295,8 @@ export class OutlookMailManager implements MailManager {
     };
 
     if (headers) {
-      // Graph API doesn't have a direct 'headers' property for sending
-      // Custom headers are usually not added this way.
-      // Some headers like Reply-To can be set as properties, but not general headers.
-      console.warn(
-        'Custom headers from IOutgoingMessage are not directly applied when sending via Microsoft Graph API.',
-      );
+      // Graph can't set In-Reply-To/References. Threading for replies is handled by creating
+      // the message through createReply/createForward (see sendAsReply), not via headers.
       // If you need to set specific headers like In-Reply-To or References for threading replies:
       // outlookMessage.internetMessageHeaders = Object.entries(headers).map(([name, value]) => ({ name, value: value?.toString() }));
       // Note: internetMessageHeaders might be read-only or limited for sending.
@@ -1173,9 +1324,7 @@ export class OutlookMailManager implements MailManager {
     if (attachments?.length > 0) {
       const regularAttachments = await Promise.all(
         attachments.map(async (file) => {
-          const arrayBuffer = await file.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          const base64Content = buffer.toString('base64');
+          const base64Content = file.base64;
 
           return {
             '@odata.type': '#microsoft.graph.fileAttachment',
@@ -1224,7 +1373,12 @@ export class OutlookMailManager implements MailManager {
       bcc,
       subject: subject ? he.decode(subject).trim() : '',
       content,
-      rawMessage: draftMessage, // Include raw Graph message
+      // Only internalDate is read by clients; don't ship the whole Graph message (body twice).
+      rawMessage: {
+        internalDate: draftMessage.createdDateTime
+          ? String(new Date(draftMessage.createdDateTime).getTime())
+          : undefined,
+      },
     };
   }
   private async withErrorHandler<T>(

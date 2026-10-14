@@ -1,10 +1,11 @@
 import { BaseSubscriptionFactory, type SubscriptionData } from './base-subscription.factory';
+import { budgetGmailRequest } from '../gmail-quota-client';
 import { c, getNotificationsUrl } from '../../lib/utils';
-import { resetConnection } from '../server-utils';
+import { withGmailPriority } from '../gmail-priority';
 import jwt from '@tsndr/cloudflare-worker-jwt';
-import { env } from '../../env';
 import { connection } from '../../db/schema';
 import { EProviders } from '../../types';
+import { env } from '../../env';
 
 interface GoogleServiceAccount {
   type: string;
@@ -20,15 +21,15 @@ interface IamPolicy {
 }
 
 export const getServiceAccount = (): GoogleServiceAccount => {
-  const serviceAccountJson = env.GOOGLE_S_ACCOUNT;
+  const serviceAccountJson = env.GOOGLE_SERVICE_ACCOUNT || env.GOOGLE_S_ACCOUNT;
   if (!serviceAccountJson || serviceAccountJson === '{}') {
     throw new Error('GOOGLE_S_ACCOUNT environment variable is required');
   }
 
   try {
     return JSON.parse(serviceAccountJson) as GoogleServiceAccount;
-  } catch (error) {
-    console.error('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson, error);
+  } catch {
+    console.error('Invalid GOOGLE_S_ACCOUNT JSON format');
     throw new Error('Invalid GOOGLE_S_ACCOUNT JSON format');
   }
 };
@@ -104,6 +105,8 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
 
   private async resourceExists(url: string): Promise<boolean> {
     const response = await this.makeAuthenticatedRequest(url);
+    if (!response.ok && response.status !== 404)
+      throw new Error(`Pub/Sub resource lookup failed (${response.status})`);
     return response.ok;
   }
 
@@ -111,12 +114,6 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     const serviceAccount = getServiceAccount();
     const baseUrl = `https://pubsub.googleapis.com/v1/projects/${serviceAccount.project_id}`;
     const topicUrl = `${baseUrl}/topics/${topicName}`;
-
-    // Delete subscription if it exists
-    const subUrl = `${baseUrl}/subscriptions/${topicName}`;
-    if (await this.resourceExists(subUrl)) {
-      await this.makeAuthenticatedRequest(subUrl, { method: 'DELETE' });
-    }
 
     // Create topic if it doesn't exist
     if (!(await this.resourceExists(topicUrl))) {
@@ -147,10 +144,14 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
 
     const policy: IamPolicy = await policyResponse.json();
     policy.bindings = policy.bindings || [];
-    policy.bindings.push({
-      role: 'roles/pubsub.publisher',
-      members: [this.pubsubServiceAccount],
-    });
+    const publishers = policy.bindings.find((binding) => binding.role === 'roles/pubsub.publisher');
+    if (publishers)
+      publishers.members = [...new Set([...publishers.members, this.pubsubServiceAccount])];
+    else
+      policy.bindings.push({
+        role: 'roles/pubsub.publisher',
+        members: [this.pubsubServiceAccount],
+      });
 
     // Update policy
     const updateResponse = await this.makeAuthenticatedRequest(`${baseUrl}:setIamPolicy`, {
@@ -176,6 +177,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
       pushConfig: {
         oidcToken: {
           serviceAccountEmail: serviceAccount.client_email,
+          audience: pushEndpoint,
         },
         pushEndpoint,
         noWrapper: {
@@ -184,10 +186,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
       },
     };
 
-    const response = await this.makeAuthenticatedRequest(url, {
-      method: 'PUT',
+    const exists = await this.resourceExists(url);
+    const response = await this.makeAuthenticatedRequest(exists ? `${url}:modifyPushConfig` : url, {
+      method: exists ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(exists ? { pushConfig: requestBody.pushConfig } : requestBody),
     });
 
     if (!response.ok) {
@@ -227,19 +230,32 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     console.log(
       `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${topicName} projects/${serviceAccount.project_id}/topics/${topicName}`,
     );
-    console.log(`[SUBSCRIPTION] Service Account: ${serviceAccount.client_email}`, serviceAccount);
 
-    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        labelIds: ['INBOX'],
-        topicName: `projects/${serviceAccount.project_id}/topics/${topicName}`,
+    const url = 'https://gmail.googleapis.com/gmail/v1/users/me/watch';
+    const response = await withGmailPriority('sync', () =>
+      budgetGmailRequest(connectionData.email, url, 'POST', async () => {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            topicName: `projects/${serviceAccount.project_id}/topics/${topicName}`,
+          }),
+        });
+        if (!response.ok) {
+          const data = await response
+            .clone()
+            .json()
+            .catch(() => undefined);
+          throw Object.assign(new Error(`Gmail watch failed (${response.status})`), {
+            response: { status: response.status, headers: response.headers, data },
+          });
+        }
+        return response;
       }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to setup Gmail watch: ${await response.text()}`);
@@ -278,7 +294,6 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
         );
         await this.setupGmailWatch(connectionData, pubSubName).catch(async (error) => {
           console.error('[SUBSCRIPTION] Error setting up Gmail watch:', { error });
-          await resetConnection(connectionData.id);
           throw error;
         });
 
@@ -287,16 +302,10 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
           new Date().toISOString(),
         );
 
-        console.log(`[SUBSCRIPTION] Initializing labels for connection: ${connectionId}`);
-        await this.initializeConnectionLabels(connectionId);
-
         console.log(`[SUBSCRIPTION] Setup completed successfully for connection: ${connectionId}`);
         return c.json({});
       } catch (error) {
         console.error('[SUBSCRIPTION] Setup failed:', error);
-
-        // Clean up on failure using base class method
-        // await this.cleanupOnFailure(connectionId, env);
 
         if (error instanceof Error && error.message.includes('Already Exists')) {
           console.log('Resource already exists, continuing...');
@@ -307,32 +316,8 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
       }
     } catch (error) {
       console.error('[SUBSCRIPTION] Error:', error);
-
-      // Clean up on error using base class method
-      //   await this.cleanupOnFailure(connectionId, env);
-
       return c.json({ error: 'Internal server error' }, { status: 500 });
     }
-  }
-
-  public async unsubscribe(data: {
-    body: { connectionId?: string; providerId?: EProviders };
-  }): Promise<Response> {
-    const connectionId = data.body.connectionId;
-    const providerId = data.body.providerId;
-
-    if (!connectionId) {
-      return c.json({ error: 'connectionId is required' }, { status: 400 });
-    }
-
-    const existingState = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
-
-    if (!existingState || existingState === 'pending') {
-      return c.json({ message: 'not subscribed' }, { status: 200 });
-    }
-
-    await env.subscribed_accounts.delete(`${connectionId}__${providerId}`);
-    return c.json({});
   }
 
   public async verifyToken(token: string): Promise<boolean> {

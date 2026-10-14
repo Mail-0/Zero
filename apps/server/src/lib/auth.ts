@@ -11,12 +11,13 @@ import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { clearMailboxChatData } from './chat-attachments';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
+import type { CreateEmailOptions } from 'resend';
 import { dubAnalytics } from '@dub/better-auth';
 import { defaultUserSettings } from './schemas';
-import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
 import { type EProviders } from '../types';
@@ -32,14 +33,18 @@ const scheduleCampaign = (userInfo: { address: string; name: string }) =>
     const name = userInfo.name || 'there';
     const resendService = resend();
 
-    const sendEmail = (subject: string, react: unknown, scheduledAt?: string) =>
+    const sendEmail = (
+      subject: string,
+      react: ReturnType<typeof WelcomeEmail>,
+      scheduledAt?: string,
+    ) =>
       Effect.promise(() =>
         resendService.emails
           .send({
             from: '0.email <onboarding@0.email>',
             to: userInfo.address,
             subject,
-            react: react as any,
+            react: react as unknown as CreateEmailOptions['react'],
             ...(scheduledAt && { scheduledAt }),
           })
           .then(() => void 0),
@@ -212,10 +217,8 @@ export const createAuth = () => {
             await Promise.allSettled(
               connections.map(async (connection) => {
                 if (!connection.accessToken || !connection.refreshToken) return false;
-                await disableBrainFunction({
-                  id: connection.id,
-                  providerId: connection.providerId as EProviders,
-                });
+                // IMAP credentials are deleted with the connection row; nothing to revoke.
+                if (connection.providerId === 'imap') return true;
                 const driver = createDriver(connection.providerId, {
                   auth: {
                     accessToken: connection.accessToken,
@@ -240,6 +243,7 @@ export const createAuth = () => {
           }
 
           await db.deleteUser();
+          await Promise.all(connections.map((connection) => clearMailboxChatData(connection.id)));
         },
       },
     },
@@ -351,6 +355,7 @@ const createAuthConfig = () => {
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
     trustedOrigins: [
+      env.VITE_PUBLIC_APP_URL,
       'https://app.0.email',
       'https://sapi.0.email',
       'https://staging.0.email',

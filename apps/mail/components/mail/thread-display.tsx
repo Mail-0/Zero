@@ -22,19 +22,30 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { focusedIndexAtom, mailNavigationCommandAtom } from '@/hooks/use-mail-navigation';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useHotkeys } from 'react-hotkeys-hook';
 
+import { loadReplyComposer, ThreadDraftCard, useThreadDraftTimeline } from './thread-draft-card';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ParsedMessage, Attachment } from '@/types';
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
@@ -43,20 +54,27 @@ import { Button } from '@/components/ui/button';
 import { cleanHtml } from '@/lib/email-utils';
 import { useParams } from 'react-router';
 
-import ReplyCompose from './reply-composer';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
 
+import { ensureThreadOpenStarted, markThreadDataReady } from '@/lib/perf';
 import { Inbox, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAnimations } from '@/hooks/use-animations';
 import { AnimatePresence, motion } from 'motion/react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
 import { useAtom } from 'jotai';
-import { ensureThreadOpenStarted, markThreadDataReady } from '@/lib/perf';
 import { toast } from 'sonner';
+
+// Reply composer pulls in the full email composer (tiptap); load it only when replying.
+const LazyReplyCompose = lazy(loadReplyComposer);
+const ReplyCompose = (props: { messageId?: string }) => (
+  <Suspense fallback={null}>
+    <LazyReplyCompose {...props} />
+  </Suspense>
+);
 
 const formatFileSize = (size: number) => {
   const sizeInMB = (size / (1024 * 1024)).toFixed(2);
@@ -170,11 +188,17 @@ const isFullscreen = false;
 export function ThreadDisplay() {
   const isMobile = useIsMobile();
   const { toggleOpen: toggleAISidebar } = useAISidebar();
+  const aiEnabled = useAiEnabled();
   const params = useParams<{ folder: string }>();
 
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
+  const { data: emailData, isLoading, refetch: refetchThread, drafts } = useThread(id ?? null);
+  const draftTimeline = useThreadDraftTimeline(
+    id ?? null,
+    emailData?.messages,
+    drafts as ParsedMessage[],
+  );
   const hasThreadData = !!emailData && !isLoading;
 
   // Perf: covers deep links / back-forward where no click started the measurement.
@@ -218,7 +242,8 @@ export function ThreadDisplay() {
   const optimisticState = useOptimisticThreadState(id ?? '');
   const isStarred =
     optimisticState.optimisticStarred ??
-    (emailData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false);
+    emailData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ??
+    false;
 
   const handlePrevious = useCallback(() => {
     if (!id || currentIndex <= 0) return;
@@ -765,10 +790,12 @@ export function ThreadDisplay() {
   useEffect(() => {
     if (mode && activeReplyId) {
       const timeout = setTimeout(() => {
-        const replyElement = document.getElementById(`reply-composer-${activeReplyId}`);
-        if (replyElement) {
-          replyElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // Inline composers (replying to an older message) live inside the list: bring them into
+        // view. The docked composer for the latest message sits below the list, so instead
+        // scroll the message being answered to the bottom, right above it.
+        const inline = document.querySelector(`[data-inline-reply="${CSS.escape(activeReplyId)}"]`);
+        const target = inline ?? document.getElementById(`thread-message-${activeReplyId}`);
+        target?.scrollIntoView({ behavior: 'smooth', block: inline ? 'nearest' : 'end' });
       }, 100); // Short delay to ensure the component is rendered
       return () => clearTimeout(timeout);
     }
@@ -797,18 +824,20 @@ export function ThreadDisplay() {
                 <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
                 </p>
-                <div className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-2">
-                  <button
-                    onClick={toggleAISidebar}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131]"
-                  >
-                    <Sparkles className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
-                    <div className="flex items-center justify-center gap-2.5 px-0.5">
-                      <div className="text-base-gray-950 justify-start text-sm leading-none">
-                        Zero chat
+                <div className={cn('mt-4 grid grid-cols-1 gap-2', aiEnabled && 'xl:grid-cols-2')}>
+                  {aiEnabled && (
+                    <button
+                      onClick={toggleAISidebar}
+                      className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131]"
+                    >
+                      <Sparkles className="mr-1 h-3.5 w-3.5 fill-[#959595]" />
+                      <div className="flex items-center justify-center gap-2.5 px-0.5">
+                        <div className="text-base-gray-950 justify-start text-sm leading-none">
+                          Zero chat
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsComposeOpen('true')}
                     className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-lg border bg-white px-2 dark:border-none dark:bg-[#313131]"
@@ -1100,7 +1129,7 @@ export function ThreadDisplay() {
                       ease: [0.4, 0, 0.2, 1],
                     }}
                     onAnimationComplete={handleAnimationComplete}
-                    className="h-full w-full"
+                    className="flex min-h-0 w-full flex-1 flex-col"
                   >
                     <MessageList
                       messages={emailData.messages}
@@ -1110,6 +1139,8 @@ export function ThreadDisplay() {
                       mode={mode || undefined}
                       activeReplyId={activeReplyId || undefined}
                       isMobile={isMobile}
+                      threadId={id ?? ''}
+                      {...draftTimeline}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -1122,6 +1153,8 @@ export function ThreadDisplay() {
                   mode={mode || undefined}
                   activeReplyId={activeReplyId || undefined}
                   isMobile={isMobile}
+                  threadId={id ?? ''}
+                  {...draftTimeline}
                 />
               )}
 
@@ -1129,7 +1162,7 @@ export function ThreadDisplay() {
                 activeReplyId &&
                 activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
                   <div
-                    className="border-border bg-panelLight dark:bg-panelDark sticky bottom-0 z-10 rounded-xl px-4 py-2"
+                    className="flex max-h-[60%] min-h-0 shrink-0 flex-col px-2 pt-2 pb-3 md:px-0"
                     id={`reply-composer-${activeReplyId}`}
                   >
                     <ReplyCompose messageId={activeReplyId} />
@@ -1151,6 +1184,10 @@ interface MessageListProps {
   mode?: string;
   activeReplyId?: string;
   isMobile: boolean;
+  threadId: string;
+  draftsByAnchor: Map<string, ParsedMessage[]>;
+  draftIds: Map<string, string>;
+  draftIdsLoading: boolean;
 }
 
 const MessageList = ({
@@ -1160,16 +1197,23 @@ const MessageList = ({
   allThreadAttachments,
   mode,
   activeReplyId,
-  isMobile,
+  threadId,
+  draftsByAnchor,
+  draftIds,
+  draftIdsLoading,
 }: MessageListProps) => (
-  <ScrollArea className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')} type="auto">
+  <ScrollArea className="min-h-0 flex-1" type="auto">
     <div className="pb-4">
       {(messages || []).map((message, index) => {
         const isLastMessage = index === messages.length - 1;
         const isReplyingToThisMessage = mode && activeReplyId === message.id;
 
         return (
-          <div key={message.id} className="mb-2 transition-all duration-200">
+          <div
+            key={message.id}
+            id={`thread-message-${message.id}`}
+            className="mb-2 transition-all duration-200"
+          >
             <MailDisplay
               zen
               emailData={message}
@@ -1180,8 +1224,24 @@ const MessageList = ({
               totalEmails={totalReplies}
               threadAttachments={index === 0 ? allThreadAttachments : undefined}
             />
+            {draftsByAnchor
+              .get(message.id)
+              ?.map((draft) => (
+                <ThreadDraftCard
+                  key={draft.id}
+                  draft={draft}
+                  draftId={draftIds.get(draft.id)}
+                  draftIdsLoading={draftIdsLoading}
+                  anchorMessageId={message.id}
+                  threadId={threadId}
+                />
+              ))}
             {isReplyingToThisMessage && !isLastMessage && (
-              <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+              <div
+                className="px-2 py-2 md:px-0"
+                id={`reply-composer-${message.id}`}
+                data-inline-reply={message.id}
+              >
                 <ReplyCompose messageId={message.id} />
               </div>
             )}

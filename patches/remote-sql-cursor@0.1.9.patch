@@ -1,0 +1,33 @@
+diff --git a/do.ts b/do.ts
+index de7c2bc08ded602c63722106a5656e7eb5717070..51ec656f36fa53b8d552f12ad76b976ca6bf8e61 100644
+--- a/do.ts
++++ b/do.ts
+@@ -7,8 +7,8 @@ export {
+   RemoteSqlStorageCursor,
+   exec,
+   makeStub,
+-  SqlStorageRow,
+-  SqlStorageValue,
++  type SqlStorageRow,
++  type SqlStorageValue,
+ } from "./js";
+ 
+ // Validator function type
+@@ -142,7 +142,7 @@ export class StreamableHandler {
+           console.error("Bindings:", bindings);
+           // Send error information
+           await writer.write(
+-            encoder.encode(JSON.stringify({ error: error.message }) + "\n"),
++            encoder.encode(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }) + "\n"),
+           );
+         } finally {
+           // Always close the writer when done
+@@ -159,7 +159,7 @@ export class StreamableHandler {
+       });
+     } catch (error) {
+       console.error("Request handling error:", error);
+-      return new Response(JSON.stringify({ error: error.message }), {
++      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
+         status: 500,
+         headers: { "Content-Type": "application/json" },
+       });

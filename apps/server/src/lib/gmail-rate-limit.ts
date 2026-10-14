@@ -6,13 +6,18 @@ import { Effect, Duration, Schedule } from 'effect';
  *  – HTTP 403 with reason == userRateLimitExceeded or quotaExceeded
  */
 export function isRateLimit(err: unknown): boolean {
-  const e: any = err || {};
+  const e = (err || {}) as {
+    code?: number;
+    status?: number;
+    errors?: { reason: string }[];
+    response?: { status?: number; data?: { error?: { errors?: { reason: string }[] } } };
+  };
   const status = e.code ?? e.status ?? e.response?.status;
 
   if (status === 429) return true;
   if (status === 403) {
     const errors = e.errors ?? e.response?.data?.error?.errors ?? [];
-    return errors.some((x: any) =>
+    return errors.some((x) =>
       [
         'userRateLimitExceeded',
         'rateLimitExceeded',

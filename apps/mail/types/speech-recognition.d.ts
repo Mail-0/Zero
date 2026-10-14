@@ -6,7 +6,7 @@ interface Window {
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  interpretation: any;
+  interpretation: unknown;
 }
 
 interface SpeechRecognitionResultList {
@@ -47,7 +47,7 @@ interface SpeechRecognition extends EventTarget {
   onnomatch: (event: Event) => void;
 }
 
-declare var SpeechRecognition: {
+declare const SpeechRecognition: {
   prototype: SpeechRecognition;
-  new(): SpeechRecognition;
-}; 
+  new (): SpeechRecognition;
+};

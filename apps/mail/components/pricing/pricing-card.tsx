@@ -68,12 +68,12 @@ const FeatureItem = ({ text, isPro }: FeatureItemProps) => (
   <div className="inline-flex items-center justify-start gap-2.5">
     <div className="flex h-5 w-5 items-start justify-start gap-3 rounded-[125px] bg-white/10 p-[5px]">
       {isPro ? (
-        <PurpleThickCheck className="relative left-px top-px" />
+        <PurpleThickCheck className="relative top-px left-px" />
       ) : (
-        <ThickCheck className="relative left-px top-px" />
+        <ThickCheck className="relative top-px left-px" />
       )}
     </div>
-    <div className="justify-center text-sm font-normal leading-normal text-white lg:text-base">
+    <div className="justify-center text-sm leading-normal font-normal text-white lg:text-base">
       {text}
     </div>
   </div>
@@ -138,12 +138,12 @@ export default function PricingCard() {
 
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
-                  <div className="justify-center text-4xl font-semibold leading-10 text-white">
+                  <div className="justify-center text-4xl leading-10 font-semibold text-white">
                     Free
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                  <div className="justify-center self-stretch text-sm font-normal leading-normal text-white opacity-70 lg:text-base">
+                  <div className="justify-center self-stretch text-sm leading-normal font-normal text-white opacity-70 lg:text-base">
                     Start with the essentials — ideal for personal use and light email
                     workflows.{' '}
                   </div>
@@ -171,7 +171,7 @@ export default function PricingCard() {
             className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343]"
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
-              <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
+              <div className="justify-start text-center leading-none font-semibold text-[#D5D5D5]">
                 Get started
               </div>
             </div>
@@ -183,7 +183,7 @@ export default function PricingCard() {
             <img
               src="/pricing-gradient.png"
               alt=""
-              className="absolute -right-0 -top-52 h-auto w-full"
+              className="absolute -top-52 -right-0 h-auto w-full"
               height={535}
               width={535}
               loading="eager"
@@ -213,17 +213,17 @@ export default function PricingCard() {
 
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
-                  <div className="justify-center text-4xl font-semibold leading-10 text-white">
+                  <div className="justify-center text-4xl leading-10 font-semibold text-white">
                     ${isAnnual ? annualPrice : monthlyPrice}
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
-                    <div className="justify-center text-sm font-medium leading-tight text-white/40">
+                    <div className="justify-center text-sm leading-tight font-medium text-white/40">
                       {isAnnual ? '/MONTH (billed annually)' : '/MONTH'}
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                  <div className="justify-center self-stretch text-sm font-normal leading-normal text-white opacity-70 lg:text-base">
+                  <div className="justify-center self-stretch text-sm leading-normal font-normal text-white opacity-70 lg:text-base">
                     For professionals and power users who want to supercharge their inbox
                     efficiency.
                   </div>
@@ -242,7 +242,7 @@ export default function PricingCard() {
             onClick={handleUpgrade}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
-              <div className="justify-start text-center font-semibold leading-none text-black">
+              <div className="justify-start text-center leading-none font-semibold text-black">
                 Start 7 day free trial
               </div>
             </div>
@@ -267,12 +267,12 @@ export default function PricingCard() {
 
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
-                  <div className="justify-center text-4xl font-semibold leading-10 text-white">
+                  <div className="justify-center text-4xl leading-10 font-semibold text-white">
                     Enterprise
                   </div>
                 </div>
                 <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                  <div className="justify-center self-stretch text-sm font-normal leading-normal text-white opacity-70 lg:text-base">
+                  <div className="justify-center self-stretch text-sm leading-normal font-normal text-white opacity-70 lg:text-base">
                     For teams and organizations that need advanced features and support.
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function PricingCard() {
             onClick={() => window.open('https://cal.com/team/0/chat', '_blank')}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
-              <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
+              <div className="justify-start text-center leading-none font-semibold text-[#D5D5D5]">
                 Contact us
               </div>
             </div>

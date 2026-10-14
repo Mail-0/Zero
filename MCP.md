@@ -28,7 +28,7 @@ Zero MCP provides the following capabilities:
 - Compose emails with AI assistance
 - Ask questions about mailbox content
 - Ask questions about specific email threads
-- Web search using Perplexity AI
+- Web search using context.dev
 
 ### Search and Organization
 

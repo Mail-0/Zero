@@ -126,8 +126,18 @@ test('thread open: click -> body painted', async ({ page, browserName }) => {
     revisit: summarize(rounds.slice(1).flat()),
     instrumented: samples.length
       ? {
-          fetchP50: Math.round(pct(samples.map((s) => s.data ?? 0), 50)),
-          renderP50: Math.round(pct(samples.map((s) => s.render ?? 0), 50)),
+          fetchP50: Math.round(
+            pct(
+              samples.map((s) => s.data ?? 0),
+              50,
+            ),
+          ),
+          renderP50: Math.round(
+            pct(
+              samples.map((s) => s.render ?? 0),
+              50,
+            ),
+          ),
           contentCacheHitRate:
             Math.round((samples.filter((s) => s.contentCacheHit).length / samples.length) * 100) /
             100,

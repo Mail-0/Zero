@@ -1,17 +1,11 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
+import { prefetchComposer } from '@/components/mail/compose-dialog';
 import React, { useMemo, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { useSidebar } from '@/components/ui/sidebar';
-import { CreateEmail } from '../create/create-email';
 import { PencilCompose, X } from '../icons/icons';
 import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,7 +30,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   });
   const [, setPricingDialog] = useQueryState('pricingDialog');
 
-  const { isFullScreen } = useAIFullScreen();
+  const { isFullScreen: aiFullScreen } = useAIFullScreen();
+  const aiEnabled = useAiEnabled();
+  // A persisted fullscreen chat must not hide the sidebar once AI is turned off.
+  const isFullScreen = aiFullScreen && aiEnabled;
 
   const { data: stats } = useStats();
 
@@ -53,12 +50,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       const items = [...navigationConfig[currentSection].sections];
 
       if (currentSection === 'mail' && stats && stats.length) {
-        if (items[0]?.items[0]) {
-          items[0].items[0].badge =
+        const inboxItem = items[0]?.items.find((item) => item.id === 'inbox');
+        if (inboxItem) {
+          inboxItem.badge =
             stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
         }
-        if (items[0]?.items[3]) {
-          items[0].items[3].badge =
+        const sentItem = items[0]?.items.find((item) => item.id === 'sent');
+        if (sentItem) {
+          sentItem.badge =
             stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
         }
       }
@@ -81,7 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar
           collapsible="icon"
           {...props}
-          className={`bg-sidebar dark:bg-sidebar flex h-screen select-none flex-col items-center ${state === 'collapsed' ? '' : ''} pb-2`}
+          className={`bg-sidebar dark:bg-sidebar flex h-screen flex-col items-center select-none ${state === 'collapsed' ? '' : ''} pb-2`}
         >
           <SidebarHeader
             className={`relative top-2.5 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}
@@ -107,7 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-2 h-6 w-6 rounded-full hover:bg-white/10 [&>svg]:h-2.5 [&>svg]:w-2.5"
+                className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-white/10 [&>svg]:h-2.5 [&>svg]:w-2.5"
                 onClick={() => {
                   setShowUpgrade(false);
                   localStorage.setItem('hideUpgradeCard', 'true');
@@ -132,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="mt-3 inline-flex h-7 w-full items-center justify-center gap-0.5 overflow-hidden rounded-lg bg-[#8B5CF6] px-2"
               >
                 <div className="flex items-center justify-center gap-2.5 px-0.5">
-                  <div className="justify-start whitespace-nowrap text-xs leading-none text-white md:text-sm">
+                  <div className="justify-start text-xs leading-none whitespace-nowrap text-white md:text-sm">
                     Start 7 day free trial
                   </div>
                 </div>
@@ -153,7 +152,7 @@ function ComposeButton() {
   const { state } = useSidebar();
   const isMobile = useIsMobile();
 
-  const [dialogOpen, setDialogOpen] = useQueryState('isComposeOpen');
+  const [, setDialogOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const [, setTo] = useQueryState('to');
   const [, setActiveReplyId] = useQueryState('activeReplyId');
@@ -171,28 +170,22 @@ function ComposeButton() {
     setMode(null);
   };
   return (
-    <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>
-      <DialogTitle></DialogTitle>
-      <DialogDescription></DialogDescription>
-
-      <DialogTrigger asChild>
-        <button className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black dark:border-none dark:text-white">
-          {state === 'collapsed' && !isMobile ? (
-            <PencilCompose className="mt-0.5 fill-white text-black" />
-          ) : (
-            <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-              <PencilCompose className="fill-white" />
-              <div className="justify-start text-sm leading-none text-white">
-                {m['common.commandPalette.commands.newEmail']()}
-              </div>
-            </div>
-          )}
-        </button>
-      </DialogTrigger>
-
-      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
-        <CreateEmail />
-      </DialogContent>
-    </Dialog>
+    <button
+      onClick={() => handleOpenChange(true)}
+      onPointerEnter={prefetchComposer}
+      onFocus={prefetchComposer}
+      className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black dark:border-none dark:text-white"
+    >
+      {state === 'collapsed' && !isMobile ? (
+        <PencilCompose className="mt-0.5 fill-white text-black" />
+      ) : (
+        <div className="flex items-center justify-center gap-2.5 pr-1 pl-0.5">
+          <PencilCompose className="fill-white" />
+          <div className="justify-start text-sm leading-none text-white">
+            {m['common.commandPalette.commands.newEmail']()}
+          </div>
+        </div>
+      )}
+    </button>
   );
 }

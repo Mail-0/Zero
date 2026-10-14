@@ -14,10 +14,10 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { z } from 'zod';
 import { env } from 'cloudflare:workers';
+import { miniModel } from '../ai-models';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 export interface GenerateTopicsOptions {
   sampleSize?: number;
@@ -35,14 +35,14 @@ export interface UserTopic {
  */
 export async function generateWhatUserCaresAbout(
   subjects: string[],
-  opts: GenerateTopicsOptions = {}
+  opts: GenerateTopicsOptions = {},
 ): Promise<UserTopic[]> {
   if (!subjects.length) {
     return [];
   }
 
-  if (!env.OPENAI_API_KEY) {
-    console.warn('OPENAI_API_KEY not configured - topics generation disabled');
+  if (!env.OPENROUTER_API_KEY) {
+    console.warn('OPENROUTER_API_KEY not configured - topics generation disabled');
     return [];
   }
 
@@ -52,7 +52,7 @@ export async function generateWhatUserCaresAbout(
       s
         .replace(/^(\s*(re|fwd):\s*)+/i, '') // strip reply/forward prefixes
         .replace(/\s{2,}/g, ' ')
-        .trim()
+        .trim(),
     )
     .filter(Boolean);
 
@@ -72,14 +72,19 @@ export async function generateWhatUserCaresAbout(
     .map(([s, n]) => `${n}× ${s}`);
 
   const schema = z.object({
-    topics: z.array(z.object({
-      topic: z.string().max(25),
-      usecase: z.string().max(100)
-    })).min(1).max(6),
+    topics: z
+      .array(
+        z.object({
+          topic: z.string().max(25),
+          usecase: z.string().max(100),
+        }),
+      )
+      .min(1)
+      .max(6),
   });
 
-  const existingLabelsText = opts.existingLabels?.length 
-    ? `\n\nExisting labels in this account (avoid duplicates or very similar topics):\n${opts.existingLabels.map(l => l.name).join(', ')}`
+  const existingLabelsText = opts.existingLabels?.length
+    ? `\n\nExisting labels in this account (avoid duplicates or very similar topics):\n${opts.existingLabels.map((l) => l.name).join(', ')}`
     : '';
 
   const systemPrompt = `You are an assistant that studies a person's email subjects and summarizes the *topics* they care about.
@@ -91,7 +96,7 @@ ${sample.join('\n')}`;
 
   try {
     const { object } = await generateObject({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o-mini'),
+      model: miniModel(),
       schema,
       system: systemPrompt,
       prompt: userPrompt,

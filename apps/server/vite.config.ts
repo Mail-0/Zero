@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   test: {
@@ -6,4 +6,4 @@ export default defineConfig({
     hookTimeout: 120000,
     teardownTimeout: 120000,
   },
-}); 
+});

@@ -1,0 +1,72 @@
+/*
+  Design tokens for the AI chat kit (ported from Orchid). Utilities such as
+  bg-surface-subtle, text-neutral-subtle, bg-ai and text-copy come from here.
+  Dark values are tuned to Zero's panels (#1a1a1a) rather than Orchid's.
+*/
+@import 'streamdown/styles.css';
+
+@source "../node_modules/streamdown/dist";
+
+@theme {
+  --background-color-surface: #ffffff;
+  --background-color-surface-weak: #f9f9f9;
+  --background-color-surface-subtle: #f0f0f0;
+  --background-color-surface-strong: #e8e8e8;
+  --background-color-neutral-inverse: #202020;
+
+  --text-color-neutral: #202020;
+  --text-color-neutral-subtle: #646464;
+  --text-color-neutral-weak: #8d8d8d;
+
+  --border-color-neutral: #e0e0e0;
+  --border-color-neutral-subtle: #e8e8e8;
+  --ring-color-neutral-subtle: #e8e8e8;
+
+  --background-color-ai: var(--color-purple-500);
+  --background-color-danger: #db0007b8;
+
+  --text-copy-lg: var(--text-base);
+  --text-copy: var(--text-sm);
+  --text-copy-sm: var(--text-xs);
+  --text-copy-sm--line-height: 1.1rem;
+  --text-copy-xs: 0.625rem;
+
+  --shadow-chat: 0px 0px 10px 3px rgba(0, 0, 0, 0.06);
+
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+
+  --animate-pulse-size: pulseSize 800ms var(--ease-in-out-expo) infinite;
+
+  @keyframes pulseSize {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.5);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+.dark {
+  --background-color-surface: #202020;
+  --background-color-surface-weak: #1f1f1f;
+  --background-color-surface-subtle: #252525;
+  --background-color-surface-strong: #2e2e2e;
+  --background-color-neutral-inverse: #eeeeee;
+
+  --text-color-neutral: #eeeeee;
+  --text-color-neutral-subtle: #b4b4b4;
+  --text-color-neutral-weak: #6e6e6e;
+
+  --border-color-neutral: #333333;
+  --border-color-neutral-subtle: #2a2a2a;
+  --ring-color-neutral-subtle: #2a2a2a;
+
+  --background-color-danger: #ef4444;
+
+  --shadow-chat: 0px 0px 10px 3px rgba(0, 0, 0, 0.3);
+}

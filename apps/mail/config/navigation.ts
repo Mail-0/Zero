@@ -4,8 +4,10 @@ import {
   ExclamationCircle,
   Folder,
   Inbox,
+  Inboxes,
   SettingsGear,
   Stars,
+  Sparkles,
   Tabs,
   Users,
   ArrowLeft,
@@ -22,7 +24,9 @@ export interface NavItem {
   id?: string;
   title: string;
   url: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<
+    React.ComponentPropsWithRef<'svg'> & { size?: number; strokeWidth?: number }
+  >;
   badge?: number;
   isBackButton?: boolean;
   isSettingsButton?: boolean;
@@ -55,6 +59,12 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/inbox',
             icon: Inbox,
             shortcut: 'g + i',
+          },
+          {
+            id: 'unified',
+            title: m['navigation.sidebar.unifiedInbox'](),
+            url: '/mail/unified',
+            icon: Inboxes,
           },
           {
             id: 'drafts',
@@ -172,6 +182,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: m['navigation.settings.labels'](),
             url: '/settings/labels',
             icon: Sheet,
+          },
+          {
+            title: m['navigation.settings.ai'](),
+            url: '/settings/ai',
+            icon: Sparkles,
           },
           //   {
           //     title: m['navigation.settings.categories'](),

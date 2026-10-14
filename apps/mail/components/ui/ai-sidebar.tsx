@@ -1,15 +1,21 @@
+import {
+  fetchCurrentChatMessages,
+  useChatConversations,
+} from '@/components/ai-chat/use-conversations';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { useState, useEffect, useCallback, lazy, Suspense, type ComponentProps } from 'react';
+import { AiSettingsDialog } from '@/components/ai-settings/ai-settings-dialog';
+import type { AIChat as AIChatComponent } from '@/components/create/ai-chat';
 import { ArrowsPointingIn, PanelLeftOpen, Phone } from '../icons/icons';
+import { ChatHistoryButton } from '@/components/ai-chat/chat-history';
+import { useAiDisabled, useAiEnabled } from '@/hooks/use-ai-enabled';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { ResizablePanel } from '@/components/ui/resizable';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AIChat } from '@/components/create/ai-chat';
 import { useTRPC } from '@/providers/query-provider';
 import { Tools } from '../../../server/src/types';
 import { useBilling } from '@/hooks/use-billing';
-import { PromptsDialog } from './prompts-dialog';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLabels } from '@/hooks/use-labels';
@@ -18,12 +24,23 @@ import { useAgentChat } from 'agents/ai-react';
 import { X, Expand, Plus } from 'lucide-react';
 import { Gauge } from '@/components/ui/gauge';
 import { useParams } from 'react-router';
+import type { Message } from 'ai';
 
 import { useAgent } from 'agents/react';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
+
+// AIChat embeds the tiptap editor; only load it once the sidebar is opened.
+const LazyAIChat = lazy(() =>
+  import('@/components/create/ai-chat').then((mod) => ({ default: mod.AIChat })),
+);
+const AIChat = (props: ComponentProps<typeof AIChatComponent>) => (
+  <Suspense fallback={null}>
+    <LazyAIChat {...props} />
+  </Suspense>
+);
 
 interface ChatHeaderProps {
   onClose: () => void;
@@ -33,6 +50,7 @@ interface ChatHeaderProps {
   isPopup: boolean;
   isPro: boolean;
   onNewChat: () => void;
+  history: React.ReactNode;
 }
 
 function ChatHeader({
@@ -43,11 +61,12 @@ function ChatHeader({
   isPopup,
   isPro,
   onNewChat,
+  history,
 }: ChatHeaderProps) {
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const { chatMessages } = useBilling();
   return (
-    <div className="relative flex items-center justify-between px-2.5 pb-[10px] pt-[13px]">
+    <div className="relative flex items-center justify-between px-2.5 pt-[13px] pb-[10px]">
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -133,7 +152,7 @@ function ChatHeader({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    You've used {chatMessages.usage} out of {chatMessages.included_usage} chat
+                    You&apos;ve used {chatMessages.usage} out of {chatMessages.included_usage} chat
                     messages.
                   </p>
                   <p className="mb-2">Upgrade for unlimited messages!</p>
@@ -152,7 +171,9 @@ function ChatHeader({
           </>
         )}
 
-        <PromptsDialog />
+        <AiSettingsDialog />
+
+        {history}
 
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -333,7 +354,54 @@ export function useAISidebar() {
   };
 }
 
-function AISidebar({ className }: AISidebarProps) {
+/** Persisted chat UI state: query params plus their localStorage mirrors. */
+const AI_CHAT_STORAGE_KEYS = ['ai-sidebar-open', 'ai-viewmode', 'ai-fullscreen'];
+
+/**
+ * Clears persisted chat state (open sidebar/popup, view mode, fullscreen) once
+ * AI is turned off, so a stale `?aiSidebar=true` or saved fullscreen can't
+ * reopen chat or hide the app sidebar, and chat starts closed if re-enabled.
+ */
+function useClearAiChatStateWhenDisabled() {
+  const aiDisabled = useAiDisabled();
+  const [open, setOpenQuery] = useQueryState('aiSidebar');
+  const [viewMode, setViewModeQuery] = useQueryState('viewMode');
+  const [fullScreen, setIsFullScreenQuery] = useQueryState('isFullScreen');
+
+  useEffect(() => {
+    if (!aiDisabled) return;
+    if (typeof window !== 'undefined')
+      AI_CHAT_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    if (open !== null) setOpenQuery(null).catch(console.error);
+    if (viewMode !== null) setViewModeQuery(null).catch(console.error);
+    if (fullScreen !== null) setIsFullScreenQuery(null).catch(console.error);
+  }, [
+    aiDisabled,
+    open,
+    viewMode,
+    fullScreen,
+    setOpenQuery,
+    setViewModeQuery,
+    setIsFullScreenQuery,
+  ]);
+}
+
+/**
+ * The AI chat sidebar/popup. Renders nothing (and opens no chat socket or
+ * Meta+0 hotkey) when the user has turned AI off.
+ */
+function AISidebar(props: AISidebarProps) {
+  const aiEnabled = useAiEnabled();
+  useClearAiChatStateWhenDisabled();
+  // The panel suspends while the open chat's saved messages load.
+  return aiEnabled ? (
+    <Suspense fallback={null}>
+      <AISidebarPanel {...props} />
+    </Suspense>
+  ) : null;
+}
+
+function AISidebarPanel({ className }: AISidebarProps) {
   const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
     useAISidebar();
   const { isPro, track, refetch: refetchBilling } = useBilling();
@@ -352,12 +420,18 @@ function AISidebar({ className }: AISidebarProps) {
     onError: (e) => console.log(e),
   });
 
+  const connectionId = activeConnection?.id ? String(activeConnection.id) : undefined;
+  const { startNew } = useChatConversations(connectionId, false);
+  // Bumped when switching chats so the composer, queue and attachments reset.
+  const [chatKey, setChatKey] = useState(0);
+
   const chatState = useAgentChat({
-    getInitialMessages: async () => {
-      return [];
-    },
+    getInitialMessages: ({ name }) =>
+      fetchCurrentChatMessages(name === 'general' ? undefined : name) as Promise<Message[]>,
     agent,
     maxSteps: 10,
+    // Batch streamed updates; one render per chunk can exceed React's update depth.
+    experimental_throttle: 50,
     body: {
       threadId: threadId ?? undefined,
       currentFolder: folder ?? undefined,
@@ -429,9 +503,23 @@ function AISidebar({ className }: AISidebarProps) {
     setOpen(!open);
   });
 
+  // Archives the open chat on the server; it stays in history.
   const handleNewChat = useCallback(() => {
-    chatState.setMessages([]);
-  }, [chatState]);
+    chatState.stop();
+    setChatKey((k) => k + 1);
+    if (connectionId) startNew.mutate();
+    else chatState.setMessages([]);
+  }, [chatState, connectionId, startNew]);
+
+  const history = (
+    <ChatHistoryButton
+      connectionId={connectionId}
+      onOpen={() => {
+        chatState.stop();
+        setChatKey((k) => k + 1);
+      }}
+    />
+  );
 
   return (
     <>
@@ -445,7 +533,7 @@ function AISidebar({ className }: AISidebarProps) {
                 defaultSize={24}
                 minSize={24}
                 maxSize={24}
-                className="bg-panelLight dark:bg-panelDark mb-1 mr-1 hidden h-[calc(100dvh-8px)] shadow-sm md:block md:rounded-2xl md:shadow-sm"
+                className="bg-panelLight dark:bg-panelDark mr-1 mb-1 hidden h-[calc(100dvh-8px)] shadow-sm md:block md:rounded-2xl md:shadow-sm"
               >
                 <div className={cn('h-[calc(98vh)]', 'flex flex-col', '', className)}>
                   <div className="flex h-full flex-col">
@@ -460,9 +548,10 @@ function AISidebar({ className }: AISidebarProps) {
                       isPopup={isPopup}
                       isPro={isPro ?? false}
                       onNewChat={handleNewChat}
+                      history={history}
                     />
                     <div className="relative flex-1 overflow-hidden">
-                      <AIChat {...chatState} />
+                      <AIChat key={chatKey} {...chatState} />
                     </div>
                   </div>
                 </div>
@@ -474,7 +563,7 @@ function AISidebar({ className }: AISidebarProps) {
           <div
             tabIndex={0}
             className={cn(
-              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-sm transition-opacity duration-150 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0 lg:opacity-40 lg:hover:opacity-100',
+              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-sm transition-opacity duration-150 sm:inset-auto sm:right-4 sm:bottom-4 sm:flex-col sm:items-end sm:justify-end sm:p-0 lg:opacity-40 lg:hover:opacity-100',
               'md:hidden',
               isPopup && !isFullScreen && 'md:flex',
               isFullScreen && 'inset-0! flex! p-0! opacity-100! backdrop-blur-none!',
@@ -506,9 +595,10 @@ function AISidebar({ className }: AISidebarProps) {
                   isPopup={isPopup}
                   isPro={isPro ?? false}
                   onNewChat={handleNewChat}
+                  history={history}
                 />
                 <div className="relative flex-1 overflow-hidden">
-                  <AIChat {...chatState} />
+                  <AIChat key={chatKey} {...chatState} />
                 </div>
               </div>
             </div>

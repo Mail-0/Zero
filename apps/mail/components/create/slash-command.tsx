@@ -1,11 +1,4 @@
-import {
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  Text,
-  } from 'lucide-react';
+import { Heading1, Heading2, Heading3, List, ListOrdered, Text } from 'lucide-react';
 import { createSuggestionItems } from 'novel';
 
 export const suggestionItems = createSuggestionItems([

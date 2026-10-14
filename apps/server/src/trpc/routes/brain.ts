@@ -1,33 +1,17 @@
-import { disableBrainFunction, getPrompts } from '../../lib/brain';
-import { EProviders, EPrompts, type ISubscribeBatch } from '../../types';
+import {
+  getShortThreadSummary,
+  shortenThreadSummary,
+  shortSummaryDepsFromEnv,
+} from '../../lib/thread-short-summary';
 import { activeConnectionProcedure, router } from '../trpc';
-import { setSubscribedState } from '../../lib/utils';
+import { summariesEnabled } from '../../lib/ai-settings';
+import { getUserAiSettings } from '../../lib/ai-access';
+import { getPrompts } from '../../lib/brain';
+import { EPrompts } from '../../types';
 import { env } from '../../env';
 import { z } from 'zod';
 
-const labelSchema = z.object({
-  name: z.string(),
-  usecase: z.string(),
-});
-
-const labelsSchema = z.array(labelSchema);
-
 export const brainRouter = router({
-  enableBrain: activeConnectionProcedure.mutation(async ({ ctx }) => {
-    const connection = ctx.activeConnection as { id: string; providerId: EProviders };
-    await setSubscribedState(connection.id, connection.providerId);
-    await env.subscribe_queue.send({
-      connectionId: connection.id,
-      providerId: connection.providerId,
-    } as ISubscribeBatch);
-    return true;
-    // return await enableBrainFunction(connection);
-  }),
-  disableBrain: activeConnectionProcedure.mutation(async ({ ctx }) => {
-    const connection = ctx.activeConnection as { id: string; providerId: EProviders };
-    return await disableBrainFunction(connection);
-  }),
-
   generateSummary: activeConnectionProcedure
     .input(
       z.object({
@@ -35,46 +19,25 @@ export const brainRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const { threadId } = input;
-      const response = await env.VECTORIZE.getByIds([threadId]);
-      if (response.length && response?.[0]?.metadata?.['summary']) {
-        const result = response[0].metadata as { summary: string; connection: string };
-        if (result.connection !== ctx.activeConnection.id) return null;
-        const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
-          input_text: result.summary,
-        });
-        return {
-          data: {
-            short: shortResponse.summary,
-          },
-        };
-      }
-      return null;
-    }),
-  getState: activeConnectionProcedure.query(async ({ ctx }) => {
-    const connection = ctx.activeConnection;
-    const state = await env.subscribed_accounts.get(`${connection.id}__${connection.providerId}`);
-    if (!state || state === 'pending') return { enabled: false };
-    return { enabled: true };
-  }),
-  getLabels: activeConnectionProcedure
-    .output(
-      z.array(
-        z.object({
-          name: z.string(),
-          usecase: z.string(),
-        }),
-      ),
-    )
-    .query(async ({ ctx }) => {
       const connection = ctx.activeConnection;
-      const labels = await env.connection_labels.get(connection.id);
-      try {
-        return labels ? (JSON.parse(labels) as z.infer<typeof labelsSchema>) : [];
-      } catch (error) {
-        console.error(`[GET_LABELS] Error parsing labels for ${connection.id}:`, error);
-        return [];
-      }
+      if (!summariesEnabled(await getUserAiSettings(ctx.sessionUser.id))) return null;
+      const deps = shortSummaryDepsFromEnv(env);
+      const existing = await getShortThreadSummary(deps, input.threadId, connection.id);
+      if (existing) return { data: { short: existing } };
+
+      // No stored summary (backfilled or older thread): summarize now for entitled
+      // users. The runner checks entitlement and coalesces concurrent opens.
+      const runner = env.WORKFLOW_RUNNER.get(
+        env.WORKFLOW_RUNNER.idFromName(`${connection.id}:${input.threadId}`),
+      );
+      const summary = await runner.generateThreadSummary({
+        connectionId: connection.id,
+        threadId: input.threadId,
+        providerId: connection.providerId,
+      });
+      if (!summary) return null;
+      const short = await shortenThreadSummary(deps, input.threadId, connection.id, summary);
+      return short ? { data: { short } } : null;
     }),
   getPrompts: activeConnectionProcedure.query(async ({ ctx }) => {
     const connection = ctx.activeConnection;
@@ -94,22 +57,6 @@ export const brainRouter = router({
 
       await env.prompts_storage.put(promptName, input.content);
 
-      return { success: true };
-    }),
-  updateLabels: activeConnectionProcedure
-    .input(
-      z.object({
-        labels: labelsSchema,
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const connection = ctx.activeConnection;
-      console.log(input.labels);
-
-      const labels = labelsSchema.parse(input.labels);
-      console.log(labels);
-
-      await env.connection_labels.put(connection.id, JSON.stringify(labels));
       return { success: true };
     }),
 });

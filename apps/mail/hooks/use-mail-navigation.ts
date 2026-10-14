@@ -1,5 +1,4 @@
-
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useOptimisticActions } from './use-optimistic-actions';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -21,10 +20,11 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   const [command, setCommand] = useAtom(mailNavigationCommandAtom);
   const { optimisticMarkAsRead } = useOptimisticActions();
   const itemsRef = useRef(items);
-  itemsRef.current = items;
   const onNavigateRef = useRef(onNavigate);
-  onNavigateRef.current = onNavigate;
-  const [threadId] = useQueryState('threadId');
+  useLayoutEffect(() => {
+    itemsRef.current = items;
+    onNavigateRef.current = onNavigate;
+  }, [items, onNavigate]);
   const [isCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
   const hoveredMailRef = useRef<string | null>(null);
@@ -89,7 +89,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
         bulkSelected: [],
       }));
     },
-    [setMail, threadId],
+    [setMail, optimisticMarkAsRead],
   );
 
   const navigateNext = useCallback(() => {

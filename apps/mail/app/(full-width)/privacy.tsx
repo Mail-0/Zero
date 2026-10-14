@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
 import { createSectionId } from '@/lib/utils';
 
-import React from 'react';
-
 const LAST_UPDATED = 'May 16, 2025';
 
 export default function PrivacyPolicy() {
@@ -22,7 +20,7 @@ export default function PrivacyPolicy() {
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <Navigation />
       <div className="relative z-10 flex grow flex-col">
-        <div className="absolute right-4 top-6 md:left-8 md:right-auto md:top-8">
+        <div className="absolute top-6 right-4 md:top-8 md:right-auto md:left-8">
           <a href="/">
             <Button
               variant="ghost"
@@ -232,7 +230,7 @@ const sections = [
           <ul className="ml-4 list-disc space-y-2">
             <li>
               We access the following Google user data through the Gmail API:
-              <ul className="ml-4 mt-2 list-disc space-y-1">
+              <ul className="mt-2 ml-4 list-disc space-y-1">
                 <li>Email content and attachments</li>
                 <li>Email metadata (subject, dates, recipients)</li>
                 <li>Labels and folder structure</li>
@@ -273,7 +271,7 @@ const sections = [
             <li>Users can request immediate deletion of their cached data</li>
             <li>
               Account deletion process:
-              <ul className="ml-4 mt-2 list-disc space-y-1">
+              <ul className="mt-2 ml-4 list-disc space-y-1">
                 <li>All user data is immediately marked for deletion</li>
                 <li>Cached data is purged within 24 hours</li>
                 <li>Audit logs are retained for 30 days then permanently deleted</li>
@@ -349,8 +347,8 @@ const sections = [
             <li>During the trial period, you have full access to all premium features</li>
             <li>You can cancel at any time during the trial period without any charges</li>
             <li>
-              If you don't cancel before the trial ends, you'll be automatically charged for the
-              premium subscription
+              If you don&apos;t cancel before the trial ends, you&apos;ll be automatically charged
+              for the premium subscription
             </li>
           </ul>
         </div>
@@ -363,7 +361,9 @@ const sections = [
             <li>Subscription fees are billed in advance on a monthly or annual basis</li>
             <li>Current pricing information is available on our pricing page</li>
             <li>All payments are processed securely through our trusted payment partners</li>
-            <li>Subscription charges will appear on your billing statement as "Zero Email"</li>
+            <li>
+              Subscription charges will appear on your billing statement as &quot;Zero Email&quot;
+            </li>
             <li>
               We accept major credit cards and other payment methods as available in your region
             </li>

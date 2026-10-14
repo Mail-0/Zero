@@ -14,6 +14,9 @@ export const shortcutRouter = router({
       const { sessionUser } = ctx;
       const { shortcuts } = input;
       const db = await getZeroDB(sessionUser.id);
-      await db.insertUserHotkeys(shortcuts as any);
+      // The RPC stores this array as JSON; its insert-row signature does not describe the payload.
+      await db.insertUserHotkeys(
+        shortcuts as unknown as Parameters<typeof db.insertUserHotkeys>[0],
+      );
     }),
 });

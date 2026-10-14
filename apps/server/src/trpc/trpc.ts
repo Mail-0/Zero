@@ -2,6 +2,7 @@ import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
+import { assertAiEnabled } from '../lib/ai-access';
 import { initTRPC, TRPCError } from '@trpc/server';
 
 import { redis } from '../lib/services';
@@ -84,6 +85,17 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
   }
 
   return res;
+});
+
+/** AI procedures: rejected with FORBIDDEN when the user has turned AI off. */
+export const aiConnectionProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
+  await assertAiEnabled(ctx.sessionUser.id);
+  return next();
+});
+
+export const aiDriverProcedure = activeDriverProcedure.use(async ({ ctx, next }) => {
+  await assertAiEnabled(ctx.sessionUser.id);
+  return next();
 });
 
 export const createRateLimiterMiddleware = (config: {

@@ -61,7 +61,7 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
 
     return (
       <div
-        className="hover:bg-accent/10 flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200"
+        className="hover:bg-accent/10 flex cursor-pointer items-center justify-center rounded-md transition-colors duration-200 select-none"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}

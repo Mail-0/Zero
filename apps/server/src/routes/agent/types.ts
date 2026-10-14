@@ -7,6 +7,8 @@ export enum IncomingMessageType {
   ChatRequestCancel = 'cf_agent_chat_request_cancel',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  Mail_SyncStatus = 'zero_mail_sync_status',
+  Mail_Count = 'zero_mail_count',
 }
 
 export enum OutgoingMessageType {
@@ -16,6 +18,8 @@ export enum OutgoingMessageType {
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
   User_Topics = 'zero_user_topics',
+  Mail_SyncStatus = 'zero_mail_sync_status',
+  Mail_Count = 'zero_mail_count',
 }
 
 export type IncomingMessage =
@@ -49,6 +53,8 @@ export type IncomingMessage =
     };
 
 export type OutgoingMessage =
+  | { type: OutgoingMessageType.Mail_SyncStatus }
+  | { type: OutgoingMessageType.Mail_Count }
   | {
       type: OutgoingMessageType.ChatMessages;
       messages: ChatMessage[];

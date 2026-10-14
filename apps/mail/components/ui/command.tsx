@@ -46,8 +46,11 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="border-input flex items-center border-none w-full px-5" cmdk-input-wrapper="">
-    <Search className="fill-iconLight me-3 relative top-0.5 text-muted-foreground/80 h-4 w-4" />
+  <div
+    className="border-input flex w-full items-center border-none px-5"
+    data-cmdk-input-wrapper=""
+  >
+    <Search className="fill-iconLight text-muted-foreground/80 relative top-0.5 me-3 h-4 w-4" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -67,7 +70,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn('max-h-80 overflow-y-auto overflow-x-hidden', className)}
+    className={cn('max-h-80 overflow-x-hidden overflow-y-auto', className)}
     {...props}
   />
 ));
@@ -118,7 +121,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      'data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground relative flex cursor-default select-none items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+      'data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground relative flex cursor-default items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
       className,
     )}
     {...props}
@@ -132,7 +135,7 @@ const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanE
     <kbd
       className={cn(
         'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
-        '-me-1 ms-auto inline-flex max-h-full items-center',
+        'ms-auto -me-1 inline-flex max-h-full items-center',
         className,
       )}
       {...props}

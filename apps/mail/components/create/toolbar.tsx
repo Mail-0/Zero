@@ -111,7 +111,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                 <TooltipContent>H3</TooltipContent>
               </Tooltip>
             </div>
-            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
+            <Separator orientation="vertical" className="relative top-0.5 right-1 h-6" />
             <div className="mr-2 flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -181,7 +181,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
               </Tooltip>
             </div>
 
-            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
+            <Separator orientation="vertical" className="relative top-0.5 right-1 h-6" />
 
             <div className="flex items-center gap-1">
               <Tooltip>

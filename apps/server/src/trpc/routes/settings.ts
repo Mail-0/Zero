@@ -16,7 +16,7 @@ export const settingsRouter = router({
 
       const { sessionUser } = ctx;
       const db = await getZeroDB(sessionUser.id);
-      const result: any = await db.findUserSettings();
+      const result = await db.findUserSettings();
 
       // Returning null here when there are no settings so we can use the default settings with timezone from the browser
       if (!result) return { settings: defaultUserSettings };
@@ -34,13 +34,13 @@ export const settingsRouter = router({
   save: privateProcedure.input(userSettingsSchema.partial()).mutation(async ({ ctx, input }) => {
     const { sessionUser } = ctx;
     const db = await getZeroDB(sessionUser.id);
-    const existingSettings: any = await db.findUserSettings();
+    const existingSettings = await db.findUserSettings();
 
     if (existingSettings) {
-      const newSettings: any = { ...(existingSettings.settings as UserSettings), ...input };
+      const newSettings = { ...(existingSettings.settings as UserSettings), ...input };
       await db.updateUserSettings(newSettings);
     } else {
-      await db.insertUserSettings({ ...(defaultUserSettings as any), ...input });
+      await db.insertUserSettings({ ...defaultUserSettings, ...input });
     }
 
     return { success: true };

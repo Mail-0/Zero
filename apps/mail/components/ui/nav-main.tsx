@@ -54,7 +54,7 @@ type IconRefType = SVGSVGElement & {
 export function NavMain({ items }: NavMainProps) {
   const location = useLocation();
   const pathname = location.pathname;
-  const searchParams = new URLSearchParams();
+  const searchParams = React.useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [category] = useQueryState('category');
 
   const trpc = useTRPC();
@@ -176,7 +176,9 @@ export function NavMain({ items }: NavMainProps) {
       loading: 'Creating label...',
       success: 'Label created successfully',
       error: 'Failed to create label',
-      finally: () => {refetch()},
+      finally: () => {
+        refetch();
+      },
     });
   };
 
@@ -218,7 +220,7 @@ export function NavMain({ items }: NavMainProps) {
                   </p>
                 ) : null
               ) : (
-                <div className="bg-muted-foreground/50 mx-2 mb-4 mt-2 h-[0.5px] dark:bg-[#262626]" />
+                <div className="bg-muted-foreground/50 mx-2 mt-2 mb-4 h-[0.5px] dark:bg-[#262626]" />
               )}
               <div className="z-20 space-y-1 pb-2">
                 {section.items.map((item) => (
@@ -242,7 +244,8 @@ export function NavMain({ items }: NavMainProps) {
                 <span className="text-muted-foreground text-[13px] dark:text-[#898989]">
                   {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
                 </span>
-                {activeAccount?.providerId === 'google' ? (
+                {/* IMAP folders can be created too (CREATE mailbox). */}
+                {activeAccount?.providerId === 'google' || activeAccount?.providerId === 'imap' ? (
                   <LabelDialog
                     trigger={
                       <Button

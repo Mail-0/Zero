@@ -8,7 +8,9 @@ export type WorkflowContext = {
   threadId: string;
   thread: IGetThreadResponse;
   foundConnection: typeof connection.$inferSelect;
-  results?: Map<string, any>;
+  results?: Map<string, unknown>;
+  /** User-defined auto-label list; absent means topics learned from the inbox. */
+  aiLabels?: { name: string; usecase: string }[];
 };
 
 export type WorkflowStep = {
@@ -17,7 +19,7 @@ export type WorkflowStep = {
   description: string;
   enabled: boolean;
   condition?: (context: WorkflowContext) => boolean | Promise<boolean>;
-  action: (context: WorkflowContext) => Promise<any>;
+  action: (context: WorkflowContext) => Promise<unknown>;
   errorHandling?: 'continue' | 'fail';
   maxRetries?: number;
 };
@@ -42,14 +44,14 @@ export class WorkflowEngine {
   async executeWorkflow(
     workflowName: string,
     context: WorkflowContext,
-    existingResults?: Map<string, any>,
-  ): Promise<{ results: Map<string, any>; errors: Map<string, Error> }> {
+    existingResults?: Map<string, unknown>,
+  ): Promise<{ results: Map<string, unknown>; errors: Map<string, Error> }> {
     const workflow = this.workflows.get(workflowName);
     if (!workflow) {
       throw new Error(`Workflow "${workflowName}" not found`);
     }
 
-    const results = new Map<string, any>(existingResults || []);
+    const results = new Map<string, unknown>(existingResults || []);
     const errors = new Map<string, Error>();
 
     for (const step of workflow.steps) {
@@ -87,9 +89,9 @@ export class WorkflowEngine {
   async executeWorkflowChain(
     workflowNames: string[],
     context: WorkflowContext,
-  ): Promise<{ results: Map<string, any>; errors: Map<string, Error> }> {
-    let sharedResults = new Map<string, any>();
-    let allErrors = new Map<string, Error>();
+  ): Promise<{ results: Map<string, unknown>; errors: Map<string, Error> }> {
+    const sharedResults = new Map<string, unknown>();
+    const allErrors = new Map<string, Error>();
 
     for (const workflowName of workflowNames) {
       console.log(`[WORKFLOW_ENGINE] Executing workflow in chain: ${workflowName}`);
@@ -187,14 +189,6 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.createDraft,
         errorHandling: 'continue',
       },
-      {
-        id: 'cleanup-workflow-execution',
-        name: 'Cleanup Workflow Execution',
-        description: 'Removes workflow execution tracking',
-        enabled: true,
-        action: workflowFunctions.cleanupWorkflowExecution,
-        errorHandling: 'continue',
-      },
     ],
   };
 
@@ -222,14 +216,6 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         description: 'Saves vector embeddings to the database',
         enabled: true,
         action: workflowFunctions.upsertEmbeddings,
-        errorHandling: 'continue',
-      },
-      {
-        id: 'cleanup-workflow-execution',
-        name: 'Cleanup Workflow Execution',
-        description: 'Removes workflow execution tracking',
-        enabled: true,
-        action: workflowFunctions.cleanupWorkflowExecution,
         errorHandling: 'continue',
       },
     ],
@@ -262,14 +248,6 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.upsertThreadSummary,
         errorHandling: 'continue',
       },
-      //   {
-      //     id: 'cleanup-workflow-execution',
-      //     name: 'Cleanup Workflow Execution',
-      //     description: 'Removes workflow execution tracking',
-      //     enabled: true,
-      //     action: workflowFunctions.cleanupWorkflowExecution,
-      //     errorHandling: 'continue',
-      //   },
     ],
   };
 
@@ -301,11 +279,11 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         errorHandling: 'continue',
       },
       {
-        id: 'cleanup-workflow-execution',
-        name: 'Cleanup Workflow Execution',
-        description: 'Removes workflow execution tracking',
+        id: 'classify-category',
+        name: 'Classify Inbox Category',
+        description: 'Refines the header-based Personal/Promotions/Updates category (IMAP only)',
         enabled: true,
-        action: workflowFunctions.cleanupWorkflowExecution,
+        action: workflowFunctions.classifyCategory,
         errorHandling: 'continue',
       },
     ],

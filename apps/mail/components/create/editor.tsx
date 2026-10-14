@@ -116,6 +116,14 @@ export default function Editor({
   const contentRef = useRef<string>('');
   const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(
+    () => () => {
+      if (sendTimerRef.current !== null) clearTimeout(sendTimerRef.current);
+    },
+    [editor],
+  );
 
   const { openAI } = state;
 
@@ -142,9 +150,9 @@ export default function Editor({
     if (editor && initialValue) {
       try {
         // Make sure the editor is ready before setting content
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           // Double-check that the editor still exists in case of unmounting
-          if (editor?.commands?.setContent) {
+          if (!editor.isDestroyed && editor.commands.setContent) {
             editor.commands.setContent(initialValue);
 
             // Important: after setting content, manually trigger an update
@@ -154,6 +162,7 @@ export default function Editor({
             onChange(html);
           }
         }, 0);
+        return () => clearTimeout(timeout);
       } catch (error) {
         console.error('Error setting editor content:', error);
       }
@@ -166,8 +175,9 @@ export default function Editor({
     onCommandEnter?.();
 
     // Clear the editor content after sending
-    setTimeout(() => {
-      if (editor?.commands?.clearContent) {
+    if (sendTimerRef.current !== null) clearTimeout(sendTimerRef.current);
+    sendTimerRef.current = setTimeout(() => {
+      if (editor && !editor.isDestroyed) {
         clearEditorContent();
       }
     }, 200);

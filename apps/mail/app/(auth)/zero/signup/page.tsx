@@ -73,7 +73,7 @@ export default function SignupZero() {
                         {...field}
                         className="w-full bg-black pr-16 text-sm text-white placeholder:text-sm"
                       />
-                      <span className="bg-popover text-muted-foreground border-input absolute bottom-0 right-0 top-0 flex items-center rounded-r-md border border-l-0 px-3 py-2 text-sm">
+                      <span className="bg-popover text-muted-foreground border-input absolute top-0 right-0 bottom-0 flex items-center rounded-r-md border border-l-0 px-3 py-2 text-sm">
                         @0.email
                       </span>
                     </div>
@@ -108,7 +108,7 @@ export default function SignupZero() {
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <a href="/zero/login" className="text-white underline hover:text-white/80">
                   Login
                 </a>

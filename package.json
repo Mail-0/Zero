@@ -16,8 +16,11 @@
     "start": "turbo run start",
     "lint": "turbo run lint",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
-    "check": "pnpm run check:format && pnpm run lint",
+    "check": "pnpm run check:format && pnpm run lint && pnpm run typecheck && pnpm run check:react",
+    "typecheck": "pnpm --filter @zero/server exec tsc --noEmit && pnpm --filter @zero/mail exec react-router typegen && pnpm --filter @zero/mail exec tsc --noEmit",
     "check:format": "prettier . --check",
+    "check:react": "react-doctor apps/mail --yes --no-telemetry --no-warnings --blocking error",
+    "check:react:json": "react-doctor apps/mail --yes --no-telemetry --blocking error --json",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:db:up": "docker compose -f docker-compose.db.yaml up -d",
     "docker:db:stop": "docker compose -f docker-compose.db.yaml stop",
@@ -29,7 +32,8 @@
     "db:studio": "dotenv -- pnpm run -C apps/server db:studio",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org zero-7y --project nextjs ./apps/mail/.next && sentry-cli sourcemaps upload --org zero-7y --project nextjs ./apps/mail/.next",
     "scripts": "dotenv -- pnpx tsx ./scripts/run.ts",
-    "test": "pnpm --filter=@zero/testing test",
+    "test": "pnpm --filter @zero/server exec vitest run src/lib && pnpm --filter @zero/mail test",
+    "test:e2e": "pnpm --filter @zero/testing test:e2e",
     "test:watch": "pnpm --filter=@zero/testing test:watch",
     "test:coverage": "pnpm --filter=@zero/testing test:coverage",
     "test:ui": "pnpm --filter=@zero/testing test:ui",
@@ -43,15 +47,17 @@
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "husky": "9.1.7",
+    "jiti": "2.4.2",
     "prettier": "3.5.3",
     "prettier-plugin-sort-imports": "1.8.8",
     "prettier-plugin-tailwindcss": "0.6.12",
+    "react-doctor": "0.9.17",
     "tsx": "4.19.4",
     "turbo": "^2.5.4",
     "typescript": "catalog:"
   },
   "dependencies": {
-    "zod-to-json-schema": "3.24.6",
-    "zod": "3.25.42"
+    "zod": "3.25.42",
+    "zod-to-json-schema": "3.24.6"
   }
 }

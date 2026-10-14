@@ -67,7 +67,7 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                       <div className="p-2">
                         <div className="flex items-center justify-between gap-2">
                           <span
-                            className="max-w-[150px] overflow-hidden truncate text-ellipsis whitespace-nowrap text-sm font-medium"
+                            className="max-w-[150px] truncate overflow-hidden text-sm font-medium text-ellipsis whitespace-nowrap"
                             title={attachment.filename}
                           >
                             {attachment.filename}

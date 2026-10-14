@@ -46,7 +46,7 @@ const useTree = () => {
   return context;
 };
 
-interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
+type TreeViewComponentProps = React.HTMLAttributes<HTMLDivElement>;
 
 type Direction = 'rtl' | 'ltr' | undefined;
 
@@ -185,7 +185,7 @@ const TreeIndicator = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEle
 
 TreeIndicator.displayName = 'TreeIndicator';
 
-interface FolderComponentProps extends React.ComponentPropsWithoutRef<typeof Accordion.Item> {}
+type FolderComponentProps = React.ComponentPropsWithoutRef<typeof Accordion.Item>;
 
 type FolderProps = {
   expandedItems?: string[];
@@ -332,7 +332,7 @@ const File = forwardRef<
       type="button"
       disabled={!isSelectable}
       className={cn(
-        'flex w-fit items-center gap-1 rounded-md pr-1 text-sm duration-200 ease-in-out rtl:pl-1 rtl:pr-0',
+        'flex w-fit items-center gap-1 rounded-md pr-1 text-sm duration-200 ease-in-out rtl:pr-0 rtl:pl-1',
         {
           'bg-muted': isSelected && isSelectable,
         },
@@ -386,7 +386,7 @@ const CollapseButton = forwardRef<
   return (
     <Button
       variant={'ghost'}
-      className="absolute bottom-1 right-2 h-8 w-fit p-1"
+      className="absolute right-2 bottom-1 h-8 w-fit p-1"
       onClick={expandedItems && expandedItems.length > 0 ? closeAll : () => expendAllTree(elements)}
       ref={ref}
       {...props}

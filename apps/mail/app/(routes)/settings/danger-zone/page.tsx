@@ -6,6 +6,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  IconTile,
+  SettingsGroup,
+  SettingsRow,
+  destructiveButton,
+  field as field_,
+} from '@/components/settings/settings-ui';
 import { Form, FormControl, FormDescription, FormField, FormItem } from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { useSession, signOut } from '@/lib/auth-client';
@@ -15,6 +22,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import { useForm } from 'react-hook-form';
 import { m } from '@/paraglide/messages';
@@ -33,7 +41,7 @@ const formSchema = z.object({
 
 function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const trpc = useTRPC();
   const { refetch } = useSession();
   const { mutateAsync: deleteAccount, isPending } = useMutation(trpc.user.delete.mutationOptions());
@@ -74,16 +82,22 @@ function DeleteAccountDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">{m['pages.settings.dangerZone.deleteAccount']()}</Button>
+        <Button variant="ghost" className={destructiveButton}>
+          {m['pages.settings.dangerZone.deleteAccount']()}
+        </Button>
       </DialogTrigger>
-      <DialogContent showOverlay>
+      <DialogContent showOverlay className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{m['pages.settings.dangerZone.title']()}</DialogTitle>
-          <DialogDescription>{m['pages.settings.dangerZone.description']()}</DialogDescription>
+          <DialogTitle className="text-[15px]">
+            {m['pages.settings.dangerZone.title']()}
+          </DialogTitle>
+          <DialogDescription className="text-[13px]">
+            {m['pages.settings.dangerZone.description']()}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="border-destructive/50 bg-destructive/10 mt-2 flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-red-600 dark:text-red-400">
-          <AlertTriangle className="h-4 w-4" />
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] px-3 py-2 text-[13px] text-[#F43F5E] dark:border-[#6E2532] dark:bg-[#411D23]">
+          <AlertTriangle className="size-4 shrink-0" />
           <span>{m['pages.settings.dangerZone.warning']()}</span>
         </div>
 
@@ -94,16 +108,23 @@ function DeleteAccountDialog() {
               name="confirmText"
               render={({ field }) => (
                 <FormItem>
-                  <FormDescription>{m['pages.settings.dangerZone.confirmation']()}</FormDescription>
+                  <FormDescription className="text-[13px]">
+                    {m['pages.settings.dangerZone.confirmation']()}
+                  </FormDescription>
                   <FormControl>
-                    <Input placeholder="DELETE" {...field} />
+                    <Input placeholder="DELETE" className={cn(field_, 'h-8')} {...field} />
                   </FormControl>
                 </FormItem>
               )}
             />
 
             <div className="flex justify-end">
-              <Button type="submit" variant="destructive" disabled={isPending}>
+              <Button
+                type="submit"
+                variant="ghost"
+                className={destructiveButton}
+                disabled={isPending}
+              >
                 {isPending
                   ? m['pages.settings.dangerZone.deleting']()
                   : m['pages.settings.dangerZone.deleteAccount']()}
@@ -118,13 +139,23 @@ function DeleteAccountDialog() {
 
 export default function DangerPage() {
   return (
-    <div className="grid gap-6">
-      <SettingsCard
-        title={m['pages.settings.dangerZone.title']()}
-        description={m['pages.settings.dangerZone.description']()}
-      >
-        <DeleteAccountDialog />
-      </SettingsCard>
-    </div>
+    <SettingsCard
+      title={m['pages.settings.dangerZone.title']()}
+      description={m['pages.settings.dangerZone.description']()}
+    >
+      <SettingsGroup>
+        <SettingsRow
+          icon={
+            <IconTile className="border-[#FCCDD5] bg-[#FDE4E9] text-[#F43F5E] dark:border-[#6E2532] dark:bg-[#411D23] dark:text-[#F43F5E]">
+              <AlertTriangle />
+            </IconTile>
+          }
+          title={m['pages.settings.dangerZone.deleteAccount']()}
+          description={m['pages.settings.dangerZone.warning']()}
+        >
+          <DeleteAccountDialog />
+        </SettingsRow>
+      </SettingsGroup>
+    </SettingsCard>
   );
 }

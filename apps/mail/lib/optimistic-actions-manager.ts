@@ -17,12 +17,25 @@ export type PendingAction = BasePendingAction &
     | { type: 'READ'; params: { read: boolean } }
     | { type: 'LABEL'; params: { labelId: string; add: boolean } }
     | { type: 'IMPORTANT'; params: { important: boolean } }
+    | { type: 'SNOOZE'; params: { currentFolder: string; wakeAt: string } }
+    | { type: 'UNSNOOZE'; params: { currentFolder: string } }
   );
 
-class OptimisticActionsManager {
+export class OptimisticActionsManager {
   pendingActions: Map<string, PendingAction> = new Map();
   pendingActionsByType: Map<string, Set<string>> = new Map();
   lastActionId: string | null = null;
+
+  settleAction(id: string) {
+    const action = this.pendingActions.get(id);
+    if (!action) return undefined;
+    this.pendingActions.delete(id);
+    const actions = this.pendingActionsByType.get(action.type);
+    actions?.delete(id);
+    const typeDrained = !actions?.size;
+    if (typeDrained) this.pendingActionsByType.delete(action.type);
+    return { optimisticId: action.optimisticId, typeDrained };
+  }
 }
 
 export const optimisticActionsManager = new OptimisticActionsManager();

@@ -37,6 +37,7 @@ export function useKeyboardLayout() {
   const [layoutInfo, setLayoutInfo] = useState<LayoutDetectionResult | null>(null);
 
   useEffect(() => {
+    let focusTimeout: ReturnType<typeof setTimeout> | undefined;
     const updateLayoutInfo = () => {
       const info = keyboardLayoutMapper.getDetectedLayout();
       setLayoutInfo(info);
@@ -46,14 +47,18 @@ export function useKeyboardLayout() {
     updateLayoutInfo();
 
     const handleFocus = () => {
-      setTimeout(() => {
+      clearTimeout(focusTimeout);
+      focusTimeout = setTimeout(() => {
         updateLayoutInfo();
         console.log('Window focused, updated keyboard layout');
       }, 100);
     };
 
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearTimeout(focusTimeout);
+    };
   }, []);
 
   return layoutInfo;

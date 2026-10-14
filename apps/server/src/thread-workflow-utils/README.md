@@ -161,7 +161,7 @@ This means:
 
 ## Migration from Hardcoded Logic
 
-The original hardcoded logic in `runThreadWorkflow` has been replaced with:
+The original hardcoded thread workflow logic has been replaced with:
 
 1. **Workflow Engine**: Orchestrates the execution of workflows
 2. **Function Registry**: Contains all the individual processing functions

@@ -59,7 +59,7 @@ const TooltipContent = React.forwardRef<
         viewBox="0 0 6 10"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="absolute left-[-6px] top-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-[-6px] -translate-y-1/2"
       >
         <path d="M6 0L0 5L6 10V0Z" className="fill-white/80 dark:fill-[#413F3E]" />
       </svg>

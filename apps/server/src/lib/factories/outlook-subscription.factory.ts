@@ -1,8 +1,4 @@
-import {
-  BaseSubscriptionFactory,
-  type SubscriptionData,
-  type UnsubscriptionData,
-} from './base-subscription.factory';
+import { BaseSubscriptionFactory, type SubscriptionData } from './base-subscription.factory';
 import { EProviders } from '../../types';
 
 export class OutlookSubscriptionFactory extends BaseSubscriptionFactory {
@@ -13,12 +9,6 @@ export class OutlookSubscriptionFactory extends BaseSubscriptionFactory {
     // This will handle Microsoft Graph API subscriptions for Outlook
 
     throw new Error('Outlook subscription not implemented yet');
-  }
-
-  public async unsubscribe(_: { body: UnsubscriptionData }): Promise<Response> {
-    // TODO: Implement Outlook unsubscription logic
-
-    throw new Error('Outlook unsubscription not implemented yet');
   }
 
   public async verifyToken(_: string): Promise<boolean> {

@@ -1,11 +1,15 @@
 import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router } from '../trpc';
 import { getActiveConnection, getZeroDB } from '../../lib/server-utils';
+import { clearMailboxChatData } from '../../lib/chat-attachments';
+import { isConnectionActive } from '../../lib/connection-status';
 import { Ratelimit } from '@upstash/ratelimit';
+import { imapConnectionsRouter } from './imap';
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const connectionsRouter = router({
+  imap: imapConnectionsRouter,
   list: privateProcedure
     .use(
       createRateLimiterMiddleware({
@@ -18,9 +22,7 @@ export const connectionsRouter = router({
       const db = await getZeroDB(sessionUser.id);
       const connections = await db.findManyConnections();
 
-      const disconnectedIds = connections
-        .filter((c) => !c.accessToken || !c.refreshToken)
-        .map((c) => c.id);
+      const disconnectedIds = connections.filter((c) => !isConnectionActive(c)).map((c) => c.id);
 
       return {
         connections: connections.map((connection) => {
@@ -53,6 +55,7 @@ export const connectionsRouter = router({
       const user = ctx.sessionUser;
       const db = await getZeroDB(user.id);
       await db.deleteConnection(connectionId);
+      await clearMailboxChatData(connectionId);
 
       const activeConnection = await getActiveConnection();
       if (connectionId === activeConnection.id) await db.updateUser({ defaultConnectionId: null });

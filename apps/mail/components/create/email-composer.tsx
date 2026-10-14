@@ -14,13 +14,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown, Forward, Reply, ReplyAll, Trash2, TriangleAlert } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Check, Command, Loader, Paperclip, Plus, Type, X as XIcon } from 'lucide-react';
+import { Check, Command, Loader, Paperclip, Type, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { ImageCompressionSettings } from './image-compression-settings';
-import { useActiveConnection } from '@/hooks/use-connections';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { isLikelyNoReply, type ReplyMode } from '@/lib/reply';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
@@ -29,9 +37,9 @@ import { compressImages } from '@/lib/image-compression';
 import { gitHubEmojis } from '@tiptap/extension-emoji';
 import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 
 import { cn, formatFileSize } from '@/lib/utils';
@@ -47,6 +55,19 @@ import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
 const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
+// Keep in sync with the FileHandler allowedMimeTypes in use-compose-editor.
+const INLINE_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+
+const attachmentKeys = new WeakMap<File, string>();
+let nextAttachmentKey = 0;
+const getAttachmentKey = (file: File) => {
+  let key = attachmentKeys.get(file);
+  if (!key) {
+    key = `attachment-${nextAttachmentKey++}`;
+    attachmentKeys.set(file, key);
+  }
+  return key;
+};
 import { TemplateButton } from './template-button';
 
 type ThreadContent = {
@@ -64,7 +85,34 @@ interface EmailComposerProps {
   initialSubject?: string;
   initialMessage?: string;
   initialAttachments?: File[];
-  replyingTo?: string;
+  /** Pre-selected From address (e.g. the alias the replied-to message was sent to). */
+  initialFromEmail?: string;
+  /**
+   * Recipient/subject suggestions for replies. Re-applied whenever `key` changes after mount
+   * (e.g. switching Reply -> Reply all) without touching the message body.
+   */
+  prefill?: {
+    key: string;
+    to: string[];
+    cc: string[];
+    subject: string;
+    fromEmail?: string;
+  };
+  replyContext?: ReplyContext;
+  /** Resume this existing draft (e.g. one found in the thread) instead of creating a new one. */
+  initialDraftId?: string;
+  /** Saved with every draft so it's a real reply (threaded, and matchable when reopened). */
+  draftThreading?: {
+    inReplyTo?: string;
+    references?: string;
+    replyToMessageId?: string;
+    isForward?: boolean;
+  };
+  /** Attachments of the original message that a forward will carry over. */
+  forwardedAttachments?: { key: string; filename: string; size: number }[];
+  onRemoveForwardedAttachment?: (key: string) => void;
+  /** email (lowercase) -> display name, so chips show "Ann Smith" instead of the raw address. */
+  displayNames?: Map<string, string>;
   onSendEmail: (data: {
     to: string[];
     cc?: string[];
@@ -73,12 +121,22 @@ interface EmailComposerProps {
     message: string;
     attachments: File[];
     fromEmail?: string;
+    draftId?: string | null;
   }) => Promise<void>;
   onClose?: () => void;
   className?: string;
   autofocus?: boolean;
   settingsLoading?: boolean;
   editorClassName?: string;
+}
+
+export interface ReplyContext {
+  mode: ReplyMode;
+  senderName?: string;
+  senderEmail?: string;
+  subject?: string;
+  canReplyAll: boolean;
+  onModeChange: (mode: ReplyMode) => void;
 }
 
 const isValidEmail = (email: string): boolean => {
@@ -110,6 +168,14 @@ export function EmailComposer({
   initialSubject = '',
   initialMessage = '',
   initialAttachments = [],
+  initialFromEmail,
+  prefill,
+  replyContext,
+  displayNames,
+  initialDraftId,
+  draftThreading,
+  forwardedAttachments,
+  onRemoveForwardedAttachment,
   onSendEmail,
   onClose,
   className,
@@ -117,6 +183,10 @@ export function EmailComposer({
   settingsLoading = false,
   editorClassName,
 }: EmailComposerProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
   const { data: aliases } = useEmailAliases();
   const { data: settings } = useSettings();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
@@ -130,12 +200,12 @@ export function EmailComposer({
   const ccInputRef = useRef<HTMLInputElement>(null);
   const bccInputRef = useRef<HTMLInputElement>(null);
   const [threadId] = useQueryState('threadId');
-  const [mode] = useQueryState('mode');
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const { data: emailData } = useThread(threadId ?? null);
   const [draftId, setDraftId] = useQueryState('draftId');
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<string | null>(null);
   const [aiIsLoading, setAiIsLoading] = useState(false);
+  const aiEnabled = useAiEnabled();
   const [isGeneratingSubject, setIsGeneratingSubject] = useState(false);
   const [isAddingRecipients, setIsAddingRecipients] = useState(false);
   const [isAddingCcRecipients, setIsAddingCcRecipients] = useState(false);
@@ -143,7 +213,6 @@ export function EmailComposer({
   const toWrapperRef = useRef<HTMLDivElement>(null);
   const ccWrapperRef = useRef<HTMLDivElement>(null);
   const bccWrapperRef = useRef<HTMLDivElement>(null);
-  const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
   const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
@@ -152,73 +221,112 @@ export function EmailComposer({
   );
   const [activeReplyId] = useQueryState('activeReplyId');
   const [toggleToolbar, setToggleToolbar] = useState(false);
-  const processAndSetAttachments = async (
-    filesToProcess: File[],
-    quality: ImageQuality,
-    showToast: boolean = false,
-  ) => {
-    if (filesToProcess.length === 0) {
-      setValue('attachments', [], { shouldDirty: true });
-      return;
-    }
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      to: initialTo,
+      cc: initialCc,
+      bcc: initialBcc,
+      subject: initialSubject,
+      message: initialMessage,
+      attachments: initialAttachments,
+      fromEmail:
+        initialFromEmail ||
+        settings?.settings?.defaultEmailAlias ||
+        aliases?.find((alias) => alias.primary)?.email ||
+        aliases?.[0]?.email ||
+        '',
+    },
+  });
+  const { watch, setValue, getValues } = form;
 
-    try {
-      const compressedFiles = await compressImages(filesToProcess, {
-        quality,
-        maxWidth: 1920,
-        maxHeight: 1080,
-      });
+  // Refs used by long-lived callbacks (editor keymaps, document listeners, unmount cleanup)
+  // so they always see current values instead of the first render's.
+  const draftIdRef = useRef<string | null>(draftId ?? initialDraftId ?? null);
+  useEffect(() => {
+    // Reflect a resumed draft in the URL so the rest of the app (and a reload) sees it.
+    if (initialDraftId && !draftId) void setDraftId(initialDraftId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (draftId) draftIdRef.current = draftId;
+  }, [draftId]);
+  const hasUnsavedChangesRef = useRef(false);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+  const savingRef = useRef<Promise<string | null> | null>(null);
+  const saveDraftRef = useRef<() => Promise<string | null>>(async () => null);
+  const handleCloseRef = useRef<() => Promise<void>>(async () => {});
+  const mountedRef = useRef(true);
+  const discardedRef = useRef(false);
+  const saveErrorShownRef = useRef(false);
+  const processAndSetAttachments = useCallback(
+    async (filesToProcess: File[], quality: ImageQuality, showToast: boolean = false) => {
+      if (filesToProcess.length === 0) {
+        setValue('attachments', [], { shouldDirty: true });
+        return;
+      }
 
-      if (compressedFiles.length !== filesToProcess.length) {
-        console.warn('Compressed files array length mismatch:', {
-          original: filesToProcess.length,
-          compressed: compressedFiles.length,
+      try {
+        const compressedFiles = await compressImages(filesToProcess, {
+          quality,
+          maxWidth: 1920,
+          maxHeight: 1080,
         });
+
+        if (compressedFiles.length !== filesToProcess.length) {
+          console.warn('Compressed files array length mismatch:', {
+            original: filesToProcess.length,
+            compressed: compressedFiles.length,
+          });
+          setValue('attachments', filesToProcess, { shouldDirty: true });
+          setHasUnsavedChanges(true);
+          if (showToast) {
+            toast.error('Image compression failed, using original files');
+          }
+          return;
+        }
+
+        setValue('attachments', compressedFiles, { shouldDirty: true });
+        setHasUnsavedChanges(true);
+
+        if (showToast && quality !== 'original') {
+          let totalOriginalSize = 0;
+          let totalCompressedSize = 0;
+
+          const imageFilesExist = filesToProcess.some((f) => f.type.startsWith('image/'));
+
+          if (imageFilesExist) {
+            filesToProcess.forEach((originalFile, index) => {
+              if (originalFile.type.startsWith('image/') && compressedFiles[index]) {
+                totalOriginalSize += originalFile.size;
+                totalCompressedSize += compressedFiles[index].size;
+              }
+            });
+
+            if (totalOriginalSize > totalCompressedSize) {
+              const savings = (
+                ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) *
+                100
+              ).toFixed(1);
+              if (parseFloat(savings) > 0.1) {
+                toast.success(`Images compressed: ${savings}% smaller`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error compressing images:', error);
         setValue('attachments', filesToProcess, { shouldDirty: true });
         setHasUnsavedChanges(true);
         if (showToast) {
           toast.error('Image compression failed, using original files');
         }
-        return;
       }
-
-      setValue('attachments', compressedFiles, { shouldDirty: true });
-      setHasUnsavedChanges(true);
-
-      if (showToast && quality !== 'original') {
-        let totalOriginalSize = 0;
-        let totalCompressedSize = 0;
-
-        const imageFilesExist = filesToProcess.some((f) => f.type.startsWith('image/'));
-
-        if (imageFilesExist) {
-          filesToProcess.forEach((originalFile, index) => {
-            if (originalFile.type.startsWith('image/') && compressedFiles[index]) {
-              totalOriginalSize += originalFile.size;
-              totalCompressedSize += compressedFiles[index].size;
-            }
-          });
-
-          if (totalOriginalSize > totalCompressedSize) {
-            const savings = (
-              ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) *
-              100
-            ).toFixed(1);
-            if (parseFloat(savings) > 0.1) {
-              toast.success(`Images compressed: ${savings}% smaller`);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error compressing images:', error);
-      setValue('attachments', filesToProcess, { shouldDirty: true });
-      setHasUnsavedChanges(true);
-      if (showToast) {
-        toast.error('Image compression failed, using original files');
-      }
-    }
-  };
+    },
+    [setValue],
+  );
 
   // Add this function to handle clicks outside the input fields
   useEffect(() => {
@@ -253,6 +361,7 @@ export function EmailComposer({
   const trpc = useTRPC();
   const { mutateAsync: aiCompose } = useMutation(trpc.ai.compose.mutationOptions());
   const { mutateAsync: createDraft } = useMutation(trpc.drafts.create.mutationOptions());
+  const { mutateAsync: deleteDraft } = useMutation(trpc.drafts.delete.mutationOptions());
   const { mutateAsync: generateEmailSubject } = useMutation(
     trpc.ai.generateEmailSubject.mutationOptions(),
   );
@@ -262,110 +371,38 @@ export function EmailComposer({
     }
   }, [isComposeOpen]);
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      to: initialTo,
-      cc: initialCc,
-      bcc: initialBcc,
-      subject: initialSubject,
-      message: initialMessage,
-      attachments: initialAttachments,
-      fromEmail:
-        settings?.settings?.defaultEmailAlias ||
-        aliases?.find((alias) => alias.primary)?.email ||
-        aliases?.[0]?.email ||
-        '',
-    },
-  });
-
+  // Reply prefill: the initial values arrive through useForm defaults. When the key changes
+  // later (Reply -> Reply all, or a different message), swap recipients/subject but keep the
+  // body. Deliberately NOT keyed on the thread data, so a background refetch can never wipe
+  // what the user has typed.
+  const appliedPrefillKey = useRef(prefill?.key);
   useEffect(() => {
-    // Don't populate from threadId if we're in compose mode
-    if (isComposeOpen === 'true') return;
+    if (!prefill || appliedPrefillKey.current === prefill.key) return;
+    appliedPrefillKey.current = prefill.key;
+    setValue('to', prefill.to);
+    setValue('cc', prefill.cc);
+    setValue('subject', prefill.subject);
+    if (prefill.fromEmail) setValue('fromEmail', prefill.fromEmail);
+    setShowCc(prefill.cc.length > 0);
+    setHasUnsavedChanges(true);
+  }, [prefill, setValue]);
 
-    if (!emailData?.latest || !mode || !activeConnection?.email) return;
-
-    const userEmail = activeConnection.email.toLowerCase();
-    const latestEmail = emailData.latest;
-    const senderEmail = latestEmail.replyTo;
-
-    // Reset states
-    form.reset();
-    setShowCc(false);
-    setShowBcc(false);
-
-    // Set subject based on mode
-    const subject =
-      mode === 'forward'
-        ? `Fwd: ${latestEmail.subject || ''}`
-        : latestEmail.subject?.startsWith('Re:')
-          ? latestEmail.subject
-          : `Re: ${latestEmail.subject || ''}`;
-    form.setValue('subject', subject);
-
-    if (mode === 'reply') {
-      // Reply to sender
-      form.setValue('to', [latestEmail.sender.email]);
-    } else if (mode === 'replyAll') {
-      const to: string[] = [];
-      const cc: string[] = [];
-
-      // Add original sender if not current user
-      if (senderEmail !== userEmail) {
-        to.push(latestEmail.replyTo || latestEmail.sender.email);
-      }
-
-      // Add original recipients from To field
-      latestEmail.to?.forEach((recipient) => {
-        const recipientEmail = recipient.email.toLowerCase();
-        if (recipientEmail !== userEmail && recipientEmail !== senderEmail) {
-          to.push(recipient.email);
-        }
-      });
-
-      // Add CC recipients
-      latestEmail.cc?.forEach((recipient) => {
-        const recipientEmail = recipient.email.toLowerCase();
-        if (recipientEmail !== userEmail && !to.includes(recipient.email)) {
-          cc.push(recipient.email);
-        }
-      });
-
-      // Add BCC recipients
-      latestEmail.bcc?.forEach((recipient) => {
-        const recipientEmail = recipient.email.toLowerCase();
-        if (
-          recipientEmail !== userEmail &&
-          !to.includes(recipient.email) &&
-          !cc.includes(recipient.email)
-        ) {
-          form.setValue('bcc', [...(bccEmails || []), recipient.email]);
-          setShowBcc(true);
-        }
-      });
-
-      form.setValue('to', to);
-      if (cc.length > 0) {
-        form.setValue('cc', cc);
-        setShowCc(true);
-      }
-    }
-    // For forward, we start with empty recipients
-  }, [mode, emailData?.latest, activeConnection?.email]);
-
-  // keep fromEmail in sync when settings or aliases load afterwards
+  // keep fromEmail in sync when settings or aliases load afterwards, unless the caller chose one
+  // (replies pick the alias the original was addressed to) or the user already picked one.
   useEffect(() => {
+    if (initialFromEmail) return;
     const preferred =
       settings?.settings?.defaultEmailAlias ??
       aliases?.find((a) => a.primary)?.email ??
       aliases?.[0]?.email;
 
-    if (preferred && form.getValues('fromEmail') !== preferred) {
+    const current = form.getValues('fromEmail');
+    const currentIsAlias = !!current && !!aliases?.some((a) => a.email === current);
+    if (preferred && !currentIsAlias && current !== preferred) {
       form.setValue('fromEmail', preferred, { shouldDirty: false });
     }
-  }, [settings?.settings?.defaultEmailAlias, aliases]);
+  }, [settings?.settings?.defaultEmailAlias, aliases, initialFromEmail]);
 
-  const { watch, setValue, getValues } = form;
   const toEmails = watch('to');
   const ccEmails = watch('cc');
   const bccEmails = watch('bcc');
@@ -373,13 +410,16 @@ export function EmailComposer({
   const attachments = watch('attachments');
   const fromEmail = watch('fromEmail');
 
-  const handleAttachment = async (newFiles: File[]) => {
-    if (newFiles && newFiles.length > 0) {
-      const newOriginals = [...originalAttachments, ...newFiles];
-      setOriginalAttachments(newOriginals);
-      await processAndSetAttachments(newOriginals, imageQuality, true);
-    }
-  };
+  const handleAttachment = useCallback(
+    async (newFiles: File[]) => {
+      if (newFiles && newFiles.length > 0) {
+        const newOriginals = [...originalAttachments, ...newFiles];
+        setOriginalAttachments(newOriginals);
+        await processAndSetAttachments(newOriginals, imageQuality, true);
+      }
+    },
+    [originalAttachments, processAndSetAttachments, imageQuality],
+  );
 
   const removeAttachment = async (index: number) => {
     const newOriginals = originalAttachments.filter((_, i) => i !== index);
@@ -387,6 +427,10 @@ export function EmailComposer({
     await processAndSetAttachments(newOriginals, imageQuality);
     setHasUnsavedChanges(true);
   };
+
+  // The editor is created once, so its keyboard handlers must go through a ref; otherwise
+  // Cmd+Enter would run the first render's handleSend (stale Cc/Bcc visibility, stale draft id).
+  const handleSendRef = useRef<() => Promise<void>>(async () => {});
 
   const editor = useComposeEditor({
     initialValue: initialMessage,
@@ -396,15 +440,26 @@ export function EmailComposer({
       setMessageLength(length);
     },
     onModEnter: () => {
-      void handleSend();
+      void handleSendRef.current();
       return true;
     },
     onAttachmentsChange: async (files) => {
       await handleAttachment(files);
     },
-    placeholder: 'Start your email here',
+    placeholder: replyContext ? 'Write your reply…' : 'Start your email here',
     autofocus,
   });
+
+  // A draft (or restored content) can arrive after the editor was created. Fill it in as long
+  // as the user hasn't started typing.
+  const seededMessage = useRef(initialMessage);
+  useEffect(() => {
+    if (!editor || !initialMessage || seededMessage.current === initialMessage) return;
+    if (editor.getText().trim().length > 0) return;
+    seededMessage.current = initialMessage;
+    editor.commands.setContent(initialMessage, false);
+    editor.commands.focus('end');
+  }, [editor, initialMessage]);
 
   // Add effect to focus editor when component mounts
   useEffect(() => {
@@ -422,7 +477,7 @@ export function EmailComposer({
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       const hasContent = editor?.getText()?.trim().length > 0;
-      if (hasContent) {
+      if (hasContent && hasUnsavedChangesRef.current) {
         e.preventDefault();
         e.returnValue = ''; // Required for Chrome
       }
@@ -432,41 +487,51 @@ export function EmailComposer({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [editor]);
 
-  // Perhaps add `hasUnsavedChanges` to the condition
+  // Escape closes the composer (keeping the draft) - but only when focus is inside it, so it
+  // doesn't hijack Escape for the rest of the app.
   useEffect(() => {
     if (!editor) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        const hasContent = editor?.getText()?.trim().length > 0;
-        if (hasContent && !draftId) {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowLeaveConfirmation(true);
-        }
-      }
+      if (e.key !== 'Escape') return;
+      if (!rootRef.current?.contains(document.activeElement)) return;
+      // Let open popovers/menus/dialogs handle their own Escape (but a dialog that merely
+      // contains this composer, like the compose modal, doesn't count).
+      if (document.querySelector('[role="menu"], [role="listbox"]')) return;
+      const dialogs = Array.from(
+        document.querySelectorAll('[role="dialog"], [role="alertdialog"]'),
+      );
+      if (dialogs.some((d) => !d.contains(rootRef.current))) return;
+      e.preventDefault();
+      e.stopPropagation();
+      void handleCloseRef.current();
     };
 
     document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [editor, draftId]);
+  }, [editor]);
 
   const proceedWithSend = async () => {
     try {
-      if (isLoading || isSavingDraft) return;
+      if (isLoading) return;
 
       const values = getValues();
 
       // Validate recipient field
       if (!values.to || values.to.length === 0) {
-        toast.error('Recipient is required');
+        toast.error('Add at least one recipient');
+        return;
+      }
+      if (!editor.getText().trim() && !(values.attachments?.length ?? 0)) {
+        toast.error('Your message is empty');
         return;
       }
 
       setIsLoading(true);
       setAiGeneratedMessage(null);
-      // Save draft before sending, we want to send drafts instead of sending new emails
-      if (hasUnsavedChanges) await saveDraft();
+      // Save draft before sending, we want to send drafts instead of sending new emails.
+      // Use the id it returns: the draftId captured by the parent's closure may be stale.
+      const savedDraftId = await flushDraft();
 
       await onSendEmail({
         to: values.to,
@@ -476,9 +541,11 @@ export function EmailComposer({
         message: editor.getHTML(),
         attachments: values.attachments || [],
         fromEmail: values.fromEmail,
+        draftId: savedDraftId,
       });
       setHasUnsavedChanges(false);
-      editor.commands.clearContent(true);
+      hasUnsavedChangesRef.current = false;
+      editor.commands.clearContent(false);
       form.reset();
       setIsComposeOpen(null);
     } catch (error) {
@@ -497,7 +564,11 @@ export function EmailComposer({
       return regex.test(messageText);
     });
 
-    if (hasAttachmentKeywords && (!values.attachments || values.attachments.length === 0)) {
+    if (
+      hasAttachmentKeywords &&
+      (!values.attachments || values.attachments.length === 0) &&
+      !forwardedAttachments?.length
+    ) {
       setShowAttachmentWarning(true);
       return;
     }
@@ -553,46 +624,92 @@ export function EmailComposer({
     }
   };
 
-  const saveDraft = async () => {
+  const saveDraft = useCallback(async (): Promise<string | null> => {
+    // Serialize saves so a send never races an in-flight autosave (which used to make
+    // Cmd+Enter silently do nothing, or create a second draft).
+    if (savingRef.current) await savingRef.current.catch(() => null);
+    if (!hasUnsavedChangesRef.current) return draftIdRef.current;
+    if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return draftIdRef.current;
+
     const values = getValues();
-
-    if (!hasUnsavedChanges) return;
     const messageText = editor.getText();
+    const html = editor.getHTML();
 
-    if (messageText.trim() === initialMessage.trim()) return;
-    if (editor.getHTML() === initialMessage.trim()) return;
-    if (!values.to.length || !values.subject.length || !messageText.length) return;
-    if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return;
-
-    try {
-      setIsSavingDraft(true);
-      const draftData = {
-        to: values.to.join(', '),
-        cc: values.cc?.join(', '),
-        bcc: values.bcc?.join(', '),
-        subject: values.subject,
-        message: editor.getHTML(),
-        attachments: await serializeFiles(values.attachments ?? []),
-        id: draftId,
-        threadId: threadId ? threadId : null,
-        fromEmail: values.fromEmail ? values.fromEmail : null,
-      };
-
-      const response = await createDraft(draftData);
-
-      if (response?.id && response.id !== draftId) {
-        setDraftId(response.id);
-      }
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      toast.error('Failed to save draft');
-      setIsSavingDraft(false);
-      setHasUnsavedChanges(false);
-    } finally {
-      setIsSavingDraft(false);
-      setHasUnsavedChanges(false);
+    // Don't create a new draft for content that is exactly what we were seeded with.
+    if (!draftIdRef.current && initialMessage.trim() && html === initialMessage.trim()) {
+      return null;
     }
-  };
+    if (!values.to.length || !values.subject.length || !messageText.trim().length) {
+      return draftIdRef.current;
+    }
+
+    hasUnsavedChangesRef.current = false;
+    setHasUnsavedChanges(false);
+
+    const run = (async () => {
+      setIsSavingDraft(true);
+      try {
+        const response = await createDraft({
+          to: values.to.join(', '),
+          cc: values.cc?.join(', '),
+          bcc: values.bcc?.join(', '),
+          subject: values.subject,
+          message: html,
+          attachments: await serializeFiles(values.attachments ?? []),
+          id: draftIdRef.current,
+          threadId: threadId ? threadId : null,
+          fromEmail: values.fromEmail ? values.fromEmail : null,
+          ...draftThreading,
+        });
+
+        const id = response?.id ?? draftIdRef.current ?? null;
+        if (id && id !== draftIdRef.current) {
+          draftIdRef.current = id;
+          // Never write into the URL after unmount: it would leak into the next composer.
+          if (mountedRef.current) void setDraftId(id);
+        }
+        if (id) {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.drafts.get.queryKey({ id }),
+            refetchType: 'none',
+          });
+        }
+        saveErrorShownRef.current = false;
+        if (mountedRef.current) setLastSavedAt(Date.now());
+        return id;
+      } catch (error) {
+        console.error('Error saving draft:', error);
+        if (!saveErrorShownRef.current) {
+          toast.error('Failed to save draft');
+          saveErrorShownRef.current = true;
+        }
+        // Keep it dirty so the next autosave retries instead of silently dropping changes.
+        hasUnsavedChangesRef.current = true;
+        if (mountedRef.current) setHasUnsavedChanges(true);
+        return draftIdRef.current;
+      } finally {
+        if (mountedRef.current) setIsSavingDraft(false);
+        savingRef.current = null;
+      }
+    })();
+    savingRef.current = run;
+    return run;
+  }, [
+    getValues,
+    editor,
+    initialMessage,
+    aiGeneratedMessage,
+    aiIsLoading,
+    isGeneratingSubject,
+    threadId,
+    createDraft,
+    setDraftId,
+    queryClient,
+    trpc,
+    draftThreading,
+  ]);
+
+  const flushDraft = saveDraft;
 
   const handleGenerateSubject = async () => {
     try {
@@ -615,17 +732,27 @@ export function EmailComposer({
     }
   };
 
-  const handleClose = () => {
+  // Closing keeps the work: save the draft and go. Only ask when we couldn't save anything
+  // (e.g. no recipient yet), because then closing really would lose the text.
+  const handleClose = async () => {
     const hasContent = editor?.getText()?.trim().length > 0;
-    if (hasContent) {
-      setShowLeaveConfirmation(true);
-    } else {
+    if (!hasContent) {
       onClose?.();
+      return;
+    }
+    const id = await flushDraft();
+    if (id) {
+      toast('Draft saved');
+      onClose?.();
+    } else {
+      setShowLeaveConfirmation(true);
     }
   };
 
   const confirmLeave = () => {
     setShowLeaveConfirmation(false);
+    hasUnsavedChangesRef.current = false;
+    discardedRef.current = true;
     onClose?.();
   };
 
@@ -633,48 +760,90 @@ export function EmailComposer({
     setShowLeaveConfirmation(false);
   };
 
-  // Component unmount protection
+  const discardDraft = async () => {
+    setShowDiscardConfirmation(false);
+    discardedRef.current = true;
+    hasUnsavedChangesRef.current = false;
+    setHasUnsavedChanges(false);
+    if (savingRef.current) await savingRef.current.catch(() => null);
+    const id = draftIdRef.current;
+    if (id) {
+      try {
+        await deleteDraft({ id });
+        void queryClient.invalidateQueries({ queryKey: trpc.drafts.list.queryKey() });
+        if (threadId) {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.mail.get.queryKey({ id: threadId }),
+          });
+        }
+      } catch (error) {
+        console.error('Failed to delete draft:', error);
+        toast.error("Couldn't delete the saved draft");
+      }
+    }
+    if (mountedRef.current) void setDraftId(null);
+    toast('Draft discarded');
+    onClose?.();
+  };
+
+  const requestDiscard = () => {
+    const hasContent = editor?.getText()?.trim().length > 0;
+    if (hasContent || draftIdRef.current) setShowDiscardConfirmation(true);
+    else onClose?.();
+  };
+
+  // Keep long-lived callbacks pointed at the latest closures (assigned after commit, not render).
+  useLayoutEffect(() => {
+    handleSendRef.current = handleSend;
+    saveDraftRef.current = saveDraft;
+    handleCloseRef.current = handleClose;
+  });
+
+  // Navigating away (closing the thread, switching threads) unmounts us without going through
+  // handleClose. Flush whatever hasn't been autosaved yet instead of dropping it.
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      // This cleanup runs when component is about to unmount
-      const hasContent = editor?.getText()?.trim().length > 0;
-      if (hasContent && !showLeaveConfirmation) {
-        // If we have content and haven't shown confirmation, it means
-        // the component is being unmounted unexpectedly
-        console.warn('Email composer unmounting with unsaved content');
+      mountedRef.current = false;
+      if (hasUnsavedChangesRef.current && !discardedRef.current) {
+        void saveDraftRef.current();
       }
     };
-  }, [editor, showLeaveConfirmation]);
+  }, []);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
 
     const autoSaveTimer = setTimeout(() => {
-      console.log('timeout set');
-      saveDraft();
+      void saveDraft();
     }, 3000);
 
     return () => clearTimeout(autoSaveTimer);
   }, [hasUnsavedChanges, saveDraft]);
 
+  // Only attach files pasted into this composer (it used to grab pastes anywhere on the page).
+  // Images pasted into the editor itself are inlined by the editor, so leave those alone.
   useEffect(() => {
     const handlePasteFiles = (event: ClipboardEvent) => {
       const clipboardData = event.clipboardData;
       if (!clipboardData || !clipboardData.files.length) return;
+      const target = event.target as Node | null;
+      if (!target || !rootRef.current?.contains(target)) return;
 
       const pastedFiles = Array.from(clipboardData.files);
-      if (pastedFiles.length > 0) {
-        event.preventDefault();
-        handleAttachment(pastedFiles);
-        toast.success(`${pluralize('file', pastedFiles.length, true)} attached`);
-      }
+      const inEditor = !!editor?.view.dom.contains(target);
+      if (inEditor && pastedFiles.every((f) => INLINE_IMAGE_TYPES.has(f.type))) return;
+
+      event.preventDefault();
+      void handleAttachment(pastedFiles);
+      toast.success(`${pluralize('file', pastedFiles.length, true)} attached`);
     };
 
     document.addEventListener('paste', handlePasteFiles);
     return () => {
       document.removeEventListener('paste', handlePasteFiles);
     };
-  }, [handleAttachment]);
+  }, [handleAttachment, editor]);
 
   // useHotkeys('meta+y', async (e) => {
   //   if (!editor.getText().trim().length && !subjectInput.trim().length) {
@@ -703,14 +872,87 @@ export function EmailComposer({
     });
   };
 
+  const labelFor = (email: string) =>
+    email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] || displayNames?.get(email.toLowerCase()) || email;
+  const noReplyRecipients = (toEmails ?? []).filter((email) => isLikelyNoReply(email));
+  const ModeIcon =
+    replyContext?.mode === 'forward'
+      ? Forward
+      : replyContext?.mode === 'replyAll'
+        ? ReplyAll
+        : Reply;
+  const modeLabel =
+    replyContext?.mode === 'forward'
+      ? 'Forward'
+      : replyContext?.mode === 'replyAll'
+        ? 'Reply all'
+        : 'Reply';
+
   return (
     <div
+      ref={rootRef}
       className={cn(
         'flex max-h-[500px] w-full max-w-[750px] flex-col overflow-hidden rounded-2xl bg-[#FAFAFA] shadow-sm dark:bg-[#202020]',
         className,
       )}
     >
       <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl">
+        {replyContext ? (
+          <div className="flex shrink-0 items-center gap-2 px-3 pt-2.5 text-sm text-[#8C8C8C]">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 rounded-md px-1 py-0.5 font-medium text-black hover:bg-black/5 dark:text-white dark:hover:bg-white/10"
+                  aria-label={`${modeLabel}. Change reply type`}
+                >
+                  <ModeIcon className="h-3.5 w-3.5" />
+                  <span>{modeLabel}</span>
+                  <ChevronDown className="h-3 w-3 opacity-60" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="z-99999">
+                <DropdownMenuItem onClick={() => replyContext.onModeChange('reply')}>
+                  <Reply className="mr-2 h-4 w-4" /> Reply
+                </DropdownMenuItem>
+                {replyContext.canReplyAll ? (
+                  <DropdownMenuItem onClick={() => replyContext.onModeChange('replyAll')}>
+                    <ReplyAll className="mr-2 h-4 w-4" /> Reply all
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem onClick={() => replyContext.onModeChange('forward')}>
+                  <Forward className="mr-2 h-4 w-4" /> Forward
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {replyContext.senderName || replyContext.senderEmail ? (
+              <span className="min-w-0 truncate" title={replyContext.senderEmail}>
+                {replyContext.mode === 'forward' ? 'message from ' : 'to '}
+                <span className="text-black dark:text-white/90">
+                  {replyContext.senderName || replyContext.senderEmail}
+                </span>
+              </span>
+            ) : null}
+            {onClose ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10"
+                      onClick={() => void handleClose()}
+                      aria-label="Close and keep draft"
+                    >
+                      <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close · draft is kept (Esc)</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+          </div>
+        ) : null}
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
@@ -731,16 +973,17 @@ export function EmailComposer({
                   {toEmails.map((email, index) => (
                     <div
                       key={email}
+                      title={email}
                       className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                     >
                       <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                         <Avatar className="h-5 w-5">
                           <AvatarFallback className="bg-offsetLight text-muted-foreground dark:bg-muted rounded-full text-xs font-bold dark:text-[#9B9B9B]">
-                            {email.charAt(0).toUpperCase()}
+                            {labelFor(email).charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
-                          {email}
+                          {labelFor(email)}
                         </span>
                       </span>
                       <button
@@ -759,7 +1002,7 @@ export function EmailComposer({
                   ))}
                   <input
                     ref={toInputRef}
-                    className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                    className="h-6 flex-1 bg-transparent text-sm leading-normal font-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                     placeholder="Enter email"
                     onPaste={(e) => {
                       e.preventDefault();
@@ -865,17 +1108,18 @@ export function EmailComposer({
                       {toEmails.slice(0, 3).map((email, index) => (
                         <div
                           key={email}
+                          title={email}
                           className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                         >
                           <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                             <Avatar className="h-5 w-5">
                               <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                {email.charAt(0).toUpperCase()}
+                                {labelFor(email).charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
                               {/* for email format: "Display Name" <email@example.com> */}
-                              {email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] ?? email}
+                              {labelFor(email)}
                             </span>
                           </span>
                           <button
@@ -918,7 +1162,7 @@ export function EmailComposer({
               >
                 <span>Bcc</span>
               </button>
-              {onClose && (
+              {onClose && !replyContext && (
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
@@ -950,15 +1194,16 @@ export function EmailComposer({
                     {ccEmails?.map((email, index) => (
                       <div
                         key={email}
+                        title={email}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                           <Avatar className="h-5 w-5">
                             <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
+                              {labelFor(email).charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {email}
+                          {labelFor(email)}
                         </span>
                         <button
                           onClick={() => {
@@ -976,7 +1221,7 @@ export function EmailComposer({
                     ))}
                     <input
                       ref={ccInputRef}
-                      className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                      className="h-6 flex-1 bg-transparent text-sm leading-normal font-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -1041,15 +1286,16 @@ export function EmailComposer({
                         {ccEmails.slice(0, 3).map((email, index) => (
                           <div
                             key={email}
+                            title={email}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                               <Avatar className="h-5 w-5">
                                 <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
+                                  {labelFor(email).charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              {email}
+                              {labelFor(email)}
                             </span>
                             <button
                               onClick={() => {
@@ -1096,15 +1342,16 @@ export function EmailComposer({
                     {bccEmails?.map((email, index) => (
                       <div
                         key={email}
+                        title={email}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                           <Avatar className="h-5 w-5">
                             <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
+                              {labelFor(email).charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {email}
+                          {labelFor(email)}
                         </span>
                         <button
                           onClick={() => {
@@ -1122,7 +1369,7 @@ export function EmailComposer({
                     ))}
                     <input
                       ref={bccInputRef}
-                      className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                      className="h-6 flex-1 bg-transparent text-sm leading-normal font-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -1187,15 +1434,16 @@ export function EmailComposer({
                         {bccEmails.slice(0, 3).map((email, index) => (
                           <div
                             key={email}
+                            title={email}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                               <Avatar className="h-5 w-5">
                                 <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
+                                  {labelFor(email).charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              {email}
+                              {labelFor(email)}
                             </span>
                             <button
                               onClick={() => {
@@ -1225,12 +1473,23 @@ export function EmailComposer({
           </div>
         </div>
 
+        {noReplyRecipients.length > 0 ? (
+          <div className="flex shrink-0 items-center gap-2 border-b border-[#E7E7E7] bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:border-[#252525] dark:text-amber-300">
+            <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 truncate">
+              {noReplyRecipients.length === 1
+                ? `${noReplyRecipients[0]} looks like an automated address and may not read replies.`
+                : `${noReplyRecipients.length} recipients look like automated addresses and may not read replies.`}
+            </span>
+          </div>
+        ) : null}
+
         {/* Subject */}
-        {!activeReplyId ? (
+        {!activeReplyId || replyContext?.mode === 'forward' ? (
           <div className="flex items-center gap-2 border-b p-3">
             <p className="text-sm font-medium text-[#8C8C8C]">Subject:</p>
             <input
-              className="h-4 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
+              className="h-4 w-full bg-transparent text-sm leading-normal font-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
               placeholder="Re: Design review feedback"
               value={subjectInput}
               onChange={(e) => {
@@ -1239,20 +1498,22 @@ export function EmailComposer({
                 setHasUnsavedChanges(true);
               }}
             />
-            <button
-              onClick={handleGenerateSubject}
-              disabled={isLoading || isGeneratingSubject || messageLength < 1}
-            >
-              <div className="flex items-center justify-center gap-2.5 pl-0.5">
-                <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
-                  {isGeneratingSubject ? (
-                    <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
-                  )}
+            {aiEnabled && (
+              <button
+                onClick={handleGenerateSubject}
+                disabled={isLoading || isGeneratingSubject || messageLength < 1}
+              >
+                <div className="flex items-center justify-center gap-2.5 pl-0.5">
+                  <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
+                    {isGeneratingSubject ? (
+                      <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            )}
           </div>
         ) : null}
 
@@ -1267,7 +1528,7 @@ export function EmailComposer({
                 setHasUnsavedChanges(true);
               }}
             >
-              <SelectTrigger className="h-6 flex-1 border-0 bg-transparent p-0 text-sm font-normal text-black placeholder:text-[#797979] focus:outline-none focus:ring-0 dark:text-white/90">
+              <SelectTrigger className="h-6 flex-1 border-0 bg-transparent p-0 text-sm font-normal text-black placeholder:text-[#797979] focus:ring-0 focus:outline-none dark:text-white/90">
                 <SelectValue placeholder="Select an email address" />
               </SelectTrigger>
               <SelectContent className="z-99999">
@@ -1301,6 +1562,32 @@ export function EmailComposer({
             <EditorContent editor={editor} className="h-full w-full max-w-full overflow-x-auto" />
           </div>
         </div>
+
+        {forwardedAttachments?.length ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5 bg-[#FFFFFF] px-3 pb-2 dark:bg-[#202020]">
+            <span className="text-xs text-[#8C8C8C]">Forwarding:</span>
+            {forwardedAttachments.map((file) => (
+              <span
+                key={file.key}
+                title={`${file.filename} · ${formatFileSize(file.size)}`}
+                className="flex max-w-[220px] items-center gap-1 rounded-md border border-[#E7E7E7] px-1.5 py-0.5 text-xs dark:border-[#2B2B2B]"
+              >
+                <Paperclip className="h-3 w-3 shrink-0 text-[#9A9A9A]" />
+                <span className="truncate">{file.filename}</span>
+                {onRemoveForwardedAttachment ? (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveForwardedAttachment(file.key)}
+                    className="ml-0.5 shrink-0 rounded-sm text-[#9A9A9A] hover:text-black dark:hover:text-white"
+                    aria-label={`Don't forward ${file.filename}`}
+                  >
+                    <XIcon className="h-3 w-3" />
+                  </button>
+                ) : null}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Bottom Actions */}
@@ -1319,9 +1606,14 @@ export function EmailComposer({
                 <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
               </div>
             </Button>
-            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
-              <Plus className="h-3 w-3 fill-[#9A9A9A]" />
-              <span className="hidden px-0.5 text-sm md:block">Add</span>
+            <Button
+              variant={'secondary'}
+              size={'xs'}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach files"
+            >
+              <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
+              <span className="hidden px-0.5 text-sm md:block">Attach</span>
             </Button>
             <TemplateButton
               editor={editor}
@@ -1351,7 +1643,7 @@ export function EmailComposer({
               <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <button
-                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B]"
+                    className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-[#2B2B2B]"
                     aria-label={`View ${attachments.length} attached ${pluralize('file', attachments.length)}`}
                   >
                     <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
@@ -1393,7 +1685,7 @@ export function EmailComposer({
                             : nameWithoutExt;
                         return (
                           <div
-                            key={file.name + index}
+                            key={getAttachmentKey(file)}
                             className="group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5 hover:bg-black/5 dark:hover:bg-white/10"
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -1448,7 +1740,7 @@ export function EmailComposer({
                                   toast.error('Failed to remove attachment');
                                 }
                               }}
-                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
+                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none"
                               aria-label={`Remove ${file.name}`}
                             >
                               <XIcon className="text-muted-foreground h-3.5 w-3.5 hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
@@ -1467,10 +1759,12 @@ export function EmailComposer({
                   <Button
                     type="button"
                     tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
+                    variant="secondary"
+                    size="xs"
+                    aria-pressed={toggleToolbar}
+                    aria-label="Formatting options"
                     onClick={() => setToggleToolbar(!toggleToolbar)}
-                    className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
+                    className={cn(toggleToolbar && 'ring-1 ring-[#8C8C8C]/40')}
                   >
                     <Type className="h-4 w-4" />
                   </Button>
@@ -1480,57 +1774,89 @@ export function EmailComposer({
             </TooltipProvider>
           </div>
         </div>
-        <div className="flex items-start justify-start gap-2">
-          <div className="relative">
-            <AnimatePresence>
-              {aiGeneratedMessage !== null ? (
-                <ContentPreview
-                  content={aiGeneratedMessage}
-                  onAccept={() => {
-                    editor.commands.setContent({
-                      type: 'doc',
-                      content: aiGeneratedMessage.split(/\r?\n/).map((line) => {
-                        return {
-                          type: 'paragraph',
-                          content: line.trim().length === 0 ? [] : [{ type: 'text', text: line }],
-                        };
-                      }),
-                    });
-                    setAiGeneratedMessage(null);
-                  }}
-                  onReject={() => {
-                    setAiGeneratedMessage(null);
-                  }}
-                />
-              ) : null}
-            </AnimatePresence>
-            <Button
-              size={'xs'}
-              variant={'ghost'}
-              className="border border-[#8B5CF6]"
-              onClick={async () => {
-                if (!subjectInput.trim()) {
-                  await handleGenerateSubject();
-                }
-                setAiGeneratedMessage(null);
-                await handleAiGenerate();
-              }}
-              disabled={isLoading || aiIsLoading || messageLength < 1}
-            >
-              <div className="flex items-center justify-center gap-2.5 pl-0.5">
-                <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
-                  {aiIsLoading ? (
-                    <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
-                  )}
+        <div className="flex items-center justify-start gap-2">
+          <span className="hidden text-xs text-[#8C8C8C] tabular-nums sm:inline" aria-live="polite">
+            {isSavingDraft ? 'Saving…' : lastSavedAt && !hasUnsavedChanges ? 'Draft saved' : ''}
+          </span>
+          {onClose ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    tabIndex={-1}
+                    onClick={requestDiscard}
+                    disabled={isLoading}
+                    aria-label="Discard draft"
+                    className="text-[#8C8C8C] hover:text-red-500"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Discard draft</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
+          {aiEnabled && (
+            <div className="relative">
+              <AnimatePresence>
+                {aiGeneratedMessage !== null ? (
+                  <ContentPreview
+                    content={aiGeneratedMessage}
+                    onAccept={() => {
+                      editor.commands.setContent({
+                        type: 'doc',
+                        content: aiGeneratedMessage.split(/\r?\n/).map((line) => {
+                          return {
+                            type: 'paragraph',
+                            content: line.trim().length === 0 ? [] : [{ type: 'text', text: line }],
+                          };
+                        }),
+                      });
+                      setAiGeneratedMessage(null);
+                    }}
+                    onReject={() => {
+                      setAiGeneratedMessage(null);
+                    }}
+                  />
+                ) : null}
+              </AnimatePresence>
+              <Button
+                size={'xs'}
+                variant={'ghost'}
+                className={cn(
+                  'border',
+                  // Loud only while it's most useful: on a short draft. Once you're writing, step back.
+                  messageLength > 0 && messageLength < 60
+                    ? 'border-[#8B5CF6]/70'
+                    : 'border-transparent text-[#8C8C8C]',
+                )}
+                onClick={async () => {
+                  if (!subjectInput.trim()) {
+                    await handleGenerateSubject();
+                  }
+                  setAiGeneratedMessage(null);
+                  await handleAiGenerate();
+                }}
+                disabled={isLoading || aiIsLoading || messageLength < 1}
+              >
+                <div className="flex items-center justify-center gap-2.5 pl-0.5">
+                  <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
+                    {aiIsLoading ? (
+                      <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
+                    )}
+                  </div>
+                  <div className="hidden text-center text-sm leading-none text-black md:block dark:text-white">
+                    Generate
+                  </div>
                 </div>
-                <div className="hidden text-center text-sm leading-none text-black md:block dark:text-white">
-                  Generate
-                </div>
-              </div>
-            </Button>
-          </div>
+              </Button>
+            </div>
+          )}
           {/* <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -1568,18 +1894,37 @@ export function EmailComposer({
       <Dialog open={showLeaveConfirmation} onOpenChange={setShowLeaveConfirmation}>
         <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Discard message?</DialogTitle>
+            <DialogTitle>Close without saving?</DialogTitle>
             <DialogDescription>
-              You have unsaved changes in your email. Are you sure you want to leave? Your changes
-              will be lost.
+              This message hasn&apos;t been saved as a draft (a draft needs at least one recipient).
+              If you close it now, what you wrote will be lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2">
             <Button variant="outline" onClick={cancelLeave}>
-              Stay
+              Keep writing
             </Button>
             <Button variant="destructive" onClick={confirmLeave}>
-              Leave
+              Close and lose it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDiscardConfirmation} onOpenChange={setShowDiscardConfirmation}>
+        <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Discard this draft?</DialogTitle>
+            <DialogDescription>
+              The message and its saved draft will be deleted. This can&apos;t be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setShowDiscardConfirmation(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => void discardDraft()}>
+              Discard
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1674,7 +2019,7 @@ const ContentPreview = ({
     initial="initial"
     animate="animate"
     exit="exit"
-    className="dark:bg-subtleBlack absolute bottom-full right-0 z-30 z-50 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
+    className="dark:bg-subtleBlack absolute right-0 bottom-full z-30 z-50 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
   >
     <div
       className="max-h-60 min-h-[150px] overflow-auto rounded-md p-1 text-sm"
@@ -1682,20 +2027,17 @@ const ContentPreview = ({
         scrollbarGutter: 'stable',
       }}
     >
-      {content.split('\n').map((line, i) => {
-        return (
-          <TextEffect
-            per="char"
-            preset="blur"
-            as="div"
-            className="whitespace-pre-wrap"
-            speedReveal={3}
-            key={i}
-          >
-            {line}
-          </TextEffect>
-        );
-      })}
+      {
+        <TextEffect
+          per="char"
+          preset="blur"
+          as="div"
+          className="whitespace-pre-wrap"
+          speedReveal={3}
+        >
+          {content}
+        </TextEffect>
+      }
     </div>
     <div className="flex justify-end gap-2 p-2">
       <button

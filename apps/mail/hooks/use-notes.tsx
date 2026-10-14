@@ -6,7 +6,6 @@ import { m } from '@/paraglide/messages';
 import type { Note } from '@/types';
 
 export const useThreadNotes = (threadId: string) => {
-  
   const trpc = useTRPC();
   const { data: activeConnection } = useActiveConnection();
 

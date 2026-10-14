@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import React from 'react';
 
 const getLogo = (mimetype: string): string => {
   if (mimetype.includes('pdf')) {
@@ -40,7 +39,7 @@ export const UploadedFileIcon = ({ removeAttachment, index, file }: Props) => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1 h-6 w-6 bg-black/20 opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/30 group-hover:opacity-100"
+            className="absolute top-1 right-1 h-6 w-6 bg-black/20 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-black/30"
             onClick={() => removeAttachment(index)}
           >
             <X className="h-3 w-3 text-white" />
@@ -54,7 +53,7 @@ export const UploadedFileIcon = ({ removeAttachment, index, file }: Props) => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+            className="absolute top-1 right-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
             onClick={() => removeAttachment(index)}
           >
             <X className="h-3 w-3" />

@@ -1,6 +1,6 @@
 import { type OptimisticAction } from '@/store/optimistic-updates';
+import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
 import { optimisticActionsAtom } from '@/store/optimistic-updates';
@@ -10,21 +10,28 @@ const EMPTY: OptimisticAction[] = [];
 const sameActions = (a: OptimisticAction[], b: OptimisticAction[]) =>
   a.length === b.length && a.every((action, i) => action === b[i]);
 
+/**
+ * Actions indexed by thread id, built once per change of the action set. Every mounted list
+ * row selects from this instead of scanning all actions itself (O(actions) per row).
+ */
+const actionsByThreadAtom = atom((get) => {
+  const byThread = new Map<string, OptimisticAction[]>();
+  for (const action of Object.values(get(optimisticActionsAtom))) {
+    for (const threadId of action.threadIds) {
+      const list = byThread.get(threadId);
+      if (!list) byThread.set(threadId, [action]);
+      else if (list[list.length - 1] !== action) list.push(action);
+    }
+  }
+  return byThread;
+});
+
 export function useOptimisticThreadState(threadId: string) {
   // Only re-render when *this* thread's actions change, not on every optimistic action
   // anywhere (e.g. mark-as-read on click would otherwise re-render every list row).
   const threadActionsAtom = useMemo(
     () =>
-      selectAtom(
-        optimisticActionsAtom,
-        (all) => {
-          const actions = Object.values(all).filter((action) =>
-            action.threadIds.includes(threadId),
-          );
-          return actions.length ? actions : EMPTY;
-        },
-        sameActions,
-      ),
+      selectAtom(actionsByThreadAtom, (byThread) => byThread.get(threadId) ?? EMPTY, sameActions),
     [threadId],
   );
   const optimisticActions = useAtomValue(threadActionsAtom);

@@ -7,8 +7,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Archive2, Eye, Star2, Trash } from '@/components/icons/icons';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { navigationConfig } from '@/config/navigation';
-import { useNavigate, useParams } from 'react-router';
 import { ChevronDown, SquarePen } from 'lucide-react';
 import { useMail } from '@/components/mail/use-mail';
 import { NavUser } from '@/components/ui/nav-user';
@@ -87,8 +87,11 @@ export function ZenBulkActions() {
 export function ZenFolderSelect() {
   const { folder = 'inbox' } = useParams<{ folder: string }>();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const items = navigationConfig.mail.sections.flatMap((section) => section.items);
-  const currentFolder = items.find((item) => item.url === `/mail/${folder}`);
+  const currentFolder =
+    items.find((item) => item.url === pathname) ??
+    items.find((item) => item.url === `/mail/${folder}`);
 
   return (
     <DropdownMenu>

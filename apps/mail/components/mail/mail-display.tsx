@@ -35,9 +35,11 @@ import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { useOptimisticThreadState } from './optimistic-thread-state';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useAttachments } from '@/hooks/use-attachments';
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { useMutation } from '@tanstack/react-query';
@@ -47,7 +49,6 @@ import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { BimiAvatar } from '../ui/bimi-avatar';
 import { RenderLabels } from './render-labels';
-import { useOptimisticThreadState } from './optimistic-thread-state';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -168,10 +169,22 @@ type Props = {
   threadAttachments?: Attachment[];
 };
 
+const RENDERABLE_SYSTEM_LABELS = new Set([
+  'important',
+  'promotions',
+  'personal',
+  'updates',
+  'work',
+  'forums',
+  'notes',
+  'starred',
+]);
+
+const isRenderableSystemLabel = (label: string) =>
+  RENDERABLE_SYSTEM_LABELS.has(label.toLowerCase().replace(/^category_/i, ''));
+
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const visibleLabels = labels.filter(
-    (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
-  );
+  const visibleLabels = labels.filter(isRenderableSystemLabel);
 
   if (!visibleLabels.length) return null;
 
@@ -318,6 +331,7 @@ const ThreadAttachments = ({ attachments }: { attachments: Attachment[] }) => {
 const AiSummary = () => {
   const [threadId] = useQueryState('threadId');
   const { data: summary, isLoading } = useSummary(threadId ?? null);
+  const aiEnabled = useAiEnabled();
   const [showSummary, setShowSummary] = useState(false);
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -325,7 +339,8 @@ const AiSummary = () => {
     setShowSummary(!showSummary);
   };
 
-  if (isLoading) return null;
+  // Cached summaries can outlive turning AI off, so check the setting too.
+  if (!aiEnabled || isLoading) return null;
   if (!summary?.data.short?.length) return null;
 
   return (
@@ -688,6 +703,7 @@ const MailDisplay = ({
     const withoutStar = labels.filter((label) => label !== 'STARRED');
     return optimisticStarred ? [...withoutStar, 'STARRED'] : withoutStar;
   }, [emailData.tags, optimisticStarred]);
+  const hasSystemLabels = displayLabels.some(isRenderableSystemLabel);
   const { data: messageAttachments } = useAttachments(emailData.id);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
@@ -708,6 +724,7 @@ const MailDisplay = ({
   );
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
+  const aiEnabled = useAiEnabled();
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   //   const trpc = useTRPC();
 
@@ -1261,14 +1278,14 @@ const MailDisplay = ({
       }}
     >
       <>
-        {searchQuery && (
+        {searchQuery && aiEnabled && (
           <MoreAboutQuery
             query={searchQuery}
             open={!!searchQuery}
             onOpenChange={(open) => (open ? void 0 : setSearchQuery(null))}
           />
         )}
-        {researchSender && (
+        {researchSender && aiEnabled && (
           <MoreAboutPerson
             open={!!researchSender}
             onOpenChange={(open) => (open ? void 0 : setResearchSender(null))}
@@ -1295,14 +1312,12 @@ const MailDisplay = ({
                 </span>
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  {displayLabels.length ? (
-                    <MailDisplayLabels labels={displayLabels} />
-                  ) : null}
-                  {displayLabels.length ? (
+                  {hasSystemLabels ? <MailDisplayLabels labels={displayLabels} /> : null}
+                  {hasSystemLabels && (threadLabels.length || !zen) ? (
                     <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
                   ) : null}
                   <RenderLabels labels={threadLabels} />
-                  {threadLabels.length ? (
+                  {threadLabels.length && !zen ? (
                     <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
                   ) : null}
                   <div
@@ -1378,13 +1393,18 @@ const MailDisplay = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
+                              // Sender research is an AI web search.
+                              if (!aiEnabled) return;
                               setResearchSender({
                                 name: emailData?.sender?.name || '',
                                 email: emailData?.sender?.email || '',
                                 //   extra: emailData?.sender?.extra || '',
                               });
                             }}
-                            className="hover:bg-muted max-w-36 truncate font-semibold whitespace-nowrap md:max-w-none"
+                            className={cn(
+                              'max-w-36 truncate font-semibold whitespace-nowrap md:max-w-none',
+                              aiEnabled && 'hover:bg-muted',
+                            )}
                           >
                             {cleanNameDisplay(emailData?.sender?.name)}
                           </span>

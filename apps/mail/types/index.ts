@@ -83,6 +83,7 @@ export interface ParsedMessage {
   messageId?: string;
   threadId?: string;
   isDraft?: boolean;
+  isZeroSuggestion?: boolean;
   attachments?: Attachment[];
 }
 

@@ -19,13 +19,13 @@ export const runCommand = async (command: string, args: string[], options: Spawn
   const useShell = process.platform === 'win32';
   const finalCommand = command;
   const finalArgs = args;
-  
+
   const spawnOptions: SpawnOptions = {
     stdio: 'inherit',
     ...options,
-    ...(useShell && options.shell === undefined ? { shell: true } : {})
+    ...(useShell && options.shell === undefined ? { shell: true } : {}),
   };
-  
+
   const child = spawn(finalCommand, finalArgs, spawnOptions);
 
   await new Promise<void>((resolve, reject) => {

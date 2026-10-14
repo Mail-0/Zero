@@ -1,3 +1,11 @@
 bun.lockb
 node_modules
 .next
+apps/mail/paraglide
+**/.react-router
+**/.wrangler
+**/build
+**/playwright-report
+**/test-results
+pnpm-lock.yaml
+apps/server/src/db/migrations/meta

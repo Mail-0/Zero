@@ -122,9 +122,9 @@ const AnimationComponent: React.FC<{
       </motion.span>
     ) : (
       <motion.span className="inline-block whitespace-pre">
-        {segment.split('').map((char, charIndex) => (
+        {keyTextSegments(segment.split('')).map(({ text: char, key }) => (
           <motion.span
-            key={`char-${charIndex}`}
+            key={key}
             aria-hidden="true"
             variants={variants}
             className="inline-block whitespace-pre"
@@ -149,6 +149,16 @@ AnimationComponent.displayName = 'AnimationComponent';
 const splitText = (text: string, per: 'line' | 'word' | 'char') => {
   if (per === 'line') return text.split('\n');
   return text.split(/(\s+)/);
+};
+
+// Distinguish repeated text by occurrence, preserving identity when other text moves.
+const keyTextSegments = (segments: string[]) => {
+  const occurrences = new Map<string, number>();
+  return segments.map((text) => {
+    const occurrence = occurrences.get(text) ?? 0;
+    occurrences.set(text, occurrence + 1);
+    return { text, key: JSON.stringify([text, occurrence]) };
+  });
 };
 
 const hasTransition = (
@@ -252,9 +262,9 @@ export function TextEffect({
           style={style}
         >
           {per !== 'line' ? <span className="sr-only">{children}</span> : null}
-          {segments.map((segment, index) => (
+          {keyTextSegments(segments).map(({ text: segment, key }) => (
             <AnimationComponent
-              key={`${per}-${index}-${segment}`}
+              key={`${per}-${key}`}
               segment={segment}
               variants={computedVariants.item}
               per={per}

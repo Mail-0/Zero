@@ -27,6 +27,7 @@ import {
   useMemo,
   useState,
   type ComponentType,
+  type SVGProps,
 } from 'react';
 import {
   CommandDialog,
@@ -38,14 +39,15 @@ import {
 } from '@/components/ui/command';
 import { getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useMutation, useQueries } from '@tanstack/react-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation, useNavigate } from 'react-router';
 import { navigationConfig } from '@/config/navigation';
 import { Separator } from '@/components/ui/separator';
+import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { useTRPC } from '@/providers/query-provider';
 import { Calendar } from '@/components/ui/calendar';
-import { useMutation } from '@tanstack/react-query';
 import { useThreads } from '@/hooks/use-threads';
 import { useLabels } from '@/hooks/use-labels';
 import { Label } from '@/components/ui/label';
@@ -66,7 +68,7 @@ type CommandPaletteContext = {
 
 interface CommandItem {
   title: string;
-  icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  icon?: ComponentType<SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number }>;
   url?: string;
   onClick?: () => unknown;
   shortcut?: string;
@@ -183,12 +185,12 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [searchValue, setSearchValue] = useSearchValue();
   const [, threads] = useThreads();
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [filtersLoaded, setFiltersLoaded] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   //   const [selectedLabels] = useState<string[]>([]);
   const [filterBuilderState, setFilterBuilderState] = useState<Record<string, string>>({});
   const [saveSearchName, setSaveSearchName] = useState('');
-  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [commandInputValue, setCommandInputValue] = useState('');
   const navigate = useNavigate();
@@ -196,9 +198,36 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const { userLabels = [] } = useLabels();
   const trpc = useTRPC();
+  // List pages carry row summaries; fall back to the detail cache (without fetching) for
+  // threads whose page had none.
+  const cachedThreads = useQueries({
+    queries: threads.map(({ id }) => trpc.mail.get.queryOptions({ id }, { enabled: false })),
+  });
+  const threadSummaries = cachedThreads.flatMap(({ data }, index) => {
+    const latest = threads[index].summary?.latest ?? data?.latest;
+    return latest
+      ? [
+          {
+            id: threads[index].id,
+            subject: latest.subject,
+            snippet: latest.body,
+            from: latest.sender,
+            to: latest.to,
+          },
+        ]
+      : [];
+  });
+  const emailSuggestions = Array.from(
+    new Set(
+      threadSummaries
+        .flatMap((thread) => [thread.from.email, ...thread.to.map((recipient) => recipient.email)])
+        .filter(Boolean),
+    ),
+  ).slice(0, 20);
   const { mutateAsync: generateSearchQuery } = useMutation(
     trpc.ai.generateSearchQuery.mutationOptions(),
   );
+  const aiEnabled = useAiEnabled();
 
   useEffect(() => {
     setRecentSearches(getRecentSearches());
@@ -220,23 +249,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to load active filters:', error);
+    } finally {
+      setFiltersLoaded(true);
     }
   }, []);
-
-  useEffect(() => {
-    if (threads && Array.isArray(threads)) {
-      const emails = new Set<string>();
-      threads.forEach((thread: any) => {
-        if (thread?.from?.email) emails.add(thread.from.email);
-        if (thread?.to && Array.isArray(thread.to)) {
-          thread.to.forEach((recipient: any) => {
-            if (recipient?.email) emails.add(recipient.email);
-          });
-        }
-      });
-      setEmailSuggestions(Array.from(emails).slice(0, 20));
-    }
-  }, [threads]);
 
   useEffect(() => {
     if (!open) {
@@ -371,28 +387,25 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   );
 
   const addFilter = useCallback((filter: ActiveFilter) => {
-    setActiveFilters((prev) => {
-      const updated = [...prev.filter((f) => f.type !== filter.type), filter];
-      try {
-        localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error('Failed to save filters:', error);
-      }
-      return updated;
-    });
+    setActiveFilters((prev) => [...prev.filter((f) => f.type !== filter.type), filter]);
   }, []);
 
   const removeFilter = useCallback((filterId: string) => {
-    setActiveFilters((prev) => {
-      const updated = prev.filter((f) => f.id !== filterId);
-      try {
-        localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error('Failed to save filters:', error);
-      }
-      return updated;
-    });
+    setActiveFilters((prev) => prev.filter((f) => f.id !== filterId));
   }, []);
+
+  useEffect(() => {
+    if (!filtersLoaded) return;
+    try {
+      if (activeFilters.length) {
+        localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(activeFilters));
+      } else {
+        localStorage.removeItem(ACTIVE_FILTERS_KEY);
+      }
+    } catch (error) {
+      console.error('Failed to save filters:', error);
+    }
+  }, [activeFilters, filtersLoaded]);
 
   useEffect(() => {
     if (pathname && activeFilters.length) {
@@ -533,8 +546,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
       try {
         let finalQuery = query;
+        // AI query rewriting is skipped when AI is off; the query runs as typed.
+        const useAi = useNaturalLanguage && aiEnabled;
 
-        if (useNaturalLanguage) {
+        if (useAi) {
           const result = await generateSearchQuery({ query });
           finalQuery = result.query;
 
@@ -552,7 +567,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             value: finalQuery,
             highlight: getMainSearchTerm(query),
             folder: searchValue.folder,
-            isAISearching: useNaturalLanguage,
+            isAISearching: true,
             isLoading: true,
           });
         }
@@ -584,7 +599,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           value: finalQuery,
           highlight: getMainSearchTerm(query),
           folder: searchValue.folder,
-          isAISearching: useNaturalLanguage,
+          isAISearching: useAi,
           isLoading: true,
         });
 
@@ -600,18 +615,18 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         setIsProcessing(false);
       }
     },
-    [activeFilters, searchValue.folder, isProcessing],
+    [activeFilters, searchValue.folder, isProcessing, aiEnabled],
   );
 
   const quickSearchResults = useMemo(() => {
     try {
       if (!searchQuery || searchQuery.length < 2 || !threads) return [];
 
-      const validThreads = Array.isArray(threads) ? threads.filter(Boolean) : [];
+      const validThreads = threadSummaries;
       if (validThreads.length === 0) return [];
 
       return validThreads
-        .filter((thread: any) => {
+        .filter((thread) => {
           try {
             if (!thread || typeof thread !== 'object') return false;
 
@@ -638,7 +653,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       console.error('Error processing search results:', error);
       return [];
     }
-  }, [searchQuery, threads]);
+  }, [searchQuery, threads, threadSummaries]);
 
   const allCommands = useMemo(() => {
     type CommandGroup = {
@@ -756,8 +771,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       if (items.length > 0) {
         let groupTitle = groupKey;
         try {
-          const translationKey = `common.commandPalette.groups.${groupKey}` as any;
-          groupTitle = (m as any)[translationKey]() || groupKey;
+          const translation: unknown = Reflect.get(m, `common.commandPalette.groups.${groupKey}`);
+          if (typeof translation === 'function') groupTitle = String(translation()) || groupKey;
         } catch {}
 
         result.push({
@@ -950,9 +965,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
           {recentSearches.length > 0 && !searchQuery && (
             <CommandGroup heading="Recent Searches">
-              {recentSearches.map((search, index) => (
+              {recentSearches.map((search) => (
                 <CommandItem
-                  key={`recent-${index}`}
+                  key={search}
                   onSelect={() => handleSearch(search, true)}
                   disabled={isProcessing}
                 >
@@ -965,9 +980,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
           {quickSearchResults.length > 0 && (
             <CommandGroup heading="Quick Results">
-              {quickSearchResults.map((thread: any) => (
+              {quickSearchResults.map((thread) => (
                 <CommandItem
-                  key={thread.id || `thread-${Math.random()}`}
+                  key={thread.id}
                   onSelect={() => {
                     runCommand(() => {
                       try {
@@ -999,10 +1014,12 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             <CommandGroup heading="Search Suggestions">
               <CommandItem onSelect={() => handleSearch(searchQuery, true)} disabled={isProcessing}>
                 <Search className="h-4 w-4 opacity-60" />
-                <span className="ml-2">Search for "{searchQuery}"</span>
-                <Badge variant="secondary" className="ml-auto text-xs">
-                  Smart Search
-                </Badge>
+                <span className="ml-2">Search for &quot;{searchQuery}&quot;</span>
+                {aiEnabled && (
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    Smart Search
+                  </Badge>
+                )}
               </CommandItem>
 
               <CommandItem
@@ -1010,7 +1027,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 disabled={isProcessing}
               >
                 <Search className="relative top-2 h-4 w-4 opacity-60" />
-                <span className="ml-2">Exact match: "{searchQuery}"</span>
+                <span className="ml-2">Exact match: &quot;{searchQuery}&quot;</span>
               </CommandItem>
 
               {searchQuery.includes('@') && (
@@ -1028,7 +1045,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 disabled={isProcessing}
               >
                 <FileText className="h-4 w-4 opacity-60" />
-                <span className="ml-2">Subject contains: "{searchQuery}"</span>
+                <span className="ml-2">Subject contains: &quot;{searchQuery}&quot;</span>
               </CommandItem>
 
               <CommandItem
@@ -1036,7 +1053,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 disabled={isProcessing}
               >
                 <Hash className="h-4 w-4 opacity-60" />
-                <span className="ml-2">Body contains: "{searchQuery}"</span>
+                <span className="ml-2">Body contains: &quot;{searchQuery}&quot;</span>
               </CommandItem>
             </CommandGroup>
           )}
@@ -1737,7 +1754,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 <span className="text-muted-foreground">Emails to specific recipient</span>
               </div>
               <div className="flex justify-between">
-                <code className="bg-muted rounded px-2 py-1">subject:"meeting notes"</code>
+                <code className="bg-muted rounded px-2 py-1">
+                  subject:&quot;meeting notes&quot;
+                </code>
                 <span className="text-muted-foreground">Emails with specific subject</span>
               </div>
             </div>
@@ -1807,9 +1826,11 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 You can also use natural language queries which will be converted to filters:
               </p>
               <div className="space-y-1">
-                <p className="italic">"emails from john about the project"</p>
-                <p className="italic">"unread messages with attachments from last week"</p>
-                <p className="italic">"starred emails from my boss"</p>
+                <p className="italic">&quot;emails from john about the project&quot;</p>
+                <p className="italic">
+                  &quot;unread messages with attachments from last week&quot;
+                </p>
+                <p className="italic">&quot;starred emails from my boss&quot;</p>
               </div>
             </div>
           </div>

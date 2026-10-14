@@ -13,6 +13,7 @@
  *
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
+import { isDurableLabelMutation, splitLabelMutation } from '../../lib/mail-label-policy';
 import type { CreateDraftData } from '../../lib/schemas';
 import { ZeroDriver, type FolderSyncResult } from '.';
 import type { IOutgoingMessage } from '../../types';
@@ -36,11 +37,26 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.getLabel(id);
   }
 
-  async createLabel(label: {
-    name: string;
-    color?: { backgroundColor: string; textColor: string };
-  }) {
-    return await this.mainDo.createLabel(label);
+  async createLabel(
+    label: {
+      name: string;
+      color?: { backgroundColor: string; textColor: string };
+    },
+    options?: { kind?: 'tag' | 'folder' },
+  ) {
+    return await this.mainDo.createLabel(label, options);
+  }
+
+  async applyAiLabels(threadId: string, addLabels: string[], removeLabels: string[]) {
+    return await this.mainDo.applyAiLabels(threadId, addLabels, removeLabels);
+  }
+
+  async setThreadCategory(
+    threadId: string,
+    category: 'personal' | 'promotions' | 'updates',
+    source: 'ai' | 'user' = 'ai',
+  ) {
+    return await this.mainDo.setThreadCategory(threadId, category, source);
   }
 
   async getUserTopics() {
@@ -90,13 +106,12 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.getThread(threadId, includeDrafts);
   }
 
+  async getThreadListSummaries(threadIds: string[]) {
+    return await this.mainDo.getThreadListSummaries(threadIds);
+  }
+
   async markThreadsRead(threadIds: string[]) {
-    const result = await Promise.all(
-      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
-    );
-    if (shouldReSyncThreadsAfterActions)
-      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
-    return result;
+    return this.mainDo.setThreadsUnread(threadIds, false);
   }
 
   async syncThread({ threadId }: { threadId: string }) {
@@ -104,17 +119,33 @@ export class DriverRpcDO extends RpcTarget {
   }
 
   async markThreadsUnread(threadIds: string[]) {
-    const result = await Promise.all(
-      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
-    );
-    if (shouldReSyncThreadsAfterActions)
-      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
-    return result;
+    return this.mainDo.setThreadsUnread(threadIds, true);
   }
 
   async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    const { providerAdd, providerRemove, syntheticAdd, syntheticRemove } = splitLabelMutation(
+      addLabelIds,
+      removeLabelIds,
+    );
+    if (isDurableLabelMutation(providerAdd, providerRemove)) {
+      return this.mainDo.setThreadLabels(
+        threadIds,
+        providerAdd,
+        providerRemove,
+        syntheticAdd,
+        syntheticRemove,
+      );
+    } else if (providerAdd.length || providerRemove.length) {
+      await Promise.all(
+        threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, providerAdd, providerRemove)),
+      );
+    }
     const result = await Promise.all(
-      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, addLabelIds, removeLabelIds)),
+      syntheticAdd.length || syntheticRemove.length
+        ? threadIds.map((id) =>
+            this.mainDo.modifyThreadLabelsInDB(id, syntheticAdd, syntheticRemove),
+          )
+        : [],
     );
     if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
@@ -127,6 +158,14 @@ export class DriverRpcDO extends RpcTarget {
 
   async getDraft(id: string) {
     return await this.mainDo.getDraft(id);
+  }
+
+  async listThreadDrafts(threadId: string) {
+    return await this.mainDo.listThreadDrafts(threadId);
+  }
+
+  async deleteDraft(id: string) {
+    return await this.mainDo.deleteDraft(id);
   }
 
   async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
@@ -148,21 +187,54 @@ export class DriverRpcDO extends RpcTarget {
   //   }
 
   async markAsRead(threadIds: string[]) {
-    const result = await Promise.all(
-      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
-    );
-    if (shouldReSyncThreadsAfterActions)
-      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
-    return result;
+    return this.mainDo.setThreadsUnread(threadIds, false);
   }
 
   async markAsUnread(threadIds: string[]) {
-    const result = await Promise.all(
-      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
-    );
-    if (shouldReSyncThreadsAfterActions)
-      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
-    return result;
+    return this.mainDo.setThreadsUnread(threadIds, true);
+  }
+
+  async setThreadsStarred(threadIds: string[], starred?: boolean) {
+    return this.mainDo.setThreadsStarred(threadIds, starred);
+  }
+
+  async setThreadsImportant(threadIds: string[], important?: boolean) {
+    return this.mainDo.setThreadsImportant(threadIds, important);
+  }
+
+  async labelSyncStatus() {
+    return this.mainDo.labelSyncStatus();
+  }
+  async retryLabelSync() {
+    return this.mainDo.retryLabelSync();
+  }
+
+  async unreadSyncStatus() {
+    return this.mainDo.unreadSyncStatus();
+  }
+
+  async retryUnreadSync() {
+    return this.mainDo.retryUnreadSync();
+  }
+
+  async signalMailboxHistory() {
+    return this.mainDo.signalMailboxHistory();
+  }
+
+  async mailboxSyncStatus() {
+    return this.mainDo.mailboxSyncStatus();
+  }
+
+  async syncProgress() {
+    return this.mainDo.syncProgress();
+  }
+
+  async retryMailboxSync() {
+    return this.mainDo.retryMailboxSync();
+  }
+
+  async recoverMailboxSync() {
+    return this.mainDo.recoverMailboxSync();
   }
 
   async normalizeIds(ids: string[]) {

@@ -91,7 +91,7 @@ export default function LoginZero() {
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <a href="/zero/signup" className="text-white underline hover:text-white/80">
                   Sign up
                 </a>

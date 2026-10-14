@@ -23,19 +23,19 @@ import {
   Tag,
   Trash,
 } from 'lucide-react';
+import { useMemo, type MouseEvent, type PointerEvent, type ReactNode, useState } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ExclamationCircle, Mail, Clock } from '../icons/icons';
 import { SnoozeDialog } from '@/components/mail/snooze-dialog';
 import { type ThreadDestination } from '@/lib/thread-actions';
-import { useThreadById } from '@/hooks/use-threads';
-import { useMemo, type ReactNode, useState } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { atom, useAtomValue } from 'jotai';
+import { useThreadById } from '@/hooks/use-threads';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
+import { atom, useAtomValue } from 'jotai';
 import { Checkbox } from '../ui/checkbox';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -137,43 +137,70 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
 export const threadListFetchingAtom = atom(false);
 
 /**
- * Rendered for every mail-list row, so it must stay cheap: no URL-state, list, mail-config,
- * query-cache or optimistic-action subscriptions here. All of that lives in
- * ThreadContextMenuItems, which Radix only mounts while the menu is open.
+ * One context menu for the whole mail list. A Radix ContextMenu root per row cost ~20 extra
+ * roots (context providers, state, handlers) on every mounted row. The right-clicked row is
+ * resolved from the event target's `data-thread-id`; ThreadContextMenuItems (and everything
+ * it subscribes to) only mounts while the menu is open.
  */
-export function ThreadContextMenu({
+export function ThreadListContextMenu({
   children,
-  threadId,
   isInbox = true,
   isSpam = false,
   isSent = false,
   isBin = false,
-}: EmailContextMenuProps) {
+}: Omit<EmailContextMenuProps, 'threadId'>) {
   const isListFetching = useAtomValue(threadListFetchingAtom);
-  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [targetThreadId, setTargetThreadId] = useState<string | null>(null);
+  const [snoozeThreadId, setSnoozeThreadId] = useState<string | null>(null);
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+    const row = (event.target as HTMLElement).closest<HTMLElement>('[data-thread-id]');
+    const id = row?.dataset.threadId;
+    if (!id) {
+      // Not on a row: skip the custom menu (preventDefault makes Radix ignore the event).
+      event.preventDefault();
+      return;
+    }
+    setTargetThreadId(id);
+  };
+
+  // Touch long-press opens from Radix's pointer timer, without a contextmenu event first.
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return;
+    const row = (event.target as HTMLElement).closest<HTMLElement>('[data-thread-id]');
+    if (row?.dataset.threadId) setTargetThreadId(row.dataset.threadId);
+  };
 
   return (
     <>
       <ContextMenu>
-        <ContextMenuTrigger disabled={isListFetching} className="w-full">
+        <ContextMenuTrigger
+          disabled={isListFetching}
+          className="flex h-full min-h-0 w-full flex-1 flex-col"
+          onContextMenu={handleContextMenu}
+          onPointerDown={handlePointerDown}
+        >
           {children}
         </ContextMenuTrigger>
         <ContextMenuContent
           className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
           onContextMenu={(e) => e.preventDefault()}
         >
-          <ThreadContextMenuItems
-            threadId={threadId}
-            isInbox={isInbox}
-            isSpam={isSpam}
-            isSent={isSent}
-            isBin={isBin}
-            onSnooze={() => setSnoozeOpen(true)}
-          />
+          {targetThreadId ? (
+            <ThreadContextMenuItems
+              key={targetThreadId}
+              threadId={targetThreadId}
+              isInbox={isInbox}
+              isSpam={isSpam}
+              isSent={isSent}
+              isBin={isBin}
+              onSnooze={() => setSnoozeThreadId(targetThreadId)}
+            />
+          ) : null}
         </ContextMenuContent>
       </ContextMenu>
-      {snoozeOpen ? (
-        <ThreadSnoozeDialog threadId={threadId} onClose={() => setSnoozeOpen(false)} />
+      {snoozeThreadId ? (
+        <ThreadSnoozeDialog threadId={snoozeThreadId} onClose={() => setSnoozeThreadId(null)} />
       ) : null}
     </>
   );

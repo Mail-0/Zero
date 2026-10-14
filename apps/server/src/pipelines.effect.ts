@@ -17,7 +17,7 @@ import { env } from './env';
 
 const showLogs = true;
 
-const log = (message: string, ...args: any[]) => {
+const log = (message: string, ...args: unknown[]) => {
   if (showLogs) {
     console.log(message, ...args);
     return message;
@@ -113,7 +113,7 @@ export const getEmbeddingVector = async (text: string) => {
         },
       },
     );
-    const embeddingVector = (embeddingResponse as any).data?.[0];
+    const embeddingVector = 'data' in embeddingResponse ? embeddingResponse.data?.[0] : undefined;
     return embeddingVector ?? null;
   } catch (error) {
     log('[getEmbeddingVector] failed', error);

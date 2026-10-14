@@ -1,7 +1,3 @@
-import { useTemplates } from '@/hooks/use-templates';
-import { useTRPC } from '@/providers/query-provider';
-import { Editor } from '@tiptap/react';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +7,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Save, Trash2 } from 'lucide-react';
-import React, { useState, useMemo, useDeferredValue, useCallback, startTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,8 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import React, { useState, useMemo, useDeferredValue, useCallback, startTransition } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FileText, Save, Trash2 } from 'lucide-react';
+import { useTRPC } from '@/providers/query-provider';
+import { useTemplates } from '@/hooks/use-templates';
+import { Button } from '@/components/ui/button';
 import { TRPCClientError } from '@trpc/client';
+import { Input } from '@/components/ui/input';
+import { Editor } from '@tiptap/react';
+import { toast } from 'sonner';
 
 type RecipientField = 'to' | 'cc' | 'bcc';
 
@@ -36,10 +36,6 @@ type Template = {
   cc?: string[] | null;
   bcc?: string[] | null;
 };
-
-type TemplatesQueryData = {
-  templates: Template[];
-} | undefined;
 
 interface TemplateButtonProps {
   editor: Editor | null;
@@ -63,7 +59,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data } = useTemplates();
-  
+
   const templates: Template[] = data?.templates ?? [];
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -76,9 +72,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
 
   const filteredTemplates = useMemo(() => {
     if (!deferredSearch.trim()) return templates;
-    return templates.filter((t) =>
-      t.name.toLowerCase().includes(deferredSearch.toLowerCase()),
-    );
+    return templates.filter((t) => t.name.toLowerCase().includes(deferredSearch.toLowerCase()));
   }, [deferredSearch, templates]);
 
   const { mutateAsync: createTemplate } = useMutation(trpc.templates.create.mutationOptions());
@@ -103,7 +97,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
         cc: cc.length ? cc : undefined,
         bcc: bcc.length ? bcc : undefined,
       });
-      queryClient.setQueryData(trpc.templates.list.queryKey(), (old: TemplatesQueryData) => {
+      queryClient.setQueryData(trpc.templates.list.queryKey(), (old) => {
         if (!old?.templates) return old;
         return {
           templates: [newTemplate.template, ...old.templates],
@@ -123,16 +117,19 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
     }
   };
 
-  const handleApplyTemplate = useCallback((template: Template) => {
-    if (!editor) return;
-    startTransition(() => {
-      if (template.subject) setSubject(template.subject);
-      if (template.body) editor.commands.setContent(template.body, false);
-      if (template.to) setRecipients('to', template.to);
-      if (template.cc) setRecipients('cc', template.cc);
-      if (template.bcc) setRecipients('bcc', template.bcc);
-    });
-  }, [editor, setSubject, setRecipients]);
+  const handleApplyTemplate = useCallback(
+    (template: Template) => {
+      if (!editor) return;
+      startTransition(() => {
+        if (template.subject) setSubject(template.subject);
+        if (template.body) editor.commands.setContent(template.body, false);
+        if (template.to) setRecipients('to', template.to);
+        if (template.cc) setRecipients('cc', template.cc);
+        if (template.bcc) setRecipients('bcc', template.bcc);
+      });
+    },
+    [editor, setSubject, setRecipients],
+  );
 
   const handleDeleteTemplate = useCallback(
     async (templateId: string) => {
@@ -177,7 +174,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
                 <FileText className="mr-2 h-3.5 w-3.5" /> Use template
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="z-99999 w-60">
-                <div className="p-2 border-b border-border sticky top-0 bg-background">
+                <div className="border-border bg-background sticky top-0 border-b p-2">
                   <Input
                     placeholder="Search..."
                     value={search}
@@ -195,10 +192,10 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
                     >
                       <span className="flex-1 truncate text-left">{t.name}</span>
                       <button
-                        className="p-0.5 text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive p-0.5"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setMenuOpen(false); 
+                          setMenuOpen(false);
                           toast(`Delete template "${t.name}"?`, {
                             duration: 10000,
                             action: {
@@ -217,7 +214,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
                     </DropdownMenuItem>
                   ))}
                   {filteredTemplates.length === 0 && (
-                    <div className="p-2 text-xs text-muted-foreground">No templates</div>
+                    <div className="text-muted-foreground p-2 text-xs">No templates</div>
                   )}
                 </div>
               </DropdownMenuSubContent>
@@ -231,7 +228,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
           <DialogHeader>
             <DialogTitle>Save as Template</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-2">
+          <div className="space-y-2 py-4">
             <Input
               placeholder="Template name"
               value={templateName}
@@ -240,11 +237,7 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
             />
           </div>
           <DialogFooter className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSaveDialogOpen(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
             <Button size="sm" onClick={handleSaveTemplate} disabled={isSaving}>
@@ -257,4 +250,4 @@ const TemplateButtonComponent: React.FC<TemplateButtonProps> = ({
   );
 };
 
-export const TemplateButton = React.memo(TemplateButtonComponent); 
+export const TemplateButton = React.memo(TemplateButtonComponent);

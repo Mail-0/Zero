@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { trpcClient } from '@/providers/query-provider';
 import { useMail } from '@/components/mail/use-mail';
@@ -50,9 +50,9 @@ export default function SelectAllCheckbox({ className }: { className?: string })
         if (!page?.nextPageToken) break;
         cursor = page.nextPageToken;
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch all thread IDs', err);
-      toast.error(err?.message ?? 'Failed to select all emails');
+      toast.error(err instanceof Error ? err.message : 'Failed to select all emails');
     }
 
     return ids;

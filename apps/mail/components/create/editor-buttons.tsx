@@ -1,5 +1,4 @@
 import { EditorProvider, useCurrentEditor } from '@tiptap/react';
-import React from 'react';
 
 const MenuBar = () => {
   const { editor } = useCurrentEditor();
@@ -134,6 +133,6 @@ const MenuBar = () => {
   );
 };
 
-export default () => {
+export default function EditorButtons() {
   return <EditorProvider slotBefore={<MenuBar />}></EditorProvider>;
-};
+}
