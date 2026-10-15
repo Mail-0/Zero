@@ -6,6 +6,7 @@ export type SessionUser = NonNullable<Awaited<ReturnType<Auth['api']['getSession
 
 export type HonoVariables = {
   auth: Auth;
+  authRecoveryURL?: string;
   sessionUser?: SessionUser;
   autumn: Autumn;
 };

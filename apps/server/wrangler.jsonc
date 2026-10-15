@@ -302,6 +302,7 @@
       ],
     },
     "production": {
+      "routes": [{ "pattern": "api.0.email", "custom_domain": true }],
       "triggers": {
         "crons": ["*/1 * * * *"],
       },
@@ -330,7 +331,7 @@
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          "id": "b1be316b45fb439a9e54b74ecc20aa21",
+          "id": "243d8c0576a3483eb9b66549210ddd6c",
           "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
         },
       ],
@@ -422,7 +423,7 @@
         "NODE_ENV": "production",
         "COOKIE_DOMAIN": "0.email",
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
-        "VITE_PUBLIC_APP_URL": "https://0.email",
+        "VITE_PUBLIC_APP_URL": "https://app.0.email",
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "10",

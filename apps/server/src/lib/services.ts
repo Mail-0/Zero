@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import { createRedis } from './redis';
 import { Resend } from 'resend';
 import { env } from '../env';
 
@@ -7,7 +7,7 @@ export const resend = () =>
     ? new Resend(env.RESEND_API_KEY)
     : { emails: { send: async (...args: unknown[]) => console.log(args) } };
 
-export const redis = () => new Redis({ url: env.REDIS_URL, token: env.REDIS_TOKEN });
+export const redis = () => createRedis(env.REDIS_URL, env.REDIS_TOKEN);
 
 export const twilio = () => {
   //   if (env.NODE_ENV === 'development' && !forceUseRealService) {

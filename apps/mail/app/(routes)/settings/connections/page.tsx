@@ -23,8 +23,8 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { AddConnectionDialog } from '@/components/connection/add';
 
 import { Trash, Plus, Unplug, Mail, Settings2 } from 'lucide-react';
-import { useSession, authClient } from '@/lib/auth-client';
 import { useConnections } from '@/hooks/use-connections';
+import { getReconnectPath } from '@/lib/auth-recovery';
 import { useTRPC } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMutation } from '@tanstack/react-query';
@@ -32,13 +32,16 @@ import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
+import { useSession } from '@/lib/auth-client';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function ConnectionsPage() {
+  const navigate = useNavigate();
   const { data, isLoading, refetch: refetchConnections } = useConnections();
   const { refetch } = useSession();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
@@ -188,12 +191,9 @@ export default function ConnectionsPage() {
                     <Button
                       variant="ghost"
                       className={cn(subtleButton, 'gap-1.5')}
-                      onClick={async () => {
-                        await authClient.linkSocial({
-                          provider: connection.providerId,
-                          callbackURL: `${window.location.origin}/settings/connections`,
-                        });
-                      }}
+                      onClick={() =>
+                        navigate(getReconnectPath(connection.providerId, connection.email))
+                      }
                     >
                       <Unplug className="size-3.5" />
                       {m['pages.settings.connections.reconnect']()}

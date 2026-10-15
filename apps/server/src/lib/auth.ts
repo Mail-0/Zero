@@ -13,6 +13,7 @@ import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { clearMailboxChatData } from './chat-attachments';
 import { getSocialProviders } from './auth-providers';
+import { getAuthRecoveryURL } from './auth-recovery';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
 import type { CreateEmailOptions } from 'resend';
@@ -96,7 +97,14 @@ const scheduleCampaign = (userInfo: { address: string; name: string }) =>
 
 const connectionHandlerHook = async (account: Account) => {
   if (!account.accessToken || !account.refreshToken) {
-    console.error('Missing Access/Refresh Tokens', { account });
+    console.error('Missing Access/Refresh Tokens', {
+      accountId: account.id,
+      providerId: account.providerId,
+    });
+    getContext<HonoContext>().set(
+      'authRecoveryURL',
+      getAuthRecoveryURL(env.VITE_PUBLIC_APP_URL, account),
+    );
     throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
   }
 
@@ -137,7 +145,10 @@ const connectionHandlerHook = async (account: Account) => {
   if (env.NODE_ENV === 'production') {
     await Effect.runPromise(
       scheduleCampaign({ address: userInfo.address, name: userInfo.name || 'there' }),
-    );
+    ).catch((error) => {
+      // Marketing email is optional; the saved connection and OAuth login must still succeed.
+      console.error('Failed to schedule onboarding emails', error);
+    });
   }
 
   if (env.GOOGLE_S_ACCOUNT && env.GOOGLE_S_ACCOUNT !== '{}') {
@@ -354,6 +365,7 @@ const createAuthConfig = () => {
       },
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
+    secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: [
       env.VITE_PUBLIC_APP_URL,
       'https://app.0.email',

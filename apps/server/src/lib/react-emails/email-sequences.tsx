@@ -9,6 +9,8 @@ import {
   Preview,
   Heading,
 } from '@react-email/components';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Wrangler's classic JSX output requires React in scope.
+import React from 'react';
 
 // Common styles
 const main = {

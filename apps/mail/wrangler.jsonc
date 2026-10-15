@@ -27,9 +27,10 @@
     },
     "production": {
       "name": "zero-production",
+      "routes": [{ "pattern": "app.0.email", "custom_domain": true }],
       "vars": {
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
-        "VITE_PUBLIC_APP_URL": "https://0.email",
+        "VITE_PUBLIC_APP_URL": "https://app.0.email",
       },
     },
   },

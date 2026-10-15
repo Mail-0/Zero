@@ -31,6 +31,7 @@ import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { IMAP_TOKEN_MARKER } from './lib/connection-status';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
+import { handleAuthRequest } from './lib/auth-recovery';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
@@ -688,7 +689,7 @@ const api = new Hono<HonoContext>()
   .route('/imap-oauth', imapOAuthApi)
   .route('/public', publicRouter)
   .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
-    return c.var.auth.handler(c.req.raw);
+    return handleAuthRequest(c.req.raw, c.var.auth.handler, () => c.var.authRecoveryURL);
   })
   .use(
     trpcServer({
