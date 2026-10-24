@@ -160,6 +160,7 @@ export async function assistantTools(): Promise<CloudTool[]> {
               approval: 'ask',
               approvalProof: 'verified',
               approvalFallback: 'tool',
+              preflight: true,
             }
           : { requiredScopes: ['mail:read'] },
       }),

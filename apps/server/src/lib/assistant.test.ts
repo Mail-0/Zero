@@ -1108,7 +1108,12 @@ describe('one Keiki agent with account-scoped conversation principals', () => {
         const writes = tool.policy?.requiredScopes?.[0] === 'mail:request_action';
         expect(tool.policy).toMatchObject(
           writes
-            ? { approval: 'ask', approvalProof: 'verified', approvalFallback: 'tool' }
+            ? {
+                approval: 'ask',
+                approvalProof: 'verified',
+                approvalFallback: 'tool',
+                preflight: true,
+              }
             : { requiredScopes: ['mail:read'] },
         );
         if (!writes) expect(tool.policy).not.toHaveProperty('approval');
@@ -1321,6 +1326,26 @@ describe('one Keiki agent with account-scoped conversation principals', () => {
     expect(state.execute).toHaveBeenCalledExactlyOnceWith('alice-mail', {
       prompt: 'Write a greeting',
     });
+    expect((await pg.query('SELECT * FROM mail0_assistant_action')).rows).toHaveLength(0);
+  });
+  it('answers a Keiki preflight without recording or running the action, and rejects a bad mailbox first', async () => {
+    const handle = '+15551111111';
+    await link(handle, 'alice');
+    const payload = { to: [{ email: 'recipient@zero.test' }], subject: 'Hi', message: 'Private' };
+    const context = { ...photonContext(handle), traceId: 'preflight-trace', preflight: true };
+    const ok = await hook('/tools/send_email', {
+      input: { connectionId: 'alice-mail', input: payload },
+      context,
+    });
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({ ok: true, preflight: true });
+    const bad = await hook('/tools/send_email', {
+      input: { connectionId: 'gmail', input: payload },
+      context,
+    });
+    expect(bad.status).toBe(400);
+    expect(await bad.json()).toMatchObject({ code: 'mailbox_selection_required' });
+    expect(state.execute).not.toHaveBeenCalled();
     expect((await pg.query('SELECT * FROM mail0_assistant_action')).rows).toHaveLength(0);
   });
   it('requests Keiki presentation without credentials, delivery claims or bypassing owner approval', async () => {
