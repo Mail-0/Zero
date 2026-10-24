@@ -1105,6 +1105,13 @@ describe('one Keiki agent with account-scoped conversation principals', () => {
         expect(new URL(tool.webhookUrl).origin).toBe('https://callback.zero.test');
         expect(new URL(tool.webhookUrl).pathname).toMatch(/^\/api\/assistant\/hooks\/tools\//);
         expect(tool.policy?.requiredScopes?.length).toBe(1);
+        const writes = tool.policy?.requiredScopes?.[0] === 'mail:request_action';
+        expect(tool.policy).toMatchObject(
+          writes
+            ? { approval: 'ask', approvalProof: 'verified', approvalFallback: 'tool' }
+            : { requiredScopes: ['mail:read'] },
+        );
+        if (!writes) expect(tool.policy).not.toHaveProperty('approval');
       }
     } finally {
       settings.KEIKI_CALLBACK_URL = undefined;

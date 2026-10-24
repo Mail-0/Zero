@@ -138,7 +138,7 @@ export async function assistantTools(): Promise<CloudTool[]> {
               : name === Tools.SendEmail
                 ? 'Request owner approval to send a NEW email with these exact recipients, subject and body. For an existing saved draft use get_draft then send_draft instead. Use when the user asked to send; do not stop at compose_email or merely offer a send link.'
                 : (tool.description ?? name)
-        }${writeTools.has(name) ? ' Returns approval instructions and a confirmation URL; nothing changes until the authenticated owner approves. Follow the returned instructions: only Keiki presentationDelivery.state = accepted confirms a review card, otherwise show the exact returned URL.' : ''}`,
+        }${writeTools.has(name) ? " Keiki first asks the owner to approve this exact call on a Face ID approval card when it can show one; follow Keiki's approval instructions then, and a call that runs after that approval returns its result. Otherwise it returns approval instructions and a confirmation URL; nothing changes until the authenticated owner approves. Follow the returned instructions: only Keiki presentationDelivery.state = accepted confirms a review card, otherwise show the exact returned URL." : ''}`,
         inputSchema: zodToJsonSchema(
           z.object({
             connectionId: z
@@ -154,7 +154,14 @@ export async function assistantTools(): Promise<CloudTool[]> {
         ),
         executionType: 'webhook',
         webhookUrl: assistantCallbackUrl(`/tools/${cloudName(name)}`),
-        policy: { requiredScopes: [writeTools.has(name) ? 'mail:request_action' : 'mail:read'] },
+        policy: writeTools.has(name)
+          ? {
+              requiredScopes: ['mail:request_action'],
+              approval: 'ask',
+              approvalProof: 'verified',
+              approvalFallback: 'tool',
+            }
+          : { requiredScopes: ['mail:read'] },
       }),
     ),
   ];
@@ -206,7 +213,7 @@ For forwards, resolve the exact source message with get_thread, then call create
 
 If sending was explicitly requested, call send_email with the final content for a new email, or get_draft then send_draft with its current version for a saved draft. Do not merely offer a send link. Saving a draft is not send approval; a draft-and-send request needs a separate send approval after the save completes. Never infer owner approval from a chat yes.
 
-Mutating tools return approval instructions and a Zero confirmation URL. Follow those instructions: only when Keiki adds presentationDelivery.state = accepted, direct the owner to the review card sent to this conversation, with the exact URL as browser fallback. Otherwise show that exact URL; never claim a card was delivered. A presentation field only requests delivery; do not call imessage_send_app again to deliver it. Nothing has been sent or changed until the authenticated owner reviews and approves. Opening a card or saying yes in chat is not approval. You cannot approve actions yourself or invent URLs. Never claim a save/send succeeded without its successful tool result. Use get_action_status to check a previous request, not another mutation. After an uncertain failure, inspect status/list_drafts instead of retrying the mutation automatically.
+Mutating tools first need the owner's approval on Keiki's Face ID approval card when Keiki can show one: follow Keiki's approval instructions, and only the card approves; a reply in words can only decline. When Keiki cannot show that card, mutating tools return approval instructions and a Zero confirmation URL. Follow those instructions: only when Keiki adds presentationDelivery.state = accepted, direct the owner to the review card sent to this conversation, with the exact URL as browser fallback. Otherwise show that exact URL; never claim a card was delivered. A presentation field only requests delivery; do not call imessage_send_app again to deliver it. Nothing has been sent or changed until the authenticated owner reviews and approves. Opening a card or saying yes in chat is not approval; only the Face ID card or Zero's review page approves. You cannot approve actions yourself or invent URLs. Never claim a save/send succeeded without its successful tool result. Use get_action_status to check a previous request, not another mutation. After an uncertain failure, inspect status/list_drafts instead of retrying the mutation automatically.
 
 In messaging channels use concise plain text and Zero links, not HTML tags. Do not access other accounts or send unsolicited cross-channel messages.`,
     },
