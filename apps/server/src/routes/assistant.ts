@@ -368,6 +368,7 @@ export const assistantHooks = new Hono<HonoContext>()
               decidedBy: z.string().nullable(),
             })
             .optional(),
+          preflight: z.boolean().optional(),
         }),
       })
       .safeParse(await c.req.json().catch(() => null));
@@ -440,6 +441,9 @@ export const assistantHooks = new Hono<HonoContext>()
           ?.senderConnectionId;
         if (senderConnectionId) mailbox = await ownedMailbox(userId, senderConnectionId);
       }
+      // Keiki checks the call before asking the owner to approve it: everything above
+      // validated, so a call that would be rejected never reaches the approval card.
+      if (parsed.data.context.preflight) return c.json({ ok: true, preflight: true });
       const id = await digest(
         JSON.stringify([
           userId,
