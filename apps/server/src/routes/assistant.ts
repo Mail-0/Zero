@@ -25,8 +25,8 @@ import { verifyWebhook, type IdentityWebhookAnswer } from '@onkeiki/agents/cloud
 import { assistantAppPresentation } from '../lib/assistant-approval';
 import { and, eq, gt, isNull, sql, count } from 'drizzle-orm';
 import { isAiEnabledForUser } from '../lib/ai-access';
+import type { Context, ErrorHandler } from 'hono';
 import type { HonoContext } from '../ctx';
-import type { ErrorHandler } from 'hono';
 import { env } from '../env';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -223,6 +223,55 @@ async function identifyPhotonSender(
   return identityReply(`Connect your Zero account to use your assistant: ${linkUrl(token)}`);
 }
 
+/** Keiki surfaces that tie a decision to a verified person (signed into the webhook body). A chat reply is not one. */
+const verifiedApprovalSurfaces = new Set(['keiki_vault', 'slack', 'dashboard']);
+
+/** Claims a pending action once and runs it when approved. */
+async function decideAction(c: Context<HonoContext>, userId: string, id: string, approve: boolean) {
+  // Atomically claim once. A timeout after sending remains indeterminate and
+  // is never retried automatically: duplicate mail is worse than an error.
+  const action = await withAssistantDb(
+    async (db) =>
+      (
+        await db
+          .update(assistantAction)
+          .set({ status: approve ? 'running' : 'declined' })
+          .where(
+            and(
+              eq(assistantAction.id, id),
+              eq(assistantAction.userId, userId),
+              eq(assistantAction.status, 'pending'),
+              gt(assistantAction.expiresAt, new Date()),
+            ),
+          )
+          .returning()
+      )[0],
+  );
+  if (!action) return c.json({ error: 'Action expired or already handled' }, 409);
+  if (!approve) return c.json({ status: 'declined' });
+  try {
+    const result = await executeMailTool(userId, action.connectionId, action.tool, action.input);
+    await withAssistantDb((db) =>
+      db
+        .update(assistantAction)
+        .set({ status: 'completed', result })
+        .where(and(eq(assistantAction.id, action.id), eq(assistantAction.userId, userId))),
+    );
+    return c.json({ status: 'completed', result });
+  } catch (error) {
+    await withAssistantDb((db) =>
+      db
+        .update(assistantAction)
+        .set({ status: 'failed' })
+        .where(and(eq(assistantAction.id, action.id), eq(assistantAction.userId, userId))),
+    );
+    if (error instanceof AssistantToolError)
+      return c.json({ error: error.message, code: error.code }, error.status);
+    console.error('[assistant action]', error);
+    return c.json({ error: 'Action failed. Check your mailbox before trying again.' }, 500);
+  }
+}
+
 /** Signed callbacks are mounted outside the session/JWT middleware. */
 export const assistantHooks = new Hono<HonoContext>()
   .use('*', async (c, next) => {
@@ -311,6 +360,13 @@ export const assistantHooks = new Hono<HonoContext>()
           }),
           principal: z
             .object({ userId: z.string().nullable(), scopes: z.array(z.string()) })
+            .optional(),
+          approval: z
+            .object({
+              actionId: z.string(),
+              decidedVia: z.string().nullable(),
+              decidedBy: z.string().nullable(),
+            })
             .optional(),
         }),
       })
@@ -438,6 +494,9 @@ export const assistantHooks = new Hono<HonoContext>()
       );
       if (!action) throw new Error('Pending action could not be loaded');
       const awaitingApproval = action.status === 'pending' && action.expiresAt > new Date();
+      const approvedVia = parsed.data.context.approval?.decidedVia;
+      if (awaitingApproval && approvedVia && verifiedApprovalSurfaces.has(approvedVia))
+        return decideAction(c, userId, id, true);
       const url = actionUrl(id);
       const presentation = awaitingApproval
         ? assistantAppPresentation(parsed.data.context, id, url)
@@ -607,47 +666,6 @@ export const assistantApi = new Hono<HonoContext>()
     const userId = c.var.sessionUser!.id;
     if (!(await isAiEnabledForUser(userId))) return c.json({ error: 'AI is disabled' }, 403);
     const { approve } = z.object({ approve: z.boolean() }).parse(await c.req.json());
-    // Atomically claim once. A timeout after sending remains indeterminate and
-    // is never retried automatically: duplicate mail is worse than an error.
-    const action = await withAssistantDb(
-      async (db) =>
-        (
-          await db
-            .update(assistantAction)
-            .set({ status: approve ? 'running' : 'declined' })
-            .where(
-              and(
-                eq(assistantAction.id, c.req.param('id')),
-                eq(assistantAction.userId, userId),
-                eq(assistantAction.status, 'pending'),
-                gt(assistantAction.expiresAt, new Date()),
-              ),
-            )
-            .returning()
-        )[0],
-    );
-    if (!action) return c.json({ error: 'Action expired or already handled' }, 409);
-    if (!approve) return c.json({ status: 'declined' });
-    try {
-      const result = await executeMailTool(userId, action.connectionId, action.tool, action.input);
-      await withAssistantDb((db) =>
-        db
-          .update(assistantAction)
-          .set({ status: 'completed', result })
-          .where(and(eq(assistantAction.id, action.id), eq(assistantAction.userId, userId))),
-      );
-      return c.json({ status: 'completed', result });
-    } catch (error) {
-      await withAssistantDb((db) =>
-        db
-          .update(assistantAction)
-          .set({ status: 'failed' })
-          .where(and(eq(assistantAction.id, action.id), eq(assistantAction.userId, userId))),
-      );
-      if (error instanceof AssistantToolError)
-        return c.json({ error: error.message, code: error.code }, error.status);
-      console.error('[assistant action]', error);
-      return c.json({ error: 'Action failed. Check your mailbox before trying again.' }, 500);
-    }
+    return decideAction(c, userId, c.req.param('id'), approve);
   })
   .onError(handleAssistantError);
