@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { PixelatedBackground } from '@/components/home/pixelated-bg';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
+import { assistantReturnTo } from '@/lib/assistant-return-to';
 import { Google, Microsoft } from '@/components/icons/icons';
 import ErrorMessage from '@/app/(auth)/login/error-message';
 import { Link, useNavigate } from 'react-router';
@@ -73,6 +74,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   const navigate = useNavigate();
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
   const [error, _] = useQueryState('error');
+  const [returnTo] = useQueryState('returnTo');
 
   useEffect(() => {
     const missing = providers.find((p) => p.required && !p.enabled);
@@ -116,7 +118,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
       toast.promise(
         signIn.social({
           provider: provider.id as Parameters<typeof signIn.social>[0]['provider'],
-          callbackURL: `${window.location.origin}/mail`,
+          callbackURL: `${window.location.origin}${assistantReturnTo(returnTo)}`,
         }),
         {
           error: 'Login redirect failed',

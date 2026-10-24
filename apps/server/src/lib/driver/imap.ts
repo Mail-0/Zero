@@ -773,7 +773,7 @@ export class ImapMailManager implements MailManager {
     );
   }
 
-  getMessageAttachments(messageId: string) {
+  getMessageAttachments(messageId: string, options?: { fresh?: boolean; includeInline?: boolean }) {
     return this.withErrorHandler(
       'getMessageAttachments',
       async () => {
@@ -782,7 +782,11 @@ export class ImapMailManager implements MailManager {
         const raw = (await this.rawMessages([message])).get(message.key);
         if (!raw) return [];
         const email = await parseRawMessage(raw);
-        return listedAttachments(email)
+        return (
+          options?.includeInline
+            ? email.attachments.map((attachment, index) => ({ attachment, index }))
+            : listedAttachments(email)
+        )
           .map(({ index }) => attachmentPayload(email, String(index)))
           .filter((attachment): attachment is NonNullable<typeof attachment> => !!attachment);
       },
@@ -948,12 +952,18 @@ export class ImapMailManager implements MailManager {
     );
   }
 
-  getDraft(id: string) {
+  getDraft(id: string, options?: { includeInline?: boolean }) {
     return this.withErrorHandler(
       'getDraft',
       async (): Promise<ParsedDraft> => {
         const message = this.store.message(id);
-        if (!message) throw new Error('Draft not found');
+        const drafts = this.folderFor('DRAFT')?.path;
+        if (
+          !message ||
+          !drafts ||
+          !message.locations.some((location) => location.folder === drafts)
+        )
+          throw new Error('Draft not found');
         const raw = (await this.rawMessages([message])).get(message.key);
         if (!raw) throw new Error('Draft not found');
         const email = await parseRawMessage(raw);
@@ -968,13 +978,20 @@ export class ImapMailManager implements MailManager {
           (list ?? []).map((address) => address.email).filter(Boolean);
         return {
           id,
+          fromEmail: parsed.sender.email,
+          threadId: message.threadId,
+          inReplyTo: parsed.inReplyTo,
+          references: parsed.references,
           to: format(parsed.to),
           cc: format(parsed.cc),
           bcc: format(parsed.bcc),
           subject: email.subject ?? '',
           content: parsed.decodedBody ?? '',
           rawMessage: { internalDate: String(message.date) },
-          attachments: listedAttachments(email)
+          attachments: (options?.includeInline
+            ? email.attachments.map((attachment, index) => ({ attachment, index }))
+            : listedAttachments(email)
+          )
             .map(({ index }) => attachmentPayload(email, String(index)))
             .filter((attachment): attachment is NonNullable<typeof attachment> => !!attachment),
         };

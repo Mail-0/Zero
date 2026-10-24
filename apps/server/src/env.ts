@@ -5,6 +5,16 @@ import { env as _env } from 'cloudflare:workers';
 import type { QueryableHandler } from 'dormroom';
 
 export type ZeroEnv = {
+  /** Account assistant credentials; Keiki is the sole assistant runtime. */
+  KEIKI_API_KEY?: string;
+  /** One shared Keiki agent; users are isolated by conversation/principal. */
+  KEIKI_AGENT_ID?: string;
+  KEIKI_PLATFORM_URL?: string;
+  /** Public callback origin, e.g. a dev tunnel; defaults to the backend URL. */
+  KEIKI_CALLBACK_URL?: string;
+  KEIKI_WEBHOOK_SECRET?: string;
+  KEIKI_MODEL?: string;
+  KEIKI_PHOTON_LINE?: string;
   GMAIL_QUOTA: DurableObjectNamespace<GmailQuota>;
   GMAIL_PROJECT_QUOTA_PER_MINUTE?: string;
   GMAIL_MAILBOX_QUOTA_PER_MINUTE?: string;

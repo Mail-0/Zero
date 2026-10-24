@@ -27,10 +27,20 @@ type ComposeEmailInput = {
   }>;
   username: string;
   connectionId: string;
+  writingInstructions?: string;
 };
 
 export async function composeEmail(input: ComposeEmailInput) {
-  const { prompt, threadMessages = [], cc, emailSubject, to, username, connectionId } = input;
+  const {
+    prompt,
+    threadMessages = [],
+    cc,
+    emailSubject,
+    to,
+    username,
+    connectionId,
+    writingInstructions,
+  } = input;
 
   const writingStyleMatrix = await getWritingStyleMatrixForConnectionId({
     connectionId,
@@ -46,6 +56,7 @@ export async function composeEmail(input: ComposeEmailInput) {
     prompt,
     username,
     styleProfile: writingStyleMatrix?.style as WritingStyleMatrix,
+    writingInstructions,
   });
 
   const threadUserMessages = threadMessages.map((message) => ({
@@ -89,7 +100,7 @@ export async function composeEmail(input: ComposeEmailInput) {
     messages: [
       {
         role: 'system',
-        content: systemPrompt,
+        content: `${systemPrompt}\n\nWrite as the sender identified in the email context, not as the assistant. User-stated writing preferences override the learned style profile; the assistant's chat voice is not the sender's email voice. Use the supplied sender's first name for a sign-off when the user's style calls for one, unless the user specifies a different name or signature. Do not sign as an AI assistant or use a placeholder name. If the sender name is unavailable, omit the named sign-off rather than inventing one. Keep the body faithful to the requested content; do not add unsupported promises, relationships or personal details.`,
       },
       ...messages,
       {
@@ -197,16 +208,24 @@ const EmailAssistantPrompt = ({
   prompt,
   username,
   styleProfile,
+  writingInstructions,
 }: {
   currentSubject?: string;
   recipients?: string[];
   prompt: string;
   username: string;
   styleProfile?: WritingStyleMatrix | null;
+  writingInstructions?: string;
 }) => {
   const parts: string[] = [];
 
   parts.push('# Email Composition Task');
+  if (writingInstructions) {
+    parts.push(
+      '## Saved writing preferences (override the style profile; explicit instructions for this email take priority)',
+    );
+    parts.push(escapeXml(writingInstructions));
+  }
   if (styleProfile) {
     parts.push('## Style Profile');
     parts.push(`\`\`\`json
@@ -234,8 +253,8 @@ const EmailAssistantPrompt = ({
   parts.push(escapeXml(prompt));
   parts.push('');
 
-  parts.push("##This is the user's name:");
-  parts.push(escapeXml(username));
+  parts.push("## Sender's name:");
+  parts.push(username.trim() ? escapeXml(username) : 'Unavailable; do not invent a sign-off name.');
   parts.push('');
 
   parts.push(

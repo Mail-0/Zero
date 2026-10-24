@@ -75,7 +75,10 @@ export class OutlookMailManager implements MailManager {
       { messageId, attachmentId },
     );
   }
-  public getMessageAttachments(messageId: string) {
+  public getMessageAttachments(
+    messageId: string,
+    options?: { fresh?: boolean; includeInline?: boolean },
+  ) {
     return this.withErrorHandler(
       'getMessageAttachments',
       async () => {
@@ -89,16 +92,25 @@ export class OutlookMailManager implements MailManager {
           files.push(...page.value);
           next = page['@odata.nextLink'];
         }
+        if (
+          options?.includeInline &&
+          files.some((file) => file['@odata.type'] !== '#microsoft.graph.fileAttachment')
+        )
+          throw new Error(
+            'This message contains attachments that cannot be copied safely. Forward it in the mailbox UI.',
+          );
         return files
           .filter(
-            (file) => file['@odata.type'] === '#microsoft.graph.fileAttachment' && !file.isInline,
+            (file) =>
+              file['@odata.type'] === '#microsoft.graph.fileAttachment' &&
+              (options?.includeInline || !file.isInline),
           )
           .map((file) => ({
             filename: file.name ?? '',
             mimeType: file.contentType ?? 'application/octet-stream',
             size: file.size ?? 0,
             attachmentId: file.id ?? '',
-            headers: [],
+            headers: file.contentId ? [{ name: 'Content-ID', value: file.contentId }] : [],
             body: file.contentBytes ?? '',
           }));
       },
@@ -710,16 +722,18 @@ export class OutlookMailManager implements MailManager {
       { draftId },
     );
   }
-  public getDraft(draftId: string) {
+  public getDraft(draftId: string, options?: { includeInline?: boolean }) {
     return this.withErrorHandler(
       'getDraft',
       async () => {
         const draftMessage: Message = await this.graphClient
           .api(`/me/messages/${draftId}`) // Drafts are messages in the drafts folder
-          .select('id,subject,body,from,toRecipients,ccRecipients,bccRecipients')
+          .select(
+            'id,subject,body,from,toRecipients,ccRecipients,bccRecipients,isDraft,conversationId,internetMessageHeaders',
+          )
           .get();
 
-        if (!draftMessage) {
+        if (!draftMessage?.isDraft) {
           throw new Error('Draft not found');
         }
 
@@ -730,7 +744,7 @@ export class OutlookMailManager implements MailManager {
 
         // Include attachment contents: the composer re-saves the draft with whatever files it
         // holds, so a draft opened without them would lose its attachments on the next save.
-        const attachments = await this.getMessageAttachments(draftId);
+        const attachments = await this.getMessageAttachments(draftId, options);
 
         return { ...parsedDraft, attachments };
       },
@@ -742,23 +756,31 @@ export class OutlookMailManager implements MailManager {
     return this.withErrorHandler(
       'listDrafts',
       async () => {
-        let request = this.graphClient.api('/me/mailfolders/drafts/messages');
+        if (pageToken) {
+          const next = new URL(pageToken);
+          if (
+            next.protocol !== 'https:' ||
+            next.hostname !== 'graph.microsoft.com' ||
+            next.username ||
+            next.password ||
+            next.port ||
+            next.hash ||
+            !/^\/v1\.0\/me\/mailfolders\/drafts\/messages$/i.test(next.pathname)
+          )
+            throw new Error('Invalid draft pagination cursor');
+        }
+        let request = this.graphClient.api(pageToken || '/me/mailfolders/drafts/messages');
 
         // if (q) {
         //   request = request.search(`"${q}"`);
         // }
 
-        request = request.select(
-          'id,subject,from,toRecipients,ccRecipients,bccRecipients,sentDateTime,receivedDateTime,isRead,internetMessageId',
-        );
-        // request = request.orderby('receivedDateTime desc');
-        request = request.top(maxResults);
-
-        if (pageToken) {
-          console.warn(
-            'Outlook pagination typically uses @odata.nextLink (full URL). pageToken needs to be handled accordingly.',
+        if (!pageToken)
+          request = request.select(
+            'id,subject,from,toRecipients,ccRecipients,bccRecipients,sentDateTime,receivedDateTime,isRead,internetMessageId',
           );
-        }
+        // request = request.orderby('receivedDateTime desc');
+        if (!pageToken) request = request.top(maxResults);
 
         const res = await request.get();
 
@@ -855,16 +877,7 @@ export class OutlookMailManager implements MailManager {
 
         let id = data.id ?? undefined;
         if (id) {
-          try {
-            await this.graphClient.api(`/me/messages/${id}`).patch(outlookMessage);
-          } catch (error) {
-            console.warn(`Failed to update draft ${id}, creating a new one`, error);
-            await this.graphClient
-              .api(`/me/messages/${id}`)
-              .delete()
-              .catch(() => undefined);
-            id = undefined;
-          }
+          await this.graphClient.api(`/me/messages/${id}`).patch(outlookMessage);
         }
 
         if (!id) {
@@ -882,7 +895,7 @@ export class OutlookMailManager implements MailManager {
         if (!id) throw new Error('Failed to save draft');
 
         await this.syncDraftAttachments(id, attachments, {
-          keepExistingInline: !!data.isForward,
+          keepExistingInline: !!data.isForward && inlineImages.length === 0,
         });
 
         return { id };
@@ -1368,6 +1381,16 @@ export class OutlookMailManager implements MailManager {
 
     return {
       id: draftMessage.id || '',
+      fromEmail: draftMessage.from?.emailAddress?.address ?? undefined,
+      threadId: draftMessage.conversationId ?? undefined,
+      inReplyTo:
+        draftMessage.internetMessageHeaders?.find(
+          (header) => header.name?.toLowerCase() === 'in-reply-to',
+        )?.value ?? undefined,
+      references:
+        draftMessage.internetMessageHeaders?.find(
+          (header) => header.name?.toLowerCase() === 'references',
+        )?.value ?? undefined,
       to,
       cc,
       bcc,

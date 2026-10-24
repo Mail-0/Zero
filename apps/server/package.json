@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "assistant:setup": "tsx scripts/setup-assistant.ts",
     "eval": "evalite",
     "eval:dev": "evalite watch"
   },
@@ -37,6 +38,7 @@
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@microsoft/microsoft-graph-types": "^2.40.0",
     "@modelcontextprotocol/sdk": "1.15.1",
+    "@onkeiki/agents": "0.1.3",
     "@openrouter/ai-sdk-provider": "^0.7.5",
     "@react-email/components": "^0.0.41",
     "@react-email/render": "1.1.0",
@@ -85,10 +87,12 @@
     "ulid": "3.0.1",
     "uuid": "11.1.0",
     "wrangler": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-to-json-schema": "3.24.6"
   },
   "devDependencies": {
     "@effect/language-service": "0.31.1",
+    "@electric-sql/pglite": "0.5.10",
     "@types/he": "1.2.3",
     "@types/node": "^22.9.0",
     "@types/react": "19.0.10",

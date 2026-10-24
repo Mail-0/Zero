@@ -45,6 +45,7 @@ import { publicRouter } from './routes/auth';
 import { WorkflowRunner } from './pipelines';
 export { GmailQuota } from './routes/gmail-quota';
 import { chatAttachmentsRouter } from './routes/chat-attachments';
+import { assistantApi, assistantHooks } from './routes/assistant';
 import { imapOAuthApi } from './routes/imap-oauth';
 import { autumnApi } from './routes/autumn';
 import { env, type ZeroEnv } from './env';
@@ -684,6 +685,7 @@ const api = new Hono<HonoContext>()
     c.set('sessionUser', undefined);
   })
   .route('/ai', aiRouter)
+  .route('/assistant', assistantApi)
   .route('/chat-attachments', chatAttachmentsRouter)
   .route('/autumn', autumnApi)
   .route('/imap-oauth', imapOAuthApi)
@@ -800,6 +802,7 @@ const app = new Hono<HonoContext>()
     },
     { replaceRequest: false },
   )
+  .route('/api/assistant/hooks', assistantHooks)
   .route('/api', api)
   .use(
     '*',

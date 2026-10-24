@@ -26,6 +26,10 @@ export const IGetThreadResponseSchema = z.object({
 
 export interface ParsedDraft {
   id: string;
+  fromEmail?: string;
+  threadId?: string;
+  inReplyTo?: string;
+  references?: string;
   to?: string[];
   subject?: string;
   content?: string;
@@ -34,7 +38,13 @@ export interface ParsedDraft {
   };
   cc?: string[];
   bcc?: string[];
-  attachments?: { filename: string; mimeType: string; size: number; body: string }[];
+  attachments?: {
+    filename: string;
+    mimeType: string;
+    size: number;
+    body: string;
+    headers?: { name: string; value: string }[];
+  }[];
 }
 
 export interface IConfig {
@@ -85,7 +95,10 @@ export type ManagerConfig = {
 
 export interface MailManager {
   config: ManagerConfig;
-  getMessageAttachments(id: string): Promise<
+  getMessageAttachments(
+    id: string,
+    options?: { fresh?: boolean; includeInline?: boolean },
+  ): Promise<
     {
       filename: string;
       mimeType: string;
@@ -101,7 +114,7 @@ export interface MailManager {
   createDraft(
     data: CreateDraftData,
   ): Promise<{ id?: string | null; success?: boolean; error?: string }>;
-  getDraft(id: string): Promise<ParsedDraft>;
+  getDraft(id: string, options?: { includeInline?: boolean }): Promise<ParsedDraft>;
   deleteDraft(id: string): Promise<void>;
   /** Drafts that belong to a thread, mapping provider draft id -> the draft's message id. */
   listThreadDrafts(threadId: string): Promise<{ draftId: string; messageId: string }[]>;

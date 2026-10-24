@@ -131,7 +131,10 @@ export const attachmentPayload = (email: Email, id: string) => {
     mimeType: attachment.mimeType,
     size: byteLength(attachment.content),
     attachmentId: id,
-    headers: [{ name: 'Content-Type', value: attachment.mimeType }],
+    headers: [
+      { name: 'Content-Type', value: attachment.mimeType },
+      ...(attachment.contentId ? [{ name: 'Content-ID', value: attachment.contentId }] : []),
+    ],
     body: toBase64(attachment.content),
   };
 };

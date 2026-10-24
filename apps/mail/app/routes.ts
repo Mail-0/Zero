@@ -17,6 +17,9 @@ export default [
 
   route('/login', '(auth)/login/page.tsx'),
   route('/login/reconnect', '(auth)/reconnect/page.tsx'),
+  route('/assistant/connect', 'assistant/connect.tsx'),
+  route('/assistant/action/:id', 'assistant/action.tsx'),
+  route('/assistant/draft/:connectionId/:draftId', 'assistant/draft.tsx'),
 
   // Enable this when we have a zero signup page
   // route('/zero/signup', '(auth)/zero/signup/page.tsx'),

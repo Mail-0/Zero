@@ -156,8 +156,8 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.createDraft(draftData);
   }
 
-  async getDraft(id: string) {
-    return await this.mainDo.getDraft(id);
+  async getDraft(id: string, options?: { fresh?: boolean }) {
+    return await this.mainDo.getDraft(id, options);
   }
 
   async listThreadDrafts(threadId: string) {
@@ -281,6 +281,14 @@ export class DriverRpcDO extends RpcTarget {
 
   async getEmailAliases() {
     return await this.mainDo.getEmailAliases();
+  }
+
+  async searchContacts(query: string, limit = 10) {
+    return this.mainDo.searchContacts(query, limit);
+  }
+
+  async getForwardSource(threadId: string, messageId: string) {
+    return this.mainDo.getForwardSource(threadId, messageId);
   }
 
   async getMessageAttachments(messageId: string) {

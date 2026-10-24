@@ -1,10 +1,11 @@
 import { getShortThreadSummary, shortSummaryDepsFromEnv } from '../../lib/thread-short-summary';
 import { getCurrentDateContext, searchAssistantSystemPrompt } from '../../lib/prompts';
+import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import { getZeroAgent } from '../../lib/server-utils';
+import { userSettingsSchema } from '../../lib/schemas';
+import { connection, user } from '../../db/schema';
 import { searchWeb } from '../../lib/context-dev';
 import { miniModel } from '../../lib/ai-models';
-import { connection } from '../../db/schema';
 import { colors } from '../../lib/prompts';
 import { generateText, tool } from 'ai';
 import { Tools } from '../../types';
@@ -171,7 +172,8 @@ const getThreadSummary = (connectionId: string) =>
 
 const composeEmailTool = (connectionId: string) =>
   tool({
-    description: 'Compose an email using AI assistance',
+    description:
+      "Generate email body text in the selected sender's email voice using their stored identity and writing style. Returns unsaved text and sender context only; does not save a mailbox draft or send email.",
     parameters: z.object({
       prompt: z.string().describe('The prompt or rough draft for the email'),
       emailSubject: z.string().optional().describe('The subject of the email'),
@@ -191,12 +193,47 @@ const composeEmailTool = (connectionId: string) =>
         .describe('Previous messages in the thread for context'),
     }),
     execute: async (data) => {
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+      let username: string;
+      let senderEmail: string;
+      let ownerId: string;
+      let ownerPrompt: string | null;
+      try {
+        const [sender] = await db
+          .select({
+            mailboxName: connection.name,
+            ownerName: user.name,
+            email: connection.email,
+            ownerId: user.id,
+            ownerPrompt: user.customPrompt,
+          })
+          .from(connection)
+          .innerJoin(user, eq(connection.userId, user.id))
+          .where(eq(connection.id, connectionId));
+        if (!sender)
+          throw new Error('Mailbox unavailable. Refresh list_mailboxes before composing.');
+        username = sender.mailboxName?.trim() || sender.ownerName.trim();
+        senderEmail = sender.email;
+        ownerId = sender.ownerId;
+        ownerPrompt = sender.ownerPrompt;
+      } finally {
+        await conn.end().catch(() => {});
+      }
+      const settings = await (await getZeroDB(ownerId)).findUserSettings();
+      const preferences = userSettingsSchema
+        .pick({ customPrompt: true })
+        .safeParse(settings?.settings ?? {});
+      const writingInstructions =
+        (preferences.success ? preferences.data.customPrompt.trim() : '') ||
+        ownerPrompt?.trim() ||
+        '';
       const newBody = await composeEmail({
         ...data,
-        username: 'AI Assistant',
+        username,
         connectionId,
+        ...(writingInstructions ? { writingInstructions } : {}),
       });
-      return { newBody };
+      return { newBody, sender: { name: username, email: senderEmail } };
     },
   });
 

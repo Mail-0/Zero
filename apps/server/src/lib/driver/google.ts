@@ -182,11 +182,14 @@ export class GoogleMailManager implements MailManager {
     return { expiration: Number(response.data.expiration) };
   }
 
-  public async getMessageAttachments(messageId: string) {
+  public async getMessageAttachments(
+    messageId: string,
+    options?: { fresh?: boolean; includeInline?: boolean },
+  ) {
     return this.withErrorHandler(
       'getMessageAttachments',
       async () => {
-        const cachedParts = await this.assets.read(['attachment-parts', messageId], async () => {
+        const loadParts = async () => {
           const res = await this.gmail.users.messages.get(
             { userId: 'me', id: messageId },
             { retry: false, timeout: 30000 },
@@ -197,26 +200,50 @@ export class GoogleMailManager implements MailManager {
               filename: part.filename,
               mimeType: part.mimeType,
               headers: part.headers,
-              body: { attachmentId: part.body?.attachmentId, size: part.body?.size },
+              body: {
+                attachmentId: part.body?.attachmentId,
+                size: part.body?.size,
+                data: part.body?.data,
+              },
             })),
           );
-        });
+        };
+        const cachedParts = options?.fresh
+          ? await loadParts()
+          : await this.assets.read(['attachment-parts', messageId], loadParts);
         const attachmentParts = JSON.parse(cachedParts ?? '[]') as gmail_v1.Schema$MessagePart[];
+        if (
+          options?.fresh &&
+          attachmentParts.reduce((sum, part) => sum + Number(part.body?.size ?? 0), 0) > 10_000_000
+        )
+          throw new Error(
+            'Original attachments are too large for an assistant forward; use the mailbox UI',
+          );
 
         const attachments = await Promise.all(
           attachmentParts.map(async (part) => {
             const attachmentId = part.body?.attachmentId;
-            if (!attachmentId) {
+            if (!attachmentId && !part.body?.data && Number(part.body?.size ?? 0) > 0) {
+              if (options?.fresh) throw new Error('Original attachment content unavailable');
               return null;
             }
 
             try {
-              const attachmentData = await this.getAttachment(messageId, attachmentId);
+              const attachmentData =
+                part.body?.data != null
+                  ? fromBase64Url(part.body.data)
+                  : attachmentId
+                    ? options?.fresh
+                      ? await this.downloadAttachment(messageId, attachmentId)
+                      : await this.getAttachment(messageId, attachmentId)
+                    : '';
+              if (!attachmentData && Number(part.body?.size ?? 0) > 0)
+                throw new Error('Message attachment content unavailable');
               return {
                 filename: part.filename || '',
                 mimeType: part.mimeType || '',
                 size: Number(part.body?.size || 0),
-                attachmentId: attachmentId,
+                attachmentId: attachmentId ?? '',
                 headers:
                   part.headers?.map((h) => ({
                     name: h.name ?? '',
@@ -224,7 +251,8 @@ export class GoogleMailManager implements MailManager {
                   })) ?? [],
                 body: attachmentData ?? '',
               };
-            } catch {
+            } catch (error) {
+              if (options?.fresh) throw error;
               return null;
             }
           }),
@@ -252,6 +280,7 @@ export class GoogleMailManager implements MailManager {
 
       if (settings.data.sendAs) {
         settings.data.sendAs.forEach((alias) => {
+          if (!alias.isPrimary && alias.verificationStatus !== 'accepted') return;
           if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
             return;
           }
@@ -821,7 +850,7 @@ export class GoogleMailManager implements MailManager {
       async () => {
         const { html: message, inlineImages } = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
-        msg.setSender('me');
+        msg.setSender(data.fromEmail || this.config.auth.email);
         // name <email@example.com>
         const to = data.to.split(', ').map((recipient: string) => {
           if (recipient.includes('<')) {
@@ -1238,19 +1267,15 @@ export class GoogleMailManager implements MailManager {
     if (!draft.message) return null;
 
     const headers = draft.message.payload?.headers || [];
-    const to =
-      headers
-        .find((h) => h.name === 'To')
-        ?.value?.split(',')
-        .map((e) => e.trim())
-        .filter(Boolean) || [];
-
-    const subject = headers.find((h) => h.name === 'Subject')?.value;
-
-    const cc =
-      draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
-    const bcc =
-      draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
+    const header = (name: string) => headers.find((h) => h.name?.toLowerCase() === name)?.value;
+    const recipients = (name: string) => {
+      const value = header(name);
+      return value?.trim() ? parseAddressList(value).map(({ email }) => email) : [];
+    };
+    const to = recipients('to');
+    const subject = header('subject');
+    const cc = recipients('cc');
+    const bcc = recipients('bcc');
 
     const payload = draft.message.payload;
     let content = '';
@@ -1263,49 +1288,56 @@ export class GoogleMailManager implements MailManager {
       body: string;
     }[] = [];
 
-    if (payload?.parts) {
+    const flatten = (part: gmail_v1.Schema$MessagePart): gmail_v1.Schema$MessagePart[] => [
+      part,
+      ...(part.parts ?? []).flatMap(flatten),
+    ];
+    const parts = payload ? flatten(payload) : [];
+    if (parts.length) {
       //  Get body
-      const htmlPart = payload.parts.find((part) => part.mimeType === 'text/html');
+      const htmlPart = parts.find((part) => part.mimeType === 'text/html' && !part.filename);
       if (htmlPart?.body?.data) {
         content = fromBinary(htmlPart.body.data);
+      } else {
+        const plainPart = parts.find((part) => part.mimeType === 'text/plain' && !part.filename);
+        if (plainPart?.body?.data)
+          content = `<p>${he.escape(fromBinary(plainPart.body.data)).replace(/\n/g, '<br>')}</p>`;
       }
 
       //  Get attachments
-      const attachmentParts = payload.parts.filter(
-        (part) => !!part.filename && !!part.body?.attachmentId,
+      const attachmentParts = parts.filter(
+        (part) => !!part.filename && (!!part.body?.attachmentId || !!part.body?.data),
       );
 
       attachments = await Promise.all(
         attachmentParts.map(async (part) => {
-          try {
-            const attachmentData = await this.getAttachment(
-              draft.message!.id!,
-              part.body!.attachmentId!,
-            );
-            return {
-              filename: part.filename || '',
-              mimeType: part.mimeType || '',
-              size: Number(part.body?.size || 0),
-              attachmentId: part.body!.attachmentId!,
-              headers:
-                part.headers?.map((h) => ({
-                  name: h.name ?? '',
-                  value: h.value ?? '',
-                })) ?? [],
-              body: attachmentData ?? '',
-            };
-          } catch (e) {
-            console.error('Failed to get attachment', e);
-            return null;
-          }
+          const attachmentData =
+            part.body?.data ??
+            (await this.getAttachment(draft.message!.id!, part.body!.attachmentId!));
+          if (!attachmentData && Number(part.body?.size ?? 0) > 0)
+            throw new Error('Draft attachment unavailable; refusing a partial draft');
+          return {
+            filename: part.filename || '',
+            mimeType: part.mimeType || '',
+            size: Number(part.body?.size || 0),
+            attachmentId: part.body!.attachmentId!,
+            headers:
+              part.headers?.map((h) => ({
+                name: h.name ?? '',
+                value: h.value ?? '',
+              })) ?? [],
+            body: attachmentData ?? '',
+          };
         }),
-      ).then((a) => a.filter((a): a is NonNullable<typeof a> => a !== null));
-    } else if (payload?.body?.data) {
-      content = fromBinary(payload.body.data);
+      );
     }
 
     return {
       id: draft.id || '',
+      fromEmail: header('from') ? parseFrom(header('from')!).email : undefined,
+      threadId: draft.message.threadId ?? undefined,
+      inReplyTo: headers.find((h) => h.name?.toLowerCase() === 'in-reply-to')?.value ?? undefined,
+      references: headers.find((h) => h.name?.toLowerCase() === 'references')?.value ?? undefined,
       to,
       subject: subject ? he.decode(subject).trim() : '',
       content,

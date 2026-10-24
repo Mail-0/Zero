@@ -23,33 +23,25 @@ import {
   type ThreadListSummary,
 } from '../../lib/thread-list-summary';
 import {
-  appendResponseMessages,
-  createDataStreamResponse,
-  generateText,
-  streamText,
-  type StreamTextOnFinishCallback,
-  type ToolSet,
-} from 'ai';
-import {
   isDurableLabelMutation,
   normalizeDurableLabelMutation,
   splitLabelMutation,
   isSyntheticLabel,
 } from '../../lib/mail-label-policy';
 import {
-  EPrompts,
-  EProviders,
-  type IOutgoingMessage,
-  type ISnoozeBatch,
-  type ParsedMessage,
-} from '../../types';
-import {
   IncomingMessageType,
   OutgoingMessageType,
   type IncomingMessage,
   type OutgoingMessage,
 } from './types';
+import {
+  EProviders,
+  type IOutgoingMessage,
+  type ISnoozeBatch,
+  type ParsedMessage,
+} from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
+import { appendResponseMessages, createDataStreamResponse, generateText } from 'ai';
 
 const storedSummaryJson = (thread: IGetThreadResponse) => {
   const summary = toStoredThreadSummary(thread);
@@ -59,47 +51,47 @@ import {
   deleteAllAttachments,
   deleteAttachments,
   referencedAttachmentIds,
-  resolveAttachmentsForModel,
   sweepOrphanedAttachments,
 } from '../../lib/chat-attachments';
+import {
+  assistantClient,
+  completionText,
+  bindAssistantConversation,
+  ownedMailbox,
+} from '../../lib/assistant';
 import {
   connectionToDriver,
   getZeroSocketAgent,
   imapSettingsFromRow,
 } from '../../lib/server-utils';
 import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
-import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { LIVE_AI_THREAD_LIMIT, selectAiThreads } from '../../lib/thread-ai-dispatch';
 import { disconnectedTokens, isConnectionActive } from '../../lib/connection-status';
 import { AI_DISABLED_MESSAGE, isAiEnabledForConnection } from '../../lib/ai-access';
 import { MailLabelStore, type LabelStorage } from '../../lib/mail-label-store';
-import { AiChatPrompt, searchAssistantSystemPrompt } from '../../lib/prompts';
 import { gmailDeliveryFailure } from '../../lib/gmail-delivery-failure';
 import { compileLabelMatcher } from '../../lib/mail-search-overlay';
 import { scheduleMailContinuation } from '../../lib/mail-schedule';
 import { MailHistoryStore } from '../../lib/mail-history-store';
+import { MailContactStore } from '../../lib/mail-contact-store';
 import { MailCleanupStore } from '../../lib/mail-cleanup-store';
+import { searchAssistantSystemPrompt } from '../../lib/prompts';
 import { unwrapGmailError } from '../../lib/gmail-quota-error';
 import { MailSearchStore } from '../../lib/mail-search-store';
 import { withGmailPriority } from '../../lib/gmail-priority';
 import { connection, connectionImap } from '../../db/schema';
 import { MailDraftStore } from '../../lib/mail-draft-store';
 import { MailCountStore } from '../../lib/mail-count-store';
-import { chatModel, miniModel } from '../../lib/ai-models';
 import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { ConversationStore } from './conversations';
-import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import type { gmail_v1 } from '@googleapis/gmail';
-import { ToolOrchestrator } from './orchestrator';
-import { getPromptName } from '../../pipelines';
+import { miniModel } from '../../lib/ai-models';
 import { Agent, type Connection } from 'agents';
 import { env, type ZeroEnv } from '../../env';
 import type { WSMessage } from 'partyserver';
-import { tools as authTools } from './tools';
-import { processToolCalls } from './utils';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import type { Message } from 'ai';
@@ -385,6 +377,16 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   private mailboxCountStore: MailCountStore | undefined;
   private mailboxSearchStore: MailSearchStore | undefined;
   private mailboxDraftStore: MailDraftStore | undefined;
+  private mailboxContactStore: MailContactStore | undefined;
+  private get contactStore() {
+    if (this.mailboxContactStore) return this.mailboxContactStore;
+    const store = new MailContactStore({
+      exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args),
+      transaction: (fn) => this.ctx.storage.transactionSync(fn),
+    });
+    store.initialize();
+    return (this.mailboxContactStore = store);
+  }
   private mailboxWork: Promise<void> = Promise.resolve();
   private mailboxCleanupStore: MailCleanupStore | undefined;
   private get cleanupStore() {
@@ -1443,6 +1445,30 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     return await this.driver.getEmailAliases();
   }
 
+  async searchContacts(query: string, limit = 10) {
+    if (!this.driver) throw new Error('No driver available');
+    if (!query.trim() || query.length > 200 || !Number.isInteger(limit) || limit < 1 || limit > 20)
+      throw new Error('Provide a contact query and a limit between 1 and 20');
+    const backfillComplete = this.contactStore.backfill();
+    return {
+      ...this.contactStore.search(query, limit),
+      backfillComplete,
+      source: 'known_mailbox_correspondents' as const,
+    };
+  }
+
+  async getForwardSource(threadId: string, messageId: string) {
+    if (!this.driver) throw new Error('No driver available');
+    const thread = await this.driver.get(threadId);
+    const message = thread.messages.find((item) => item.id === messageId && !item.isDraft);
+    if (!message) throw new Error('Forward source message not found');
+    const attachments = await this.driver.getMessageAttachments(messageId, {
+      fresh: true,
+      includeInline: true,
+    });
+    return { message, attachments };
+  }
+
   async getMessageAttachments(messageId: string) {
     if (!this.driver) {
       throw new Error('No driver available');
@@ -2376,10 +2402,11 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     await this.afterImapMutation();
   }
 
-  async getDraft(id: string) {
+  async getDraft(id: string, options?: { fresh?: boolean }) {
     if (!this.driver) {
       throw new Error('No driver available');
     }
+    if (options?.fresh) return this.driver.getDraft(id, { includeInline: true });
     if (!this.driver.batchModifyMessageLabels) return this.driver.getDraft(id);
     return this.draftStore.get(id, Date.now(), this.draftHistoryStamp(), () =>
       this.driver!.getDraft(id),
@@ -2642,6 +2669,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         );
 
         // Broadcast update if agent exists
+        this.contactStore.observe(threadData.messages.filter((message) => !message.isDraft));
         if (this.agent) {
           yield* Effect.tryPromise(() =>
             this.agent!.broadcastChatMessage({
@@ -3532,6 +3560,9 @@ export class ZeroDriver extends Agent<ZeroEnv> {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UUID = '[0-9a-f-]{36}';
+type ChatFinish = (event: {
+  response: { messages: Parameters<typeof appendResponseMessages>[0]['responseMessages'] };
+}) => Promise<void>;
 
 export class ZeroAgent extends AIChatAgent<ZeroEnv> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
@@ -3658,34 +3689,6 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     await deleteAllAttachments(this.name);
   }
 
-  async registerZeroMCP() {
-    await this.mcp.connect(this.env.VITE_PUBLIC_BACKEND_URL + '/sse', {
-      transport: {
-        authProvider: new DurableObjectOAuthClientProvider(
-          this.ctx.storage,
-          'zero-mcp',
-          this.env.VITE_PUBLIC_BACKEND_URL,
-        ),
-      },
-    });
-  }
-
-  async registerThinkingMCP() {
-    await this.mcp.connect(this.env.VITE_PUBLIC_BACKEND_URL + '/mcp/thinking/sse', {
-      transport: {
-        authProvider: new DurableObjectOAuthClientProvider(
-          this.ctx.storage,
-          'thinking-mcp',
-          this.env.VITE_PUBLIC_BACKEND_URL,
-        ),
-      },
-    });
-  }
-
-  onStart(): void | Promise<void> {
-    this.registerThinkingMCP();
-  }
-
   /** Tells the mailbox how many app tabs are open, so IMAP push runs only while used. */
   override onConnect() {
     this.reportPresence();
@@ -3708,74 +3711,6 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
         }),
       ),
     );
-  }
-
-  private getDataStreamResponse(
-    onFinish: StreamTextOnFinishCallback<Pick<ToolSet, never>>,
-    currentThreadId: string,
-    currentFolder: string,
-    currentFilter: string,
-    abortSignal?: AbortSignal,
-  ) {
-    const dataStreamResponse = createDataStreamResponse({
-      execute: async (dataStream) => {
-        if (this.name === 'general') return;
-        const connectionId = this.name;
-        const orchestrator = new ToolOrchestrator(dataStream, connectionId);
-
-        const mcpTools = this.mcp.unstable_getAITools();
-
-        const rawTools = {
-          ...(await authTools(connectionId)),
-          ...mcpTools,
-        };
-
-        const tools = orchestrator.processTools(rawTools);
-        const processedMessages = await processToolCalls(
-          {
-            messages: this.messages,
-            dataStream,
-            tools,
-          },
-          {},
-        );
-
-        const messagesForModel = await Promise.all(
-          processedMessages.map(async (message) =>
-            message.experimental_attachments?.length
-              ? {
-                  ...message,
-                  experimental_attachments: await resolveAttachmentsForModel(
-                    connectionId,
-                    message.experimental_attachments,
-                  ),
-                }
-              : message,
-          ),
-        );
-
-        const result = streamText({
-          model: chatModel(),
-          maxSteps: 10,
-          messages: messagesForModel,
-          tools,
-          abortSignal,
-          onFinish,
-          onError: (error) => {
-            console.error('Error in streamText', error);
-          },
-          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt(), {
-            currentThreadId,
-            currentFolder,
-            currentFilter,
-          }),
-        });
-
-        result.mergeIntoDataStream(dataStream);
-      },
-    });
-
-    return dataStreamResponse;
   }
 
   private async tryCatchChat<T>(fn: () => T | Promise<T>) {
@@ -4009,18 +3944,72 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
   }
 
   async onChatMessageWithContext(
-    onFinish: StreamTextOnFinishCallback<Pick<ToolSet, never>>,
+    onFinish: ChatFinish,
     currentThreadId: string,
     currentFolder: string,
     currentFilter: string,
     abortSignal?: AbortSignal,
   ) {
-    return this.getDataStreamResponse(
-      onFinish,
-      currentThreadId,
-      currentFolder,
-      currentFilter,
-      abortSignal,
-    );
+    // The Durable Object remains a history/socket adapter, not an agent loop.
+    // Mailbox sync, presence, old conversations and attachment storage stay put.
+    const conversationId = this.conversations().currentId();
+    const messages = [...this.messages];
+    return createDataStreamResponse({
+      execute: async (stream) => {
+        const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
+        let userId: string | undefined;
+        try {
+          userId = (
+            await db
+              .select({ userId: connection.userId })
+              .from(connection)
+              .where(eq(connection.id, this.name))
+          )[0]?.userId;
+        } finally {
+          await conn.end().catch(() => {});
+        }
+        if (!userId) throw new Error('Mailbox account not found');
+        await ownedMailbox(userId, this.name);
+        const agent = await bindAssistantConversation(userId, conversationId);
+        if (messages.some((message) => message.experimental_attachments?.length)) {
+          throw new Error(
+            'This conversation contains attachments, which the Keiki web gateway does not yet support. Start a new text-only chat.',
+          );
+        }
+        const transcript = messages
+          .filter((message) => message.role === 'user' || message.role === 'assistant')
+          .map((message) => ({ role: message.role, content: message.content }));
+        const response = await assistantClient().completions({
+          agentId: agent.agentId,
+          conversationId,
+          messages: [
+            {
+              role: 'system',
+              content: JSON.stringify({
+                activeMailbox: this.name,
+                currentThreadId,
+                currentFolder,
+                currentFilter,
+              }),
+            },
+            ...transcript,
+          ],
+          signal: abortSignal,
+        });
+        let text = '';
+        for await (const delta of completionText(response)) {
+          text += delta;
+          stream.write(`0:${JSON.stringify(delta)}\n`);
+        }
+        await onFinish({
+          response: {
+            messages: [
+              { id: crypto.randomUUID(), role: 'assistant', content: [{ type: 'text', text }] },
+            ],
+          },
+        });
+      },
+      onError: (error) => (error instanceof Error ? error.message : 'Assistant request failed'),
+    });
   }
 }

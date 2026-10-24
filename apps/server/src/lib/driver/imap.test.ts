@@ -242,6 +242,20 @@ describe('ImapMailManager', () => {
     await driver.dispose();
   });
 
+  it('does not expose an inbox message as an editable draft', async () => {
+    const { imap, driver } = await setup();
+    imap.deliver('INBOX', sampleMessage({ messageId: 'not-a-draft@x', subject: 'Incoming' }));
+    const [threadId] = await syncAll(driver);
+    const thread = await driver.get(threadId!);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await expect(driver.getDraft(thread.messages[0]!.id)).rejects.toThrow('Draft not found');
+    } finally {
+      log.mockRestore();
+      await driver.dispose();
+    }
+  });
+
   it('searches with Gmail-style queries', async () => {
     const { imap, driver } = await setup();
     imap.deliver(

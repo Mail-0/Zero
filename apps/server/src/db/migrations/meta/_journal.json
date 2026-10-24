@@ -281,6 +281,13 @@
       "when": 1791868568375,
       "tag": "0038_melodic_old_lace",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792099207060,
+      "tag": "0039_account_assistants",
+      "breakpoints": true
     }
   ]
 }

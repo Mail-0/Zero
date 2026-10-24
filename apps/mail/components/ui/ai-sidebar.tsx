@@ -460,6 +460,11 @@ function AISidebarPanel({ className }: AISidebarProps) {
         throw new Error('Failed to send message');
       }
     },
+    async onFinish() {
+      // Cloud tools execute server-side, so there may be no client tool event.
+      await queryClient.invalidateQueries({ queryKey: trpc.mail.pathKey() });
+      await refetchLabels();
+    },
     async onToolCall({ toolCall }) {
       console.warn('toolCall', toolCall);
       posthog.capture('AI Chat Tool Call', {

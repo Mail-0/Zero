@@ -27,6 +27,73 @@ export const user = createTable('user', {
   phoneNumberVerified: boolean('phone_number_verified'),
 });
 
+/** Authorization binding only; Keiki owns the transcript and agent runtime. */
+export const assistantConversation = createTable(
+  'assistant_conversation',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('assistant_conversation_user').on(t.userId)],
+);
+
+export const assistantIdentity = createTable(
+  'assistant_identity',
+  {
+    id: text('id').primaryKey(),
+    channel: text('channel').notNull(),
+    gateway: text('gateway').notNull(),
+    sender: text('sender').notNull(),
+    // Retain a tombstone after deletion: never reuse another person's transcript.
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('assistant_identity_sender').on(t.channel, t.gateway, t.sender),
+    index('assistant_identity_user').on(t.userId),
+  ],
+);
+
+export const assistantLink = createTable(
+  'assistant_link',
+  {
+    tokenHash: text('token_hash').primaryKey(),
+    channel: text('channel').notNull(),
+    gateway: text('gateway').notNull(),
+    sender: text('sender').notNull(),
+    userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    challenge: text('challenge'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('assistant_link_sender').on(t.channel, t.gateway, t.sender)],
+);
+
+export const assistantAction = createTable(
+  'assistant_action',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => connection.id, { onDelete: 'cascade' }),
+    tool: text('tool').notNull(),
+    input: jsonb('input').notNull().$type<Record<string, unknown>>(),
+    status: text('status').notNull().default('pending'),
+    result: jsonb('result'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('assistant_action_user').on(t.userId)],
+);
+
 export const session = createTable(
   'session',
   {
