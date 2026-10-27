@@ -16,6 +16,7 @@
 
 import {
   parseStoredThreadSummary,
+  repairStoredThreadSummary,
   resolveStoredThreadSummary,
   toStoredThreadSummary,
   toThreadListSummary,
@@ -1266,9 +1267,17 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     );
   }
 
-  async setMetaData(connectionId: string) {
+  async setMetaData(connectionId: string, initializeSocket = true) {
     await this.setName(connectionId);
-    this.agent ??= await getZeroSocketAgent(connectionId);
+    if (initializeSocket) {
+      this.agent ??= await getZeroSocketAgent(connectionId);
+    } else {
+      // Cached reads need only SQLite/R2. Restore provider auth and sync in the
+      // background so a cold mailbox can paint without waiting on another DO/Postgres.
+      this.ctx.waitUntil(
+        this.setupAuth().catch((error) => console.warn('[mailbox] Background setup failed', error)),
+      );
+    }
     return new DriverRpcDO(this, connectionId);
   }
 
@@ -1950,9 +1959,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   }
 
   async getThread(threadId: string, includeDrafts: boolean = false) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
     return await this.getThreadFromDB(threadId, includeDrafts);
   }
 
@@ -1961,35 +1967,38 @@ export class ZeroDriver extends Agent<ZeroEnv> {
    * isn't imported yet maps to null and the client fetches it individually instead.
    */
   async getThreadListSummaries(threadIds: string[]): Promise<(ThreadListSummary | null)[]> {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
     if (!threadIds.length) return [];
+    const started = performance.now();
+    let fallbackCount = 0;
     this.historyStore.activate(Date.now());
 
     // One indexed read for the page; only threads the snapshot can't answer touch R2.
     const placeholders = threadIds.map(() => '?').join(',');
-    const stored = new Map<string, StoredThreadSummary>();
+    const stored = new Map<string, { json: string | null; summary: StoredThreadSummary | null }>();
     for (const row of this.ctx.storage.sql.exec<{ thread_id: string; summary_json: string | null }>(
       `SELECT thread_id, summary_json FROM threads WHERE thread_id IN (${placeholders})`,
       ...threadIds,
     )) {
       const summary = parseStoredThreadSummary(row.summary_json);
-      if (summary) stored.set(String(row.thread_id), summary);
+      stored.set(String(row.thread_id), { json: row.summary_json, summary });
     }
 
-    return await Promise.all(
+    const summaries = await Promise.all(
       threadIds.map(async (id) => {
         try {
-          const snapshot = stored.get(id);
+          const cached = stored.get(id);
+          const snapshot = cached?.summary;
           if (snapshot) {
             const resolved = resolveStoredThreadSummary(id, snapshot, this.labelStore);
             if (resolved.kind === 'summary') return resolved.summary;
             if (resolved.kind === 'empty') return null;
           }
           // No snapshot yet (stored before the column existed) or it can't answer exactly.
+          fallbackCount++;
           const thread = await this.getThreadFromDB(id, true);
-          if (!snapshot && thread.messages.length) this.backfillStoredSummary(id, thread);
+          if (thread.messages.length) {
+            repairStoredThreadSummary(this.mailboxStorage, id, thread, cached?.json ?? null);
+          }
           return toThreadListSummary(thread);
         } catch (error) {
           console.warn('[getThreadListSummaries] Failed for', id, error);
@@ -1997,21 +2006,13 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         }
       }),
     );
-  }
-
-  /**
-   * Lazily fills summary_json for threads stored before it existed. `thread` came from the
-   * stored R2 JSON, so the snapshot matches what syncThread would have written; deleted
-   * messages are already filtered out, which only makes the snapshot more conservative.
-   */
-  private backfillStoredSummary(threadId: string, thread: IGetThreadResponse) {
-    const json = storedSummaryJson(thread);
-    if (!json) return;
-    this.ctx.storage.sql.exec(
-      'UPDATE threads SET summary_json = ? WHERE thread_id = ? AND summary_json IS NULL',
-      json,
-      threadId,
-    );
+    console.debug('[mailbox] Row summaries', {
+      count: threadIds.length,
+      fallbackCount,
+      missingCount: summaries.filter((summary) => !summary).length,
+      durationMs: Math.round(performance.now() - started),
+    });
+    return summaries;
   }
 
   //   async markThreadsRead(threadIds: string[]) {
@@ -2093,16 +2094,19 @@ export class ZeroDriver extends Agent<ZeroEnv> {
       updated_at = CURRENT_TIMESTAMP WHERE thread_id = ${threadId}`;
   }
 
-  private async hydrateMessageLabels(threadId: string) {
+  private async hydrateMessageLabels(threadId: string, cachedThread?: IGetThreadResponse) {
     const store = this.labelStore;
     if (store.isThreadDeleted(threadId)) return;
     const stored = this.ctx.storage.sql
       .exec('SELECT message_id FROM mail_message_labels WHERE thread_id = ? LIMIT 1', threadId)
       .toArray();
     if (stored.length) return;
-    const body = await this.env.THREADS_BUCKET.get(this.getThreadKey(threadId));
-    if (!body) return;
-    const thread = JSON.parse(await body.text()) as IGetThreadResponse;
+    let thread = cachedThread;
+    if (!thread) {
+      const body = await this.env.THREADS_BUCKET.get(this.getThreadKey(threadId));
+      if (!body) return;
+      thread = JSON.parse(await body.text()) as IGetThreadResponse;
+    }
     store.importMessages(
       threadId,
       thread.messages.map((message) => ({
@@ -3439,12 +3443,13 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         await this.ensureCachedThreadImport(id);
       }
 
-      let messages: ParsedMessage[] = storedThread
-        ? (JSON.parse(await storedThread.text()) as IGetThreadResponse).messages
-        : [];
+      const cachedThread = storedThread
+        ? (JSON.parse(await storedThread.text()) as IGetThreadResponse)
+        : undefined;
+      let messages: ParsedMessage[] = cachedThread?.messages ?? [];
 
       const store = this.labelStore;
-      await this.hydrateMessageLabels(id);
+      if (cachedThread) await this.hydrateMessageLabels(id, cachedThread);
       messages = messages
         .filter((message) => !store.isDeleted(message.id))
         .map((message) => {
@@ -3490,6 +3495,8 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   }
 
   private async ensureCachedThreadImport(id: string) {
+    // Only a cache miss needs provider initialization; normal reads stay local.
+    if (!this.driver) await this.setupAuth();
     if (this.driver?.getMailboxHistoryId) {
       this.historyStore.ensureImport(id);
       await this.ensureHistoryRecovery();
@@ -3530,9 +3537,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     pageToken?: string;
   }) {
     this.historyStore.activate(Date.now());
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
     return await this.getThreadsFromDB(params);
   }
 
@@ -3544,9 +3548,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     pageToken?: string;
   }) {
     this.historyStore.activate(Date.now());
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
     return await this.getThreadsFromDB(params);
   }
 

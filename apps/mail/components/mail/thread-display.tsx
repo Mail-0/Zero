@@ -44,11 +44,13 @@ import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getMailLoadState } from '@/lib/mail-load-state';
 import type { ParsedMessage, Attachment } from '@/types';
 import { useAiEnabled } from '@/hooks/use-ai-enabled';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
+import { MailLoadError } from './mail-load-error';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { cleanHtml } from '@/lib/email-utils';
@@ -193,7 +195,21 @@ export function ThreadDisplay() {
 
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread, drafts } = useThread(id ?? null);
+  const {
+    data: emailData,
+    isLoading,
+    isPending,
+    isFetching,
+    isError,
+    refetch: refetchThread,
+    drafts,
+  } = useThread(id ?? null);
+  const loadState = getMailLoadState({
+    hasData: !!emailData?.messages.length || !!drafts.length,
+    isPending,
+    isFetching,
+    isError,
+  });
   const draftTimeline = useThreadDraftTimeline(
     id ?? null,
     emailData?.messages,
@@ -853,7 +869,20 @@ export function ThreadDisplay() {
               </div>
             </div>
           </div>
-        ) : !emailData || isLoading ? (
+        ) : loadState === 'error' || loadState === 'unavailable' ? (
+          <div className="flex min-h-0 flex-1 flex-col justify-center">
+            <ThreadActionButton
+              icon={X}
+              label={m['common.actions.close']()}
+              onClick={handleClose}
+              className="absolute top-2 left-2 z-20 h-7 w-7"
+            />
+            <MailLoadError
+              unavailable={loadState === 'unavailable'}
+              onRetry={() => void refetchThread()}
+            />
+          </div>
+        ) : loadState === 'loading' || !emailData ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:mx-auto md:w-[calc(100%-112px)] md:max-w-[650px] lg:max-w-[700px]">
             <ThreadActionButton
               icon={X}

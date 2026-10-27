@@ -1,5 +1,6 @@
 import { ParsedMessageSchema, type ParsedMessage } from '../types';
 import type { IGetThreadResponse } from './driver/types';
+import type { LabelStorage } from './mail-label-store';
 import { z } from 'zod';
 
 /**
@@ -87,6 +88,23 @@ export function parseStoredThreadSummary(json: unknown): StoredThreadSummary | n
   } catch {
     return null;
   }
+}
+
+/** Repair legacy/invalidated snapshots once, without overwriting a concurrent sync. */
+export function repairStoredThreadSummary(
+  storage: Pick<LabelStorage, 'exec'>,
+  threadId: string,
+  thread: IGetThreadResponse,
+  previousJson: string | null,
+) {
+  const summary = toStoredThreadSummary(thread);
+  if (!summary) return;
+  storage.exec(
+    'UPDATE threads SET summary_json = ? WHERE thread_id = ? AND summary_json IS ?',
+    JSON.stringify(summary),
+    threadId,
+    previousJson,
+  );
 }
 
 /** The label-store reads getThreadFromDB applies on top of stored thread content. */

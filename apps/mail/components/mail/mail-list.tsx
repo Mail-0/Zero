@@ -30,7 +30,9 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
+import { getMailLoadState } from '@/lib/mail-load-state';
 import { useMail } from '@/components/mail/use-mail';
+import { MailLoadError } from './mail-load-error';
 import { markThreadOpenStart } from '@/lib/perf';
 import { Avatar } from '../ui/avatar';
 
@@ -257,7 +259,8 @@ const Thread = memo(
     userLabels,
   }: ThreadRowProps) {
     const { isFolderSent, isFolderBin } = folderFlags;
-    const rowData = useThreadRowData(message.id, message.summary);
+    const rowQuery = useThreadRowData(message.id, message.summary);
+    const rowData = rowQuery.data;
     const [hovered, setHovered] = useState(false);
     const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -599,7 +602,16 @@ const Thread = memo(
       isDesktop,
     ]);
 
-    if (!rowData) return <ThreadRowSkeleton isDesktop={isDesktop} />;
+    const loadState = getMailLoadState({ ...rowQuery, hasData: !!rowData });
+    if (loadState === 'loading') return <ThreadRowSkeleton isDesktop={isDesktop} />;
+    if (loadState !== 'ready') {
+      return (
+        <MailLoadError
+          unavailable={loadState === 'unavailable'}
+          onRetry={() => void rowQuery.refetch()}
+        />
+      );
+    }
     if (!latestMessage || optimisticState.shouldHide || !idToUse) return null;
 
     return (
@@ -1132,6 +1144,8 @@ export const MailList = memo(
               <div className="flex h-32 w-full items-center justify-center">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
               </div>
+            ) : threadsQuery.isError && items.length === 0 ? (
+              <MailLoadError onRetry={() => void threadsQuery.refetch()} />
             ) : !items || items.length === 0 ? (
               <div className="flex w-full items-center justify-center">
                 <div className="flex flex-col items-center justify-center gap-2 text-center">

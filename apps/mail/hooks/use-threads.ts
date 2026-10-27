@@ -145,7 +145,13 @@ export const useThreadRowData = (id: string, summary: ThreadListSummary | null |
   // re-render every mounted row.
   const summaryUpdatedAt = summary ? (summaryStamps.get(summary) ?? 0) : 0;
   const useDetail = !!detailRow && (!summary || detail.dataUpdatedAt > summaryUpdatedAt);
-  return useDetail ? detailRow : (summary ?? undefined);
+  return {
+    data: useDetail ? detailRow : (summary ?? undefined),
+    isError: detail.isError,
+    isPending: detail.isPending,
+    isFetching: detail.isFetching,
+    refetch: detail.refetch,
+  };
 };
 
 /**

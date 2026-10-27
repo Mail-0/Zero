@@ -32,6 +32,7 @@ import { IMAP_TOKEN_MARKER } from './lib/connection-status';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { handleAuthRequest } from './lib/auth-recovery';
+import { withServerTiming } from './lib/server-timing';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
@@ -91,6 +92,10 @@ export class DbRpcDO extends RpcTarget {
     connectionId: string,
   ): Promise<typeof connection.$inferSelect | undefined> {
     return await this.mainDo.findUserConnection(this.userId, connectionId);
+  }
+
+  async findActiveConnection(): Promise<typeof connection.$inferSelect | undefined> {
+    return this.mainDo.findActiveConnection(this.userId);
   }
 
   async updateUser(data: Partial<typeof user.$inferInsert>) {
@@ -250,6 +255,20 @@ class ZeroDB extends DurableObject<ZeroEnv> {
     return await this.db.query.connection.findFirst({
       where: and(eq(connection.userId, userId), eq(connection.id, connectionId)),
     });
+  }
+
+  async findActiveConnection(userId: string): Promise<typeof connection.$inferSelect | undefined> {
+    // Resolve the default in one owned join, not two sequential database/RPC reads.
+    const [result] = await this.db
+      .select({ connection })
+      .from(user)
+      .innerJoin(
+        connection,
+        and(eq(connection.userId, user.id), eq(connection.id, user.defaultConnectionId)),
+      )
+      .where(eq(user.id, userId))
+      .limit(1);
+    return result?.connection ?? this.findFirstConnection(userId);
   }
 
   async updateUser(userId: string, data: Partial<typeof user.$inferInsert>) {
@@ -657,7 +676,11 @@ const api = new Hono<HonoContext>()
   .use('*', async (c, next) => {
     const auth = createAuth();
     c.set('auth', auth);
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    const session = await withServerTiming<Awaited<ReturnType<typeof auth.api.getSession>>>(
+      c,
+      'session',
+      () => auth.api.getSession({ headers: c.req.raw.headers }),
+    );
     c.set('sessionUser', session?.user);
 
     if (c.req.header('Authorization') && !session?.user) {
@@ -739,7 +762,7 @@ const app = new Hono<HonoContext>()
       },
       credentials: true,
       allowHeaders: ['Content-Type', 'Authorization'],
-      exposeHeaders: ['X-Zero-Redirect'],
+      exposeHeaders: ['X-Zero-Redirect', 'Server-Timing'],
     }),
   )
   .get('.well-known/oauth-authorization-server', async (c) => {

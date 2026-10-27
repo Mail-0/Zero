@@ -1,5 +1,6 @@
 import {
   parseStoredThreadSummary,
+  repairStoredThreadSummary,
   resolveStoredThreadSummary,
   toStoredThreadSummary,
   toThreadListSummary,
@@ -7,6 +8,7 @@ import {
 } from './thread-list-summary';
 import type { ParsedMessage } from '../types';
 import { describe, expect, it } from 'vitest';
+import { DatabaseSync } from 'node:sqlite';
 
 const message = (overrides: Partial<ParsedMessage>): ParsedMessage => ({
   id: 'm',
@@ -29,6 +31,51 @@ const message = (overrides: Partial<ParsedMessage>): ParsedMessage => ({
     { attachmentId: 'a', filename: 'f', mimeType: 'text/plain', size: 1, body: '', headers: [] },
   ],
   ...overrides,
+});
+
+describe('summary repair', () => {
+  it.each([null, 'invalid legacy JSON', '{"v":0}', '{"v":1,"latest":{"id":"deleted"}}'])(
+    'replaces an unchanged legacy/invalidated snapshot (%s)',
+    (previousJson) => {
+      const db = new DatabaseSync(':memory:');
+      try {
+        db.exec('CREATE TABLE threads (thread_id TEXT PRIMARY KEY, summary_json TEXT)');
+        db.prepare('INSERT INTO threads VALUES (?, ?)').run('t', previousJson);
+        const latest = message({});
+        repairStoredThreadSummary(
+          { exec: (query, ...args) => (db.prepare(query).run(...args), []) },
+          't',
+          { latest, messages: [latest], labels: [], hasUnread: false, totalReplies: 1 },
+          previousJson,
+        );
+        const json = String(db.prepare('SELECT summary_json FROM threads').get()?.summary_json);
+        expect(parseStoredThreadSummary(json)?.latest.id).toBe('m');
+        expect(json).not.toContain('<p>decoded</p>');
+      } finally {
+        db.close();
+      }
+    },
+  );
+
+  it('does not overwrite a newer snapshot written while the R2 read was in flight', () => {
+    const db = new DatabaseSync(':memory:');
+    try {
+      db.exec('CREATE TABLE threads (thread_id TEXT PRIMARY KEY, summary_json TEXT)');
+      db.prepare('INSERT INTO threads VALUES (?, ?)').run('t', 'newer snapshot');
+      const latest = message({});
+      repairStoredThreadSummary(
+        { exec: (query, ...args) => (db.prepare(query).run(...args), []) },
+        't',
+        { latest, messages: [latest], labels: [], hasUnread: false, totalReplies: 1 },
+        null,
+      );
+      expect(db.prepare('SELECT summary_json FROM threads').get()?.summary_json).toBe(
+        'newer snapshot',
+      );
+    } finally {
+      db.close();
+    }
+  });
 });
 
 describe('toThreadListSummary', () => {

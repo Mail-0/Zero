@@ -1,6 +1,7 @@
 import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
+import { withServerTiming } from '../lib/server-timing';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { assertAiEnabled } from '../lib/ai-access';
 import { initTRPC, TRPCError } from '@trpc/server';
@@ -30,7 +31,11 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
 
 export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next }) => {
   try {
-    const activeConnection = await getActiveConnection();
+    const activeConnection = await withServerTiming(
+      ctx.c,
+      'active_connection',
+      getActiveConnection,
+    );
     return next({ ctx: { ...ctx, activeConnection } });
   } catch (err) {
     await ctx.c.var.auth.api.signOut({ headers: ctx.c.req.raw.headers });

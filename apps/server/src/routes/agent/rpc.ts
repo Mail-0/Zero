@@ -14,6 +14,7 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 import { isDurableLabelMutation, splitLabelMutation } from '../../lib/mail-label-policy';
+import { withThreadListSummaries } from '../../lib/thread-list-page';
 import type { CreateDraftData } from '../../lib/schemas';
 import { ZeroDriver, type FolderSyncResult } from '.';
 import type { IOutgoingMessage } from '../../types';
@@ -104,6 +105,11 @@ export class DriverRpcDO extends RpcTarget {
 
   async getThread(threadId: string, includeDrafts: boolean = false) {
     return await this.mainDo.getThread(threadId, includeDrafts);
+  }
+
+  async listThreadsWithSummaries(params: Parameters<ZeroDriver['list']>[0]) {
+    const page = await this.mainDo.list(params);
+    return withThreadListSummaries(page, (ids) => this.mainDo.getThreadListSummaries(ids));
   }
 
   async getThreadListSummaries(threadIds: string[]) {

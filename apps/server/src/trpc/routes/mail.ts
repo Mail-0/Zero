@@ -7,9 +7,11 @@ import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { pickForwardedAttachments } from '../../lib/forward-attachments';
 import { getGmailQuotaGovernor } from '../../lib/gmail-quota-client';
+import { withThreadListSummaries } from '../../lib/thread-list-page';
 import { isConnectionActive } from '../../lib/connection-status';
 import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { processEmailHtml } from '../../lib/email-processor';
+import { withServerTiming } from '../../lib/server-timing';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { isAiEnabledForUser } from '../../lib/ai-access';
 import { serializedFileSchema } from '../../lib/schemas';
@@ -78,8 +80,10 @@ export const mailRouter = router({
     .output(IGetThreadResponseSchema)
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThread(input.id, true);
+      const agent = await getZeroAgent(activeConnection.id, {
+        initializeAuth: !isConnectionActive(activeConnection),
+      });
+      return withServerTiming(ctx.c, 'thread_read', () => agent.getThread(input.id, true));
     }),
   count: activeDriverProcedure
     .output(
@@ -109,7 +113,13 @@ export const mailRouter = router({
     .query(async ({ ctx, input }) => {
       const { folder, maxResults, cursor, q, labelIds } = input;
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id, {
+        initializeAuth:
+          !!q ||
+          folder === FOLDERS.DRAFT ||
+          folder === FOLDERS.SNOOZED ||
+          !isConnectionActive(activeConnection),
+      });
 
       console.debug('[listThreads] input:', { folder, maxResults, cursor, q, labelIds });
 
@@ -124,7 +134,7 @@ export const mailRouter = router({
         return drafts;
       }
 
-      type ThreadItem = { id: string; historyId: string | null; $raw?: unknown };
+      type ThreadItem = IGetThreadsResponse['threads'][number];
 
       let threadsResponse: IGetThreadsResponse;
 
@@ -132,21 +142,25 @@ export const mailRouter = router({
       const effectiveLabelIds = labelIds;
 
       if (q) {
-        threadsResponse = await agent.rawListThreads({
-          query: q,
-          maxResults,
-          labelIds: effectiveLabelIds,
-          pageToken: cursor,
-          folder,
-        });
+        threadsResponse = await withServerTiming(ctx.c, 'thread_search', () =>
+          agent.rawListThreads({
+            query: q,
+            maxResults,
+            labelIds: effectiveLabelIds,
+            pageToken: cursor,
+            folder,
+          }),
+        );
       } else {
-        threadsResponse = await agent.listThreads({
-          folder,
-          // query: q,
-          maxResults,
-          labelIds: effectiveLabelIds,
-          pageToken: cursor,
-        });
+        threadsResponse = await withServerTiming(ctx.c, 'thread_list', () =>
+          agent.listThreadsWithSummaries({
+            folder,
+            // query: q,
+            maxResults,
+            labelIds: effectiveLabelIds,
+            pageToken: cursor,
+          }),
+        );
       }
 
       if (folder === FOLDERS.SNOOZED) {
@@ -186,24 +200,16 @@ export const mailRouter = router({
         );
 
         threadsResponse.threads = filtered;
-        console.debug('[listThreads] Snoozed threads after filtering:', filtered);
+        console.debug('[listThreads] Snoozed threads after filtering:', filtered.length);
       }
 
       // Row data for the whole page in one round trip (see ThreadListSummarySchema). Without
       // it every visible list row fetches its full thread via mail.get.
-      let summaries: Awaited<ReturnType<typeof agent.getThreadListSummaries>> = [];
-      try {
-        summaries = await agent.getThreadListSummaries(threadsResponse.threads.map((t) => t.id));
-      } catch (error) {
-        console.warn('[listThreads] Failed to load row summaries', error);
+      if (q) {
+        threadsResponse = await withServerTiming(ctx.c, 'thread_summaries', () =>
+          withThreadListSummaries(threadsResponse, (ids) => agent.getThreadListSummaries(ids)),
+        );
       }
-      threadsResponse = {
-        ...threadsResponse,
-        threads: threadsResponse.threads.map((thread, i) => ({
-          ...thread,
-          summary: summaries[i] ?? null,
-        })),
-      };
 
       // Counts only: the response now carries subjects/senders/snippets, which must not hit logs.
       console.debug('[listThreads] Returning', {
@@ -256,23 +262,17 @@ export const mailRouter = router({
       const fallbackKey = cursor || new Date().toISOString();
       const results = await Promise.allSettled(
         connections.map(async (connection) => {
-          const agent = await getZeroAgent(connection.id);
-          const page = await agent.listThreads({
+          const agent = await getZeroAgent(connection.id, { initializeAuth: false });
+          const page = await agent.listThreadsWithSummaries({
             folder: FOLDERS.INBOX,
             maxResults,
             pageToken: cursor,
           });
-          let summaries: Awaited<ReturnType<typeof agent.getThreadListSummaries>> = [];
-          try {
-            summaries = await agent.getThreadListSummaries(page.threads.map((t) => t.id));
-          } catch (error) {
-            console.warn('[listUnifiedInbox] Failed to load row summaries', connection.id, error);
-          }
           // Threads arrive sorted newest-first; a thread without a summary inherits its
           // predecessor's timestamp so it keeps its place in the merged order.
           let previousKey = fallbackKey;
-          const threads = page.threads.map((thread, i) => {
-            const summary = summaries[i] ?? null;
+          const threads = page.threads.map((thread) => {
+            const summary = thread.summary ?? null;
             const receivedOn = summary?.latest?.receivedOn;
             const parsed = receivedOn ? new Date(receivedOn) : null;
             const sortKey =

@@ -31,12 +31,17 @@ export const getZeroClient = async (connectionId: string, executionCtx: Executio
   return agent;
 };
 
-export const getZeroAgent = async (connectionId: string) => {
+export const getZeroAgent = async (
+  connectionId: string,
+  options: { initializeAuth?: boolean } = {},
+) => {
+  // initializeAuth:false is only for cached reads after the caller has verified
+  // the user's active connection. Provider operations retain the default setup.
   const client = scopedRpc<DriverRpcDO>(async () => {
     const stub = env.ZERO_DRIVER.get(env.ZERO_DRIVER.idFromName(connectionId));
-    const target = await stub.setMetaData(connectionId);
+    const target = await stub.setMetaData(connectionId, options.initializeAuth !== false);
     try {
-      await target.setupAuth();
+      if (options.initializeAuth !== false) await target.setupAuth();
       return target;
     } catch (error) {
       disposeRpc(target);
@@ -59,20 +64,13 @@ export const getActiveConnection = async () => {
 
   const db = await getZeroDB(sessionUser.id);
 
-  const userData = await db.findUser();
-
-  if (userData?.defaultConnectionId) {
-    const activeConnection = await db.findUserConnection(userData.defaultConnectionId);
-    if (activeConnection) return activeConnection;
-  }
-
-  const firstConnection = await db.findFirstConnection();
-  if (!firstConnection) {
+  const activeConnection = await db.findActiveConnection();
+  if (!activeConnection) {
     console.error(`No connections found for user ${sessionUser.id}`);
     throw new Error('No connections found for user');
   }
 
-  return firstConnection;
+  return activeConnection;
 };
 
 /** Builds the driver's IMAP settings from a `mail0_connection_imap` row. */
