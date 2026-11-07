@@ -649,7 +649,8 @@ export function EmailComposer({
               </button>
               {onClose && (
                 <button
-                  tabIndex={-1}
+                  type="button"
+                  aria-label="Close composer"
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8] hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded-sm px-1 py-0.5"
                   onClick={handleClose}
                 >
@@ -703,6 +704,8 @@ export function EmailComposer({
               }}
             />
             <button
+              type="button"
+              aria-label="Generate subject"
               onClick={handleGenerateSubject}
               disabled={isLoading || isGeneratingSubject || messageLength < 1}
               className="hover:bg-gray-50 dark:hover:bg-[#404040] transition-colors cursor-pointer rounded p-1"
