@@ -51,6 +51,7 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    allowedHosts: ['sb-2zhu6cnok5hg.vercel.run'],
     warmup: {
       clientFiles: ['./app/**/*', './components/**/*'],
     },
