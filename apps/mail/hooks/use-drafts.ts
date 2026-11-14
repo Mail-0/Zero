@@ -11,7 +11,7 @@ export const useDraft = (id: string | null) => {
   const draftQuery = useQuery(
     trpc.drafts.get.queryOptions(
       { id: id! },
-      { enabled: !!session?.user.id && !!id, staleTime: DRAFT_STALE_MS },
+      { enabled: !!session?.user?.id && !!id, staleTime: DRAFT_STALE_MS },
     ),
   );
   return draftQuery;

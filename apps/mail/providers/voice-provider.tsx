@@ -130,8 +130,8 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
           console.log('message', message);
         },
         dynamicVariables: {
-          user_name: session?.user.name.split(' ')[0] || 'User',
-          user_email: session?.user.email || '',
+          user_name: session?.user?.name?.split(' ')[0] || 'User',
+          user_email: session?.user?.email || '',
           current_time: new Date().toLocaleString(),
           has_open_email: context?.hasOpenEmail ? 'yes' : 'no',
           current_thread_id: context?.currentThreadId || 'none',
