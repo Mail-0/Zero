@@ -183,7 +183,7 @@ export function AIChat({
         )}
       </div>
 
-      <div className={cn('flex shrink-0 flex-col gap-2 px-3 pt-1 pb-3', isFullScreen && 'px-0')}>
+      <div className={cn('flex shrink-0 flex-col gap-2 px-3 pb-3 pt-1', isFullScreen && 'px-0')}>
         <QueuedMessageStack
           items={queue.queue}
           onDismiss={queue.remove}
@@ -220,7 +220,7 @@ export function AIChat({
 
 function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center py-8 select-none">
+    <div className="flex min-h-full select-none flex-col items-center justify-center py-8">
       <div className="flex w-full max-w-md flex-col">
         <motion.div
           className="flex items-center gap-2"
@@ -248,7 +248,7 @@ function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void })
           <div className="px-3 py-2">
             <span className="text-neutral-subtle text-copy font-medium">Suggested</span>
           </div>
-          <div className="bg-surface flex flex-col gap-0.5 rounded-[10px] p-0.5 shadow-xs">
+          <div className="bg-surface shadow-xs flex flex-col gap-0.5 rounded-[10px] p-0.5">
             {SUGGESTED_QUERIES.map((query) => (
               <button
                 key={query}
@@ -271,10 +271,25 @@ function useElementHeight(ref: React.RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new ResizeObserver(() => setHeight(el.clientHeight));
+
+    let frameId = 0;
+    const updateHeight = () => {
+      if (frameId) return;
+      frameId = requestAnimationFrame(() => {
+        frameId = 0;
+        const nextHeight = el.clientHeight;
+        setHeight((currentHeight) => (currentHeight === nextHeight ? currentHeight : nextHeight));
+      });
+    };
+
+    const observer = new ResizeObserver(updateHeight);
     observer.observe(el);
-    setHeight(el.clientHeight);
-    return () => observer.disconnect();
+    updateHeight();
+
+    return () => {
+      observer.disconnect();
+      if (frameId) cancelAnimationFrame(frameId);
+    };
   }, [ref]);
   return height;
 }
