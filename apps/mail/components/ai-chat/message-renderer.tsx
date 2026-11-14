@@ -35,22 +35,19 @@ const STREAMING_ANIMATION = { sep: 'char', stagger: 2, duration: 100, easing: 'e
 export function ChatConversation({
   messages,
   isLoading,
-  lastPairMinHeight,
 }: {
   messages: ChatMessage[];
   isLoading: boolean;
-  lastPairMinHeight?: number;
 }) {
   const pairs = useMemo(() => pairMessages(messages), [messages]);
   return (
-    <div className="flex flex-col">
+    <div className="flex min-h-full flex-col">
       {pairs.map((pair, index) => (
         <MessagePair
           key={pair.user.id}
           pair={pair}
           isLast={index === pairs.length - 1}
           isLoading={isLoading}
-          minHeight={index === pairs.length - 1 ? lastPairMinHeight : undefined}
         />
       ))}
     </div>
@@ -82,19 +79,16 @@ const MessagePair = memo(
     pair,
     isLast,
     isLoading,
-    minHeight,
   }: {
     pair: Pair;
     isLast: boolean;
     isLoading: boolean;
-    minHeight?: number;
   }) {
     const assistantLoading = isLast && isLoading;
     return (
       <div
         data-last-user-message-pair={isLast ? '' : undefined}
-        className={cn('flex flex-col', isLast ? 'scroll-mt-2 pt-2 pb-6' : 'py-2')}
-        style={minHeight ? { minHeight } : undefined}
+        className={cn('flex flex-col', isLast ? 'flex-1 scroll-mt-2 pb-6 pt-2' : 'py-2')}
       >
         <ChatMessageView message={pair.user} isLoading={false} />
         {pair.assistant ? (
@@ -107,7 +101,6 @@ const MessagePair = memo(
   },
   (prev, next) =>
     prev.isLast === next.isLast &&
-    prev.minHeight === next.minHeight &&
     prev.pair.user === next.pair.user &&
     prev.pair.assistant === next.pair.assistant &&
     (!next.isLast || prev.isLoading === next.isLoading),
@@ -273,7 +266,6 @@ function renderParts(parts: ChatPart[], messageId: string, isLoading: boolean) {
         thinkingItems.push(
           <ThinkingBlock
             // Message parts are append-only, so a part's position is its stable identity.
-            // eslint-disable-next-line react/no-array-index-key
             key={`${messageId}-reasoning-${index}`}
             content={part.reasoning}
             isComplete={isComplete}

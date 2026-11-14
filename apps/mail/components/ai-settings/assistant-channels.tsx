@@ -9,13 +9,13 @@ type Status = {
 };
 export function AssistantChannels() {
   const { data: session } = useSession();
-  const queryKey = ['assistant-channels', session?.user.id];
+  const queryKey = ['assistant-channels', session?.user?.id];
   const queryClient = useQueryClient();
   const status = useQuery({
     queryKey,
     queryFn: () => assistantRequest<Status>('/status'),
     retry: false,
-    enabled: !!session?.user.id,
+    enabled: !!session?.user?.id,
   });
   const disconnect = useMutation({
     mutationFn: (id: string) => assistantRequest(`/identities/${id}`, { method: 'DELETE' }),

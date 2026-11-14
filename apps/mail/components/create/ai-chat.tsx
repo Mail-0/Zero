@@ -44,7 +44,6 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
-  const viewportHeight = useElementHeight(scrollRef);
 
   const isLoading = status === 'submitted' || status === 'streaming';
   // Only emptiness is tracked: re-rendering on every keystroke loops with tiptap.
@@ -161,11 +160,7 @@ export function AIChat({
           <EmptyState onQueryClick={handleQueryClick} />
         ) : (
           <>
-            <ChatConversation
-              messages={messages}
-              isLoading={isLoading}
-              lastPairMinHeight={viewportHeight ? viewportHeight - 8 : undefined}
-            />
+            <ChatConversation messages={messages} isLoading={isLoading} />
             {showError && !isLoading && (
               <div className="-mt-4 mb-4 flex items-center gap-2 px-2 py-1">
                 <div className="bg-danger size-1.5 shrink-0 rounded-full" />
@@ -183,7 +178,7 @@ export function AIChat({
         )}
       </div>
 
-      <div className={cn('flex shrink-0 flex-col gap-2 px-3 pt-1 pb-3', isFullScreen && 'px-0')}>
+      <div className={cn('flex shrink-0 flex-col gap-2 px-3 pb-3 pt-1', isFullScreen && 'px-0')}>
         <QueuedMessageStack
           items={queue.queue}
           onDismiss={queue.remove}
@@ -220,7 +215,7 @@ export function AIChat({
 
 function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center py-8 select-none">
+    <div className="flex min-h-full select-none flex-col items-center justify-center py-8">
       <div className="flex w-full max-w-md flex-col">
         <motion.div
           className="flex items-center gap-2"
@@ -248,7 +243,7 @@ function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void })
           <div className="px-3 py-2">
             <span className="text-neutral-subtle text-copy font-medium">Suggested</span>
           </div>
-          <div className="bg-surface flex flex-col gap-0.5 rounded-[10px] p-0.5 shadow-xs">
+          <div className="bg-surface shadow-xs flex flex-col gap-0.5 rounded-[10px] p-0.5">
             {SUGGESTED_QUERIES.map((query) => (
               <button
                 key={query}
@@ -264,17 +259,4 @@ function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void })
       </div>
     </div>
   );
-}
-
-function useElementHeight(ref: React.RefObject<HTMLElement | null>) {
-  const [height, setHeight] = useState(0);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => setHeight(el.clientHeight));
-    observer.observe(el);
-    setHeight(el.clientHeight);
-    return () => observer.disconnect();
-  }, [ref]);
-  return height;
 }

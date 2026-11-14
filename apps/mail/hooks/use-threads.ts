@@ -218,7 +218,7 @@ export const useThreadById = (id: string | null) => {
         id: id!,
       },
       {
-        enabled: !!id && !!session?.user.id,
+        enabled: !!id && !!session?.user?.id,
         staleTime: THREAD_STALE_TIME,
       },
     ),

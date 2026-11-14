@@ -185,7 +185,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
     ) : null;
 
   if (!isRendered) return null;
-  if (!session) return null;
+  if (!session?.user) return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -228,7 +228,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="ml-3 w-(--radix-dropdown-menu-trigger-width) min-w-56 bg-white font-medium dark:bg-[#131313]"
+                className="w-(--radix-dropdown-menu-trigger-width) ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
                 align="end"
                 side={'bottom'}
                 sideOffset={8}
@@ -360,7 +360,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                 </div>
                 <>
                   <DropdownMenuSeparator className="mt-1" />
-                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pt-1 pb-2 text-[10px]">
+                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
                     <a href="/privacy" className="hover:underline">
                       Privacy
                     </a>
@@ -398,7 +398,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                       </AvatarFallback>
                     </Avatar>
                     {data.connections.length > 1 && (
-                      <CircleCheck className="fill-mainBlue absolute -right-2 -bottom-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
+                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-[#141414]" />
                     )}
                   </div>
                 </div>
@@ -555,7 +555,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                   </div>
 
                   <DropdownMenuSeparator className="mt-1" />
-                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pt-1 pb-2 text-[10px]">
+                  <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
                     <a href="/privacy" className="hover:underline">
                       Privacy
                     </a>
@@ -633,7 +633,7 @@ export function NavUser({ compact = false }: { compact?: boolean }) {
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
               ) : null}
             </div>
-            <div className="h-5 max-w-[200px] truncate overflow-hidden text-xs leading-none font-normal text-[#898989]">
+            <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
               {activeAccount?.email || session.user.email}
             </div>
             {!isPro && (

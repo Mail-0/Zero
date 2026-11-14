@@ -8,7 +8,7 @@ export const useAttachments = (messageId: string) => {
   const AttachmentsQuery = useQuery(
     trpc.mail.getMessageAttachments.queryOptions(
       { messageId },
-      { enabled: !!session?.user.id && !!messageId, staleTime: 1000 * 60 * 60 },
+      { enabled: !!session?.user?.id && !!messageId, staleTime: 1000 * 60 * 60 },
     ),
   );
 

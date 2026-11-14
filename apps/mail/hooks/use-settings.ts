@@ -8,7 +8,7 @@ export function useSettings() {
 
   const settingsQuery = useQuery(
     trpc.settings.get.queryOptions(void 0, {
-      enabled: !!session?.user.id,
+      enabled: !!session?.user?.id,
       staleTime: Infinity,
     }),
   );
