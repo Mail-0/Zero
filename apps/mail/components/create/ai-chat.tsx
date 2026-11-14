@@ -44,7 +44,6 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
-  const viewportHeight = useElementHeight(scrollRef);
 
   const isLoading = status === 'submitted' || status === 'streaming';
   // Only emptiness is tracked: re-rendering on every keystroke loops with tiptap.
@@ -161,11 +160,7 @@ export function AIChat({
           <EmptyState onQueryClick={handleQueryClick} />
         ) : (
           <>
-            <ChatConversation
-              messages={messages}
-              isLoading={isLoading}
-              lastPairMinHeight={viewportHeight ? viewportHeight - 8 : undefined}
-            />
+            <ChatConversation messages={messages} isLoading={isLoading} />
             {showError && !isLoading && (
               <div className="-mt-4 mb-4 flex items-center gap-2 px-2 py-1">
                 <div className="bg-danger size-1.5 shrink-0 rounded-full" />
@@ -264,32 +259,4 @@ function EmptyState({ onQueryClick }: { onQueryClick: (query: string) => void })
       </div>
     </div>
   );
-}
-
-function useElementHeight(ref: React.RefObject<HTMLElement | null>) {
-  const [height, setHeight] = useState(0);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    let frameId = 0;
-    const updateHeight = () => {
-      if (frameId) return;
-      frameId = requestAnimationFrame(() => {
-        frameId = 0;
-        const nextHeight = el.clientHeight;
-        setHeight((currentHeight) => (currentHeight === nextHeight ? currentHeight : nextHeight));
-      });
-    };
-
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(el);
-    updateHeight();
-
-    return () => {
-      observer.disconnect();
-      if (frameId) cancelAnimationFrame(frameId);
-    };
-  }, [ref]);
-  return height;
 }
