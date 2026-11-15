@@ -1,4 +1,5 @@
 import type { LabelStorage } from './mail-label-store';
+import { MailDataRevision } from './mail-data-revision';
 
 export interface MailCount {
   label: string;
@@ -14,10 +15,15 @@ const normalizeName = (name: string) =>
 
 export class MailCountStore {
   private inFlight: Promise<MailCount[]> | undefined;
+  private revision: MailDataRevision;
 
-  constructor(private storage: LabelStorage) {}
+  constructor(private storage: LabelStorage) {
+    this.revision = new MailDataRevision(storage);
+  }
 
+  /** Requires the label and history store tables to exist. */
   initialize() {
+    this.revision.initialize();
     this.storage.exec(`CREATE TABLE IF NOT EXISTS mail_count_cache (
       id INTEGER PRIMARY KEY, counts TEXT, fetched_at INTEGER NOT NULL DEFAULT 0,
       cursor TEXT, retry_at INTEGER NOT NULL DEFAULT 0,
@@ -77,12 +83,19 @@ export class MailCountStore {
     const row = [
       ...this.storage.exec(`SELECT EXISTS (
       SELECT 1 FROM mailbox_history WHERE id = 1 AND cursor IS NOT NULL AND snapshot_baseline IS NULL
-    ) AND NOT EXISTS (SELECT 1 FROM mailbox_import_jobs)
-      AND NOT EXISTS (SELECT 1 FROM threads t WHERE NOT EXISTS (
-        SELECT 1 FROM mail_message_labels m WHERE m.thread_id = t.thread_id
-      )) AS complete`),
+    ) AND NOT EXISTS (SELECT 1 FROM mailbox_import_jobs) AS ready`),
     ][0];
-    return Boolean(row?.complete);
+    if (!row?.ready) return false;
+    // Scans every thread, so it is cached until messages or threads change.
+    return this.revision.memo(
+      'threads-have-messages',
+      () =>
+        ![
+          ...this.storage.exec(`SELECT 1 FROM threads t WHERE NOT EXISTS (
+          SELECT 1 FROM mail_message_labels m WHERE m.thread_id = t.thread_id) LIMIT 1`),
+        ].length,
+      true,
+    );
   }
 
   async read(
@@ -206,31 +219,19 @@ export class MailCountStore {
     });
   }
 
+  /** Number of stored threads, cached until threads are added or removed. */
+  threadCount() {
+    return this.revision.memo(
+      'thread-count',
+      () => Number([...this.storage.exec('SELECT COUNT(*) AS n FROM threads')][0]?.n ?? 0),
+      true,
+    );
+  }
+
   localCounts(): MailCount[] {
-    // Apply pending intents per message before counting distinct threads. An
-    // unread message elsewhere in a conversation must not inflate a label's
-    // unread badge if that message does not carry the label itself.
-    const rows = [
-      ...this.storage.exec(`WITH effective AS (
-      SELECT m.message_id, m.thread_id, j.value AS label_id
-      FROM mail_message_labels m, json_each(m.provider_labels) j
-      WHERE NOT EXISTS (SELECT 1 FROM mail_label_intents i
-        WHERE i.message_id = m.message_id AND i.label_id = j.value AND i.desired = 0)
-      UNION
-      SELECT m.message_id, m.thread_id, i.label_id FROM mail_message_labels m
-      JOIN mail_label_intents i ON i.message_id = m.message_id WHERE i.desired = 1
-    ), counts AS (
-      SELECT label_id, COUNT(DISTINCT thread_id) AS count FROM effective e
-      WHERE label_id IN ('DRAFT', 'SENT') OR (
-        NOT EXISTS (SELECT 1 FROM effective d WHERE d.message_id = e.message_id AND d.label_id = 'DRAFT')
-        AND EXISTS (SELECT 1 FROM effective u WHERE u.message_id = e.message_id AND u.label_id = 'UNREAD')
-      ) GROUP BY label_id
-    ) SELECT label_id, count FROM counts
-    UNION ALL SELECT '__archive__', COUNT(DISTINCT m.thread_id) FROM mail_message_labels m
-      WHERE NOT EXISTS (SELECT 1 FROM effective d WHERE d.message_id = m.message_id AND d.label_id = 'DRAFT')
-      AND NOT EXISTS (SELECT 1 FROM effective f WHERE f.thread_id = m.thread_id AND f.label_id IN ('INBOX','SPAM','TRASH'))`),
-    ];
-    const counts = new Map(rows.map((row) => [String(row.label_id), Number(row.count)]));
+    const counts = new Map(
+      this.revision.memo('local-label-counts', () => this.countThreads()) as [string, number][],
+    );
     const state = this.state();
     const catalogue = state.catalogue
       ? (JSON.parse(String(state.catalogue)) as { id: string; name: string }[])
@@ -243,5 +244,66 @@ export class MailCountStore {
       })),
       { label: 'archive', count: counts.get('__archive__') ?? 0 },
     ];
+  }
+
+  /**
+   * One pass over messages in thread order, applying pending intents per
+   * message. Labels count distinct threads: DRAFT and SENT count any message,
+   * other labels only an unread non-draft message carrying that label itself.
+   * Archive counts threads with a non-draft message and no INBOX/SPAM/TRASH.
+   */
+  private countThreads(): [string, number][] {
+    const intents = new Map<string, [string, boolean][]>();
+    for (const row of this.storage.exec(
+      'SELECT message_id, label_id, desired FROM mail_label_intents',
+    )) {
+      const list = intents.get(String(row.message_id)) ?? [];
+      list.push([String(row.label_id), Boolean(row.desired)]);
+      intents.set(String(row.message_id), list);
+    }
+    const counts = new Map<string, number>();
+    let thread: string | undefined;
+    let labels = new Set<string>();
+    let nonDraft = false;
+    let foldered = false;
+    const flush = () => {
+      for (const label of labels) counts.set(label, (counts.get(label) ?? 0) + 1);
+      if (thread !== undefined && nonDraft && !foldered)
+        counts.set('__archive__', (counts.get('__archive__') ?? 0) + 1);
+      labels = new Set();
+      nonDraft = false;
+      foldered = false;
+    };
+    for (const row of this.storage.exec(
+      'SELECT thread_id, message_id, provider_labels FROM mail_message_labels ORDER BY thread_id',
+    )) {
+      if (String(row.thread_id) !== thread) {
+        flush();
+        thread = String(row.thread_id);
+      }
+      const effective = new Set(parseLabels(row.provider_labels));
+      for (const [label, desired] of intents.get(String(row.message_id)) ?? []) {
+        if (desired) effective.add(label);
+        else effective.delete(label);
+      }
+      const draft = effective.has('DRAFT');
+      const unread = effective.has('UNREAD');
+      if (!draft) nonDraft = true;
+      for (const label of effective) {
+        if (label === 'INBOX' || label === 'SPAM' || label === 'TRASH') foldered = true;
+        if (label === 'DRAFT' || label === 'SENT' || (!draft && unread)) labels.add(label);
+      }
+    }
+    flush();
+    return [...counts];
+  }
+}
+
+function parseLabels(value: unknown): string[] {
+  try {
+    const labels: unknown = JSON.parse(String(value));
+    return Array.isArray(labels) ? labels.map(String) : [];
+  } catch {
+    return [];
   }
 }

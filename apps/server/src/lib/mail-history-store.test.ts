@@ -173,6 +173,44 @@ describe('durable Gmail history checkpoints', () => {
     store.acknowledgeNotification('t', String(notification.version));
     expect(store.notifications(0)).toHaveLength(1);
   });
+
+  it('picks the earliest due job within the highest priority and skips blocked work', () => {
+    const { store, db } = fixture();
+    store.enqueue('late-delete', 'delete');
+    store.enqueue('early-delete', 'delete');
+    store.enqueue('verify', 'verify');
+    store.enqueue('blocked', 'delete');
+    db.exec("UPDATE mailbox_import_jobs SET next_at = 500 WHERE thread_id = 'late-delete'");
+    db.exec("UPDATE mailbox_import_jobs SET next_at = 100 WHERE thread_id = 'early-delete'");
+    db.exec("UPDATE mailbox_import_jobs SET blocked = 1 WHERE thread_id = 'blocked'");
+    expect(store.job(1000)?.thread_id).toBe('early-delete');
+    expect(store.job(200)?.thread_id).toBe('early-delete');
+    expect(store.job(50)?.thread_id).toBe('verify');
+  });
+
+  it('reports the next due job or notification, delaying paused backfill', () => {
+    const { store, db } = fixture();
+    expect(store.jobDue()).toBeUndefined();
+    store.enqueue('old', 'backfill');
+    store.pauseBackfill(90000);
+    expect(store.jobDue()).toBe(90000);
+    store.enqueue('live');
+    db.exec("UPDATE mailbox_import_jobs SET next_at = 40000 WHERE thread_id = 'live'");
+    expect(store.jobDue()).toBe(40000);
+    store.notify('t');
+    db.exec("UPDATE mailbox_notifications SET next_at = 20000 WHERE thread_id = 't'");
+    expect(store.jobDue()).toBe(20000);
+    db.exec('UPDATE mailbox_import_jobs SET blocked = 1');
+    db.exec('DELETE FROM mailbox_notifications');
+    expect(store.jobDue()).toBeUndefined();
+    expect(store.hasJobs()).toBe(true);
+  });
+
+  it('uses a supplied thread count for import progress', () => {
+    const { store } = fixture();
+    store.enqueue('pending', 'backfill');
+    expect(store.importProgress(42)).toEqual({ imported: 42, remaining: 1 });
+  });
   describe('AI runs', () => {
     const LEASE = 600000;
     it('dispatches only after the import lands, and survives a restart', () => {

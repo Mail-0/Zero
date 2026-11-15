@@ -1,5 +1,8 @@
 import type { LabelStorage } from './mail-label-store';
 
+// Must match the mailbox_job_priority index expression so lookups stay indexed.
+const jobPriority = `CASE kind WHEN 'delete' THEN 0 WHEN 'verify' THEN 1 WHEN 'import' THEN 2 ELSE 3 END`;
+
 export class MailHistoryStore {
   private importIndexReady = false;
   constructor(private storage: LabelStorage) {}
@@ -29,25 +32,27 @@ export class MailHistoryStore {
     this.storage.exec(`CREATE TABLE IF NOT EXISTS mailbox_notifications (
       thread_id TEXT PRIMARY KEY, version TEXT NOT NULL, next_at INTEGER NOT NULL DEFAULT 0
     )`);
-    this.storage.exec(`INSERT OR IGNORE INTO mailbox_notifications(thread_id, version, next_at)
-      SELECT thread_id, version, next_at FROM mailbox_import_jobs WHERE kind = 'notify'`);
-    this.storage.exec("DELETE FROM mailbox_import_jobs WHERE kind = 'notify'");
     this.storage.exec('CREATE TABLE IF NOT EXISTS mailbox_sync_migrations (id TEXT PRIMARY KEY)');
-    if (
-      ![
-        ...this.storage.exec(
-          "SELECT id FROM mailbox_sync_migrations WHERE id = 'live-priority-v1'",
-        ),
-      ].length
-    ) {
+    const migrated = new Set(
+      [...this.storage.exec('SELECT id FROM mailbox_sync_migrations')].map((row) => String(row.id)),
+    );
+    if (!migrated.has('notify-table-v1')) {
+      this.storage.transaction(() => {
+        this.storage.exec(`INSERT OR IGNORE INTO mailbox_notifications(thread_id, version, next_at)
+          SELECT thread_id, version, next_at FROM mailbox_import_jobs WHERE kind = 'notify'`);
+        this.storage.exec("DELETE FROM mailbox_import_jobs WHERE kind = 'notify'");
+        this.storage.exec("INSERT INTO mailbox_sync_migrations VALUES ('notify-table-v1')");
+      });
+    }
+    if (!migrated.has('live-priority-v1')) {
       this.storage.transaction(() => {
         this.storage.exec("UPDATE mailbox_import_jobs SET kind = 'backfill' WHERE kind = 'import'");
         this.storage.exec("INSERT INTO mailbox_sync_migrations VALUES ('live-priority-v1')");
       });
     }
-    this.storage.exec(`CREATE INDEX IF NOT EXISTS mailbox_job_priority ON mailbox_import_jobs(
-      blocked, CASE kind WHEN 'delete' THEN 0 WHEN 'verify' THEN 1 WHEN 'import' THEN 2 ELSE 3 END, next_at
-    )`);
+    this.storage.exec(
+      `CREATE INDEX IF NOT EXISTS mailbox_job_priority ON mailbox_import_jobs(blocked, ${jobPriority}, next_at)`,
+    );
     this.storage.exec(
       'CREATE INDEX IF NOT EXISTS mailbox_job_due ON mailbox_import_jobs(blocked, next_at)',
     );
@@ -294,15 +299,28 @@ export class MailHistoryStore {
   }
 
   job(now: number) {
-    return [
-      ...this.storage.exec(
-        `SELECT * FROM mailbox_import_jobs WHERE next_at <= ? AND blocked = 0
-        AND (kind != 'backfill' OR COALESCE((SELECT until_ms FROM mailbox_backfill_pause WHERE id = 1),0) <= ?)
-      ORDER BY CASE kind WHEN 'delete' THEN 0 WHEN 'verify' THEN 1 WHEN 'import' THEN 2 ELSE 3 END, next_at LIMIT 1`,
-        now,
-        now,
-      ),
-    ][0];
+    const paused = this.backfillPausedUntil() > now;
+    for (const priority of [0, 1, 2, 3]) {
+      // Kinds in the last bucket are all backfill; a paused backfill skips it.
+      if (priority === 3 && paused) break;
+      const row = [
+        ...this.storage.exec(
+          `SELECT * FROM mailbox_import_jobs WHERE blocked = 0 AND ${jobPriority} = ? AND next_at <= ?
+          ORDER BY next_at LIMIT 1`,
+          priority,
+          now,
+        ),
+      ][0];
+      if (row) return row;
+    }
+    return undefined;
+  }
+
+  private backfillPausedUntil() {
+    return Number(
+      [...this.storage.exec('SELECT until_ms FROM mailbox_backfill_pause WHERE id = 1')][0]
+        ?.until_ms ?? 0,
+    );
   }
 
   notify(threadId: string) {
@@ -371,6 +389,10 @@ export class MailHistoryStore {
     );
   }
 
+  hasJobs() {
+    return [...this.storage.exec('SELECT 1 FROM mailbox_import_jobs LIMIT 1')].length > 0;
+  }
+
   progress() {
     return {
       jobs: [
@@ -385,18 +407,22 @@ export class MailHistoryStore {
     };
   }
 
-  importProgress() {
+  /** `imported` lets callers supply a cached thread count instead of a full scan. */
+  importProgress(imported?: number) {
     if (!this.importIndexReady) {
       this.storage.exec('CREATE INDEX IF NOT EXISTS mailbox_thread_identity ON threads(thread_id)');
       this.importIndexReady = true;
     }
     const row = [
       ...this.storage.exec(`SELECT
-      (SELECT COUNT(*) FROM threads) AS imported,
+      ${imported === undefined ? '(SELECT COUNT(*) FROM threads)' : 'NULL'} AS imported,
       (SELECT COUNT(*) FROM mailbox_import_jobs j WHERE j.kind != 'delete'
        AND NOT EXISTS (SELECT 1 FROM threads t WHERE t.thread_id = j.thread_id)) AS remaining`),
     ][0];
-    return { imported: Number(row?.imported ?? 0), remaining: Number(row?.remaining ?? 0) };
+    return {
+      imported: imported ?? Number(row?.imported ?? 0),
+      remaining: Number(row?.remaining ?? 0),
+    };
   }
 
   beginSnapshot(baseline: string) {
@@ -444,12 +470,24 @@ export class MailHistoryStore {
   }
 
   jobDue() {
-    const row = [
-      ...this.storage.exec(`SELECT MIN(next_at) AS due FROM (
-        SELECT CASE WHEN kind = 'backfill' THEN MAX(next_at, COALESCE((SELECT until_ms FROM mailbox_backfill_pause WHERE id = 1),0)) ELSE next_at END AS next_at FROM mailbox_import_jobs WHERE blocked = 0
-        UNION ALL SELECT next_at FROM mailbox_notifications
-      )`),
+    let due: number | undefined;
+    for (const priority of [0, 1, 2, 3]) {
+      const row = [
+        ...this.storage.exec(
+          `SELECT MIN(next_at) AS due FROM mailbox_import_jobs WHERE blocked = 0 AND ${jobPriority} = ?`,
+          priority,
+        ),
+      ][0];
+      if (row?.due === null || row?.due === undefined) continue;
+      const next =
+        priority === 3 ? Math.max(Number(row.due), this.backfillPausedUntil()) : Number(row.due);
+      due = due === undefined ? next : Math.min(due, next);
+    }
+    const notification = [
+      ...this.storage.exec('SELECT MIN(next_at) AS due FROM mailbox_notifications'),
     ][0];
-    return row?.due === null ? undefined : Number(row?.due);
+    if (notification?.due !== null && notification?.due !== undefined)
+      due = due === undefined ? Number(notification.due) : Math.min(due, Number(notification.due));
+    return due;
   }
 }

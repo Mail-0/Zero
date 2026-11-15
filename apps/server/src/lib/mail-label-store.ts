@@ -86,21 +86,32 @@ export class MailLabelStore {
     );
     // Empty rows also mark migrated threads, preventing a stale SQL summary
     // from resurrecting a synthetic label after an explicit removal.
+    this.storage.exec('CREATE TABLE IF NOT EXISTS mail_label_migrations (id TEXT PRIMARY KEY)');
     if (
+      ![
+        ...this.storage.exec(
+          "SELECT id FROM mail_label_migrations WHERE id = 'synthetic-from-threads-v1'",
+        ),
+      ].length &&
       [...this.storage.exec('PRAGMA table_info(threads)')].some(
         (row) => row.name === 'latest_label_ids',
       )
     ) {
-      // Bulk-import only rows not yet migrated. Avoid a per-thread SQLite RPC
-      // fan-out every time an alarm reconstructs a mailbox at scale.
-      this.storage.exec(`INSERT OR IGNORE INTO mail_thread_synthetic_labels(thread_id, labels)
-        SELECT t.thread_id, (SELECT json_group_array(value) FROM json_each(
-          CASE WHEN json_valid(t.latest_label_ids) THEN t.latest_label_ids ELSE '[]' END
-        ) WHERE value IN ('SNOOZED', 'MUTE'))
-        FROM threads t WHERE NOT EXISTS (SELECT 1 FROM mail_deleted_threads d WHERE d.thread_id = t.thread_id)
-        AND NOT EXISTS (
-          SELECT 1 FROM mail_thread_synthetic_labels s WHERE s.thread_id = t.thread_id
-        )`);
+      // Bulk-import rows not yet migrated, once. It scans every thread, so it
+      // must not run again each time an alarm reconstructs the mailbox.
+      this.storage.transaction(() => {
+        this.storage.exec(`INSERT OR IGNORE INTO mail_thread_synthetic_labels(thread_id, labels)
+          SELECT t.thread_id, (SELECT json_group_array(value) FROM json_each(
+            CASE WHEN json_valid(t.latest_label_ids) THEN t.latest_label_ids ELSE '[]' END
+          ) WHERE value IN ('SNOOZED', 'MUTE'))
+          FROM threads t WHERE NOT EXISTS (SELECT 1 FROM mail_deleted_threads d WHERE d.thread_id = t.thread_id)
+          AND NOT EXISTS (
+            SELECT 1 FROM mail_thread_synthetic_labels s WHERE s.thread_id = t.thread_id
+          )`);
+        this.storage.exec(
+          "INSERT INTO mail_label_migrations VALUES ('synthetic-from-threads-v1')",
+        );
+      });
     }
   }
 

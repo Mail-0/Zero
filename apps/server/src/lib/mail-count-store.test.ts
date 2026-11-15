@@ -254,6 +254,33 @@ describe('storage-backed mailbox counts', () => {
     expect(names).not.toHaveBeenCalled();
   });
 
+  it('caches whole-mailbox aggregates until stored messages, intents, or threads change', () => {
+    const { db, labels, history, counts, reopen } = fixture();
+    db.exec("UPDATE mailbox_history SET cursor = '100'");
+    counts.saveCatalogue(catalogue, 0);
+    labels.importMessages('a', [{ id: 'm', labels: ['INBOX', 'UNREAD'] }]);
+    db.exec("INSERT INTO threads VALUES ('a')");
+    expect(values(counts.localCounts()).inbox).toBe(1);
+    expect(counts.threadCount()).toBe(1);
+    expect(counts.hasCompleteCoverage()).toBe(true);
+    // Writes outside the label store must invalidate too.
+    db.exec("DELETE FROM mail_message_labels WHERE thread_id = 'a'");
+    const restored = reopen();
+    restored.initialize();
+    expect(values(restored.localCounts()).inbox).toBe(0);
+    expect(restored.hasCompleteCoverage()).toBe(false);
+    labels.importMessages('a', [{ id: 'm', labels: ['INBOX', 'UNREAD'] }]);
+    labels.setUnread('a', false, 0);
+    expect(values(restored.localCounts()).inbox).toBe(0);
+    db.exec("INSERT OR REPLACE INTO threads VALUES ('a')");
+    db.exec("INSERT INTO threads VALUES ('b')");
+    expect(restored.threadCount()).toBe(2);
+    db.exec("DELETE FROM threads WHERE thread_id = 'b'");
+    expect(restored.threadCount()).toBe(1);
+    history.enqueue('b', 'backfill');
+    expect(restored.hasCompleteCoverage()).toBe(false);
+  });
+
   it('refreshes label names after invalidation and backs off failed catalogue refreshes', async () => {
     const { db, labels, counts } = fixture();
     db.exec("UPDATE mailbox_history SET cursor = '100'");

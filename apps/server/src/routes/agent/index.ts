@@ -320,6 +320,7 @@ export type FolderSyncFailure = FolderSyncErrors;
 
 /** Concurrent AI thread runs per mailbox, and how long one may run before redispatch. */
 const AI_RUN_CAPACITY = 4;
+const SYNC_PROGRESS_INTERVAL_MS = 10_000;
 const AI_RUN_LEASE_MS = 10 * 60000;
 
 /** IMAP push: one alarm-driven session, IDLE slices within it, and the activity window. */
@@ -373,6 +374,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   private unreadFlushInProgress = false;
   private lastSyncProgress: string | undefined;
+  private lastSyncProgressAt = 0;
   private messageLabelStore: MailLabelStore | undefined;
   private mailboxHistoryStore: MailHistoryStore | undefined;
   private mailboxCountStore: MailCountStore | undefined;
@@ -625,7 +627,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     const state = this.historyStore.state();
     const jobs = this.historyStore.progress();
     const labels = this.labelStore.status();
-    const imports = this.historyStore.importProgress();
+    const imports = this.historyStore.importProgress(this.countStore.threadCount());
     return {
       importedThreads: imports.imported,
       spamCleanup: this.cleanupStore.state() ?? null,
@@ -678,6 +680,15 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   }
 
   private async publishSyncProgress() {
+    // Progress changes on every tick while importing; recomputing it scans the
+    // job queue, so broadcast at most once per interval until the queue drains.
+    const now = Date.now();
+    if (
+      now - this.lastSyncProgressAt < SYNC_PROGRESS_INTERVAL_MS &&
+      this.historyStore.hasJobs()
+    )
+      return;
+    this.lastSyncProgressAt = now;
     const progress = await this.syncProgress();
     const digest = JSON.stringify(progress);
     if (digest !== this.lastSyncProgress) {
@@ -2725,8 +2736,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   }
 
   async getThreadCount() {
-    const count = this.sql`SELECT COUNT(*) FROM threads`;
-    return count[0]['COUNT(*)'] as number;
+    return this.countStore.threadCount();
   }
 
   async getFolderThreadCount(folder: string) {

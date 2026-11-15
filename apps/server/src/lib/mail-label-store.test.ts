@@ -84,6 +84,17 @@ describe('durable message label outbox', () => {
     expect(() => store.setThreadLabels(['t'], ['SNOOZED'], [], 0)).toThrow('Synthetic');
   });
 
+  it('migrates synthetic labels from stored threads only once', () => {
+    const { store, db, reopen } = fixture();
+    db.exec(`CREATE TABLE threads (thread_id TEXT PRIMARY KEY, latest_label_ids TEXT);
+      INSERT INTO threads VALUES ('t', '["SNOOZED"]')`);
+    store.initialize();
+    expect(store.getSyntheticThreadLabels('t')).toEqual(['SNOOZED']);
+    db.exec(`INSERT INTO threads VALUES ('later', '["MUTE"]')`);
+    reopen().initialize();
+    expect(store.getSyntheticThreadLabels('later')).toEqual([]);
+  });
+
   it('keeps thread state across snapshot message replacement and clears it on final deletion', () => {
     const { store } = fixture();
     store.importMessages('t', [{ id: 'old', labels: [] }], '1');
